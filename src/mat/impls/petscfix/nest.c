@@ -621,6 +621,10 @@ static PetscErrorCode MatCreateNestPermonVerticalMerge_Extract_Private(PetscInt 
   if (nmats_in == 1) {
     A = mats_in[0];
     TRY( PetscObjectTypeCompareAny((PetscObject)A,&nest,MATNEST,MATNESTPERMON,"") );
+    if (nest) {
+      TRY( MatNestGetSize(A,&Mn,NULL) );
+      if (Mn==1) nest = PETSC_FALSE;
+    }
     if (!nest) {
       *nmats_out = 1;
       if (mats_out) {
