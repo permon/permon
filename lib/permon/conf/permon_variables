@@ -1,0 +1,49 @@
+# -*- mode: makefile -*-
+#
+# PETSc < 3.6
+-include ${PETSC_DIR}/conf/variables
+# PETSc >= 3.6
+-include ${PETSC_DIR}/lib/petsc/conf/variables
+
+# Variables specific to PERMON that can be employed in user makefiles.
+# PERMON_LIB_DIR          - determines where the PermonQP library is built.
+# PERMON_CC_INCLUDES      - locations of PERMON, PETSc and external library include files
+# PERMON_[C,F]CPPFLAGS    - preprocessor flags for *.c, *.F preprocessing
+PERMON_LIB_DIR        = ${PERMON_DIR}/${PETSC_ARCH}/lib
+PERMON_INCLUDE        = -I${PERMON_DIR}/include -I${PERMON_DIR}/${PETSC_ARCH}/include
+PERMON_CEXT_INCLUDES  = ${PRIMME_FLAGS}
+PERMON_CC_INCLUDES    = ${PERMON_INCLUDE} ${PERMON_CEXT_INCLUDES} ${PETSC_CC_INCLUDES}
+PERMON_FC_INCLUDES    = ${PERMON_INCLUDE} ${PETSC_FC_INCLUDES}
+PERMON_CCPPFLAGS      = ${PERMON_INCLUDE} ${PERMON_CEXT_INCLUDES} ${PETSC_CCPPFLAGS}
+PERMON_FCPPFLAGS      = ${PERMON_INCLUDE} ${PETSC_FCPPFLAGS}
+PERMON_C_SH_LIB_PATH  = ${CC_LINKER_SLFLAG}${PERMON_LIB_DIR}
+PERMON_F_SH_LIB_PATH  = ${FC_LINKER_SLFLAG}${PERMON_LIB_DIR}
+
+# Redefine variables in PETSc makefiles
+# INSTALL_LIB_DIR   - the location where the libraries are built.
+# [C,F]CPPFLAGS     - preprocessor flags for *.c, *.F preprocessing
+INSTALL_LIB_DIR	= ${PERMON_LIB_DIR}
+CCPPFLAGS	= ${PERMON_CCPPFLAGS}
+FCPPFLAGS	= ${PERMON_FCPPFLAGS}
+
+# Variables for the different PERMON modules
+PERMON_LIB_BASIC     = -lpermon
+#TODO PERMON_QP_LIB_BASIC  = -lpermonqp
+#TODO PERMON_FLLOP_LIB_BASIC  = -lpermonfllop ${PERMON_QP_LIB_BASIC}
+#TODO PERMON_LIB_BASIC     = ${PERMON_FLLOP_LIB_BASIC}
+
+#
+# PERMON_LIB defines all PERMON libraries,
+# all needed PETSc libraries (such as vectors and matrices)
+# and other external libraries (such as SLEPc).
+# The order of listing these libraries 
+# is important!
+#
+PERMON_LIB = ${PERMON_C_SH_LIB_PATH} -L${PERMON_LIB_DIR} ${PERMON_LIB_BASIC} ${PERMON_EXTERNAL_LIB} ${PETSC_TAO_LIB}
+#TODO PERMON_EXTERNAL_LIB  = ${SLEPC_LIB}
+
+# Redefine variable used to build shared libraries
+SHLIBS = libpermon
+#TODO SHLIBS = libpermonfllop libpermonqp
+LIBNAME    = ${INSTALL_LIB_DIR}/libpermon.${AR_LIB_SUFFIX}
+

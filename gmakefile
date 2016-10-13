@@ -1,0 +1,199 @@
+# -*- mode: makefile-gmake -*-
+
+include ./lib/permon/conf/permon_variables
+
+OBJDIR := $(PETSC_ARCH)/obj
+MODDIR := $(PETSC_ARCH)/include
+LIBDIR := $(abspath $(PETSC_ARCH)/lib)
+
+pkgs := sys vec mat ksp qp qpc qppf pc qps interface
+
+# $(call SONAME_FUNCTION,libfoo,abiversion)
+SONAME_FUNCTION = $(1).$(SL_LINKER_SUFFIX)
+# $(call SL_LINKER_FUNCTION,libfoo,abiversion,libversion)
+SL_LINKER_FUNCTION ?= -shared -Wl,-soname,$(call SONAME_FUNCTION,$(notdir $(1)))
+
+soname_function = $(call SONAME_FUNCTION,$(1))
+libname_function = $(call SONAME_FUNCTION,$(1))
+basename_all = $(basename $(basename $(basename $(basename $(1)))))
+sl_linker_args = $(call SL_LINKER_FUNCTION,$(call basename_all,$@))
+
+libpermon_shared  := $(LIBDIR)/libpermon.$(SL_LINKER_SUFFIX)
+libpermon_soname  := $(call soname_function,$(LIBDIR)/libpermon)
+libpermon_libname := $(call libname_function,$(LIBDIR)/libpermon)
+libpermon_static  := $(LIBDIR)/libpermon.$(AR_LIB_SUFFIX)
+libpermonpkgs_shared  := $(foreach pkg, $(pkgs), $(LIBDIR)/libpermon$(pkg).$(SL_LINKER_SUFFIX))
+libpermonpkgs_soname  := $(foreach pkg, $(pkgs), $(call soname_function,$(LIBDIR)/libpermon$(pkg)))
+libpermonpkgs_libname := $(foreach pkg, $(pkgs), $(call libname_function,$(LIBDIR)/libpermon$(pkg)))
+libpermonpkgs_static  := $(foreach pkg, $(pkgs), $(LIBDIR)/libpermon$(pkg).$(AR_LIB_SUFFIX))
+
+ifeq ($(PETSC_WITH_EXTERNAL_LIB),)
+  libpermonall_shared  := $(libpermonpkgs_shared)
+  libpermonall_soname  := $(libpermonpkgs_soname)
+  libpermonall_libname := $(libpermonpkgs_libname)
+  libpermonall_static  := $(libpermonpkgs_static)
+else
+  libpermonall_shared  := $(libpermon_shared)
+  libpermonall_soname  := $(libpermon_soname)
+  libpermonall_libname := $(libpermon_libname)
+  libpermonall_static  := $(libpermon_static)
+endif
+libpermonall := $(if $(filter-out no,$(BUILDSHAREDLIB)),$(libpermonall_shared) $(libpermonall_soname),$(libpermonall_static))
+
+generated      := $(PETSC_ARCH)/lib/permon/conf/files
+#permonconf      := $(PETSC_ARCH)/include/permonconf.h
+#permonvariables := $(PETSC_ARCH)/lib/permon/conf/permonvariables
+
+all : $(generated) $(libpermonall)
+
+.SECONDEXPANSION:		# to expand $$(@D)/.DIR
+
+#workarround old cygwin versions
+ifeq ($(PETSC_CYGWIN_BROKEN_PIPE),1)
+ifeq ($(shell basename $(AR)),ar)
+  V ?=1
+endif
+endif
+ifeq ($(V),)
+  quiet_HELP := "Use \"$(MAKE) V=1\" to see the verbose compile lines.\n"
+  quiet = @printf $(quiet_HELP)$(eval quiet_HELP:=)"  %10s %s\n" "$1$2" "$@"; $($1)
+else ifeq ($(V),0)		# Same, but do not print any help
+  quiet = @printf "  %10s %s\n" "$1$2" "$@"; $($1)
+else				# Show the full command line
+  quiet = $($1)
+endif
+
+$(generated) : $(permonconf) $(permonvariables)
+	$(PYTHON) ./lib/permon/conf/gmakegen.py --petsc-arch=$(PETSC_ARCH) --installed-petsc=$(INSTALLED_PETSC)
+
+-include $(generated)
+
+ifeq ($(PETSC_LANGUAGE),CXXONLY)
+  cc_name := CXX
+else
+  cc_name := CC
+endif
+
+PERMON_COMPILE.c = $(call quiet,$(cc_name)) -c $(PCC_FLAGS) $(CFLAGS) $(CCPPFLAGS) $(PERMON_CC_INCLUDES) $(C_DEPFLAGS)
+PERMON_COMPILE.cxx = $(call quiet,CXX) -c $(CXX_FLAGS) $(CFLAGS) $(CCPPFLAGS) $(PERMON_CC_INCLUDES) $(CXX_DEPFLAGS)
+PERMON_COMPILE.cu = $(call quiet,CUDAC) -c $(CUDAC_FLAGS) --compiler-options="$(PCC_FLAGS) $(CXXFLAGS) $(CCPPFLAGS)"
+PERMON_GENDEPS.cu = $(call quiet,CUDAC,.dep) --generate-dependencies --output-directory=$(@D) $(CUDAC_FLAGS) --compiler-options="$(PCC_FLAGS) $(CXXFLAGS) $(CCPPFLAGS)"
+PERMON_COMPILE.F = $(call quiet,FC) -c $(FC_FLAGS) $(FFLAGS) $(FCPPFLAGS) $(FC_DEPFLAGS)
+
+langs := c cu cxx F
+concatlang = $(foreach lang, $(langs), $(srcs-$(1).$(lang):%.$(lang)=$(OBJDIR)/%.o))
+srcs.o := $(foreach pkg, $(pkgs), $(call concatlang,$(pkg)))
+
+# with-single-library=1 (default)
+$(libpermon_libname) : $(srcs.o) | $$(@D)/.DIR
+	$(call quiet,CLINKER) $(sl_linker_args) -o $@ $^ $(PERMON_EXTERNAL_LIB) $(PETSC_KSP_LIB)
+ifneq ($(DSYMUTIL),true)
+	$(call quiet,DSYMUTIL) $@
+endif
+
+$(libpermon_static) : obj := $(srcs.o)
+
+define ARCHIVE_RECIPE_WIN32FE_LIB
+  @$(RM) $@ $@.args
+  @cygpath -w $^ > $@.args
+  $(call quiet,AR) $(AR_FLAGS) $@ @$@.args
+  @$(RM) $@.args
+endef
+
+define ARCHIVE_RECIPE_DEFAULT
+  @$(RM) $@
+  $(call quiet,AR) $(AR_FLAGS) $@ $^
+  $(call quiet,RANLIB) $@
+endef
+
+%.$(AR_LIB_SUFFIX) : $$(obj) | $$(@D)/.DIR
+	$(if $(findstring win32fe lib,$(AR)),$(ARCHIVE_RECIPE_WIN32FE_LIB),$(ARCHIVE_RECIPE_DEFAULT))
+
+# with-single-library=0
+libpkg = $(foreach pkg, $1, $(LIBDIR)/libpermon$(pkg).$(SL_LINKER_SUFFIX))
+define pkg_template
+  $(LIBDIR)/libpermon$(1).$(AR_LIB_SUFFIX)  : $(call concatlang,$(1))
+  $(call libname_function,$(LIBDIR)/libpermon$(1)) : $(call concatlang,$(1))
+endef
+$(foreach pkg,$(pkgs),$(eval $(call pkg_template,$(pkg))))
+$(call libname_function,$(LIBDIR)/libpermoneps) : libdep := $(call libpkg,sys)
+$(call libname_function,$(LIBDIR)/libpermonsvd) : libdep := $(call libpkg,eps sys)
+$(call libname_function,$(LIBDIR)/libpermonpep) : libdep := $(call libpkg,eps sys)
+$(call libname_function,$(LIBDIR)/libpermonnep) : libdep := $(call libpkg,pep eps sys)
+$(call libname_function,$(LIBDIR)/libpermonmfn) : libdep := $(call libpkg,sys)
+
+# The package libraries technically depend on each other (not just in an order-only way), but only
+# ABI changes like new or removed symbols requires relinking the dependent libraries.  ABI should
+# only occur when a header is changed, which would trigger recompilation and relinking anyway.
+# RELINK=1 causes dependent libraries to be relinked anyway.
+ifeq ($(RELINK),1)
+  libdep_true = $$(libdep)
+  libdep_order =
+else
+  libdep_true =
+  libdep_order = $$(libdep)
+endif
+$(libpermonpkgs_libname) : $(libdep_true) | $(libdep_order) $$(@D)/.DIR
+	$(call quiet,CLINKER) $(sl_linker_args) -o $@ $^ $(PERMON_EXTERNAL_LIB)
+ifneq ($(DSYMUTIL),true)
+	$(call quiet,DSYMUTIL) $@
+endif
+
+%.$(SL_LINKER_SUFFIX) : $(call libname_function,%)
+	@ln -sf $(notdir $<) $@
+
+$(call soname_function,%) : $(call libname_function,%)
+	@ln -sf $(notdir $<) $@
+
+$(OBJDIR)/%.o : %.c | $$(@D)/.DIR
+	$(PERMON_COMPILE.c) $(abspath $<) -o $@
+
+$(OBJDIR)/%.o : %.cxx | $$(@D)/.DIR
+	$(PERMON_COMPILE.cxx) $(abspath $<) -o $@
+
+$(OBJDIR)/%.o : %.cu | $$(@D)/.DIR
+	$(PERMON_COMPILE.cu) $(abspath $<) -o $@ # Compile first so that if there is an error, it comes from a normal compile
+	@$(PERMON_GENDEPS.cu) $(abspath $<) -o $(@:%.o=%.d) # Generate the dependencies for later
+
+$(OBJDIR)/%.o : %.F | $$(@D)/.DIR
+ifeq ($(FC_MODULE_OUTPUT_FLAG),)
+	cd $(MODDIR) && $(FC) -c $(FC_FLAGS) $(FFLAGS) $(FCPPFLAGS) $(FC_DEPFLAGS) $(abspath $<) -o $(abspath $@)
+else
+	$(PERMON_COMPILE.F) $(abspath $<) -o $@ $(FC_MODULE_OUTPUT_FLAG)$(MODDIR)
+endif
+
+# Hack: manual dependencies on object files
+$(OBJDIR)/src/mfn/f90-mod/permonmfnmod.o   : $(OBJDIR)/src/sys/f90-mod/permonsysmod.o
+$(OBJDIR)/src/eps/f90-mod/permonepsmod.o   : $(OBJDIR)/src/sys/f90-mod/permonsysmod.o
+$(OBJDIR)/src/pep/f90-mod/permonpepmod.o   : $(OBJDIR)/src/eps/f90-mod/permonepsmod.o
+$(OBJDIR)/src/nep/f90-mod/permonnepmod.o   : $(OBJDIR)/src/pep/f90-mod/permonpepmod.o
+$(OBJDIR)/src/svd/f90-mod/permonsvdmod.o   : $(OBJDIR)/src/eps/f90-mod/permonepsmod.o
+
+# all sources should get recompiled when permonvariables changes (i.e when configure is rerun or when permonvariables is manually edited.)
+$(srcs.o) : $(permonvariables)
+
+%/.DIR :
+	@mkdir -p $(@D)
+	@touch $@
+
+.PRECIOUS: %/.DIR
+
+.SUFFIXES: # Clear .SUFFIXES because we don't use implicit rules
+.DELETE_ON_ERROR:               # Delete likely-corrupt target file if rule fails
+
+.PHONY: clean all print
+
+clean:
+	$(RM) -rf $(OBJDIR) $(LIBDIR)/libpermon* $(MODDIR)/permon*.mod $(MPIUNI_MOD) $(generated)
+
+# make print VAR=the-variable
+print:
+	@echo $($(VAR))
+
+allobj.d := $(srcs.o:%.o=%.d)
+# Tell make that allobj.d are all up to date.  Without this, the include
+# below has quadratic complexity, taking more than one second for a
+# do-nothing build of PETSc (much worse for larger projects)
+$(allobj.d) : ;
+
+-include $(allobj.d)

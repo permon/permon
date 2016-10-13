@@ -1,0 +1,15 @@
+# -*- mode: makefile -*-
+#
+
+permon_gnumake: chk_makej
+	@echo "Building PERMON using GNU Make with ${MAKE_NP} build threads"           
+	@echo "=========================================="
+	@cd ${PERMON_DIR} && ${OMAKE_PRINTDIR} -f gmakefile -j ${MAKE_NP} V=${V}
+	@echo "========================================="
+
+
+# include PETSc rules at the end
+# PETSc < 3.6
+-include ${PETSC_DIR}/conf/rules
+# PETSc >= 3.6
+-include ${PETSC_DIR}/lib/petsc/conf/rules
