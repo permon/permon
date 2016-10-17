@@ -1413,6 +1413,8 @@ PetscErrorCode QPSetIneq(QP qp, Mat Bineq, Vec cineq)
   if (Bineq != qp->BI) {
     if (Bineq) TRY( PetscObjectReference((PetscObject)Bineq) );
     TRY( MatDestroy(&qp->BI) );
+    TRY( MatDestroy(&qp->B) );
+    TRY( QPSetIneqMultiplier(qp,NULL) );
     qp->BI = Bineq;
     change = PETSC_TRUE;
   }
@@ -1438,6 +1440,7 @@ PetscErrorCode QPSetIneq(QP qp, Mat Bineq, Vec cineq)
   if (cineq != qp->cI) {
     if (cineq) TRY( PetscObjectReference((PetscObject)cineq) );
     TRY( VecDestroy(&qp->cI) );
+    TRY( VecDestroy(&qp->c) );
     qp->cI = cineq;
     change = PETSC_TRUE;
   }
@@ -1510,6 +1513,8 @@ PetscErrorCode QPSetEq(QP qp, Mat Beq, Vec ceq)
       TRY( PetscObjectReference((PetscObject)Beq) );
     }
     TRY( MatDestroy(&qp->BE) );
+    TRY( MatDestroy(&qp->B) );
+    TRY( QPSetEqMultiplier(qp,NULL) );
     qp->BE = Beq;
     qp->BE_nest_count = 0;
     change = PETSC_TRUE;
@@ -1536,6 +1541,7 @@ PetscErrorCode QPSetEq(QP qp, Mat Beq, Vec ceq)
   if (ceq != qp->cE) {
     if (ceq) TRY( PetscObjectReference((PetscObject)ceq) );
     TRY( VecDestroy(&qp->cE) );
+    TRY( VecDestroy(&qp->c) );
     qp->cE = ceq;
     change = PETSC_TRUE;
   }
@@ -1959,6 +1965,7 @@ PetscErrorCode QPSetEqMultiplier(QP qp, Vec lambda_E)
   }
   TRY( VecDestroy(&qp->lambda_E) );
   TRY( VecDestroy(&qp->lambda) );
+  TRY( VecDestroy(&qp->Bt_lambda) );
   qp->lambda_E = lambda_E;
   if (qp->changeListener) TRY( (*qp->changeListener)(qp) );
   PetscFunctionReturn(0);
@@ -1978,6 +1985,7 @@ PetscErrorCode QPSetIneqMultiplier(QP qp, Vec lambda_I)
   }
   TRY( VecDestroy(&qp->lambda_I) );
   TRY( VecDestroy(&qp->lambda) );
+  TRY( VecDestroy(&qp->Bt_lambda) );
   qp->lambda_I = lambda_I;
   if (qp->changeListener) TRY( (*qp->changeListener)(qp) );
   PetscFunctionReturn(0);
