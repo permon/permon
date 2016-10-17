@@ -1400,6 +1400,7 @@ PetscErrorCode QPGetRhs(QP qp,Vec *b)
 PetscErrorCode QPSetIneq(QP qp, Mat Bineq, Vec cineq)
 {
   PetscReal norm;
+  PetscBool change = PETSC_FALSE;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
@@ -1413,7 +1414,7 @@ PetscErrorCode QPSetIneq(QP qp, Mat Bineq, Vec cineq)
     if (Bineq) TRY( PetscObjectReference((PetscObject)Bineq) );
     TRY( MatDestroy(&qp->BI) );
     qp->BI = Bineq;
-    if (qp->changeListener) TRY( (*qp->changeListener)(qp) );
+    change = PETSC_TRUE;
   }
 
   if (cineq) {
@@ -1438,6 +1439,10 @@ PetscErrorCode QPSetIneq(QP qp, Mat Bineq, Vec cineq)
     if (cineq) TRY( PetscObjectReference((PetscObject)cineq) );
     TRY( VecDestroy(&qp->cI) );
     qp->cI = cineq;
+    change = PETSC_TRUE;
+  }
+
+  if (change) {
     if (qp->changeListener) TRY( (*qp->changeListener)(qp) );
   }
   PetscFunctionReturn(0);
@@ -1483,6 +1488,7 @@ PetscErrorCode QPGetIneq(QP qp, Mat *Bineq, Vec *cineq)
 PetscErrorCode QPSetEq(QP qp, Mat Beq, Vec ceq)
 {
   PetscReal norm;
+  PetscBool change = PETSC_FALSE;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
@@ -1506,7 +1512,7 @@ PetscErrorCode QPSetEq(QP qp, Mat Beq, Vec ceq)
     TRY( MatDestroy(&qp->BE) );
     qp->BE = Beq;
     qp->BE_nest_count = 0;
-    if (qp->changeListener) TRY( (*qp->changeListener)(qp) );
+    change = PETSC_TRUE;
   }
 
   if (ceq) {
@@ -1531,6 +1537,10 @@ PetscErrorCode QPSetEq(QP qp, Mat Beq, Vec ceq)
     if (ceq) TRY( PetscObjectReference((PetscObject)ceq) );
     TRY( VecDestroy(&qp->cE) );
     qp->cE = ceq;
+    change = PETSC_TRUE;
+  }
+
+  if (change) {
     if (qp->changeListener) TRY( (*qp->changeListener)(qp) );
   }
   PetscFunctionReturn(0);
