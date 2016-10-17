@@ -1960,6 +1960,7 @@ PetscErrorCode QPSetEqMultiplier(QP qp, Vec lambda_E)
   TRY( VecDestroy(&qp->lambda_E) );
   TRY( VecDestroy(&qp->lambda) );
   qp->lambda_E = lambda_E;
+  if (qp->changeListener) TRY( (*qp->changeListener)(qp) );
   PetscFunctionReturn(0);
 }
 
@@ -1978,6 +1979,7 @@ PetscErrorCode QPSetIneqMultiplier(QP qp, Vec lambda_I)
   TRY( VecDestroy(&qp->lambda_I) );
   TRY( VecDestroy(&qp->lambda) );
   qp->lambda_I = lambda_I;
+  if (qp->changeListener) TRY( (*qp->changeListener)(qp) );
   PetscFunctionReturn(0);
 }
 
