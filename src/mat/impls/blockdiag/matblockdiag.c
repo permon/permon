@@ -520,6 +520,17 @@ PetscErrorCode MatSetValuesLocal_BlockDiag(Mat mat,PetscInt nrow,const PetscInt 
 }
 
 #undef __FUNCT__
+#define __FUNCT__ "MatScale_BlockDiag"
+PetscErrorCode MatScale_BlockDiag(Mat mat,PetscScalar a)
+{
+  Mat_BlockDiag *data = (Mat_BlockDiag*) mat->data;
+
+  PetscFunctionBegin;
+  TRY( MatScale(data->localBlock,a) );
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ "MatGetColumnVectors_BlockDiag"
 static PetscErrorCode MatGetColumnVectors_BlockDiag(Mat mat, Vec *cols_new[])
 {
@@ -653,6 +664,7 @@ FLLOP_EXTERN PetscErrorCode MatCreate_BlockDiag(Mat B) {
   B->ops->zerorows           = MatZeroRows_BlockDiag;
   B->ops->zerorowscolumns    = MatZeroRowsColumns_BlockDiag;
   B->ops->transposematmult   = MatTransposeMatMult_BlockDiag_BlockDiag;
+  B->ops->scale              = MatScale_BlockDiag;
 #if PETSC_VERSION_MINOR<6
   B->ops->getredundantmatrix = MatGetRedundantMatrix_BlockDiag;
 #endif
