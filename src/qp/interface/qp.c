@@ -1145,6 +1145,10 @@ PetscErrorCode QPPostSolve(QP qp)
     TRY( QPRemoveInactiveBounds(cqp) );
     TRY( QPComputeMissingBoxMultipliers(cqp) );
     TRY( QPComputeMissingEqMultiplier(cqp) );
+    parent = cqp->parent;
+    postSolve = cqp->postSolve;
+    if (postSolve) TRY( (*postSolve)(cqp,parent) );
+
     if (view) {
       if (first) {
         first = PETSC_FALSE;
@@ -1153,10 +1157,8 @@ PetscErrorCode QPPostSolve(QP qp)
       }
       TRY( QPViewKKT(cqp,v) );
     }
-    parent = cqp->parent;
+
     if (!parent) break;
-    postSolve = cqp->postSolve;
-    if (postSolve) TRY( (*postSolve)(cqp,parent) );
     parent->solved = solved;
     if (cqp == qp) break;
     cqp = parent;
