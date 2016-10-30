@@ -529,6 +529,7 @@ PetscErrorCode VecScaleSkipInf(Vec x,PetscScalar alpha)
   PetscScalar *varr,v;
 
   PetscFunctionBeginI;
+  if (alpha == 1.0) PetscFunctionReturnI(0);
   TRY( VecGetLocalSize(x,&n) );
   TRY( VecGetArray(x,&varr) );
   for (i=0; i<n; i++) {
