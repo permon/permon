@@ -67,6 +67,10 @@ typedef struct {
   PetscReal norm_A, norm_b;
 } QPTNormalizeObjective_Ctx;
 
+typedef struct {
+  PetscReal scale_A, scale_b;
+} QPTScaleObjectiveByScalar_Ctx;
+
 FLLOP_EXTERN PetscLogEvent QPT_HomogenizeEq, QPT_OrthonormalizeEq, QPT_EnforceEqByProjector, QPT_EnforceEqByPenalty, QPT_Dualize, QPT_Dualize_AssembleG, QPT_Dualize_FactorK, QPT_Dualize_PrepareBt, QPT_AllInOne;
 FLLOP_EXTERN PetscLogEvent QPT_SplitBE;
 

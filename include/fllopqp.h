@@ -95,6 +95,8 @@ FLLOP_EXTERN PetscErrorCode QPTSplitBE(QP qp);
 FLLOP_EXTERN PetscErrorCode QPTAllInOne(QP qp,MatInvType invType,PetscBool dual,PetscBool project,PetscReal penalty,PetscBool regularize);
 FLLOP_EXTERN PetscErrorCode QPTFromOptions(QP qp);
 FLLOP_EXTERN PetscErrorCode QPTScale(QP qp);
+FLLOP_EXTERN PetscErrorCode QPTScaleObjectiveByScalar(QP qp,PetscScalar scale_A,PetscScalar scale_b);
+FLLOP_EXTERN PetscErrorCode QPTNormalizeHessian(QP qp);
 FLLOP_EXTERN PetscErrorCode QPTNormalizeObjective(QP qp);
 
 /* MatPenalized */

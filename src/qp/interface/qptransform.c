@@ -1190,43 +1190,75 @@ PetscErrorCode QPTScale(QP qp)
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "QPTPostSolve_QPTNormalizeObjective"
-static PetscErrorCode QPTPostSolve_QPTNormalizeObjective(QP child,QP parent)
+#define __FUNCT__ "QPTNormalizeObjective"
+PetscErrorCode QPTNormalizeObjective(QP qp)
 {
-  QPTNormalizeObjective_Ctx *psctx = (QPTNormalizeObjective_Ctx*)child->postSolveCtx;
-  PetscReal norm_A = psctx->norm_A;
-  PetscReal norm_b = psctx->norm_b;
+  PetscReal norm_A, norm_b;
+
+  PetscFunctionBeginI;
+  PetscValidHeaderSpecific(qp,QP_CLASSID,1);
+  TRY( QPChainGetLast(qp,&qp) );
+  TRY( MatGetMaxEigenvalue(qp->A, NULL, &norm_A, PETSC_DECIDE, PETSC_DECIDE) );
+  TRY( VecNorm(qp->b,NORM_2,&norm_b) );
+  TRY( PetscInfo2(qp,"||A||=%.8e, scale A by 1/||A||=%.8e\n",norm_A,1.0/norm_A) );
+  TRY( PetscInfo2(qp,"||b||=%.8e, scale b by 1/||b||=%.8e\n",norm_b,1.0/norm_b) );
+  TRY( QPTScaleObjectiveByScalar(qp, 1.0/norm_A, 1.0/norm_b) );
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "QPTNormalizeHessian"
+PetscErrorCode QPTNormalizeHessian(QP qp)
+{
+  PetscReal norm_A;
+
+  PetscFunctionBeginI;
+  PetscValidHeaderSpecific(qp,QP_CLASSID,1);
+  TRY( QPChainGetLast(qp,&qp) );
+  TRY( MatGetMaxEigenvalue(qp->A, NULL, &norm_A, PETSC_DECIDE, PETSC_DECIDE) );
+  TRY( PetscInfo2(qp,"||A||=%.8e, scale A by 1/||A||=%.8e\n",norm_A,1.0/norm_A) );
+  TRY( QPTScaleObjectiveByScalar(qp, 1.0/norm_A, 1.0/norm_A) );
+  PetscFunctionReturnI(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "QPTPostSolve_QPTScaleObjectiveByScalar"
+static PetscErrorCode QPTPostSolve_QPTScaleObjectiveByScalar(QP child,QP parent)
+{
+  QPTScaleObjectiveByScalar_Ctx *psctx = (QPTScaleObjectiveByScalar_Ctx*)child->postSolveCtx;
+  PetscReal scale_A = psctx->scale_A;
+  PetscReal scale_b = psctx->scale_b;
 
   PetscFunctionBegin;
   TRY( VecCopy(child->x,parent->x) );
-  TRY( VecScale(parent->x,norm_b/norm_A) );
+  TRY( VecScale(parent->x,scale_A/scale_b) );
   
   if (parent->Bt_lambda) {
     TRY( VecCopy(child->Bt_lambda,parent->Bt_lambda) );
-    TRY( VecScale(parent->Bt_lambda,norm_b) );
+    TRY( VecScale(parent->Bt_lambda,1.0/scale_b) );
   }
   if (parent->lambda_E) {
     TRY( VecCopy(child->lambda_E,parent->lambda_E) );
-    TRY( VecScale(parent->lambda_E,norm_b) );
+    TRY( VecScale(parent->lambda_E,1.0/scale_b) );
   }
   if (parent->lb) {
     TRY( VecCopy(child->lambda_lb,parent->lambda_lb) );
-    TRY( VecScale(parent->lambda_lb,norm_b) );
+    TRY( VecScale(parent->lambda_lb,1.0/scale_b) );
   }
   if (parent->ub) {
     TRY( VecCopy(child->lambda_ub,parent->lambda_ub) );
-    TRY( VecScale(parent->lambda_ub,norm_b) );
+    TRY( VecScale(parent->lambda_ub,1.0/scale_b) );
   }
   if (parent->BI) {
     TRY( VecCopy(child->lambda_I,parent->lambda_I) );
-    TRY( VecScale(parent->lambda_I,norm_b) );
+    TRY( VecScale(parent->lambda_I,1.0/scale_b) );
   }
   PetscFunctionReturn(0);
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "QPTPostSolveDestroy_QPTNormalizeObjective"
-static PetscErrorCode QPTPostSolveDestroy_QPTNormalizeObjective(void *ctx)
+#define __FUNCT__ "QPTPostSolveDestroy_QPTScaleObjectiveByScalar"
+static PetscErrorCode QPTPostSolveDestroy_QPTScaleObjectiveByScalar(void *ctx)
 {
   PetscFunctionBegin;
   PetscFree(ctx);
@@ -1234,12 +1266,12 @@ static PetscErrorCode QPTPostSolveDestroy_QPTNormalizeObjective(void *ctx)
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "QPTNormalizeObjective"
-PetscErrorCode QPTNormalizeObjective(QP qp)
+#define __FUNCT__ "QPTScaleObjectiveByScalar"
+PetscErrorCode QPTScaleObjectiveByScalar(QP qp,PetscScalar scale_A,PetscScalar scale_b)
 {
   MPI_Comm comm;
   QP child;
-  QPTNormalizeObjective_Ctx *ctx;
+  QPTScaleObjectiveByScalar_Ctx *ctx;
   Mat Anew;
   Vec bnew;
   Vec lbnew,ubnew;
@@ -1247,58 +1279,64 @@ PetscErrorCode QPTNormalizeObjective(QP qp)
 
   PetscFunctionBeginI;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  TRY( QPTransformBegin(QPTNormalizeObjective,
-      QPTPostSolve_QPTNormalizeObjective, QPTPostSolveDestroy_QPTNormalizeObjective,
+  TRY( QPTransformBegin(QPTScaleObjectiveByScalar,
+      QPTPostSolve_QPTScaleObjectiveByScalar, QPTPostSolveDestroy_QPTScaleObjectiveByScalar,
       QP_DUPLICATE_COPY_POINTERS, &qp, &child, &comm) );
   TRY( PetscNew(&ctx) );
+  ctx->scale_A = scale_A;
+  ctx->scale_b = scale_b;
   child->postSolveCtx = ctx;
 
-  TRY( MatGetMaxEigenvalue(qp->A, NULL, &norm_A, PETSC_DECIDE, PETSC_DECIDE) );
-  TRY( PetscInfo2(qp,"||A||=%.8e, scale A by 1/||A||=%.8e\n",norm_A,1.0/norm_A) );
-  TRY( MatCreateProd(comm,1,&qp->A,&Anew) );
-  TRY( MatScale(Anew,1.0/norm_A) );
-  TRY( PetscInfo(qp,"setting stashed estimate ||A|| = 1.0\n") );
-  TRY( PetscObjectComposedDataSetScalar((PetscObject)Anew,MatGetMaxEigenvalue_composed_id,1.0) );
+  if (FllopDebugEnabled) {
+    TRY( MatGetMaxEigenvalue(qp->A, NULL, &norm_A, 1e-5, 50) );
+    TRY( FllopDebug1("||A||=%.8e\n",norm_A) );
+    TRY( VecNorm(qp->b,NORM_2,&norm_b) );
+    TRY( FllopDebug1("||b||=%.8e\n",norm_b) );
+  }
+
+  if (qp->A->ops->duplicate) {
+    TRY( MatDuplicate(qp->A,MAT_COPY_VALUES,&Anew) );
+  } else {
+    TRY( MatCreateProd(comm,1,&qp->A,&Anew) );
+  }
+  TRY( MatScale(Anew,scale_A) );
   TRY( QPSetOperator(child,Anew) );
-  ctx->norm_A = norm_A;
   TRY( MatDestroy(&Anew) );
 
   TRY( VecDuplicate(qp->b,&bnew) );
   TRY( VecCopy(qp->b,bnew) );
-  TRY( VecNormalize(bnew,&norm_b) );
-  TRY( PetscInfo2(qp,"||b||=%.8e, scale b by 1/||b||=%.8e\n",norm_b,1.0/norm_b) );
+  TRY( VecScale(bnew,scale_b) );
   TRY( QPSetRhs(child,bnew) );
-  ctx->norm_b = norm_b;
   TRY( VecDestroy(&bnew) );
 
   lbnew=NULL;
   if (qp->lb) {
     TRY( VecDuplicate(qp->lb,&lbnew) );
     TRY( VecCopy(qp->lb,lbnew) );
-    TRY( VecScaleSkipInf(lbnew,norm_A/norm_b) );
+    TRY( VecScaleSkipInf(lbnew,scale_b/scale_A) );
   }
   ubnew=NULL;
   if (qp->ub) {
     TRY( VecDuplicate(qp->ub,&ubnew) );
     TRY( VecCopy(qp->ub,ubnew) );
-    TRY( VecScaleSkipInf(ubnew,norm_A/norm_b) );
+    TRY( VecScaleSkipInf(ubnew,scale_b/scale_A) );
   }
   TRY( QPSetBox(child,lbnew,ubnew) );
   TRY( VecDestroy(&lbnew) );
   TRY( VecDestroy(&ubnew) );
-
-  if (FllopDebugEnabled) {
-    TRY( MatGetMaxEigenvalue(child->A, NULL, &norm_A, 1e-4, 50) );
-    TRY( FllopDebug1("||A_new|| %.8e\n",norm_A) );
-    TRY( VecNorm(child->b,NORM_2,&norm_b) );
-    TRY( FllopDebug1("||b_new|| %.8e\n",norm_b) );
-  }
 
   TRY( QPSetInitialVector(child,NULL) );
   TRY( QPSetEqMultiplier(child,NULL) );
   TRY( QPSetIneqMultiplier(child,NULL) );
   TRY( QPSetLowerBoundMultiplier(child,NULL) );
   TRY( QPSetUpperBoundMultiplier(child,NULL) );
+
+  if (FllopDebugEnabled) {
+    TRY( MatGetMaxEigenvalue(child->A, NULL, &norm_A, 1e-5, 50) );
+    TRY( FllopDebug1("||A_new||=%.8e\n",norm_A) );
+    TRY( VecNorm(child->b,NORM_2,&norm_b) );
+    TRY( FllopDebug1("||b_new||=%.8e\n",norm_b) );
+  }
   PetscFunctionReturnI(0);
 }
 
@@ -1438,17 +1476,24 @@ PetscErrorCode QPTSplitBE(QP qp)
 PetscErrorCode QPTAllInOne(QP qp,MatInvType invType,PetscBool dual,PetscBool project,PetscReal penalty,PetscBool regularize)
 {
   MatRegularizationType regularize_e;
-  PetscBool freeze=PETSC_FALSE, normalize=PETSC_FALSE;
+  PetscBool freeze=PETSC_FALSE, normalize=PETSC_FALSE, normalize_hessian=PETSC_FALSE;
   QP last;
 
   PetscFunctionBeginI;
   regularize_e = regularize ? MAT_REG_EXPLICIT : MAT_REG_NONE;
 
+  TRY( PetscLogEventBegin(QPT_AllInOne,qp,0,0,0) );
   _fllop_ierr = PetscObjectOptionsBegin((PetscObject)qp);CHKERRQ(_fllop_ierr);
   TRY( PetscOptionsBool("-qp_I_freeze","perform QPTFreezeIneq","QPTFreezeIneq",freeze,&freeze,NULL) );
+  TRY( PetscOptionsBoolGroupBegin("-qp_O_normalize","perform QPTNormalizeObjective","QPTNormalizeObjective",&normalize) );
+  TRY( PetscOptionsBoolGroupEnd("-qp_O_normalize_hessian","perform QPTNormalizeHessian","QPTNormalizeHessian",&normalize_hessian) );
   _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
+  if (normalize) {
+    TRY( QPTNormalizeObjective(qp) );
+  } else if (normalize_hessian) {
+    TRY( QPTNormalizeHessian(qp) );
+  }
 
-  TRY( PetscLogEventBegin(QPT_AllInOne,qp,0,0,0) );
   TRY( QPTScale(qp) );
   TRY( QPTOrthonormalizeEqFromOptions(qp) );
   if (freeze) TRY( QPTFreezeIneq(qp) );
@@ -1461,12 +1506,19 @@ PetscErrorCode QPTAllInOne(QP qp,MatInvType invType,PetscBool dual,PetscBool pro
     TRY( QPTEnforceEqByProjector(qp) );
   }
 
+  normalize = PETSC_FALSE;
+  normalize_hessian = PETSC_FALSE;
   TRY( QPChainGetLast(qp,&last) );
   _fllop_ierr = PetscObjectOptionsBegin((PetscObject)last);CHKERRQ(_fllop_ierr);
-  TRY( PetscOptionsBool("-qp_O_normalize","perform QPTNormalizeObjective","QPTNormalizeObjective",normalize,&normalize,NULL) );
+  TRY( PetscOptionsBoolGroupBegin("-qp_O_normalize","perform QPTNormalizeObjective","QPTNormalizeObjective",&normalize) );
+  TRY( PetscOptionsBoolGroupEnd("-qp_O_normalize_hessian","perform QPTNormalizeHessian","QPTNormalizeHessian",&normalize_hessian) );
   _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
+  if (normalize) {
+    TRY( QPTNormalizeObjective(qp) );
+  } else if (normalize_hessian) {
+    TRY( QPTNormalizeHessian(qp) );
+  }
 
-  if (normalize) TRY( QPTNormalizeObjective(qp) );
   TRY( QPTEnforceEqByPenalty(qp,penalty) );
   TRY( PetscLogEventEnd  (QPT_AllInOne,qp,0,0,0) );
   PetscFunctionReturnI(0);
