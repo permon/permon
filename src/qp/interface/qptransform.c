@@ -500,13 +500,13 @@ PetscErrorCode QPTHomogenizeEq(QP qp)
 static PetscErrorCode QPTPostSolve_QPTOrthonormalizeEq(QP child,QP parent)
 {
   Mat T = (Mat) child->postSolveCtx;
-  PetscBool skip_lambda_E,skip_Bt_lambda;
+  PetscBool skip_lambda_E=PETSC_TRUE,skip_Bt_lambda=PETSC_TRUE;
 
   PetscFunctionBegin;
   /* B_p'*lambda_p = B_c'*lambda_c is done implicitly */
 
-  TRY( VecIsInvalidated(child->lambda_E,&skip_lambda_E) );
-  TRY( VecIsInvalidated(child->Bt_lambda,&skip_Bt_lambda) );
+  //TRY( VecIsInvalidated(child->lambda_E,&skip_lambda_E) );
+  //TRY( VecIsInvalidated(child->Bt_lambda,&skip_Bt_lambda) );
 
   if (!skip_lambda_E && T->ops->multtranspose) {
     /* lambda_E_p = T'*lambda_E_c */
