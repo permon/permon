@@ -1445,6 +1445,10 @@ PetscErrorCode QPSetIneq(QP qp, Mat Bineq, Vec cineq)
     change = PETSC_TRUE;
   }
 
+  if (!Bineq) {
+    TRY( VecDestroy(&qp->lambda_I) );
+  }
+
   if (change) {
     if (qp->changeListener) TRY( (*qp->changeListener)(qp) );
   }
@@ -1544,6 +1548,10 @@ PetscErrorCode QPSetEq(QP qp, Mat Beq, Vec ceq)
     TRY( VecDestroy(&qp->c) );
     qp->cE = ceq;
     change = PETSC_TRUE;
+  }
+
+  if (!Beq) {
+    TRY( VecDestroy(&qp->lambda_E) );
   }
 
   if (change) {
@@ -1904,6 +1912,8 @@ PetscErrorCode QPSetBox(QP qp, Vec lb, Vec ub)
     else {
       TRY( PetscObjectReference((PetscObject) lb) );
     }
+  } else {
+    TRY( VecDestroy(&qp->lambda_lb) );
   }
   TRY( VecDestroy(&qp->lb) );
   qp->lb = lb;
@@ -1916,6 +1926,8 @@ PetscErrorCode QPSetBox(QP qp, Vec lb, Vec ub)
       ub = NULL;
     }
     else TRY( PetscObjectReference((PetscObject) ub) );
+  } else {
+    TRY( VecDestroy(&qp->lambda_ub) );
   }
   TRY( VecDestroy(&qp->ub) );
   qp->ub = ub;
