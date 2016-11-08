@@ -608,7 +608,7 @@ PetscErrorCode QPReset(QP qp)
   
   TRY( PCDestroy( &qp->pc) );
 
-  if (qp->pf) TRY( QPPFReset(qp->pf) );
+  TRY( QPPFDestroy(&qp->pf) );
   qp->setupcalled = PETSC_FALSE;
   qp->solved = PETSC_FALSE;
   PetscFunctionReturn(0);
