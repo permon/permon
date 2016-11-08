@@ -481,6 +481,10 @@ PetscErrorCode QPPFApplyQ(QPPF cp, Vec v, Vec Qv)
   Vec Gt_right;
 
   PetscFunctionBegin;
+  PetscValidHeaderSpecific(cp,QPPF_CLASSID,1);
+  PetscValidHeaderSpecific(v,VEC_CLASSID,2);
+  PetscValidHeaderSpecific(Qv,VEC_CLASSID,3);
+
   /* if v is the same as the last time, reuse the last computed product Q*v */
   if (v == cp->QPPFApplyQ_last_v && ((PetscObject)v)->state == cp->QPPFApplyQ_last_v_state) {
     TRY( VecCopy(cp->QPPFApplyQ_last_Qv, Qv) );
@@ -529,6 +533,9 @@ PetscErrorCode QPPFApplyHalfQ(QPPF cp, Vec x, Vec y)
 {
 
   PetscFunctionBeginI;
+  PetscValidHeaderSpecific(cp,QPPF_CLASSID,1);
+  PetscValidHeaderSpecific(x,VEC_CLASSID,2);
+  PetscValidHeaderSpecific(y,VEC_CLASSID,3);
   TRY( QPPFSetUp(cp) );
 
   TRY( PetscLogEventBegin(QPPF_ApplyHalfQ,cp,x,y,0) );
@@ -553,6 +560,9 @@ PetscErrorCode QPPFApplyHalfQTranspose(QPPF cp, Vec x, Vec y)
   Vec Gt_right;
 
   PetscFunctionBeginI;
+  PetscValidHeaderSpecific(cp,QPPF_CLASSID,1);
+  PetscValidHeaderSpecific(x,VEC_CLASSID,2);
+  PetscValidHeaderSpecific(y,VEC_CLASSID,3);
   TRY( QPPFSetUp(cp) );
 
   TRY( PetscLogEventBegin(QPPF_ApplyHalfQ,cp,x,y,0) );
@@ -579,6 +589,9 @@ PetscErrorCode QPPFApplyHalfQTranspose(QPPF cp, Vec x, Vec y)
 PetscErrorCode QPPFApplyP(QPPF cp, Vec v, Vec Pv)
 {
   PetscFunctionBegin;
+  PetscValidHeaderSpecific(cp,QPPF_CLASSID,1);
+  PetscValidHeaderSpecific(v,VEC_CLASSID,2);
+  PetscValidHeaderSpecific(Pv,VEC_CLASSID,3);
   TRY( PetscLogEventBegin(QPPF_ApplyP,cp,v,Pv,0) );
   TRY( QPPFApplyQ(cp, v, Pv) );
   TRY( VecAYPX(Pv, -1.0, v) );  //Pv = v - Pv
@@ -593,6 +606,9 @@ PetscErrorCode QPPFApplyP(QPPF cp, Vec v, Vec Pv)
 PetscErrorCode QPPFApplyGtG(QPPF cp, Vec v, Vec GtGv)
 {
   PetscFunctionBegin;
+  PetscValidHeaderSpecific(cp,QPPF_CLASSID,1);
+  PetscValidHeaderSpecific(v,VEC_CLASSID,2);
+  PetscValidHeaderSpecific(GtGv,VEC_CLASSID,3);
   if (cp->G_has_orthonormal_rows_explicitly || cp->G_has_orthonormal_rows_implicitly) {
     TRY( QPPFApplyQ(cp,v,GtGv) );
     PetscFunctionReturn(0);
