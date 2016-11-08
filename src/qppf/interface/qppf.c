@@ -486,7 +486,7 @@ PetscErrorCode QPPFApplyQ(QPPF cp, Vec v, Vec Qv)
   PetscValidHeaderSpecific(Qv,VEC_CLASSID,3);
 
   /* if v is the same as the last time, reuse the last computed product Q*v */
-  if (v == cp->QPPFApplyQ_last_v && ((PetscObject)v)->state == cp->QPPFApplyQ_last_v_state) {
+  if (v == cp->QPPFApplyQ_last_v && ((PetscObject)v)->state == cp->QPPFApplyQ_last_v_state && cp->QPPFApplyQ_last_Qv) {
     TRY( VecCopy(cp->QPPFApplyQ_last_Qv, Qv) );
     PetscFunctionReturn(0);
   }
