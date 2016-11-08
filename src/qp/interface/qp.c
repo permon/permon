@@ -627,18 +627,13 @@ PetscErrorCode QPSetUpInnerObjects(QP qp)
 
   FllopTracedFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  if (qp->setupinnerobjectscalled) PetscFunctionReturn(0);
 
   TRY( PetscObjectGetComm((PetscObject)qp,&comm) );
   if (!qp->A) FLLOP_SETERRQ(comm,PETSC_ERR_ORDER,"Hessian must be set before " __FUNCT__);
   if (!qp->b) FLLOP_SETERRQ(comm,PETSC_ERR_ORDER,"linear term must be set before " __FUNCT__);
 
   FllopTraceBegin;
-  qp->setupinnerobjectscalled = PETSC_TRUE;
   TRY( PetscInfo1(qp,"setup inner objects for QP #%d\n",qp->id) );
-
-  if (!qp->pc) TRY( QPGetPC(qp,&qp->pc) );
-  TRY( PCSetOperators(qp->pc,qp->A,qp->A) );
 
   TRY( QPInitializeInitialVector_Private(qp) );
 
@@ -648,23 +643,37 @@ PetscErrorCode QPSetUpInnerObjects(QP qp)
     TRY( VecDuplicate(qp->b,&qp->lambda_lb) );
     TRY( VecInvalidate(qp->lambda_lb) );
   }
+  if (!qp->lb) {
+    TRY( VecDestroy(&qp->lambda_lb) );
+  }
 
   if (qp->ub && !qp->lambda_ub) {
     TRY( VecDuplicate(qp->b,&qp->lambda_ub) );
     TRY( VecInvalidate(qp->lambda_ub) );
   }
-
-  if (!qp->BE && !qp->BI) PetscFunctionReturnI(0);
+  if (!qp->ub) {
+    TRY( VecDestroy(&qp->lambda_ub) );
+  }
 
   if (qp->BE && !qp->lambda_E) {
     TRY( MatCreateVecs(qp->BE,NULL,&qp->lambda_E) );
     TRY( VecInvalidate(qp->lambda_E) );
+  }
+  if (!qp->BE) {
+    TRY( VecDestroy(&qp->lambda_E) );
   }
 
   if (qp->BI && !qp->lambda_I) {
     TRY( MatCreateVecs(qp->BI,NULL,&qp->lambda_I) );
     TRY( VecInvalidate(qp->lambda_I) );
   }
+  if (!qp->BI) {
+    TRY( VecDestroy(&qp->lambda_I) );
+  }
+
+  if ((qp->BE || qp->BI) && !qp->B)
+  {
+  TRY( VecDestroy(&qp->c) );
 
   if (qp->BE && !qp->BI) {
     TRY( PetscObjectReference((PetscObject)(qp->B       = qp->BE)) );
@@ -698,12 +707,6 @@ PetscErrorCode QPSetUpInnerObjects(QP qp)
     TRY( PetscObjectSetName((PetscObject)qp->B,"B") );
     TRY( PetscObjectSetName((PetscObject)qp->c,"c") );
     
-    if (!qp->lambda) {
-      TRY( MatCreateVecs(qp->B,NULL,&qp->lambda) );
-      TRY( PetscObjectSetName((PetscObject)qp->lambda,"lambda") );
-      TRY( VecInvalidate(qp->lambda) );
-    }
-    
     /* copy cE,cI to c */
     TRY( MatNestGetISs(qp->B,rows,NULL) );
     for (i=0; i<2; i++) {
@@ -718,10 +721,23 @@ PetscErrorCode QPSetUpInnerObjects(QP qp)
       TRY( VecDestroy(&lambdas[i]) );
     }
   }
+  }
+
+  if (qp->B && !qp->lambda) {
+    TRY( MatCreateVecs(qp->B,NULL,&qp->lambda) );
+    TRY( PetscObjectSetName((PetscObject)qp->lambda,"lambda") );
+    TRY( VecInvalidate(qp->lambda) );
+  }
 
   if (qp->B && !qp->Bt_lambda) {
     TRY( MatCreateVecs(qp->B,&qp->Bt_lambda,NULL) );
+    TRY( PetscObjectSetName((PetscObject)qp->lambda,"Bt_lambda") );
     TRY( VecInvalidate(qp->Bt_lambda) );
+  }
+
+  if (!qp->B) {
+    TRY( VecDestroy(&qp->lambda) );
+    TRY( VecDestroy(&qp->Bt_lambda) );
   }
   PetscFunctionReturnI(0);
 }
@@ -751,6 +767,7 @@ PetscErrorCode QPSetUp(QP qp)
   FllopTraceBegin;
   TRY( PetscInfo1(qp,"setup QP #%d\n",qp->id) );
   TRY( QPSetUpInnerObjects(qp) );
+  if (!qp->pc) TRY( QPGetPC(qp,&qp->pc) );
   TRY( PCSetOperators(qp->pc,qp->A,qp->A) );
   TRY( QPSetFromOptions_Private(qp) );
   TRY( PCSetUp(qp->pc) );

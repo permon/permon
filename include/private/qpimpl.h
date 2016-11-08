@@ -12,7 +12,6 @@ struct _p_QP {
   PetscInt         id;
   PetscBool        solved;
   PetscBool        setupcalled;
-  PetscBool        setupinnerobjectscalled;
   PetscInt         setfromoptionscalled;
   void             *changeListenerCtx;
   PetscErrorCode   (*changeListener)(QP);
