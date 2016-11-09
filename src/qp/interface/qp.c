@@ -198,6 +198,34 @@ PetscErrorCode QPDuplicate(QP qp1,QPDuplicateOption opt,QP *qp2)
 }
 
 #undef __FUNCT__
+#define __FUNCT__ "QPCompareEqMultiplierWithLeastSquare"
+PetscErrorCode QPCompareEqMultiplierWithLeastSquare(QP qp,PetscReal *norm)
+{
+  Vec BEt_lambda = NULL;
+  Vec BEt_lambda_LS;
+  QP qp2;
+
+  PetscFunctionBegin;
+  if (!qp->BE) PetscFunctionReturn(0);
+
+  TRY( QPCompute_BEt_lambda(qp,&BEt_lambda) );
+
+  TRY( QPDuplicate(qp,QP_DUPLICATE_COPY_POINTERS,&qp2) );
+  TRY( QPSetEqMultiplier(qp2,NULL) );
+  TRY( QPComputeMissingEqMultiplier(qp2) );
+  TRY( QPCompute_BEt_lambda(qp2,&BEt_lambda_LS) );
+
+  /* compare lambda_E with least-square lambda_E */
+  TRY( VecAXPY(BEt_lambda_LS,-1.0,BEt_lambda) );
+  TRY( VecNorm(BEt_lambda_LS,NORM_2,norm) );
+
+  TRY( VecDestroy(&BEt_lambda) );
+  TRY( VecDestroy(&BEt_lambda_LS) );
+  TRY( QPDestroy(&qp2) );
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ "QPViewKKT"
 /*@
    QPViewKKT - View how well are satisfied KKT conditions.
@@ -211,11 +239,11 @@ PetscErrorCode QPDuplicate(QP qp1,QPDuplicateOption opt,QP *qp2)
 PetscErrorCode QPViewKKT(QP qp,PetscViewer v)
 {
   PetscReal   normb=0.0,norm=0.0,dot=0.0;
-  Vec         x,b,cE,cI,lb,ub,r,o,t,Bt_lambda=NULL,BEt_lambda=NULL;
+  Vec         x,b,cE,cI,lb,ub,r,o,t;
   Mat         A,BE,BI;
   PetscBool   flg=PETSC_FALSE,compare_lambda_E=PETSC_FALSE,avail=PETSC_TRUE;
   MPI_Comm    comm;
-  char        kkt_name[256]="A*x - b";
+  char        *kkt_name;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
@@ -227,7 +255,7 @@ PetscErrorCode QPViewKKT(QP qp,PetscViewer v)
   TRY( PetscObjectTypeCompare((PetscObject)v,PETSCVIEWERASCII,&flg) );
   if (!flg) FLLOP_SETERRQ1(comm,PETSC_ERR_SUP,"Viewer type %s not supported for QP",((PetscObject)v)->type_name);
 
-  TRY( PetscOptionsGetBool(((PetscObject)qp)->options,((PetscObject)qp)->prefix,"-qp_view_kkt_compare_lambda_E",&compare_lambda_E,NULL) );
+  TRY( PetscOptionsGetBool(((PetscObject)qp)->options,NULL,"-qp_view_kkt_compare_lambda_E",&compare_lambda_E,NULL) );
 
   TRY( PetscObjectName((PetscObject)qp) );
   TRY( PetscObjectPrintClassNamePrefixType((PetscObject)qp,v) );
@@ -244,127 +272,30 @@ PetscErrorCode QPViewKKT(QP qp,PetscViewer v)
   TRY( QPGetSolutionVector(qp, &x) );
   TRY( VecNorm(b,NORM_2,&normb) );
 
+  QPView_Vec(v,x,"x");
+  QPView_Vec(v,b,"b");
+  if (cE) QPView_Vec(v,cE,"cE");
+  if (BE && !cE) TRY( PetscViewerASCIIPrintf(v, "||cE|| = 0.00e-00    max(cE) = 0.00e-00 = cE(0)    min(cE) = 0.00e-00 = cE(0)\n") );
+  if (cI) QPView_Vec(v,cI,"cI");
+  if (BI && !cI) TRY( PetscViewerASCIIPrintf(v, "||cI|| = 0.00e-00    max(cI) = 0.00e-00 = cI(0)    min(cI) = 0.00e-00 = cI(0)\n") );
+  if (lb) QPView_Vec(v,lb,"lb");
+  if (ub) QPView_Vec(v,ub,"ub");
+
   TRY( VecDuplicate(b, &r) );
-  TRY( MatMult(A, x, r) );
-  TRY( VecAXPY(r, -1.0, b) );                                                   /* r = A*x - b */
+  TRY( QPComputeLagrangianGradient(qp,x,r,&kkt_name) );
+  TRY( VecIsValid(r,&avail) );
 
-  if (qp->lb) {
-    TRY( VecAXPY(r,-1.0,qp->lambda_lb) );                                       /* r = r - lambda_lb */
-  }
-  if (qp->ub) {
-    TRY( VecAXPY(r, 1.0,qp->lambda_ub) );                                       /* r = r + lambda_ub */
-  }
-
-  TRY( VecDuplicate(r,&Bt_lambda) );
-  if (qp->B) {
-    TRY( VecIsInvalidated(qp->Bt_lambda,&flg) );
-    if (!flg) {
-      TRY( VecCopy(qp->Bt_lambda,Bt_lambda) );                                  /* Bt_lambda = (B'*lambda) */
-      TRY( PetscStrcat(kkt_name," + (B'*lambda)") );
-      if (!qp->BI) TRY( PetscObjectReference((PetscObject)(BEt_lambda = Bt_lambda)) );
-      goto endif;
-    }
-
-    TRY( VecIsInvalidated(qp->lambda,&flg) );
-    if (!flg && qp->B->ops->multtranspose) {
-      TRY( MatMultTranspose(qp->B, qp->lambda, Bt_lambda) );                    /* Bt_lambda = B'*lambda */
-      TRY( PetscStrcat(kkt_name," + B'*lambda") );
-      if (!qp->BI) TRY( PetscObjectReference((PetscObject)(BEt_lambda = Bt_lambda)) );
-      goto endif;
-    }
-
-    if (qp->BE) {
-      TRY( PetscStrcat(kkt_name," + BE'*lambda_E") );
-    }
-    if (qp->BI) {
-      TRY( PetscStrcat(kkt_name," + BI'*lambda_I") );
-    }
-
-    if (qp->BE) {
-      TRY( VecIsInvalidated(qp->lambda_E,&flg) );
-      if (flg || !qp->BE->ops->multtranspose) {
-        avail = PETSC_FALSE;
-        goto endif;
-      }
-      TRY( MatMultTranspose(BE, qp->lambda_E, Bt_lambda) );                     /* Bt_lambda = BE'*lambda_E */
-    }
-
-    if (qp->BI) {
-      TRY( VecIsInvalidated(qp->lambda_I,&flg) );
-      if (flg || !qp->BI->ops->multtranspose) {
-        avail = PETSC_FALSE;
-        goto endif;
-      }
-      TRY( MatMultTransposeAdd(BI, qp->lambda_I, Bt_lambda, Bt_lambda) );       /* Bt_lambda = Bt_lambda + BI'*lambda_I */
-      if (compare_lambda_E) {
-        TRY( VecDuplicate(Bt_lambda,&BEt_lambda) );
-        TRY( VecCopy(Bt_lambda,BEt_lambda) );
-      }
-    } else {
-      TRY( PetscObjectReference((PetscObject)(BEt_lambda = Bt_lambda)) );
-    }
-  }
-  endif:
   if (avail) {
-    
-    if (qp->BE && compare_lambda_E) {
-      Vec BEt_lambda_LS = qp->xwork;
-      Vec r1;
-      PetscReal norm;
-      
-      if (!BEt_lambda) {
-        TRY( VecDuplicate(Bt_lambda,&BEt_lambda) );
-        TRY( MatMultTranspose(BE, qp->lambda_E, BEt_lambda) );                  /* Bt_lambda = BE'*lambda_E */
-      }
-      
-      if (qp->BI) {
-        TRY( VecHasValidValues(qp->lambda_I,&flg) );
-        FLLOP_ASSERT(flg,"lambda_I valid");
-        TRY( VecDuplicate(r,&r1) );
-        TRY( MatMultTransposeAdd(qp->BI, qp->lambda_I, r, r1) );                /* r1 = r + BI'*lambda_I */
-      } else {
-        r1 = r;
-        TRY( PetscObjectReference((PetscObject)r) );
-      }
-      
-      TRY( QPPFApplyQ(qp->pf,r1,BEt_lambda_LS) );
-      TRY( VecScale(BEt_lambda_LS,-1.0) );                                    /* BEt_lambda_E_LS = -BE'*(BE*BE')\\BE*r */
-
-      /* compare lambda_E with least-square lambda_E */
-      TRY( VecAXPY(BEt_lambda_LS,-1.0,BEt_lambda) );
-      TRY( VecNorm(BEt_lambda_LS,NORM_2,&norm) );
+    if (compare_lambda_E) {
+      TRY( QPCompareEqMultiplierWithLeastSquare(qp,&norm) );
       TRY( PetscViewerASCIIPrintf(v,"||BE'*lambda_E - BE'*lambda_E_LS|| = %.4e\n",norm) );
-
-      TRY( VecDestroy(&r1) );
     }
-    
-    TRY( VecAXPY(r,1.0,Bt_lambda) );                                              /* r = r + Bt_lambda */
-    if (qp->lb) {
-      TRY( PetscStrcat(kkt_name," - lambda_lb") );
-    }
-    if (qp->ub) {
-      TRY( PetscStrcat(kkt_name," + lambda_ub") );
-    }
-    
     TRY( VecNorm(r, NORM_2, &norm) );
-    
-    QPView_Vec(v,x,"x");
-    QPView_Vec(v,b,"b");
-    if (cE) QPView_Vec(v,cE,"cE");
-    if (BE && !cE) TRY( PetscViewerASCIIPrintf(v, "||cE|| = 0.00e-00    max(cE) = 0.00e-00 = cE(0)    min(cE) = 0.00e-00 = cE(0)\n") );
-    if (cI) QPView_Vec(v,cI,"cI");
-    if (BI && !cI) TRY( PetscViewerASCIIPrintf(v, "||cI|| = 0.00e-00    max(cI) = 0.00e-00 = cI(0)    min(cI) = 0.00e-00 = cI(0)\n") );
-    if (lb) QPView_Vec(v,lb,"lb");
-    if (ub) QPView_Vec(v,ub,"ub");
-    
     TRY( PetscViewerASCIIPrintf(v,"r = ||%s|| = %.2e    rO/||b|| = %.2e\n",kkt_name,norm,norm/normb) );
   } else {
     TRY( PetscViewerASCIIPrintf(v,"r = ||%s|| not available\n",kkt_name) );
-
   }
   TRY( VecDestroy(&r) );
-  TRY( VecDestroy(&Bt_lambda) );
-  TRY( VecDestroy(&BEt_lambda) );
 
   if (BE) {
     if (BE->ops->mult) {
@@ -803,15 +734,141 @@ PetscErrorCode QPCheckNullSpace(QP qp,PetscReal tol)
 }
 
 #undef __FUNCT__
+#define __FUNCT__ "QPCompute_BEt_lambda"
+PetscErrorCode QPCompute_BEt_lambda(QP qp,Vec *BEt_lambda)
+{
+  PetscBool   flg=PETSC_FALSE;
+
+  PetscFunctionBegin;
+  *BEt_lambda = NULL;
+  if (!qp->BE) PetscFunctionReturn(0);
+
+  if (!qp->BI) {
+    TRY( VecIsInvalidated(qp->Bt_lambda, &flg) );
+    if (!flg) {
+      TRY( VecDuplicate(qp->Bt_lambda, BEt_lambda) );
+      TRY( VecCopy(qp->Bt_lambda, *BEt_lambda) );                               /* BEt_lambda = Bt_lambda */
+      PetscFunctionReturn(0);
+    }
+
+    TRY( VecIsInvalidated(qp->lambda,&flg) );
+    if (!flg && qp->B->ops->multtranspose) {
+      TRY( MatCreateVecs(qp->B, BEt_lambda, NULL) );
+      TRY( MatMultTranspose(qp->B, qp->lambda, *BEt_lambda) );                  /* BEt_lambda = B'*lambda */
+      PetscFunctionReturn(0);
+    }
+  }
+
+  TRY( VecIsInvalidated(qp->lambda_E,&flg) );
+  if (!flg || !qp->BE->ops->multtranspose) {
+    TRY( MatCreateVecs(qp->BE, BEt_lambda, NULL) );
+    TRY( MatMultTranspose(qp->BE, qp->lambda_E, *BEt_lambda) );                 /* Bt_lambda = BE'*lambda_E */
+  }
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "QPComputeLagrangianGradient"
+PetscErrorCode QPComputeLagrangianGradient(QP qp, Vec x, Vec r, char *kkt_name_[])
+{
+  Vec         b,cE,cI,lb,ub,Bt_lambda=NULL,BEt_lambda=NULL;
+  Mat         A,BE,BI;
+  PetscBool   flg=PETSC_FALSE,avail=PETSC_TRUE;
+  char        kkt_name[256]="A*x - b";
+
+  PetscFunctionBegin;
+  TRY( QPSetUp(qp) );
+  TRY( QPGetOperator(qp, &A) );
+  TRY( QPGetRhs(qp, &b) );
+  TRY( QPGetEq(qp, &BE, &cE) );
+  TRY( QPGetIneq(qp, &BI, &cI) );
+  TRY( QPGetBox(qp, &lb, &ub) );
+
+  TRY( MatMult(A, x, r) );
+  TRY( VecAXPY(r, -1.0, b) );                                                   /* r = A*x - b */
+
+  if (qp->lb) {
+    TRY( VecAXPY(r,-1.0,qp->lambda_lb) );                                       /* r = r - lambda_lb */
+  }
+  if (qp->ub) {
+    TRY( VecAXPY(r, 1.0,qp->lambda_ub) );                                       /* r = r + lambda_ub */
+  }
+
+  TRY( VecDuplicate(r,&Bt_lambda) );
+  if (qp->B) {
+    TRY( VecIsInvalidated(qp->Bt_lambda,&flg) );
+    if (!flg) {
+      TRY( VecCopy(qp->Bt_lambda,Bt_lambda) );                                  /* Bt_lambda = (B'*lambda) */
+      if (kkt_name_) TRY( PetscStrcat(kkt_name," + (B'*lambda)") );
+      if (!qp->BI) TRY( PetscObjectReference((PetscObject)(BEt_lambda = Bt_lambda)) );
+      goto endif;
+    }
+
+    TRY( VecIsInvalidated(qp->lambda,&flg) );
+    if (!flg && qp->B->ops->multtranspose) {
+      TRY( MatMultTranspose(qp->B, qp->lambda, Bt_lambda) );                    /* Bt_lambda = B'*lambda */
+      if (kkt_name_) TRY( PetscStrcat(kkt_name," + B'*lambda") );
+      if (!qp->BI) TRY( PetscObjectReference((PetscObject)(BEt_lambda = Bt_lambda)) );
+      goto endif;
+    }
+
+    if (qp->BE) {
+      if (kkt_name_) TRY( PetscStrcat(kkt_name," + BE'*lambda_E") );
+    }
+    if (qp->BI) {
+      if (kkt_name_) TRY( PetscStrcat(kkt_name," + BI'*lambda_I") );
+    }
+
+    if (qp->BE) {
+      TRY( VecIsInvalidated(qp->lambda_E,&flg) );
+      if (flg || !qp->BE->ops->multtranspose) {
+        avail = PETSC_FALSE;
+        goto endif;
+      }
+      TRY( MatMultTranspose(BE, qp->lambda_E, Bt_lambda) );                     /* Bt_lambda = BE'*lambda_E */
+    }
+
+    if (qp->BI) {
+      TRY( VecIsInvalidated(qp->lambda_I,&flg) );
+      if (flg || !qp->BI->ops->multtransposeadd) {
+        avail = PETSC_FALSE;
+        goto endif;
+      }
+      TRY( MatMultTransposeAdd(BI, qp->lambda_I, Bt_lambda, Bt_lambda) );       /* Bt_lambda = Bt_lambda + BI'*lambda_I */
+    } else {
+      TRY( PetscObjectReference((PetscObject)(BEt_lambda = Bt_lambda)) );
+    }
+  }
+  endif:
+  if (avail) {
+    TRY( VecAXPY(r,1.0,Bt_lambda) );                                            /* r = r + Bt_lambda */
+    if (qp->lb) {
+      if (kkt_name_) TRY( PetscStrcat(kkt_name," - lambda_lb") );
+    }
+    if (qp->ub) {
+      if (kkt_name_) TRY( PetscStrcat(kkt_name," + lambda_ub") );
+    }
+  } else {
+    TRY( VecInvalidate(r) );
+  }
+  if (kkt_name_) TRY( PetscStrallocpy(kkt_name,kkt_name_) );
+  TRY( VecDestroy(&Bt_lambda) );
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ "QPComputeMissingEqMultiplier"
 PetscErrorCode QPComputeMissingEqMultiplier(QP qp)
 {
-  Vec r;
+  Vec r = qp->xwork;
   PetscBool flg;
   const char *name;
+  QP qp_I;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
+  TRY( QPSetUp(qp) );
+
   if (!qp->BE) PetscFunctionReturn(0);
   TRY( VecIsInvalidated(qp->lambda_E,&flg) );
   if (!flg) PetscFunctionReturn(0);
@@ -819,26 +876,11 @@ PetscErrorCode QPComputeMissingEqMultiplier(QP qp)
     TRY( VecIsInvalidated(qp->Bt_lambda,&flg) );
     if (!flg) PetscFunctionReturn(0);
   }
-  
-  TRY( VecDuplicate(qp->b,&r) );
 
-  TRY( MatMult(qp->A, qp->x, r) );
-  TRY( VecAXPY(r, -1.0, qp->b) );                                               /* r = A*x - b */
-  if (qp->lb) {
-    TRY( VecHasValidValues(qp->lambda_lb,&flg) );
-    FLLOP_ASSERT(flg,"lambda_lb valid");
-    TRY( VecAXPY(r,-1.0,qp->lambda_lb) );                                       /* r = r - lambda_lb */
-  }
-  if (qp->ub) {
-    TRY( VecHasValidValues(qp->lambda_ub,&flg) );
-    FLLOP_ASSERT(flg,"lambda_ub valid");
-    TRY( VecAXPY(r, 1.0,qp->lambda_ub) );                                       /* r = r + lambda_ub */
-  }
-  if (qp->BI) {
-    TRY( VecHasValidValues(qp->lambda_I,&flg) );
-    FLLOP_ASSERT(flg,"lambda_I valid");
-    TRY( MatMultTransposeAdd(qp->BI, qp->lambda_I, r, r) );                     /* r = r + BI'*lambda_I */
-  }
+  TRY( QPDuplicate(qp,QP_DUPLICATE_COPY_POINTERS,&qp_I) );
+  TRY( QPSetEq(qp_I,NULL,NULL) );
+  TRY( QPComputeLagrangianGradient(qp_I,qp->x,r,NULL) );
+  TRY( QPDestroy(&qp_I) );
 
   //TODO Should we add qp->Bt_lambda_E ?
   if (qp->BE == qp->B) {
@@ -860,12 +902,8 @@ PetscErrorCode QPComputeMissingEqMultiplier(QP qp)
     TRY( FllopDebug1("||r||=%.2e\n",norm) );
   }
 
-  TRY( VecDestroy(&r) );
-
-  if (PetscLogPrintInfo) {
-    TRY( PetscObjectGetName((PetscObject)qp,&name) );
-    TRY( PetscInfo3(qp,"missing eq. con. multiplier computed for QP Object %s (#%d in chain, derived by %s)\n",name,qp->id,qp->transform_name) );
-  }
+  TRY( PetscObjectGetName((PetscObject)qp,&name) );
+  TRY( PetscInfo3(qp,"missing eq. con. multiplier computed for QP Object %s (#%d in chain, derived by %s)\n",name,qp->id,qp->transform_name) );
   PetscFunctionReturn(0);
 }
 
@@ -876,47 +914,47 @@ PetscErrorCode QPComputeMissingBoxMultipliers(QP qp)
   Vec lb = qp->lb;
   Vec ub = qp->ub;
   Vec lambda_lb = qp->lambda_lb;
-  PetscBool flg;
+  Vec lambda_ub = qp->lambda_ub;
+  Vec r = qp->xwork;
+  PetscBool flg,flg2;
+  QP qp_E;
   const char *name;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  if (!lb || qp->BI) PetscFunctionReturn(0);
-  TRY( VecIsInvalidated(lambda_lb,&flg) );
-  if (!flg) PetscFunctionReturn(0);
+  TRY( QPSetUp(qp) );
 
+  if (lb) {
+    TRY( VecIsInvalidated(lambda_lb,&flg) );
+  }
   if (ub) {
-    //TODO handle ub in QPComputeBoxMultipliers - see my thesis
-    // leave lambda_lb unchanged for now
-    PetscFunctionReturn(0);
+    TRY( VecIsInvalidated(lambda_ub,&flg2) );
   }
+  if (!lb && !ub) PetscFunctionReturn(0);
+  if ((!flg) && (!flg2)) PetscFunctionReturn(0);
 
+  /* currently cannot handle this situation, leave multipliers untouched */
+  if (qp->BI) PetscFunctionReturn(0);
+
+  TRY( QPDuplicate(qp,QP_DUPLICATE_COPY_POINTERS,&qp_E) );
+  TRY( QPSetBox(qp_E,NULL,NULL) );
+  TRY( QPComputeLagrangianGradient(qp_E,qp->x,r,NULL) );
+  TRY( QPDestroy(&qp_E) );
+
+  if (lb) {
+    TRY( VecCopy(r,lambda_lb) );
+  }
+  if (ub) {
+    TRY( VecCopy(r,lambda_ub) );
+    TRY( VecScale(lambda_ub,-1.0) );
+  }
+  if (lb && ub) {
+    TRY( VecZeroEntries(r) );
+    TRY( VecPointwiseMax(lambda_lb,lambda_lb,r) );
+    TRY( VecPointwiseMax(lambda_ub,lambda_ub,r) );
+  }
   TRY( PetscObjectGetName((PetscObject)qp,&name) );
-
-  flg = PETSC_TRUE;
-  if (!lb) {
-    TRY( VecSet(lambda_lb,0.0) );
-  } else {
-    Vec r = lambda_lb;
-    TRY( MatMult(qp->A, qp->x, r) );
-    TRY( VecAXPY(r, -1.0, qp->b) );                                             /* r = A*x - b */
-    if (qp->BE) {
-      TRY( VecHasValidValues(qp->lambda_E, &flg) );
-      if (flg && qp->BE->ops->multtransposeadd) {
-        TRY( MatMultTransposeAdd(qp->BE, qp->lambda_E, r, r) );                 /* r = r + BE'*lambda_E */
-      } else {
-        TRY( VecHasValidValues(qp->Bt_lambda, &flg) );
-        if (flg) {
-          TRY( VecAXPY(r, 1.0, qp->Bt_lambda) );                                /* r = r + (BE'*lambda_E) */
-        } else {
-          TRY( VecInvalidate(r) );
-          TRY( PetscInfo3(qp,"missing lower bound con. multiplier NOT computed due to mising eq. con. multiplier for QP Object %s (#%d in chain, derived by %s)\n",name,qp->id,qp->transform_name) );
-        }
-      }
-    }
-  }
-
-  if (flg) TRY( PetscInfo3(qp,"missing lower bound con. multiplier computed for QP Object %s (#%d in chain, derived by %s)\n",name,qp->id,qp->transform_name) );
+  TRY( PetscInfo3(qp,"missing lower bound con. multiplier computed for QP Object %s (#%d in chain, derived by %s)\n",name,qp->id,qp->transform_name) );
   PetscFunctionReturn(0);
 }
 

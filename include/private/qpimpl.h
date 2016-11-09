@@ -73,6 +73,7 @@ typedef struct {
 FLLOP_EXTERN PetscLogEvent QPT_HomogenizeEq, QPT_OrthonormalizeEq, QPT_EnforceEqByProjector, QPT_EnforceEqByPenalty, QPT_Dualize, QPT_Dualize_AssembleG, QPT_Dualize_FactorK, QPT_Dualize_PrepareBt, QPT_AllInOne;
 FLLOP_EXTERN PetscLogEvent QPT_SplitBE;
 
+FLLOP_INTERN PetscErrorCode QPCompute_BEt_lambda(QP qp,Vec *BEt_lambda);
 FLLOP_INTERN PetscErrorCode QPDefaultPostSolve(QP child,QP parent);
 FLLOP_INTERN PetscErrorCode QPSetEqMultiplier(QP qp, Vec lambda_E);
 FLLOP_INTERN PetscErrorCode QPSetIneqMultiplier(QP qp, Vec lambda_I);

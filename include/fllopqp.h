@@ -41,9 +41,11 @@ FLLOP_EXTERN PetscErrorCode QPDestroy(QP *qp);
 FLLOP_EXTERN PetscErrorCode QPDump(QP qp);
 
 FLLOP_EXTERN PetscErrorCode QPCheckNullSpace(QP qp,PetscReal tol);
+FLLOP_EXTERN PetscErrorCode QPCompareEqMultiplierWithLeastSquare(QP qp,PetscReal *norm);
 FLLOP_EXTERN PetscErrorCode QPComputeMissingEqMultiplier(QP qp);
 FLLOP_EXTERN PetscErrorCode QPComputeMissingBoxMultipliers(QP qp);
 FLLOP_EXTERN PetscErrorCode QPComputeEqMultiplier(QP qp,Vec lambda_E_LS,Vec BEt_lambda_E_LS);
+FLLOP_EXTERN PetscErrorCode QPComputeLagrangianGradient(QP qp, Vec x, Vec r, char *kkt_name[]);
 FLLOP_EXTERN PetscErrorCode QPComputeObjective(QP qp, Vec x, PetscReal *f);
 FLLOP_EXTERN PetscErrorCode QPComputeObjectiveGradient(QP qp, Vec x, Vec g);
 FLLOP_EXTERN PetscErrorCode QPComputeObjectiveFromGradient(QP qp, Vec x, Vec g, PetscReal *f);

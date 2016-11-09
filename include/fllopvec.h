@@ -10,6 +10,7 @@ FLLOP_EXTERN PetscErrorCode VecCheckSameLayoutVec(Vec v1,Vec v2);
 FLLOP_EXTERN PetscErrorCode VecCheckSameLayoutIS(Vec vec,IS is);
 FLLOP_EXTERN PetscErrorCode VecInvalidate(Vec vec);
 FLLOP_EXTERN PetscErrorCode VecIsInvalidated(Vec vec,PetscBool *flg);
+FLLOP_EXTERN PetscErrorCode VecIsValid(Vec vec,PetscBool *flg);
 FLLOP_EXTERN PetscErrorCode VecHasValidValues(Vec vec,PetscBool *flg);
 FLLOP_EXTERN PetscErrorCode VecNestGetMPI(PetscInt N,Vec *vecs[]);
 FLLOP_EXTERN PetscErrorCode VecNestRestoreMPI(PetscInt N,Vec *vecs[]);

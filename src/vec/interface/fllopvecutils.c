@@ -328,6 +328,16 @@ PetscErrorCode VecIsInvalidated(Vec vec,PetscBool *flg)
   PetscFunctionReturn(0);
 }
 
+#undef __FUNCT__
+#define __FUNCT__ "VecIsValid"
+PetscErrorCode VecIsValid(Vec vec,PetscBool *flg)
+{
+  PetscBool flg_;
+  PetscFunctionBegin;
+  TRY( VecIsInvalidated(vec,&flg_) );
+  *flg = !flg_;
+  PetscFunctionReturn(0);
+}
 
 #undef __FUNCT__
 #define __FUNCT__ "VecHasValidValues"
