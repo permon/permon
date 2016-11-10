@@ -1259,8 +1259,7 @@ PetscErrorCode QPDestroy(QP *qp)
 
    Input Parameter:
 +  qp  - the QP
-.  A   - the matrix
--  flg - symmetry flag, one of QP_SYM_UNDEF, QP_SYM_SYMMETRIC, QP_SYM_UPPER_TRIANGULAR
+-  A   - the Hessian matrix
 @*/
 PetscErrorCode QPSetOperator(QP qp, Mat A)
 {
