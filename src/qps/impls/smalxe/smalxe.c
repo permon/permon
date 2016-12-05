@@ -737,7 +737,7 @@ PetscErrorCode QPSSetFromOptions_SMALXE(PetscOptionItems *PetscOptionsObject,QPS
   TRY( PetscOptionsBool("-qps_smalxe_norm_update_lag","","",smalxe->lag_enabled,&smalxe->lag_enabled,NULL) );
   TRY( PetscOptionsBoolGroupBegin("-qps_smalxe_norm_update_lag_monitor","","",&smalxe->lag_monitor) );
   TRY( PetscOptionsBoolGroupEnd("-qps_smalxe_norm_update_lag_compare","","",&smalxe->lag_compare ) );
-  TRY( PetscOptionsInt("-qps_smalxe_norm_update_lag_offset","","",smalxe->offset,&smalxe->offset,NULL) );
+  TRY( PetscOptionsInt("-qps_smalxe_norm_update_lag_offset","","",smalxe->norm_update_lag_offset,&smalxe->norm_update_lag_offset,NULL) );
   TRY( PetscOptionsInt("-qps_smalxe_norm_update_lag_start","","",smalxe->Jstart,&smalxe->Jstart,NULL) );
   TRY( PetscOptionsInt("-qps_smalxe_norm_update_lag_step","","",smalxe->Jstep,&smalxe->Jstep,NULL) );
   TRY( PetscOptionsInt("-qps_smalxe_norm_update_lag_end","","",smalxe->Jend,&smalxe->Jend,NULL) );
