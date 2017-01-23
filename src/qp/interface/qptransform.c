@@ -286,7 +286,7 @@ PetscErrorCode QPTEnforceEqByProjector(QP qp)
     PetscReal norm1, norm2;
     TRY( VecNorm(qp->b, NORM_2, &norm1) );
     TRY( VecNorm(newb, NORM_2, &norm2) );
-    TRY( FllopDebug2("\n    ||b||\t= %e  b = b_bar\n    ||Pb||\t= %e\n",norm1,norm2) );
+    TRY( FllopDebug2("\n    ||b||\t= %.12e  b = b_bar\n    ||Pb||\t= %.12e\n",norm1,norm2) );
   }
   TRY( QPSetRhs(child, newb) );
   TRY( VecDestroy(&newb) );
@@ -358,7 +358,7 @@ PetscErrorCode QPTEnforceEqByPenalty(QP qp, PetscReal rho)
   } else if (rho < 0) {
     FLLOP_SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_WRONG,"rho must be nonnegative");
   }
-  TRY( PetscInfo1(qp, "using penalty = real %0.2e\n", rho) );
+  TRY( PetscInfo1(qp, "using penalty = real %.12e\n", rho) );
 
   TRY( PetscLogEventBegin(QPT_EnforceEqByPenalty,qp,0,0,0) );
   TRY( QPTransformBegin(QPTEnforceEqByPenalty, QPTEnforceEqByPenalty_PostSolve_Private,NULL, QP_DUPLICATE_DO_NOT_COPY,&qp,&child,&comm) );
@@ -464,10 +464,10 @@ PetscErrorCode QPTHomogenizeEq(QP qp)
     TRY( VecNorm(qp->b,  NORM_2, &norm3) );
     TRY( VecNorm(child->b,NORM_2, &norm4) );
     TRY( FllopDebug4("\n"
-        "    ||ceq||\t= %e  ceq = e\n"
-        "    ||xtilde||\t= %e  xtilde = Beq'*inv(Beq*Beq')*ceq\n"
-        "    ||b||\t= %e  b = d\n"
-        "    ||b_bar||\t= %e  b_bar = b-A*xtilde\n",norm1,norm2,norm3,norm4) );
+        "    ||ceq||\t= %.12e  ceq = e\n"
+        "    ||xtilde||\t= %.12e  xtilde = Beq'*inv(Beq*Beq')*ceq\n"
+        "    ||b||\t= %.12e  b = d\n"
+        "    ||b_bar||\t= %.12e  b_bar = b-A*xtilde\n",norm1,norm2,norm3,norm4) );
   }
 
   TRY( QPSetEq(child,qp->BE,NULL) );                                            /* cE is eliminated */
@@ -704,7 +704,7 @@ static PetscErrorCode QPTDualizeViewBSpectra_Private(Mat B)
   TRY( MatCreateTranspose(B,&Bt) );
   TRY( MatCreateNormal(Bt,&BBt) );
   TRY( MatGetMaxEigenvalue(BBt,NULL,&norm,1e-6,10) );
-  TRY( PetscPrintf(PetscObjectComm((PetscObject)B),"||%s * %s'|| = %.4e (10 power method iterations)\n",name,name,norm) );
+  TRY( PetscPrintf(PetscObjectComm((PetscObject)B),"||%s * %s'|| = %.12e (10 power method iterations)\n",name,name,norm) );
   TRY( MatDestroy(&BBt) );
   TRY( MatDestroy(&Bt) );
   PetscFunctionReturn(0);
@@ -790,10 +790,10 @@ static PetscErrorCode QPTDualizeView_Private(QP qp, QP child)
     if (d) TRY( VecNorm(d, NORM_2, &norm3) );
     if (e) TRY( VecNorm(e, NORM_2, &norm4) );
     TRY( FllopDebug4("\n"
-        "    ||f||\t= %e\n"
-        "    ||c||\t= %e\n"
-        "    ||d||\t= %e  d = B*Kplus*f-c \n"
-        "    ||e||\t= %e  e = R'*f \n",norm1,norm2,norm3,norm4) );
+        "    ||f||\t= %.12e\n"
+        "    ||c||\t= %.12e\n"
+        "    ||d||\t= %.12e  d = B*Kplus*f-c \n"
+        "    ||e||\t= %.12e  e = R'*f \n",norm1,norm2,norm3,norm4) );
   }
   PetscFunctionReturn(0);
 }
@@ -1343,8 +1343,8 @@ PetscErrorCode QPTNormalizeObjective(QP qp)
   TRY( QPChainGetLast(qp,&qp) );
   TRY( MatGetMaxEigenvalue(qp->A, NULL, &norm_A, PETSC_DECIDE, PETSC_DECIDE) );
   TRY( VecNorm(qp->b,NORM_2,&norm_b) );
-  TRY( PetscInfo2(qp,"||A||=%.8e, scale A by 1/||A||=%.8e\n",norm_A,1.0/norm_A) );
-  TRY( PetscInfo2(qp,"||b||=%.8e, scale b by 1/||b||=%.8e\n",norm_b,1.0/norm_b) );
+  TRY( PetscInfo2(qp,"||A||=%.12e, scale A by 1/||A||=%.12e\n",norm_A,1.0/norm_A) );
+  TRY( PetscInfo2(qp,"||b||=%.12e, scale b by 1/||b||=%.12e\n",norm_b,1.0/norm_b) );
   TRY( QPTScaleObjectiveByScalar(qp, 1.0/norm_A, 1.0/norm_b) );
   PetscFunctionReturn(0);
 }
@@ -1359,7 +1359,7 @@ PetscErrorCode QPTNormalizeHessian(QP qp)
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
   TRY( QPChainGetLast(qp,&qp) );
   TRY( MatGetMaxEigenvalue(qp->A, NULL, &norm_A, PETSC_DECIDE, PETSC_DECIDE) );
-  TRY( PetscInfo2(qp,"||A||=%.8e, scale A by 1/||A||=%.8e\n",norm_A,1.0/norm_A) );
+  TRY( PetscInfo2(qp,"||A||=%.12e, scale A by 1/||A||=%.12e\n",norm_A,1.0/norm_A) );
   TRY( QPTScaleObjectiveByScalar(qp, 1.0/norm_A, 1.0/norm_A) );
   PetscFunctionReturnI(0);
 }
@@ -1432,9 +1432,9 @@ PetscErrorCode QPTScaleObjectiveByScalar(QP qp,PetscScalar scale_A,PetscScalar s
 
   if (FllopDebugEnabled) {
     TRY( MatGetMaxEigenvalue(qp->A, NULL, &norm_A, 1e-5, 50) );
-    TRY( FllopDebug1("||A||=%.8e\n",norm_A) );
+    TRY( FllopDebug1("||A||=%.12e\n",norm_A) );
     TRY( VecNorm(qp->b,NORM_2,&norm_b) );
-    TRY( FllopDebug1("||b||=%.8e\n",norm_b) );
+    TRY( FllopDebug1("||b||=%.12e\n",norm_b) );
   }
 
   if (qp->A->ops->duplicate) {
@@ -1476,9 +1476,9 @@ PetscErrorCode QPTScaleObjectiveByScalar(QP qp,PetscScalar scale_A,PetscScalar s
 
   if (FllopDebugEnabled) {
     TRY( MatGetMaxEigenvalue(child->A, NULL, &norm_A, 1e-5, 50) );
-    TRY( FllopDebug1("||A_new||=%.8e\n",norm_A) );
+    TRY( FllopDebug1("||A_new||=%.12e\n",norm_A) );
     TRY( VecNorm(child->b,NORM_2,&norm_b) );
-    TRY( FllopDebug1("||b_new||=%.8e\n",norm_b) );
+    TRY( FllopDebug1("||b_new||=%.12e\n",norm_b) );
   }
   PetscFunctionReturnI(0);
 }
