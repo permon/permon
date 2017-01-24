@@ -452,7 +452,7 @@ PetscErrorCode MatGetMaxEigenvalue(Mat A, Vec v, PetscScalar *lambda_out, PetscR
   if (lambda_out && !v) {
     TRY( PetscObjectComposedDataGetScalar((PetscObject)A,MatGetMaxEigenvalue_composed_id,lambda,flg) );
     if (flg) {
-      TRY( PetscInfo1(fllop,"returning stashed estimate ||A|| = %.8e\n",lambda) );
+      TRY( PetscInfo1(fllop,"returning stashed estimate ||A|| = %.12e\n",lambda) );
       *lambda_out = lambda;
       PetscFunctionReturnI(0);
     }
@@ -499,7 +499,7 @@ PetscErrorCode MatGetMaxEigenvalue(Mat A, Vec v, PetscScalar *lambda_out, PetscR
     TRY( VecScale(v, 1.0/PetscSqrtReal(vAv_vv[1])) );
   }
 
-  TRY( PetscInfo7(fllop,"%s  lambda = %.8e  [err relerr reltol] = [%.8e %.8e %.4e]  actual/max iterations = %d/%d\n", (i<=maxits)?"CONVERGED":"NOT CONVERGED", lambda,err,relerr,tol,i,maxits) );
+  TRY( PetscInfo7(fllop,"%s  lambda = %.12e  [err relerr reltol] = [%.12e %.12e %.12e]  actual/max iterations = %d/%d\n", (i<=maxits)?"CONVERGED":"NOT CONVERGED", lambda,err,relerr,tol,i,maxits) );
 
   if (lambda_out) *lambda_out = lambda;
 
