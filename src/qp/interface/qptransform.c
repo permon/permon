@@ -424,9 +424,17 @@ PetscErrorCode QPTHomogenizeEq(QP qp)
   MPI_Comm          comm;
   QP                child;
   Vec               b_bar, cineq, lb, ub, xtilde;
+  Vec               lb_f, lb_new_f, xtilde_f;
+  IS                isf;
 
   FllopTracedFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
+  lb = NULL;
+  ub = NULL;
+  isf = NULL;
+  lb_f = NULL;
+  lb_new_f = NULL;
+  xtilde_f = NULL;
 
   TRY( QPChainGetLast(qp,&qp) );
   if (!qp->cE) {
@@ -474,15 +482,69 @@ PetscErrorCode QPTHomogenizeEq(QP qp)
   TRY( QPSetIneq(child, qp->BI, cineq) );
   TRY( VecDestroy(&cineq) );
 
-  lb = NULL;
-  ub = NULL;
+  if (qp->lb) {
+    TRY( PetscObjectQuery((PetscObject)qp->lb,"is_finite",(PetscObject*)&isf) );
+    if (isf) TRY( PetscInfo(qp,"is_finite composed to lb found\n") );
+  }
+
   if (qp->lb) {
     TRY( VecDuplicate(qp->lb, &lb) );
-    TRY( VecWAXPY(lb, -1.0, xtilde, qp->lb) );                                  /* lb = lb - xtilde */
+    if (isf) {
+      TRY( VecSet(lb,PETSC_NINFINITY) );
+      TRY( VecGetSubVector(qp->lb,isf,&lb_f) );
+      TRY( VecGetSubVector(xtilde,isf,&xtilde_f) );
+      TRY( VecGetSubVector(lb,isf,&lb_new_f) );
+      TRY( VecWAXPY(lb_new_f, -1.0, xtilde_f, lb_f) );                          /* lb = lb - xtilde */
+      TRY( VecRestoreSubVector(qp->lb,isf,&lb_f) );
+      TRY( VecRestoreSubVector(xtilde,isf,&xtilde_f) );
+      TRY( VecRestoreSubVector(lb,isf,&lb_new_f) );
+    } else {
+      TRY( VecWAXPY(lb, -1.0, xtilde, qp->lb) );                                /* lb = lb - xtilde */
+    }
   }
+
+  if (FllopDebugEnabled && isf) {
+    PetscReal norm1,norm2,norm3;
+    Vec xtilde_i;
+    IS isif;
+
+    TRY( ISComplementVec(isf,xtilde,&isif) );
+    TRY( VecGetSubVector(xtilde,isif,&xtilde_i) );
+    TRY( VecNorm(xtilde_i, NORM_2, &norm1) );
+    TRY( VecRestoreSubVector(xtilde,isif,&xtilde_i) );
+    TRY( FllopDebug1("\n"
+        "    ||xtilde(~is_finite)|| = %.12e\n",norm1) );
+    
+    TRY( VecGetSubVector(qp->lb,isf,&lb_f) );
+    TRY( VecGetSubVector(xtilde,isf,&xtilde_f) );
+    TRY( VecGetSubVector(lb,isf,&lb_new_f) );
+    TRY( VecNorm(lb_f, NORM_2, &norm1) );
+    TRY( VecNorm(xtilde_f, NORM_2, &norm2) );
+    TRY( VecNorm(lb_new_f, NORM_2, &norm3) );
+    TRY( VecRestoreSubVector(qp->lb,isf,&lb_f) );
+    TRY( VecRestoreSubVector(xtilde,isf,&xtilde_f) );
+    TRY( VecRestoreSubVector(lb,isf,&lb_new_f) );
+
+    TRY( FllopDebug3("\n"
+        "        ||lb(is_finite)|| = %.12e\n"
+        "    ||xtilde(is_finite)|| = %.12e\n"
+        "    ||lb_new(is_finite)|| = %.12e    lb_new = lb - xtilde\n",norm1,norm2,norm3) );
+  }
+
   if (qp->ub) {
     TRY( VecDuplicate(qp->ub, &ub) );
-    TRY( VecWAXPY(ub, -1.0, xtilde, qp->ub) );                                  /* ub = ub - xtilde */
+    if (isf) {
+      TRY( VecSet(ub,PETSC_INFINITY) );
+      TRY( VecGetSubVector(qp->ub,isf,&lb_f) );
+      TRY( VecGetSubVector(xtilde,isf,&xtilde_f) );
+      TRY( VecGetSubVector(ub,isf,&lb_new_f) );
+      TRY( VecWAXPY(lb_new_f, -1.0, xtilde_f, lb_f) );                          /* ub = ub - xtilde */
+      TRY( VecRestoreSubVector(qp->ub,isf,&lb_f) );
+      TRY( VecRestoreSubVector(xtilde,isf,&xtilde_f) );
+      TRY( VecRestoreSubVector(ub,isf,&lb_new_f) );
+    } else {
+      TRY( VecWAXPY(ub, -1.0, xtilde, qp->ub) );                                /* ub = ub - xtilde */
+    }
   }
   TRY( QPSetBox(child, lb, ub) );
   TRY( VecDestroy(&lb) );
@@ -1061,6 +1123,8 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
       TRY( VecGetSubVector(lb,rows[1],&lbI) );
       TRY( VecSet(lbI,0.0) );
       TRY( VecRestoreSubVector(lb,rows[1],&lbI) );
+
+      TRY( PetscObjectCompose((PetscObject)lb,"is_finite",(PetscObject)rows[1]) );
     } else {
       /* lb = 0 */
       TRY( VecSet(lb,0.0) );
