@@ -45,6 +45,17 @@ PetscErrorCode QPSMonitorDefault_MPGP(QPS qps,PetscInt n,PetscViewer viewer)
 }
 
 #undef __FUNCT__
+#define __FUNCT__ "QPSMPGPGetCurrentStepType_MPGP"
+PetscErrorCode QPSMPGPGetCurrentStepType_MPGP(QPS qps,char *stepType)
+{
+  QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
+
+  PetscFunctionBegin;
+  *stepType = mpgp->currentStepType;
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ "QPSMPGPGetAlpha_MPGP"
 static PetscErrorCode QPSMPGPGetAlpha_MPGP(QPS qps,PetscReal *alpha,QPSScalarArgType *argtype)
 {
@@ -581,6 +592,7 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
       {
         /* CONJUGATE GRADIENT STEP */
         ncg++;                                    /* increase CG step counter */
+        mpgp->currentStepType = 'c';
 
         /* make CG step */
         TRY( VecAXPY(x, -acg, p) );               /* x=x-acg*p      */
@@ -618,12 +630,14 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
         TRY( VecCopy(phi, p) );                   /* p=phi           */
 
         nexp++;                                   /* increase expansion step counter */
+        mpgp->currentStepType = 'e';
       }
     }
     else                                          /* proportioning step  */
     {
       /* PROPORTIONING STEP */
       nprop++;                                    /* increase proportioning step counter */
+      mpgp->currentStepType = 'p';
  
       TRY( VecCopy(beta, p) );                    /* p=beta           */
       TRY( MatMult(A, p, Ap) );                   /* Ap=A*p */
@@ -793,6 +807,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
   mpgp->nexp                 = 0;
   mpgp->nmv                  = 0;
   mpgp->nprop                = 0;
+  mpgp->currentStepType      = ' ';
   
   /*
        Sets the functions that are associated with this data structure 
@@ -806,6 +821,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
   qps->ops->monitor          = QPSMonitorDefault_MPGP;
   qps->ops->viewconvergence  = QPSViewConvergence_MPGP;
 
+  TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetCurrentStepType_MPGP_C",QPSMPGPGetCurrentStepType_MPGP) );
   TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetAlpha_MPGP_C",QPSMPGPGetAlpha_MPGP) );
   TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetAlpha_MPGP_C",QPSMPGPSetAlpha_MPGP) );
   TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetGamma_MPGP_C",QPSMPGPGetGamma_MPGP) );
@@ -821,6 +837,17 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
 }
 
 
+#undef __FUNCT__
+#define __FUNCT__ "QPSMPGPGetCurrentStepType"
+PetscErrorCode QPSMPGPGetCurrentStepType(QPS qps,char *stepType)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
+  if (stepType) PetscValidRealPointer(stepType,2);
+  *stepType = ' ';
+  TRY( PetscTryMethod(qps,"QPSMPGPGetCurrentStepType_MPGP_C",(QPS,char*),(qps,stepType)) );
+  PetscFunctionReturn(0);
+}
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSMPGPGetAlpha"

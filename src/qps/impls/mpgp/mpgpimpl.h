@@ -24,6 +24,7 @@ typedef struct {
   PetscInt  ncg;              /* ... cg step counter                  */ 
   PetscInt  nprop;            /* ... proportional step counter        */
   PetscInt  nexp;             /* ... expansion step counter           */
+  char      currentStepType;
 } QPS_MPGP;
 
 #endif

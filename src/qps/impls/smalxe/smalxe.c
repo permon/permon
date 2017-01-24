@@ -547,7 +547,7 @@ PETSC_STATIC_INLINE PetscErrorCode QPSConverged_Inner_SMALXE_Monitor_Outer(QPS q
   }
   if (header) {
     if (smalxe->monitor) {
-      TRY( PetscPrintf(PetscObjectComm((PetscObject)qps_outer),"    in  G=||g||    E=||Bx||/rtol_E     max(G,E)         ttol_outer       G                min(M1||Bx||,eta)          M1||Bx||   eta        gtol\n") );
+      TRY( PetscPrintf(PetscObjectComm((PetscObject)qps_outer),"    in   G=||g||    E=||Bx||/rtol_E     max(G,E)         ttol_outer       G                min(M1||Bx||,eta)          M1||Bx||   eta        gtol\n") );
     } else if (smalxe->monitor_excel && !smalxe->inner_iter_accu) {
       TRY( PetscPrintf(PetscObjectComm((PetscObject)qps_outer),"in_ac    in        ||g||       ||Bx||    out           M           rho               Lag\n") );
     }
@@ -561,11 +561,13 @@ PETSC_STATIC_INLINE PetscErrorCode QPSConverged_Inner_SMALXE_Monitor_Inner(QPS q
 {
   QPS qps_outer = cctx->qps_outer;
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps_outer->data;
+  char stepType;
 
   PetscFunctionBegin;
+  TRY( QPSMPGPGetCurrentStepType(qps_inner,&stepType) );
   if (smalxe->monitor) {
-    TRY( PetscPrintf(PetscObjectComm((PetscObject)qps_outer),"  %4d  %.4e   %.4e    %c = %.8e %c %.8e   %.8e %c %.8e = %-8s  %.3e  %.3e  %.3e\n",
-        i, gnorm, smalxe->enorm, (gnorm > smalxe->enorm)?'G':'E', qps_outer->rnorm, (qps_outer->rnorm < cctx->ttol_outer)?'<':'>', cctx->ttol_outer,
+    TRY( PetscPrintf(PetscObjectComm((PetscObject)qps_outer),"  %4d %c %.4e   %.4e    %c = %.8e %c %.8e   %.8e %c %.8e = %-8s  %.3e  %.3e  %.3e\n",
+        i, stepType, gnorm, smalxe->enorm, (gnorm > smalxe->enorm)?'G':'E', qps_outer->rnorm, (qps_outer->rnorm < cctx->ttol_outer)?'<':'>', cctx->ttol_outer,
         gnorm, (gnorm<qps_inner->atol)?'<':'>', qps_inner->atol, (cctx->MNormBu<smalxe->eta)?"M1||Bu||":"eta", cctx->MNormBu, smalxe->eta, cctx->gtol) );
   } else if (smalxe->monitor_excel) {
     PetscReal rho,Lag;

@@ -85,6 +85,7 @@ FLLOP_EXTERN PetscErrorCode QPSKSPGetType(QPS qps,KSPType *type);
 FLLOP_EXTERN PetscErrorCode QPSTaoGetTao(QPS qps,Tao *tao);
 
 /* MPGP */
+FLLOP_EXTERN PetscErrorCode QPSMPGPGetCurrentStepType(QPS qps,char *stepType);
 FLLOP_EXTERN PetscErrorCode QPSMPGPSetAlpha(QPS qps,PetscReal alpha,QPSScalarArgType argtype);
 FLLOP_EXTERN PetscErrorCode QPSMPGPGetAlpha(QPS qps,PetscReal *alpha,QPSScalarArgType *argtype);
 FLLOP_EXTERN PetscErrorCode QPSMPGPSetGamma(QPS qps,PetscReal gamma);
