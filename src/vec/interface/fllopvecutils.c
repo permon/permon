@@ -44,7 +44,7 @@ PetscErrorCode VecMergeAndDestroy(MPI_Comm comm, Vec *local_in, Vec *global_out)
   PetscValidPointer(global_out,3);
   local = *local_in;
   TRY( MPI_Comm_size(comm,&size) );
-  TRY( PetscBoolGlobalOr(comm,(PetscBool)local,&any_nonnull) );
+  TRY( PetscBoolGlobalOr(comm, local ? PETSC_TRUE : PETSC_FALSE, &any_nonnull) );
   if (!any_nonnull) { /* all local vecs are null => global vec is null */
     *global_out = NULL;
     PetscFunctionReturn(0);
