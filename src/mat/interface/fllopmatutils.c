@@ -678,13 +678,13 @@ PetscErrorCode MatMergeAndDestroy(MPI_Comm comm, Mat *local_in, Vec column_layou
   }
 
   TRY( MPI_Comm_size(comm,&size) );
-  TRY( PetscBoolGlobalOr( comm,local_in,&any_nonnull) );
+  TRY( PetscBoolGlobalOr( comm,(PetscBool)local_in,&any_nonnull) );
   if (!any_nonnull) {
     *global_out = NULL;
     PetscFunctionReturnI(0);
   }
 
-  TRY( PetscBoolGlobalAnd(comm,local_in,&all_nonnull) );
+  TRY( PetscBoolGlobalAnd(comm,(PetscBool)local_in,&all_nonnull) );
   if (!all_nonnull) {
     TRY( MPI_Comm_rank(comm,&rank) );
     FLLOP_SETERRQ1(comm,PETSC_ERR_ARG_NULL,"null local matrix on rank %d; currently, local matrices must be either all non-null or all null", rank);

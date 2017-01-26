@@ -55,12 +55,6 @@ FLLOP_EXTERN PetscErrorCode _fllop_ierr;
 #define FLLOP_ASSERT4(c,cstr,a1,a2,a3,a4)         if (PetscUnlikely(!(c))) FLLOP_SETERRQ4(PETSC_COMM_SELF,PETSC_ERR_PLIB, "Assertion failed: " cstr, a1,a2,a3,a4);
 #define FLLOP_ASSERT5(c,cstr,a1,a2,a3,a4,a5)      if (PetscUnlikely(!(c))) FLLOP_SETERRQ4(PETSC_COMM_SELF,PETSC_ERR_PLIB, "Assertion failed: " cstr, a1,a2,a3,a4,a5);
 
-#define PetscIntGlobalSum( comm, loc, glob) MPI_Allreduce((PetscMPIInt*) &(loc), (PetscMPIInt*) (glob), 1, MPIU_INT,  MPIU_SUM, (comm)) 
-#define PetscIntGlobalMax( comm, loc, glob) MPI_Allreduce((PetscMPIInt*) &(loc), (PetscMPIInt*) (glob), 1, MPIU_INT,  MPIU_MAX, (comm))
-#define PetscIntGlobalMin( comm, loc, glob) MPI_Allreduce((PetscMPIInt*) &(loc), (PetscMPIInt*) (glob), 1, MPIU_INT,  MPIU_MIN, (comm))
-#define PetscBoolGlobalAnd(comm, loc, glob) MPI_Allreduce((PetscBool*)   &(loc), (PetscBool*)   (glob), 1, MPIU_BOOL, MPI_LAND, (comm))
-#define PetscBoolGlobalOr( comm, loc, glob) MPI_Allreduce((PetscBool*)   &(loc), (PetscBool*)   (glob), 1, MPIU_BOOL, MPI_LOR,  (comm))
-
 #define FllopDebug(msg)                       0; do { if (FllopDebugEnabled) PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg); } while(0)
 #define FllopDebug1(msg,a1)                   0; do { if (FllopDebugEnabled) PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1); } while(0)
 #define FllopDebug2(msg,a1,a2)                0; do { if (FllopDebugEnabled) PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1,a2); } while(0)
@@ -68,6 +62,16 @@ FLLOP_EXTERN PetscErrorCode _fllop_ierr;
 #define FllopDebug4(msg,a1,a2,a3,a4)          0; do { if (FllopDebugEnabled) PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1,a2,a3,a4); } while(0)
 #define FllopDebug5(msg,a1,a2,a3,a4,a5)       0; do { if (FllopDebugEnabled) PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1,a2,a3,a4,a5); } while(0)
 #define FllopDebug6(msg,a1,a2,a3,a4,a5,a6)    0; do { if (FllopDebugEnabled) PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1,a2,a3,a4,a5,a6); } while(0)
+
+PETSC_STATIC_INLINE PetscErrorCode PetscBoolGlobalAnd(MPI_Comm comm,PetscBool loc,PetscBool *glob)
+{
+  return MPI_Allreduce(&loc,glob,1,MPIU_BOOL,MPI_LAND,comm);
+}
+
+PETSC_STATIC_INLINE PetscErrorCode PetscBoolGlobalOr(MPI_Comm comm,PetscBool loc,PetscBool *glob)
+{
+  return MPI_Allreduce(&loc,glob,1,MPIU_BOOL,MPI_LOR,comm);
+}
 
 PETSC_STATIC_INLINE void FLLTIC(PetscLogDouble *t) {
     PetscTime(t);
