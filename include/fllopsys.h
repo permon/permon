@@ -26,6 +26,10 @@
   used to distinguish between PETSc and FLLOP sys routines while using PetscInfo*,
 */
 typedef struct _p_FLLOP* FLLOP;
+/*
+  StateContainer is simple structure containing PetscObjectState
+*/
+typedef struct _n_StateContainer *StateContainer;
 FLLOP_EXTERN PetscClassId FLLOP_CLASSID;
 FLLOP_EXTERN FLLOP fllop;
 FLLOP_EXTERN PetscBool FllopInfoEnabled, FllopObjectInfoEnabled, FllopDebugEnabled;

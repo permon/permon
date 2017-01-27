@@ -961,22 +961,21 @@ PetscErrorCode QPComputeMissingBoxMultipliers(QP qp)
   Vec lambda_lb = qp->lambda_lb;
   Vec lambda_ub = qp->lambda_ub;
   Vec r = qp->xwork;
-  PetscBool flg,flg2;
+  PetscBool flg=PETSC_TRUE,flg2=PETSC_TRUE;
   QP qp_E;
-  const char *name;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
   TRY( QPSetUp(qp) );
 
   if (lb) {
-    TRY( VecIsInvalidated(lambda_lb,&flg) );
+    TRY( VecIsValid(lambda_lb,&flg) );
   }
   if (ub) {
-    TRY( VecIsInvalidated(lambda_ub,&flg2) );
+    TRY( VecIsValid(lambda_ub,&flg2) );
   }
   if (!lb && !ub) PetscFunctionReturn(0);
-  if ((!flg) && (!flg2)) PetscFunctionReturn(0);
+  if (flg && flg2) PetscFunctionReturn(0);
 
   /* currently cannot handle this situation, leave multipliers untouched */
   if (qp->BI) PetscFunctionReturn(0);
@@ -998,8 +997,13 @@ PetscErrorCode QPComputeMissingBoxMultipliers(QP qp)
     TRY( VecPointwiseMax(lambda_lb,lambda_lb,r) );
     TRY( VecPointwiseMax(lambda_ub,lambda_ub,r) );
   }
-  TRY( PetscObjectGetName((PetscObject)qp,&name) );
-  TRY( PetscInfo3(qp,"missing lower bound con. multiplier computed for QP Object %s (#%d in chain, derived by %s)\n",name,qp->id,qp->transform_name) );
+
+  {
+    const char *name_qp,*name_lambda;
+    TRY( PetscObjectGetName((PetscObject)qp,&name_qp) );
+    TRY( PetscObjectGetName((PetscObject)qp->lambda_lb,&name_lambda) );
+    TRY( PetscInfo4(qp,"missing lower bound con. multiplier %s computed for QP Object %s (#%d in chain, derived by %s)\n",name_lambda,name_qp,qp->id,qp->transform_name) );
+  }
   PetscFunctionReturn(0);
 }
 

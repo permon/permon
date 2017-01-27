@@ -12,4 +12,7 @@ struct _p_FLLOP {
   PETSCHEADER(int);
 };
 
+struct _n_StateContainer {
+  PetscObjectState state;
+};
 #endif

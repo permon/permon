@@ -292,17 +292,19 @@ PetscErrorCode VecCheckSameLayoutVec(Vec v1, Vec v2)
 #define __FUNCT__ "VecInvalidate"
 PetscErrorCode VecInvalidate(Vec vec)
 {
-  PetscInt          n;
-  PetscScalar       *x;
+  PetscContainer container;
+  StateContainer sc;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(vec,VEC_CLASSID,1);
-  TRY( VecGetLocalSize(vec,&n) );
-  if (n) {
-    TRY( VecGetArray(vec,&x) );
-    x[0] = NAN;
-    TRY( VecRestoreArray(vec,&x) );
-  }
+  TRY( VecSetInf(vec) );
+
+  TRY( PetscContainerCreate(PetscObjectComm((PetscObject)vec),&container) );
+  TRY( PetscNew(&sc) );
+  TRY( PetscObjectStateGet((PetscObject)vec,&sc->state) );
+  TRY( PetscContainerSetPointer(container,(void*)sc) );
+  TRY( PetscObjectCompose((PetscObject)vec,"VecInvalidState",(PetscObject)container) );
+  TRY( PetscContainerDestroy(&container) );
   PetscFunctionReturn(0);
 }
 
@@ -310,21 +312,26 @@ PetscErrorCode VecInvalidate(Vec vec)
 #define __FUNCT__ "VecIsInvalidated"
 PetscErrorCode VecIsInvalidated(Vec vec,PetscBool *flg)
 {
-  PetscInt          n;
-  const PetscScalar *x;
-  PetscBool tflg;
+  PetscContainer container;
+  StateContainer sc;
+  PetscObjectState state;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(vec,VEC_CLASSID,1);
   PetscValidPointer(flg,2);
-  TRY( VecGetLocalSize(vec,&n) );
-  tflg = PETSC_TRUE;
-  if (n) {
-    TRY( VecGetArrayRead(vec,&x) );
-    tflg = PetscIsInfOrNanScalar(x[0]);
-    TRY( VecRestoreArrayRead(vec,&x) );
+  TRY( PetscObjectQuery((PetscObject)vec,"VecInvalidState",(PetscObject*)&container) );
+  if (!container) {
+    *flg = PETSC_FALSE;
+    PetscFunctionReturn(0);
   }
-  TRY( PetscBoolGlobalAnd(PetscObjectComm((PetscObject)vec),tflg,flg) );
+  TRY( PetscContainerGetPointer(container,(void**)&sc) );
+  TRY( PetscObjectStateGet((PetscObject)vec,&state) );
+  if (state > sc->state) {
+    *flg = PETSC_FALSE;
+    TRY( PetscObjectCompose((PetscObject)vec,"VecInvalidState",NULL) );
+  } else {
+    *flg = PETSC_TRUE;
+  }
   PetscFunctionReturn(0);
 }
 
