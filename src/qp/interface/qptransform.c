@@ -615,6 +615,12 @@ PetscErrorCode QPTOrthonormalizeEq(QP qp,MatOrthType type,MatOrthForm form)
   }
 
   FllopTraceBegin;
+  if (type == MAT_ORTH_INEXACT && qp->cE) {
+    TRY( PetscInfo(qp, "MAT_ORTH_INEXACT and nonzero lin. eq. con. RHS prescribed ==> automatically calling QPTHomogenizeEq\n") );
+    TRY( QPTHomogenizeEq(qp) );
+    TRY( QPChainGetLast(qp,&qp) );
+  }
+
   TRY( PetscLogEventBegin(QPT_OrthonormalizeEq,qp,0,0,0) );
   TRY( QPTransformBegin(QPTOrthonormalizeEq, QPTPostSolve_QPTOrthonormalizeEq,QPTPostSolveDestroy_QPTOrthonormalizeEq, QP_DUPLICATE_COPY_POINTERS,&qp,&child,&comm) );
 
@@ -631,7 +637,7 @@ PetscErrorCode QPTOrthonormalizeEq(QP qp,MatOrthType type,MatOrthForm form)
 
   TcE=NULL;
   if (cE) {
-    if (type == MAT_ORTH_IMPLICIT) {
+    if (type == MAT_ORTH_IMPLICIT || type == MAT_ORTH_INEXACT) {
       TRY( PetscObjectReference((PetscObject)cE) );
       TcE = cE;
     } else {
@@ -652,6 +658,8 @@ PetscErrorCode QPTOrthonormalizeEq(QP qp,MatOrthType type,MatOrthForm form)
     TRY( PetscObjectReference((PetscObject)qp->pf->GGtinv) );
     TRY( PetscObjectReference((PetscObject)qp->pf->Gt) );
     TRY( QPPFSetUp(child->pf) );
+  } else if (type == MAT_ORTH_INEXACT) {
+    TRY( PetscObjectSetOptionsPrefix((PetscObject)child->pf,"inexact_") );
   }
 
   TRY( MatDestroy(&TBE) );

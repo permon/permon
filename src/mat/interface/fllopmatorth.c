@@ -4,7 +4,7 @@
 
 PetscLogEvent Mat_OrthColumns;
 
-const char *MatOrthTypes[]={"none","gs","gslingen","cholesky","implicit","MatOrthType","MAT_ORTH_",0};
+const char *MatOrthTypes[]={"none","gs","gslingen","cholesky","implicit","inexact","MatOrthType","MAT_ORTH_",0};
 const char *MatOrthForms[]={"implicit","explicit","MatOrthForm","MAT_ORTH_",0};
 
 #undef __FUNCT__
@@ -424,6 +424,7 @@ PetscErrorCode MatOrthColumns(Mat A, MatOrthType type, MatOrthForm form, Mat *Q_
       case MAT_ORTH_CHOLESKY:
         f = MatOrthColumns_Cholesky_Default; break;
       case MAT_ORTH_IMPLICIT:
+      case MAT_ORTH_INEXACT:
         f = MatOrthColumns_Implicit_Default; break;
       case MAT_ORTH_NONE:
         FLLOP_ASSERT(0,"this should never happen");
@@ -493,7 +494,7 @@ PetscErrorCode MatOrthRows(Mat A, MatOrthType type, MatOrthForm form, Mat *Qt_ne
   Mat At,Qt,Tt;
 
   PetscFunctionBegin;
-  if (type == MAT_ORTH_IMPLICIT) {
+  if (type == MAT_ORTH_IMPLICIT || type == MAT_ORTH_INEXACT) {
     TRY( MatOrthRows_Implicit_Default(A,type,form,Qt_new,T_new) );
     TRY( PetscObjectSetName((PetscObject)*Qt_new,"Qt") );
     TRY( PetscObjectSetName((PetscObject)*T_new,"T") );

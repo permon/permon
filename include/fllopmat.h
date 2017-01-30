@@ -138,7 +138,7 @@ FLLOP_EXTERN PetscErrorCode FllopMatConvertBlocks(Mat A, MatType newtype,MatReus
 FLLOP_EXTERN PetscErrorCode MatRemoveGluingOfDirichletDofs(Mat Bgt, Vec cg, Mat Bdt, Mat *Bgt_new, Vec *cg_new, IS *is_new);
 
 /*   ORTHONORMALIZATION   */
-typedef enum {MAT_ORTH_NONE=0, MAT_ORTH_GS, MAT_ORTH_GS_LINGEN, MAT_ORTH_CHOLESKY, MAT_ORTH_IMPLICIT} MatOrthType;
+typedef enum {MAT_ORTH_NONE=0, MAT_ORTH_GS, MAT_ORTH_GS_LINGEN, MAT_ORTH_CHOLESKY, MAT_ORTH_IMPLICIT, MAT_ORTH_INEXACT} MatOrthType;
 typedef enum {MAT_ORTH_FORM_IMPLICIT=0, MAT_ORTH_FORM_EXPLICIT=1} MatOrthForm;
 FLLOP_EXTERN const char *MatOrthTypes[], *MatOrthForms[];
 FLLOP_EXTERN PetscErrorCode MatOrthColumns(Mat mat, MatOrthType type, MatOrthForm form, Mat *matOrth, Mat *T);

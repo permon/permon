@@ -266,7 +266,8 @@ static PetscErrorCode QPPFSetUpGGt_Private(QPPF cp, Mat *newGGt)
     TRY( PetscLogObjectParent((PetscObject)cp,(PetscObject)GGt) );
     TRY( PetscObjectIncrementTabLevel((PetscObject)GGt,(PetscObject)cp,1) );
 
-    TRY( MatSetOptionsPrefix(GGt, "qppf_") );
+    TRY( MatSetOptionsPrefix(GGt, ((PetscObject)cp)->prefix) );
+    TRY( MatAppendOptionsPrefix(GGt, "qppf_") );
     TRY( MatSetOption(GGt, MAT_SYMMETRIC, PETSC_TRUE) );
     TRY( MatSetOption(GGt, MAT_SYMMETRY_ETERNAL, PETSC_TRUE) );
     TRY( MatSetOption(GGt, MAT_SPD, PETSC_TRUE) );
@@ -301,7 +302,8 @@ static PetscErrorCode QPPFSetUpGGtinv_Private(QPPF cp, Mat *GGtinv_new)
   TRY( PetscLogObjectParent((PetscObject)cp,(PetscObject)GGtinv) );
   TRY( PetscObjectIncrementTabLevel((PetscObject) GGtinv, (PetscObject) cp, 1) );
   TRY( PetscObjectSetName((PetscObject) GGtinv, "GGtinv") );
-  TRY( MatSetOptionsPrefix(GGtinv, "qppf_") );
+  TRY( MatSetOptionsPrefix(GGtinv, ((PetscObject)cp)->prefix) );
+  TRY( MatAppendOptionsPrefix(GGtinv, "qppf_") );
   TRY( MatDestroy(&GGt) );
   
   TRY( MatInvSetRedundancy(GGtinv, cp->redundancy) );
