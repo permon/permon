@@ -62,6 +62,7 @@ typedef struct {
   PetscInt  norm_update_lag_offset, Jstart, Jstep, Jend;
   PetscReal lower, upper;
 
+  PetscBool knoll;
   PetscErrorCode (*updateNormBu)(QPS qps,Vec u,PetscReal *normBu,PetscReal *enorm);
 } QPS_SMALXE;
 

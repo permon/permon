@@ -759,6 +759,7 @@ PetscErrorCode QPSSetFromOptions_SMALXE(PetscOptionItems *PetscOptionsObject,QPS
   TRY( PetscOptionsReal("-qps_smalxe_norm_update_lag_lower","","",smalxe->lower,&smalxe->lower,NULL) );
   TRY( PetscOptionsReal("-qps_smalxe_norm_update_lag_upper","","",smalxe->upper,&smalxe->upper,NULL) );
 
+  TRY( PetscOptionsBool("-qps_smalxe_knoll","","",smalxe->knoll,&smalxe->knoll,NULL) );
   smalxe->setfromoptionscalled = PETSC_TRUE;
   TRY( PetscOptionsTail() );
   PetscFunctionReturn(0);
@@ -926,6 +927,14 @@ PetscErrorCode QPSSolve_SMALXE(QPS qps)
 
   /* initialize Btmu as zero vector */
   TRY( VecZeroEntries(Btmu) );
+
+  /* use projected right hand side as initial guess (the Knoll trick) */
+  if (smalxe->knoll) {
+    QPPF qppf_exact=NULL;
+    TRY( PetscObjectQuery((PetscObject)qp->pf,"exact",(PetscObject*)&qppf_exact) );
+    if (!qppf_exact) qppf_exact = qp->pf;
+    TRY( QPPFApplyP(qppf_exact,b,u) );
+  }
 
   /* compute initial value of Lagrangian */
   TRY( QPComputeObjective(qp_inner,u,&Lag_old) );
@@ -1189,6 +1198,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_SMALXE(QPS qps)
   smalxe->lower       = 0.1;
   smalxe->upper       = 1.1;
 
+  smalxe->knoll       = PETSC_FALSE;
   /* set SMALXE-specific default maximum number of outer iterations */
   qps->max_it = 100;
 

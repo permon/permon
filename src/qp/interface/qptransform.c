@@ -660,6 +660,7 @@ PetscErrorCode QPTOrthonormalizeEq(QP qp,MatOrthType type,MatOrthForm form)
     TRY( QPPFSetUp(child->pf) );
   } else if (type == MAT_ORTH_INEXACT) {
     TRY( PetscObjectSetOptionsPrefix((PetscObject)child->pf,"inexact_") );
+    TRY( PetscObjectCompose((PetscObject)child->pf,"exact",(PetscObject)qp->pf) );
   }
 
   TRY( MatDestroy(&TBE) );
