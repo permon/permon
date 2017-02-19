@@ -319,18 +319,22 @@ static PetscErrorCode QPTEnforceEqByPenalty_PostSolve_Private(QP child,QP parent
 //TODO allow to set multiple of max eigenvalue
 #undef __FUNCT__
 #define __FUNCT__ "QPTEnforceEqByPenalty"
-PetscErrorCode QPTEnforceEqByPenalty(QP qp, PetscReal rho)
+PetscErrorCode QPTEnforceEqByPenalty(QP qp, PetscReal rho_user, PetscBool rho_direct)
 {
   MPI_Comm         comm;
   Mat              newA=NULL;
   Vec              newb=NULL;
   QP               child;
+  PetscReal        rho,maxeig;
+  PetscReal        maxeig_tol=PETSC_DECIDE;
+  PetscInt         maxeig_iter=PETSC_DECIDE;
 
   FllopTracedFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  PetscValidLogicalCollectiveReal(qp,rho,2);
+  PetscValidLogicalCollectiveReal(qp,rho_user,2);
+  PetscValidLogicalCollectiveBool(qp,rho_direct,3);
 
-  if (!rho) {
+  if (!rho_user) {
     TRY( PetscInfo(qp, "penalty=0.0 ==> no effect, returning...\n") );
     PetscFunctionReturn(0);
   }
@@ -353,9 +357,18 @@ PetscErrorCode QPTEnforceEqByPenalty(QP qp, PetscReal rho)
       TRY( QPChainGetLast(qp,&qp) );
     }
   }
-  if (rho==PETSC_DECIDE) {
-    TRY( MatGetMaxEigenvalue(qp->A, NULL, &rho, 1e-4, 50) );
-  } else if (rho < 0) {
+
+  TRY( PetscOptionsGetReal(NULL,NULL,"-qpt_penalize_maxeig_tol",&maxeig_tol,NULL) );
+  TRY( PetscOptionsGetInt(NULL,NULL,"-qpt_penalize_maxeig_iter",&maxeig_iter,NULL) );
+
+  if (!rho_direct) {
+    TRY( MatGetMaxEigenvalue(qp->A, NULL, &maxeig, maxeig_tol, maxeig_iter) );
+    rho = rho_user * maxeig;
+  } else {
+    rho = rho_user;
+  }
+
+  if (rho < 0) {
     FLLOP_SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_WRONG,"rho must be nonnegative");
   }
   TRY( PetscInfo1(qp, "using penalty = real %.12e\n", rho) );
@@ -1626,7 +1639,7 @@ PetscErrorCode QPTSplitBE(QP qp)
 
 #undef __FUNCT__
 #define __FUNCT__ "QPTAllInOne"
-PetscErrorCode QPTAllInOne(QP qp,MatInvType invType,PetscBool dual,PetscBool project,PetscReal penalty,PetscBool regularize)
+PetscErrorCode QPTAllInOne(QP qp,MatInvType invType,PetscBool dual,PetscBool project,PetscReal penalty,PetscBool penalty_direct,PetscBool regularize)
 {
   MatRegularizationType regularize_e;
   PetscBool freeze=PETSC_FALSE, normalize=PETSC_FALSE, normalize_hessian=PETSC_FALSE;
@@ -1672,7 +1685,7 @@ PetscErrorCode QPTAllInOne(QP qp,MatInvType invType,PetscBool dual,PetscBool pro
     TRY( QPTNormalizeHessian(qp) );
   }
 
-  TRY( QPTEnforceEqByPenalty(qp,penalty) );
+  TRY( QPTEnforceEqByPenalty(qp,penalty,penalty_direct) );
   TRY( PetscLogEventEnd  (QPT_AllInOne,qp,0,0,0) );
   PetscFunctionReturnI(0);
 }
@@ -1684,6 +1697,7 @@ PetscErrorCode QPTFromOptions(QP qp)
   MatInvType invType=MAT_INV_MONOLITHIC;
   PetscBool ddm=PETSC_FALSE, dual=PETSC_FALSE, feti=PETSC_FALSE, project=PETSC_FALSE;
   PetscReal penalty=0.0;
+  PetscBool penalty_direct=PETSC_FALSE;
   PetscBool regularize=PETSC_TRUE;
 
   PetscFunctionBegin;
@@ -1696,7 +1710,7 @@ PetscErrorCode QPTFromOptions(QP qp)
       project         = PETSC_TRUE;
     }
     TRY( PetscOptionsReal("-penalty","QPTEnforceEqByPenalty penalty parameter","QPTEnforceEqByPenalty",penalty,&penalty,NULL) );
-    if (penalty < 0)  penalty = PETSC_DECIDE;
+    TRY( PetscOptionsBool("-penalty_direct","","QPTEnforceEqByPenalty",penalty_direct,&penalty_direct,NULL) );
     TRY( PetscOptionsBool("-project","perform QPTEnforceEqByProjector","QPTEnforceEqByProjector",project,&project,NULL) );
     TRY( PetscOptionsBool("-dual","perform QPTDualize","QPTDualize",dual,&dual,NULL) );
     TRY( PetscOptionsBool("-ddm","domain decomposed data","QPTDualize",ddm,&ddm,NULL) );
@@ -1706,7 +1720,7 @@ PetscErrorCode QPTFromOptions(QP qp)
     }
   }
   _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
-  TRY( QPTAllInOne(qp, invType, dual, project, penalty, regularize) );
+  TRY( QPTAllInOne(qp, invType, dual, project, penalty, penalty_direct, regularize) );
   PetscFunctionReturn(0);
 }
 #undef QPTransformBegin

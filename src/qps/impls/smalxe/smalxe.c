@@ -835,7 +835,7 @@ PetscErrorCode QPSSetUp_SMALXE(QPS qps)
   TRY( QPPFSetUp(qp->pf) );
 
   /* setup QP with eq. constraints eliminated for inner loop */
-  TRY( QPTEnforceEqByPenalty(qp, rho) );
+  TRY( QPTEnforceEqByPenalty(qp, rho, PETSC_TRUE) );
   TRY( QPChainGetLast(qp,&smalxe->qp_penalized) );
   qp_inner = smalxe->qp_penalized;
 
