@@ -1033,6 +1033,7 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
     TRY( FllopMatTranspose(R,MAT_TRANSPOSE_CHEAPEST,&Rt) );
     TRY( PetscObjectSetName((PetscObject)Rt,"Rt") );
     TRY( QPPFCreate(comm,&pf_R) );
+    TRY( PetscObjectSetOptionsPrefix((PetscObject)pf_R,"Kplus_") );
     TRY( QPPFSetG(pf_R,Rt) );
     TRY( QPPFCreateP(pf_R,&P_R) );
     TRY( QPPFSetUp(pf_R) );
