@@ -8,10 +8,6 @@
 #endif
 #include <private/fllopimpl.h>
 
-#if defined(PERMON_HAVE_MKL_PARDISO)
-#include <private/pardisoimpl.h>
-#endif
-
 typedef struct {
   Mat               A,R;
   KSP               ksp, innerksp;
@@ -27,29 +23,6 @@ typedef struct {
 	Vec xloc, yloc, yloc1;            /* local work vectors */ 
   Vec *cols_loc;
 } Mat_BlockDiag;
-
-typedef struct {
-	PetscInt N;												/* number of blocks */
-	Mat *localBlocks;									/* array of blocks */
-	Mat *invLocalBlocks;							/* inverse of blocks */
-	Vec *xloc, *yloc, *yloc1;									/* local work vectors */
-	PetscInt *lo[2], *mn[2];								/* array of low index and sizes of blocks */
-	Vec **cols_loc;
-	PetscBool	inverseBlocks, setfromoptionscalled;
-	PetscInt numThreads, numThreadsSolver, numThreadsInSolver;
-	PetscBool solverPardiso;
-#if defined(PERMON_HAVE_MKL_PARDISO)
-	Mat_MKL_PARDISO **pardisoBlocks;
-#endif
-} Mat_BlockDiagSeq;
-
-typedef struct {         
-	PetscSF SF;              /*SF for communication (column index)*/
-	const PetscReal *leaves_sign; /*+-1*/
-	const PetscInt *leaves_row; /*row index*/ 
-	PetscInt n_nonzeroRow; 
-	PetscInt n_leaves;
-} Mat_Gluing;
 
 typedef struct {
   Mat  A;                               /* the wrapped matrix */
