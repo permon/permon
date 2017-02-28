@@ -302,7 +302,7 @@ static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
   Mat_Inv *inv = (Mat_Inv*) imat->data;
   Mat Areg,A_decisive;
   PC pc;
-  PetscBool factorizable,parallel,flg;
+  PetscBool factorizable,parallel;
   KSPType default_ksptype;
   PCType  default_pctype;
 #if PETSC_VERSION_MINOR < 6
@@ -337,6 +337,9 @@ static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
   factorizable = A_decisive->ops->getvalues ? PETSC_TRUE : PETSC_FALSE;    /* if elements of matrix are accessible it is likely an explicitly assembled matrix */
   default_pkg           = MATSOLVERPETSC;
   if (factorizable) {
+#if defined(PETSC_HAVE_MUMPS) || defined(PETSC_HAVE_PASTIX) || defined(PETSC_HAVE_SUPERLU_DIST)
+    PetscBool flg;
+#endif
     default_ksptype     = KSPPREONLY;
     default_pctype      = PCCHOLESKY;
     parallel            = PETSC_FALSE;
@@ -389,6 +392,7 @@ static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
     default_ksptype     = KSPCG;
     default_pctype      = PCNONE;
     parallel            = PETSC_TRUE;
+    goto chosen;
   }
   chosen:
 
