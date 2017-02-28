@@ -15,11 +15,7 @@ struct _QPSOps {
   PetscErrorCode (*destroy)(QPS);
   PetscErrorCode (*view)(QPS,PetscViewer);
   PetscErrorCode (*viewconvergence)(QPS,PetscViewer);
-#if PETSC_VERSION_MINOR < 6
-  PetscErrorCode (*setfromoptions)(QPS);
-#else
   PetscErrorCode (*setfromoptions)(PetscOptionItems*,QPS);
-#endif
   PetscErrorCode (*reset)(QPS);
   PetscErrorCode (*isqpcompatible)(QPS,QP,PetscBool *);
   PetscErrorCode (*monitor)(QPS,PetscInt,PetscViewer);  

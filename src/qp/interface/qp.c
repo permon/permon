@@ -96,11 +96,7 @@ PetscErrorCode QPCreate(MPI_Comm comm, QP *qp_out)
   TRY( QPInitializePackage() );
 #endif
 
-#if PETSC_VERSION_MINOR < 6
-  TRY( PetscHeaderCreate(qp,_p_QP,0,QP_CLASSID,"QP","Quadratic Programming Problem","QP",comm,QPDestroy,QPView) );
-#else
   TRY( PetscHeaderCreate(qp,QP_CLASSID,"QP","Quadratic Programming Problem","QP",comm,QPDestroy,QPView) );
-#endif
   TRY( PetscObjectChangeTypeName((PetscObject)qp,"QP") );
   qp->A            = NULL;
   qp->R            = NULL;

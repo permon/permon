@@ -1,11 +1,7 @@
 #if !defined(__FLLOPMATIMPL_H)
 #define	__FLLOPMATIMPL_H
 #include <fllopmat.h>
-#if PETSC_VERSION_MINOR<6
-#include <petsc-private/matimpl.h>
-#else
 #include <petsc/private/matimpl.h>
-#endif
 #include <private/fllopimpl.h>
 
 typedef struct {

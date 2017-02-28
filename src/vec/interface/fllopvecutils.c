@@ -1,12 +1,7 @@
 #include <fllopvec.h>
 #include <private/fllopimpl.h>
-#if PETSC_VERSION_MINOR<6
-#include <petsc-private/vecimpl.h>
-#include <petsc-private/isimpl.h>
-#else
 #include <petsc/private/vecimpl.h>
 #include <petsc/private/isimpl.h>
-#endif
 
 #undef __FUNCT__
 #define __FUNCT__ "ISAdd"
@@ -178,9 +173,7 @@ PetscErrorCode ISGetVec(IS is, Vec *vec)
   TRY( VecSetSizes(*vec,m,M) );
   TRY( VecSetBlockSize(*vec,bs) );
   TRY( VecSetType(*vec,VECSTANDARD) );
-#if PETSC_VERSION_MINOR>=5
   TRY( PetscLayoutReference(is->map,&(*vec)->map) );
-#endif
   PetscFunctionReturn(0);
 }
 
@@ -223,9 +216,7 @@ PetscErrorCode ISGetVecBlock(IS is, Vec *vec, PetscInt bs)
   TRY( VecSetBlockSize(*vec,1) ); /* the block size is 1 */
   TRY( VecSetType(*vec,VECSTANDARD) );
 
-#if PETSC_VERSION_MINOR>=5
   TRY( PetscLayoutReference(is->map,&(*vec)->map) );
-#endif
   PetscFunctionReturn(0);
 }
 

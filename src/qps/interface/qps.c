@@ -66,11 +66,7 @@ PetscErrorCode QPSCreate(MPI_Comm comm,QPS *inqps)
   TRY( QPSInitializePackage() );
 #endif
   
-#if PETSC_VERSION_MINOR < 6
-  TRY( PetscHeaderCreate(qps,_p_QPS,struct _QPSOps,QPS_CLASSID,"QPS","Quadratic Programming Solver","QPS",comm,QPSDestroy,QPSView) );
-#else
   TRY( PetscHeaderCreate(qps,QPS_CLASSID,"QPS","Quadratic Programming Solver","QPS",comm,QPSDestroy,QPSView) );
-#endif
   
   qps->rtol        = 1e-5;
   qps->atol        = 1e-50;
@@ -769,11 +765,7 @@ PetscErrorCode QPSSetFromOptions(QPS qps)
   TRY( PetscOptionsName("-qps_view_convergence","print the QPS convergence info at the end of a QPSSolve call","QPSViewConvergence",&flg) );
 
   if (qps->ops->setfromoptions) {
-#if PETSC_VERSION_MINOR<6
-    TRY( (*qps->ops->setfromoptions)(qps) );
-#else
     TRY( (*qps->ops->setfromoptions)(PetscOptionsObject,qps) );
-#endif
   }
   if (qps->topQP) TRY( QPChainSetFromOptions(qps->topQP) );
   _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);

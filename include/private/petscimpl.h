@@ -3,14 +3,7 @@
 
 #include "petscpc.h"
 
-#if PETSC_VERSION_MINOR==5
-#include "private/petsc/3.5/mat/aij.h"
-#include "private/petsc/3.5/mat/mpiaij.h"
-#include "private/petsc/3.5/mat/matnestimpl.h"
-#include "private/petsc/3.5/mat/sbaij.h"
-#include "private/petsc/3.5/mat/shell.h"
-#include "private/petsc/3.5/pc/redundant.h"
-#elif PETSC_VERSION_MINOR==6
+#if PETSC_VERSION_MINOR==6
 #include "private/petsc/3.6/mat/aij.h"
 #include "private/petsc/3.6/mat/mpiaij.h"
 #include "private/petsc/3.6/mat/matnestimpl.h"

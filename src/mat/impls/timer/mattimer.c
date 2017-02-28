@@ -49,21 +49,6 @@ PetscErrorCode MatMultTransposeAdd_Timer(Mat W, Vec x, Vec y, Vec z) {
     PetscFunctionReturn(0);
 }
 
-#if PETSC_VERSION_MINOR<6
-#undef __FUNCT__
-#define __FUNCT__ "MatGetRedundantMatrix_Timer"
-PetscErrorCode MatGetRedundantMatrix_Timer(Mat W, PetscInt nsubcomm, MPI_Comm subcomm, MatReuse reuse, Mat *matredundant) {
-    Mat_Timer *ctx;
-    PetscFunctionBegin;
-    TRY( MatShellGetContext(W, (void*) &ctx) );
-    TRY( PetscLogEventBegin(ctx->events[MATOP_GET_REDUNDANT_MATRIX],ctx->A,0,0,0) );
-    TRY( MatGetRedundantMatrix(ctx->A,nsubcomm,subcomm,reuse,matredundant) );
-    TRY( MatCreateTimer(*matredundant,matredundant) );
-    TRY( PetscLogEventEnd(  ctx->events[MATOP_GET_REDUNDANT_MATRIX],ctx->A,0,0,0) );
-    PetscFunctionReturn(0);
-}
-#endif
-
 #undef __FUNCT__
 #define __FUNCT__ "MatDestroy_Timer"
 PetscErrorCode MatDestroy_Timer(Mat W) {
@@ -95,9 +80,6 @@ PetscErrorCode MatCreateTimer(Mat A, Mat *W_inout) {
     TRY( MatTimerSetOperation(W,MATOP_MULT_ADD,"MatMultAdd",(void(*)(void))MatMultAdd_Timer) );
     TRY( MatTimerSetOperation(W,MATOP_MULT_TRANSPOSE,"MatMultTr",(void(*)(void))MatMultTranspose_Timer) );
     TRY( MatTimerSetOperation(W,MATOP_MULT_TRANSPOSE_ADD,"MatMultTrAdd",(void(*)(void))MatMultTransposeAdd_Timer) );
-#if PETSC_VERSION_MINOR<6
-    TRY( MatTimerSetOperation(W,MATOP_GET_REDUNDANT_MATRIX,"GetRedundantMatrix",(void(*)(void))MatGetRedundantMatrix_Timer) );
-#endif
     
     if (*W_inout == A) {
       /* the original object will be replaced by the wrapper */

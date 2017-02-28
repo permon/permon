@@ -1,11 +1,7 @@
 
 #include <fllopsys.h>
 #include <private/fllopimpl.h>
-#if PETSC_VERSION_MINOR<6
-#include <petsc-private/logimpl.h>
-#else
 #include <petsc/private/logimpl.h>
-#endif
 #include <petsclog.h>
 
 PetscBool FllopInfoEnabled = PETSC_FALSE;
@@ -27,11 +23,7 @@ PetscErrorCode FllopCreate(MPI_Comm comm,FLLOP *fllop_new)
 
   PetscFunctionBegin;
   PetscValidPointer(fllop_new,2);
-#if PETSC_VERSION_MINOR < 6
-  TRY( PetscHeaderCreate(fllop,_p_FLLOP,0,FLLOP_CLASSID,"FLLOP","FLLOP","FLLOP",comm,0,0) );
-#else
   TRY( PetscHeaderCreate(fllop,FLLOP_CLASSID,"FLLOP","FLLOP","FLLOP",comm,0,0) );
-#endif
   *fllop_new = fllop;
   PetscFunctionReturn(0);
 }

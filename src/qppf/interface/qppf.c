@@ -85,11 +85,7 @@ PetscErrorCode QPPFCreate(MPI_Comm comm, QPPF* newcp)
   TRY( QPPFInitializePackage() );
 #endif
 
-#if PETSC_VERSION_MINOR < 6
-  TRY( PetscHeaderCreate(cp,_p_QPPF,0,QPPF_CLASSID,"QPPF", "Projector Factory", "QPPF", comm, QPPFDestroy, QPPFView) );
-#else
   TRY( PetscHeaderCreate(cp,QPPF_CLASSID,"QPPF", "Projector Factory", "QPPF", comm, QPPFDestroy, QPPFView) );
-#endif
 
   cp->G                   = NULL;
   cp->Gt                  = NULL;

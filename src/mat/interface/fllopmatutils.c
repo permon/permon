@@ -606,31 +606,11 @@ PetscErrorCode MatFilterZeros(Mat A, PetscReal tol, Mat *Af_new)
 static PetscErrorCode MatMergeAndDestroy_Default(MPI_Comm comm, Mat *local_in, Vec x, Mat *global_out)
 {
   PetscFunctionBegin;
-#if PETSC_VERSION_MINOR < 6
-  FLLOP_SETERRQ1(PetscObjectComm((PetscObject)local_in),PETSC_ERR_SUP,"MatMergeAndDestroy not supported for matrix type %s",((PetscObject)local_in)->type_name);
-#else
-  {
-    PetscInt n = PETSC_DECIDE;
-    if (x) TRY( VecGetLocalSize(x,&n) );
-    TRY( MatCreateMPIMatConcatenateSeqMat(comm, *local_in, n, MAT_INITIAL_MATRIX, global_out) );
-  }
-#endif
-  PetscFunctionReturn(0);
-}
-
-#if PETSC_VERSION_MINOR < 6
-#undef __FUNCT__
-#define __FUNCT__ "MatMergeAndDestroy_SeqAIJ"
-static PetscErrorCode MatMergeAndDestroy_SeqAIJ(MPI_Comm comm, Mat *local_in, Vec x, Mat *global_out)
-{
   PetscInt n = PETSC_DECIDE;
-
-  PetscFunctionBegin;
   if (x) TRY( VecGetLocalSize(x,&n) );
-  TRY( MatCreateMPIAIJConcatenateSeqAIJ(comm, *local_in, n, MAT_INITIAL_MATRIX, global_out) );
+  TRY( MatCreateMPIMatConcatenateSeqMat(comm, *local_in, n, MAT_INITIAL_MATRIX, global_out) );
   PetscFunctionReturn(0);
 }
-#endif
 
 #undef __FUNCT__
 #define __FUNCT__ "MatMergeAndDestroy_SeqDense"
@@ -695,13 +675,7 @@ PetscErrorCode MatMergeAndDestroy(MPI_Comm comm, Mat *local_in, Vec column_layou
     /* try to find a type-specific implementation */
     TRY( PetscObjectQueryFunction((PetscObject)A,"MatMergeAndDestroy_C",&f) );
 
-    /* work-around for MATSEQAIJ and MATSEQDENSE to avoid need of a new constructor */
-#if PETSC_VERSION_MINOR < 6
-    if (!f) {
-      TRY( PetscObjectTypeCompare((PetscObject)A,MATSEQAIJ,&flg) );
-      if (flg) f = MatMergeAndDestroy_SeqAIJ;
-    }
-#endif
+    /* work-around for MATSEQDENSE to avoid need of a new constructor */
     if (!f) {
       TRY( PetscObjectTypeCompare((PetscObject)A,MATSEQDENSE,&flg) );
       if (flg) f = MatMergeAndDestroy_SeqDense;

@@ -1,10 +1,6 @@
 
 #include <../src/qps/impls/tao/qpstaoimpl.h>
-#if PETSC_VERSION_MINOR<6
-#include <petsc-private/taoimpl.h>
-#else
 #include <petsc/private/taoimpl.h>
-#endif
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSTaoConverged_Tao"
@@ -194,11 +190,7 @@ PetscErrorCode QPSSolve_Tao(QPS qps)
 
 #undef __FUNCT__  
 #define __FUNCT__ "QPSSetFromOptions_Tao"
-#if PETSC_VERSION_MINOR<6
-PetscErrorCode QPSSetFromOptions_Tao(QPS qps)
-#else
 PetscErrorCode QPSSetFromOptions_Tao(PetscOptionItems *PetscOptionsObject,QPS qps)
-#endif
 {
   QPS_Tao          *qpstao = (QPS_Tao*)qps->data;
   //Tao              tao = qpstao->tao;

@@ -2,11 +2,7 @@
 #include <private/fllopmatimpl.h>
 #include <private/petscimpl.h>
 #include <fllopksp.h>
-#if PETSC_VERSION_MINOR<6
-#include <petsc-private/pcimpl.h>
-#else
 #include <petsc/private/pcimpl.h>
-#endif
 #if defined(PETSC_HAVE_MUMPS)
 #include <private/mumpsimpl.h>
 #endif
@@ -364,11 +360,7 @@ static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
   PetscBool factorizable,parallel;
   KSPType default_ksptype;
   PCType  default_pctype;
-#if PETSC_VERSION_MINOR < 6
-  MatSolverPackage default_pkg;
-#else
   const MatSolverPackage default_pkg;
-#endif
   PetscMPIInt size;
 
   FllopTracedFunctionBegin;
@@ -718,11 +710,7 @@ PetscErrorCode MatDestroy_Inv(Mat imat)
 
 #undef __FUNCT__  
 #define __FUNCT__ "MatSetFromOptions_Inv"
-#if PETSC_VERSION_MINOR<6
-PetscErrorCode MatSetFromOptions_Inv(Mat imat)
-#else
 PetscErrorCode MatSetFromOptions_Inv(PetscOptionItems *PetscOptionsObject,Mat imat)
-#endif
 {
   PetscBool set;
   PetscSubcommType psubcommType;

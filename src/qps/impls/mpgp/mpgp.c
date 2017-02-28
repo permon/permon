@@ -732,11 +732,7 @@ PetscErrorCode QPSIsQPCompatible_MPGP(QPS qps,QP qp,PetscBool *flg)
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSSetFromOptions_MPGP"
-#if PETSC_VERSION_MINOR<6
-PetscErrorCode QPSSetFromOptions_MPGP(QPS qps)
-#else
 PetscErrorCode QPSSetFromOptions_MPGP(PetscOptionItems *PetscOptionsObject,QPS qps)
-#endif
 {
   QPS_MPGP    *mpgp = (QPS_MPGP*)qps->data;
   PetscBool flg1,flg2,alpha_direct;

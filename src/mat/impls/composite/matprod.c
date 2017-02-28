@@ -146,39 +146,6 @@ PetscErrorCode MatMultTransposeAdd_Prod(Mat A,Vec x,Vec y, Vec z)
   PetscFunctionReturn(0);
 }
 
-#if PETSC_VERSION_MINOR<6
-#undef __FUNCT__  
-#define __FUNCT__ "MatGetRedundantMatrix_Prod"
-PetscErrorCode MatGetRedundantMatrix_Prod(Mat A, PetscInt nsubcomm, MPI_Comm subcomm, MatReuse reuse, Mat *matredundant)
-{
-  Mat_Composite     *shell = (Mat_Composite*)A->data;  
-  Mat_CompositeLink next = shell->head;
-  Mat               *red_arr;
-  PetscInt          i, count = 1;
-  
-  PetscFunctionBegin;
-  if (!next) FLLOP_SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_WRONGSTATE,"Must provide at least one matrix with MatCompositeAddMat()");
-  
-  //num of matrices
-  while (next->next) {
-    next = next->next;
-    count += 1;
-  }
-
-  next = shell->head;
-  TRY( PetscMalloc(count*sizeof(Mat), &red_arr) );
-  for (i = 0; i < count; i++) {
-   TRY( MatGetRedundantMatrix(next->mat, nsubcomm, subcomm, reuse, &red_arr[i]) );
-   next = next->next;
-  }
-  TRY( MatCreateProd(subcomm, count, red_arr, matredundant) );
-  
-  for (i = 0; i < count; i++) TRY( MatDestroy(&red_arr[i]) );
-  TRY( PetscFree(red_arr) );
-  PetscFunctionReturn(0);
-}
-#endif
-
 #undef __FUNCT__  
 #define __FUNCT__ "MatCreate_Prod"
 FLLOP_EXTERN PetscErrorCode  MatCreate_Prod(Mat A)
@@ -196,9 +163,6 @@ FLLOP_EXTERN PetscErrorCode  MatCreate_Prod(Mat A)
   A->ops->multtranspose      = MatMultTranspose_Prod;
   A->ops->multadd            = MatMultAdd_Prod;
   A->ops->multtransposeadd   = MatMultTransposeAdd_Prod;
-#if PETSC_VERSION_MINOR<6
-  A->ops->getredundantmatrix = MatGetRedundantMatrix_Prod;
-#endif
   A->ops->getdiagonal        = NULL;
   composite->type            = MAT_COMPOSITE_MULTIPLICATIVE;
 

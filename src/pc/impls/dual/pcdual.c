@@ -166,11 +166,7 @@ static PetscErrorCode PCDestroy_Dual(PC pc)
 
 #undef __FUNCT__
 #define __FUNCT__ "PCSetFromOptions_Dual"
-#if PETSC_VERSION_MINOR<6
-PetscErrorCode PCSetFromOptions_Dual(PC pc)
-#else
 PetscErrorCode PCSetFromOptions_Dual(PetscOptionItems *PetscOptionsObject,PC pc)
-#endif
 {
   PC_Dual         *ctx = (PC_Dual*)pc->data;
 

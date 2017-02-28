@@ -7,11 +7,7 @@ PetscErrorCode KSPViewBriefInfo(KSP ksp, PetscViewer viewer)
 {
   KSPType                 ksptype;
   PCType                  pctype;
-#if PETSC_VERSION_MINOR < 6
-  MatSolverPackage        pcpkg;
-#else
   const MatSolverPackage  pcpkg;
-#endif
   MatType                 mattype;
   MPI_Comm                comm;
   PC                      pc;

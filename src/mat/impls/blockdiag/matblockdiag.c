@@ -601,30 +601,6 @@ static PetscErrorCode MatOrthColumns_BlockDiag(Mat A, MatOrthType type, MatOrthF
   PetscFunctionReturn(0);
 }
 
-#if PETSC_VERSION_MINOR<6
-//NOTE not tested
-#undef __FUNCT__
-#define __FUNCT__ "MatGetRedundantMatrix_BlockDiag"
-static PetscErrorCode MatGetRedundantMatrix_BlockDiag(Mat A, PetscInt nsubcomm, MPI_Comm subcomm, MatReuse reuse, Mat *matredundant){
-  Mat_BlockDiag  *bd = (Mat_BlockDiag*) A->data;
-  Mat red_loc = NULL;
-  MPI_Comm comm;
-  PetscMPIInt size;
-  
-  PetscFunctionBegin;
-  PetscObjectGetComm((PetscObject)A,&comm);
-  MPI_Comm_size(comm,&size);
-  if (size == 1){
-    red_loc = bd->localBlock;
-  }else{
-    TRY( MatGetRedundantMatrix(bd->localBlock, nsubcomm, subcomm, reuse, &red_loc) );
-  }
-  TRY( MatCreateBlockDiag(subcomm, red_loc, matredundant) );
-  TRY( MatDestroy(&red_loc) );
-  PetscFunctionReturn(0);
-}
-#endif
-
 #undef __FUNCT__
 #define __FUNCT__ "MatCreate_BlockDiag"
 FLLOP_EXTERN PetscErrorCode MatCreate_BlockDiag(Mat B) {
@@ -665,9 +641,6 @@ FLLOP_EXTERN PetscErrorCode MatCreate_BlockDiag(Mat B) {
   B->ops->zerorowscolumns    = MatZeroRowsColumns_BlockDiag;
   B->ops->transposematmult   = MatTransposeMatMult_BlockDiag_BlockDiag;
   B->ops->scale              = MatScale_BlockDiag;
-#if PETSC_VERSION_MINOR<6
-  B->ops->getredundantmatrix = MatGetRedundantMatrix_BlockDiag;
-#endif
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatGetDiagonalBlock_C",MatGetDiagonalBlock_BlockDiag) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatGetColumnVectors_C",MatGetColumnVectors_BlockDiag) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatRestoreColumnVectors_C",MatRestoreColumnVectors_BlockDiag) );

@@ -518,32 +518,6 @@ static PetscErrorCode MatAXPY_NestPermon(Mat Y, PetscScalar a, Mat X, MatStructu
 }
 
 
-#if PETSC_VERSION_MINOR<6
-#undef __FUNCT__
-#define __FUNCT__ "MatGetRedundantMatrix_NestPermon"
-static PetscErrorCode MatGetRedundantMatrix_NestPermon(Mat A, PetscInt nsubcomm, MPI_Comm subcomm, MatReuse reuse, Mat *matredundant)
-{
-  PetscInt i,j,Mn,Nn,MnNn;
-  Mat *mats_out,**mats_in;
-
-  PetscFunctionBegin;
-  TRY( MatNestGetSubMats(A,&Mn,&Nn,&mats_in) );
-  MnNn = Mn*Nn;
-  TRY( PetscMalloc(MnNn*sizeof(Mat),&mats_out) );
-  for (i=0; i<Mn; i++) for (j=0; j<Nn; j++) {
-    if (mats_in[i][j]) {
-      TRY( MatGetRedundantMatrix(mats_in[i][j], nsubcomm, subcomm, reuse, &mats_out[j*Mn+i]) );
-    } else {
-      mats_out[j*Mn+i] = NULL;
-    }
-  }
-  TRY( MatCreateNestPermon(subcomm,Mn,NULL,Nn,NULL,mats_out, matredundant) );
-  for (i=0; i<MnNn; i++) TRY( MatDestroy(&mats_out[i]) );
-  TRY( PetscFree(mats_out) );
-  PetscFunctionReturn(0);
-}
-#endif
-
 #undef __FUNCT__
 #define __FUNCT__ "MatConvert_Nest_NestPermon"
 PETSC_EXTERN PetscErrorCode MatConvert_Nest_NestPermon(Mat A,MatType type,MatReuse reuse,Mat *newmat)
@@ -560,9 +534,6 @@ PETSC_EXTERN PetscErrorCode MatConvert_Nest_NestPermon(Mat A,MatType type,MatReu
   B->ops->duplicate          = MatDuplicate_NestPermon;
   B->ops->axpy               = MatAXPY_NestPermon;
   B->ops->matmult            = MatMatMult_NestPermon_NestPermon;
-#if PETSC_VERSION_MINOR<6
-  B->ops->getredundantmatrix = MatGetRedundantMatrix_NestPermon;
-#endif
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatGetColumnVectors_C",MatGetColumnVectors_NestPermon) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatRestoreColumnVectors_C",MatRestoreColumnVectors_NestPermon) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatFilterZeros_C",MatFilterZeros_NestPermon) );

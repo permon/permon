@@ -148,11 +148,7 @@ PetscErrorCode QPSSolve_KSP(QPS qps)
 
 #undef __FUNCT__  
 #define __FUNCT__ "QPSSetFromOptions_KSP"
-#if PETSC_VERSION_MINOR<6
-PetscErrorCode QPSSetFromOptions_KSP(QPS qps)
-#else
 PetscErrorCode QPSSetFromOptions_KSP(PetscOptionItems *PetscOptionsObject,QPS qps)
-#endif
 {
   QPS_KSP          *qpsksp = (QPS_KSP*)qps->data;
   

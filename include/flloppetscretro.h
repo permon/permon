@@ -2,8 +2,8 @@
 #define	__FLLOPPETSCRETRO_H
 #include <petscsys.h>
 
-#if PETSC_VERSION_MAJOR!=3 || (PETSC_VERSION_MAJOR==3 && (PETSC_VERSION_MINOR<5 || PETSC_VERSION_MINOR>7))
-#error "FLLOP requires PETSc version 3.5 - 3.7"
+#if PETSC_VERSION_MAJOR!=3 || (PETSC_VERSION_MAJOR==3 && (PETSC_VERSION_MINOR<6 || PETSC_VERSION_MINOR>7))
+#error "FLLOP requires PETSc version 3.6 to 3.7"
 #endif
 
 /* ----------------------- */
@@ -13,11 +13,7 @@
 /* include headers that use the functions overriden with the macros below so that they use the original functions */
 #include <petsctao.h>
 #include <petsclog.h>
-#if PETSC_VERSION_MINOR<=5
-#include <petsc-private/matimpl.h>
-#else
 #include <petsc/private/matimpl.h>
-#endif
 
 #define MAT_INPLACE_MATRIX MAT_REUSE_MATRIX
 #define PetscOptionItems PetscOptions
@@ -60,23 +56,6 @@ do {\
     }\
     _3_ierr = PetscLogStageSetActive(_stageNum,(PetscBool)(!PetscPreLoadMax || PetscPreLoadIt));\
     _3_ierr = PetscLogStagePush(_stageNum);CHKERRQ(_3_ierr);
-#endif
-
-
-/* ----------------------- */
-/* petsc <= 3.5 compatibility */
-/* ----------------------- */
-#if PETSC_VERSION_MINOR<=5
-#undef MatSolverPackage
-typedef const char* MatSolverPackage;
-/* fix MatGetFactorAvailable for version <= 3.5 */
-FLLOP_EXTERN PetscErrorCode MatGetFactorAvailable_permonfix(Mat mat, const MatSolverPackage type,MatFactorType ftype,PetscBool  *flg);
-#define MatGetFactorAvailable(mat,type,ftype,flg) MatGetFactorAvailable_permonfix(mat,type,ftype,flg)
-PETSC_EXTERN PetscOptionsObjectType PetscOptionsObject;
-PETSC_STATIC_INLINE PetscErrorCode MatCreateVecs(Mat mat,Vec *x,Vec *y) {return MatGetVecs(mat,x,y);}
-PETSC_STATIC_INLINE PetscErrorCode MatCreateRedundantMatrix(Mat mat,PetscInt nsubcomm,MPI_Comm subcomm,MatReuse reuse,Mat *matredundant) {return MatGetRedundantMatrix(mat,nsubcomm,subcomm,reuse,matredundant);}
-#define PetscOptionsHead(obj,str) PetscOptionsHead(str)
-
 #endif
 
 #endif
