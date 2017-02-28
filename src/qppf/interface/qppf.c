@@ -1,9 +1,6 @@
 
 #include <private/qppfimpl.h>
 #include <fllopksp.h>
-#ifdef PETSC_HAVE_OPENMP
-#include <omp.h>
-#endif
 PetscClassId QPPF_CLASSID;
 PetscLogEvent QPPF_SetUp, QPPF_SetUp_Gt, QPPF_SetUp_GGt, QPPF_SetUp_GGtinv;
 PetscLogEvent QPPF_ApplyCP, QPPF_ApplyCP_gt, QPPF_ApplyCP_sc;
@@ -192,9 +189,6 @@ PetscErrorCode QPPFSetFromOptions(QPPF cp)
   TRY( PetscOptionsInt("-qppf_redundancy", "number of parallel redundant solves of CP, each with (size of CP's comm)/qppf_redundancy processes", "QPPFSetRedundancy", cp->redundancy, &nred, &set) );
   if (set) TRY( QPPFSetRedundancy(cp, nred) );
   
-  //TODO uncomment in future?
-  //TRY( PetscOptionsInt("-qppf_threads", "number of threads of CP", "QPPFThreads", cp->numThreads, &cp->numThreads, &set) );
-
   if (cp->GGtinv) TRY( MatSetFromOptions(cp->GGtinv) );  
 
   _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
@@ -315,11 +309,8 @@ static PetscErrorCode QPPFSetUpGGtinv_Private(QPPF cp, Mat *GGtinv_new)
   //TODO dirty
   TRY( MatSetFromOptions(GGtinv) );
  
-  //TODO uncomment in future?
-  //omp_set_num_threads(cp->numThreads);
   TRY( MatAssemblyBegin(GGtinv, MAT_FINAL_ASSEMBLY) );
   TRY( MatAssemblyEnd(  GGtinv, MAT_FINAL_ASSEMBLY) );
-  //omp_set_num_threads(1);
 
   TRY( MatInvGetRedundancy(GGtinv, &cp->redundancy) );
   

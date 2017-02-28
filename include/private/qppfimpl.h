@@ -27,8 +27,6 @@ struct _p_QPPF {
     Vec QPPFApplyQ_last_v;
     Vec QPPFApplyQ_last_Qv;
     PetscObjectState QPPFApplyQ_last_v_state;
-    
-		PetscInt numThreads;
 };
 
 
