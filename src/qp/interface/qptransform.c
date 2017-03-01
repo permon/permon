@@ -866,6 +866,8 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
   Mat              R,B,Bt,F,G,K,Kplus;
   Vec              c,d,e,f,lb,tprim,lambda;
   PetscBool        B_explicit = PETSC_FALSE, B_view_spectra = PETSC_FALSE;
+  PetscBool        mp = PETSC_FALSE;
+  PetscBool        true_mp = PETSC_FALSE;
 
   PetscFunctionBeginI;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
@@ -879,10 +881,6 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
   tprim = qp->xwork;
   K = qp->A;
   f = qp->b;
-  R = NULL;
-  TRY( QPCheckNullSpace(qp,PETSC_SMALL) );
-  TRY( QPGetOperatorNullSpace(qp,&R) );
-  if (!R) FLLOP_SETERRQ_WORLD(PETSC_ERR_ARG_NULL,"currently implemented only for a system with composed matrix R whose columns span the null space of the system matrix");
   if (!qp->BE) FLLOP_SETERRQ_WORLD(PETSC_ERR_ARG_NULL,"lin. eq. constraint matrix (BE) is needed for dualization");
 
   TRY( PetscOptionsGetBool(NULL,NULL,"-qpt_dualize_B_explicit",&B_explicit,NULL) );
@@ -893,7 +891,7 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
   }
 
   TRY( MatPrintInfo(qp->B) );
-  
+
   TRY( PetscLogEventBegin(QPT_Dualize_PrepareBt,qp,0,0,0) );
   {
     TRY( FllopMatTranspose(qp->B,MAT_TRANSPOSE_CHEAPEST,&Bt) );
@@ -915,13 +913,94 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
     TRY( MatPrintInfo(Bt) );
   }
 
-  /* create system matrix pseudoinverse */
+  /* create stiffness matrix pseudoinverse */
   TRY( MatCreateInv(K, invType, &Kplus) );
+  TRY( MatPrintInfo(K) );
   TRY( FllopPetscObjectInheritName((PetscObject)Kplus,(PetscObject)K,"_plus") );
   TRY( FllopPetscObjectInheritPrefix((PetscObject)Kplus,(PetscObject)child,NULL) );
+
+  /* get or compute stiffness matrix kernel (R) */
+  R = NULL;
+  TRY( QPGetOperatorNullSpace(qp,&R) );
+  if (R) {
+    TRY( QPCheckNullSpace(qp,PETSC_SMALL) );
+    TRY( MatInvSetNullSpace(Kplus,R) );
+  } else {
+    TRY( PetscInfo(qp,"null space matrix not set => using -qpt_dualize_Kplus_left and -regularize 0\n") );
+    mp = PETSC_TRUE;
+    true_mp = PETSC_TRUE;
+    regType = MAT_REG_NONE;
+    TRY( PetscInfo(qp,"null space matrix not set => trying to compute one\n") );
+    TRY( MatInvComputeNullSpace(Kplus) );
+    TRY( MatInvGetNullSpace(Kplus,&R) );
+    TRY( MatOrthColumns(R, MAT_ORTH_GS, MAT_ORTH_FORM_EXPLICIT, &R, NULL) );
+    TRY( QPSetOperatorNullSpace(qp,R) );
+    TRY( QPCheckNullSpace(qp,PETSC_SMALL) );
+  }
   TRY( MatInvSetRegularizationType(Kplus,regType) );
-  TRY( MatInvSetNullSpace(Kplus,R) );
   TRY( MatSetFromOptions(Kplus) );
+
+  TRY( PetscOptionsGetBool(NULL,NULL,"-qpt_dualize_Kplus_mp",&true_mp,NULL) );
+  if (!true_mp) {
+    TRY( PetscOptionsGetBool(NULL,NULL,"-qpt_dualize_Kplus_left",&mp,NULL) );
+  }
+
+  /* convert to Moore-Penrose pseudoinverse using projector to image of K (kernel of R') */
+  if (true_mp || mp) {
+    QPPF pf_R;
+    Mat P_R;
+    Mat mats[3];
+    Mat Kplus_new;
+    Mat Rt;
+    PetscInt size=2;
+
+    if (true_mp) {
+      TRY( PetscInfo(qp,"creating Moore-Penrose inverse\n") );
+    } else {
+      TRY( PetscInfo(qp,"creating left generalized inverse\n") );
+    }
+    TRY( FllopMatTranspose(R,MAT_TRANSPOSE_CHEAPEST,&Rt) );
+    TRY( PetscObjectSetName((PetscObject)Rt,"Rt") );
+    TRY( QPPFCreate(comm,&pf_R) );
+    TRY( QPPFSetG(pf_R,Rt) );
+    TRY( QPPFCreateP(pf_R,&P_R) );
+    TRY( QPPFSetUp(pf_R) );
+
+    if (true_mp) {
+      size=3;
+      mats[2]=P_R;
+    }
+    mats[1]=Kplus; mats[0]=P_R;
+    TRY( MatCreateProd(comm,size,mats,&Kplus_new) );
+    TRY( PetscObjectCompose((PetscObject)Kplus_new,"Kplus",(PetscObject)Kplus) );
+
+    TRY( MatDestroy(&Kplus) );
+    TRY( MatDestroy(&Rt) );
+    TRY( MatDestroy(&P_R) );
+    TRY( QPPFDestroy(&pf_R) );
+    Kplus = Kplus_new;
+
+    if (FllopDebugEnabled) {
+      /* is Kplus MP? */
+      Mat mats2[3];
+      Mat prod;
+      PetscBool flg;
+      mats2[2]=K; mats2[1]=Kplus; mats2[0]=K;
+      TRY( MatCreateProd(comm,3,mats2,&prod) );
+      TRY( MatMultEqual(prod,K,3,&flg) );
+      FLLOP_ASSERT(flg,"Kplus is left generalized inverse");
+      TRY( MatDestroy(&prod) );
+      if (true_mp) {
+        mats2[2]=Kplus; mats2[1]=K; mats2[0]=Kplus;
+        TRY( MatCreateProd(comm,3,mats2,&prod) );
+        TRY( MatMultEqual(prod,Kplus,3,&flg) );
+        FLLOP_ASSERT(flg,"Kplus is Moore-Penrose pseudoinverse");
+        TRY( MatDestroy(&prod) );
+      }
+    }
+  }
+
+  TRY( PetscObjectSetName((PetscObject)Kplus,"Kplus") );
 
   TRY( PetscLogEventBegin(QPT_Dualize_FactorK,qp,Kplus,0,0) );
   TRY( MatAssemblyBegin(Kplus, MAT_FINAL_ASSEMBLY) );
