@@ -11,14 +11,8 @@ typedef struct {
   PetscReal maxeig_tol;
   PetscInt  maxeig_iter;
 
-  /* compute norm of the gradient types */  
-  PetscBool compute_phinorm;
-  PetscBool compute_betanorm;
-  PetscBool compute_gPalphanorm;
-  
   PetscReal phinorm;
   PetscReal betanorm;
-  PetscReal gPalphanorm;
 
   PetscInt  nmv;              /* ... matrix-vector mult. counter      */
   PetscInt  ncg;              /* ... cg step counter                  */ 

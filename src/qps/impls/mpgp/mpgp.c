@@ -26,21 +26,9 @@ PetscErrorCode QPSMonitorDefault_MPGP(QPS qps,PetscInt n,PetscViewer viewer)
    }
 
    TRY( PetscViewerASCIIPrintf(viewer,"%3D MPGP ||gp||=%.10e",n,(double)qps->rnorm) );
-
-   if(mpgp->compute_phinorm){
-        TRY( PetscViewerASCIIPrintf(viewer,",\t||phi||=%.10e",(double)mpgp->phinorm) );
-   }
-
-   if(mpgp->compute_betanorm){
-        TRY( PetscViewerASCIIPrintf(viewer,",\t||beta||=%.10e",(double)mpgp->betanorm) );
-   }
-
-   if(mpgp->compute_gPalphanorm){
-        TRY( PetscViewerASCIIPrintf(viewer,",\t||gPalpha||=%.10e",(double)mpgp->gPalphanorm) );
-   }
-
+   TRY( PetscViewerASCIIPrintf(viewer,",\t||phi||=%.10e",(double)mpgp->phinorm) );
+   TRY( PetscViewerASCIIPrintf(viewer,",\t||beta||=%.10e",(double)mpgp->betanorm) );
    TRY( PetscViewerASCIIPrintf(viewer,"\n") );
-
    PetscFunctionReturn(0);
 }
 
@@ -557,17 +545,8 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
 
     /* compute norm of phi, beta from computed dot products */
     if (qps->numbermonitors) {
-      if(mpgp->compute_phinorm){
-        mpgp->phinorm =  PetscSqrtScalar(phiTphi);
-      }
-      if(mpgp->compute_betanorm){
-        mpgp->betanorm =  PetscSqrtScalar(betaTbeta);
-      }
-      if(mpgp->compute_gPalphanorm){
-        //TODO: VH: is it right?
-        TRY( QPGetScaledProjectedGradient(qp,alpha,galpha) );
-        TRY( VecNorm(galpha,NORM_2,&mpgp->gPalphanorm) );
-      }
+      mpgp->phinorm =  PetscSqrtScalar(phiTphi);
+      mpgp->betanorm =  PetscSqrtScalar(betaTbeta);
       TRY( QPSMonitor(qps,qps->iteration,qps->rnorm)) ;
     }
 
@@ -660,13 +639,13 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
     qps->iteration++;
   };
 
-  if (mpgp->compute_gPalphanorm && PetscLogPrintInfo) {
+  if (FllopDebugEnabled) {
     PetscReal norm;
 
     TRY( QPGetScaledProjectedGradient(qp,alpha,galpha) );
     TRY( VecAXPY(galpha,-1.0,gP) );
     TRY( VecNorm(galpha,NORM_2,&norm) );
-    TRY( PetscInfo1(qps,"||g_alpha - g_P|| = %.8e\n",norm) );
+    TRY( FllopDebug1("||g_alpha - g_P|| = %.8e\n",norm) );
   }
 
   mpgp->ncg     += ncg;
@@ -795,10 +774,6 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
 
   /* set the computed norms of gradients */
   //TODO: set from options/command line
-  mpgp->compute_phinorm      = PETSC_TRUE;
-  mpgp->compute_betanorm     = PETSC_TRUE;
-  mpgp->compute_gPalphanorm  = PETSC_FALSE;
-  
   mpgp->ncg                  = 0;
   mpgp->nexp                 = 0;
   mpgp->nmv                  = 0;
