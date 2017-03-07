@@ -93,8 +93,7 @@ static PetscErrorCode PCSetUp_Dual(PC pc)
 {
   PC_Dual *ctx = (PC_Dual*)pc->data;
   Mat F = pc->mat;
-  Mat Bt, Kplus, K;
-  MPI_Comm comm;
+  Mat Bt, K;
 
   PetscFunctionBegin;
   TRY( PetscInfo1(pc,"using PCDualType %s\n",PCDualTypes[ctx->pcdualtype]) );
@@ -106,13 +105,8 @@ static PetscErrorCode PCSetUp_Dual(PC pc)
 
   pc->ops->apply = PCApply_Dual;
 
-  TRY( MatTimerGetMat(F,&F) );
-  TRY( MatProdGetMat(F,0,&Bt) );
-  TRY( MatProdGetMat(F,1,&Kplus) );
-
-  TRY( MatTimerGetMat(Kplus,&Kplus) );
-  TRY( MatInvGetMat(Kplus,&K) );
-  TRY( PetscObjectGetComm((PetscObject)K,&comm) );
+  TRY( PetscObjectQuery((PetscObject)F,"Bt",(PetscObject*)&Bt) );
+  TRY( PetscObjectQuery((PetscObject)F,"K",(PetscObject*)&K) );
 
   if (ctx->pcdualtype == PC_DUAL_LUMPED) {
     ctx->At = Bt;

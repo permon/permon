@@ -947,7 +947,7 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
 {
   MPI_Comm         comm;
   QP               child;
-  Mat              R,B,Bt,F,G,K,Kplus;
+  Mat              R,B,Bt,F,G,K,Kplus,Kplus_orig;
   Vec              c,d,e,f,lb,tprim,lambda;
   PetscBool        B_explicit = PETSC_FALSE, B_view_spectra = PETSC_FALSE;
   PetscBool        mp = PETSC_FALSE;
@@ -959,6 +959,7 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
   TRY( QPTransformBegin(QPTDualize, QPTDualizePostSolve_Private,NULL, QP_DUPLICATE_DO_NOT_COPY,&qp,&child,&comm) );
   TRY( QPAppendOptionsPrefix(child,"dual_") );
 
+  Kplus_orig = NULL;
   B = NULL;
   c = qp->c;
   lambda = qp->lambda;
@@ -999,6 +1000,7 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
 
   /* create stiffness matrix pseudoinverse */
   TRY( MatCreateInv(K, invType, &Kplus) );
+  Kplus_orig = Kplus;
   TRY( MatPrintInfo(K) );
   TRY( FllopPetscObjectInheritName((PetscObject)Kplus,(PetscObject)K,"_plus") );
   TRY( FllopPetscObjectInheritPrefix((PetscObject)Kplus,(PetscObject)child,NULL) );
@@ -1110,7 +1112,9 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
     TRY( MatCreateTimer(F,&F) );
     
     TRY( PetscObjectCompose((PetscObject)F,"B",(PetscObject)B) );
+    TRY( PetscObjectCompose((PetscObject)F,"K",(PetscObject)K) );
     TRY( PetscObjectCompose((PetscObject)F,"Kplus",(PetscObject)Kplus) );
+    TRY( PetscObjectCompose((PetscObject)F,"Kplus_orig",(PetscObject)Kplus_orig) );
     TRY( PetscObjectCompose((PetscObject)F,"Bt",(PetscObject)Bt) );
     
     TRY( MatDestroy(&B) );       B     = F_arr[2];
