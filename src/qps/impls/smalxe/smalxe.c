@@ -384,12 +384,13 @@ static PetscErrorCode QPSSMALXEUpdateRho_SMALXE(QPS qps, PetscBool Lagrangian_fl
 {
   QPS_SMALXE    *smalxe = (QPS_SMALXE*)qps->data;
   Mat           A_inner = smalxe->qp_penalized->A;
-  PetscReal     rho_update;
+  PetscReal     rho_update = smalxe->rho_update;
 
   PetscFunctionBegin;
   switch (smalxe->state) {
     case 1: rho_update = smalxe->rho_update; break;
     case 3: rho_update = smalxe->rho_update_late; Lagrangian_flag = PETSC_TRUE; break;
+    default: FLLOP_SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_WRONGSTATE,"invalid SMALXE state");
   }
   if (!Lagrangian_flag || rho_update == 1.0) PetscFunctionReturn(0);
   
