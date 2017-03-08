@@ -36,13 +36,7 @@ FLLOP_EXTERN PetscErrorCode MatCreateExtension(MPI_Comm comm, PetscInt m, PetscI
 
 
 /* PETSc fixes */
-PETSC_STATIC_INLINE PetscErrorCode MatCreateNormal_permonfix(Mat A,Mat *N)
-{
-  PetscErrorCode ierr;
-  ierr = MatCreateNormal(A,N);CHKERRQ(ierr);
-  ierr = MatSetUp(*N);CHKERRQ(ierr);
-  return 0;
-}
+FLLOP_EXTERN PetscErrorCode MatCreateNormal_permonfix(Mat A,Mat *N);
 #define MatCreateNormal(A,N) MatCreateNormal_permonfix(A,N)
 
 FLLOP_EXTERN PetscErrorCode MatCreateShellPermon(MPI_Comm comm,PetscInt m,PetscInt n,PetscInt M,PetscInt N,void *ctx,Mat *A);
