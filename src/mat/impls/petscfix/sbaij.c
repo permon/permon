@@ -6,8 +6,8 @@
 #endif
 
 #undef __FUNCT__
-#define __FUNCT__ "MatCreateSeqSBAIJWithArrays_fllopfix"
-PetscErrorCode  MatCreateSeqSBAIJWithArrays_fllopfix(MPI_Comm comm,PetscInt bs,PetscInt m,PetscInt n,PetscInt *i,PetscInt *j,PetscScalar *a,Mat *mat)
+#define __FUNCT__ "MatCreateSeqSBAIJWithArrays_permonfix"
+PetscErrorCode  MatCreateSeqSBAIJWithArrays_permonfix(MPI_Comm comm,PetscInt bs,PetscInt m,PetscInt n,PetscInt *i,PetscInt *j,PetscScalar *a,Mat *mat)
 {
   PetscErrorCode ierr;
   Mat_SeqSBAIJ   *sbaij;
@@ -19,4 +19,4 @@ PetscErrorCode  MatCreateSeqSBAIJWithArrays_fllopfix(MPI_Comm comm,PetscInt bs,P
   PetscFunctionReturn(0);
 }
 
-#define MatCreateSeqSBAIJWithArrays(a,b,c,d,e,f,g,h) MatCreateSeqSBAIJWithArrays_fllopfix(a,b,c,d,e,f,g,h)
+#define MatCreateSeqSBAIJWithArrays(a,b,c,d,e,f,g,h) MatCreateSeqSBAIJWithArrays_permonfix(a,b,c,d,e,f,g,h)

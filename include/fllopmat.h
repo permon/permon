@@ -36,20 +36,20 @@ FLLOP_EXTERN PetscErrorCode MatCreateExtension(MPI_Comm comm, PetscInt m, PetscI
 
 
 /* PETSc fixes */
-PETSC_STATIC_INLINE PetscErrorCode MatCreateNormal_fllopfix(Mat A,Mat *N)
+PETSC_STATIC_INLINE PetscErrorCode MatCreateNormal_permonfix(Mat A,Mat *N)
 {
   PetscErrorCode ierr;
   ierr = MatCreateNormal(A,N);CHKERRQ(ierr);
   ierr = MatSetUp(*N);CHKERRQ(ierr);
   return 0;
 }
-#define MatCreateNormal(A,N) MatCreateNormal_fllopfix(A,N)
+#define MatCreateNormal(A,N) MatCreateNormal_permonfix(A,N)
 
 FLLOP_EXTERN PetscErrorCode MatCreateShellPermon(MPI_Comm comm,PetscInt m,PetscInt n,PetscInt M,PetscInt N,void *ctx,Mat *A);
 FLLOP_EXTERN PetscErrorCode MatCreateDummy(MPI_Comm comm,PetscInt m,PetscInt n,PetscInt M,PetscInt N,void *ctx,Mat *A);
 
-FLLOP_EXTERN PetscErrorCode MatCreateSeqSBAIJWithArrays_fllopfix(MPI_Comm comm,PetscInt bs,PetscInt m,PetscInt n,PetscInt *i,PetscInt *j,PetscScalar *a,Mat *mat);
-#define MatCreateSeqSBAIJWithArrays(a,b,c,d,e,f,g,h) MatCreateSeqSBAIJWithArrays_fllopfix(a,b,c,d,e,f,g,h)
+FLLOP_EXTERN PetscErrorCode MatCreateSeqSBAIJWithArrays_permonfix(MPI_Comm comm,PetscInt bs,PetscInt m,PetscInt n,PetscInt *i,PetscInt *j,PetscScalar *a,Mat *mat);
+#define MatCreateSeqSBAIJWithArrays(a,b,c,d,e,f,g,h) MatCreateSeqSBAIJWithArrays_permonfix(a,b,c,d,e,f,g,h)
 
 FLLOP_EXTERN PetscErrorCode MatCreateDensePermon(MPI_Comm comm,PetscInt m,PetscInt n,PetscInt M,PetscInt N,PetscScalar *data,Mat *A_new);
 FLLOP_EXTERN PetscErrorCode MatCreateNestPermon(MPI_Comm comm,PetscInt nr,const IS is_row[],PetscInt nc,const IS is_col[],const Mat a[],Mat *B);
