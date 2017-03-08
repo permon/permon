@@ -1675,18 +1675,20 @@ PetscErrorCode QPTAllInOne(QP qp,MatInvType invType,PetscBool dual,PetscBool pro
   if (project) {
     TRY( QPTEnforceEqByProjector(qp) );
   }
-
-  normalize = PETSC_FALSE;
-  normalize_hessian = PETSC_FALSE;
-  TRY( QPChainGetLast(qp,&last) );
-  _fllop_ierr = PetscObjectOptionsBegin((PetscObject)last);CHKERRQ(_fllop_ierr);
-  TRY( PetscOptionsBoolGroupBegin("-qp_O_normalize","perform QPTNormalizeObjective","QPTNormalizeObjective",&normalize) );
-  TRY( PetscOptionsBoolGroupEnd("-qp_O_normalize_hessian","perform QPTNormalizeHessian","QPTNormalizeHessian",&normalize_hessian) );
-  _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
-  if (normalize) {
-    TRY( QPTNormalizeObjective(qp) );
-  } else if (normalize_hessian) {
-    TRY( QPTNormalizeHessian(qp) );
+  
+  if (dual || project) {
+    normalize = PETSC_FALSE;
+    normalize_hessian = PETSC_FALSE;
+    TRY( QPChainGetLast(qp,&last) );
+    _fllop_ierr = PetscObjectOptionsBegin((PetscObject)last);CHKERRQ(_fllop_ierr);
+    TRY( PetscOptionsBoolGroupBegin("-qp_O_normalize","perform QPTNormalizeObjective","QPTNormalizeObjective",&normalize) );
+    TRY( PetscOptionsBoolGroupEnd("-qp_O_normalize_hessian","perform QPTNormalizeHessian","QPTNormalizeHessian",&normalize_hessian) );
+    _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
+    if (normalize) {
+      TRY( QPTNormalizeObjective(qp) );
+    } else if (normalize_hessian) {
+      TRY( QPTNormalizeHessian(qp) );
+    }
   }
 
   TRY( QPTEnforceEqByPenalty(qp,penalty,penalty_direct) );
