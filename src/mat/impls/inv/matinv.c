@@ -266,7 +266,7 @@ static PetscErrorCode MatInvSetPsubcommType_Inv(Mat imat, PetscSubcommType type)
 
 #undef __FUNCT__  
 #define __FUNCT__ "MatInvGetPsubcommColor_Inv"
-static PetscErrorCode MatInvGetPsubcommColor_Inv(Mat imat, PetscInt *color)
+static PetscErrorCode MatInvGetPsubcommColor_Inv(Mat imat, PetscMPIInt *color)
 {
   Mat_Inv *inv = (Mat_Inv*) imat->data;
   PC pc;
@@ -586,10 +586,10 @@ static PetscErrorCode MatInvExplicitly_Inv(Mat imat, PetscBool transpose, MatReu
   PetscInt M;
   PetscInt m, n;
   MPI_Comm comm;
-  PetscMPIInt rank,subrank;
+  PetscMPIInt rank, subrank, scColor=0;
   KSP ksp;
   PetscInt iloihi[2];
-  PetscInt redundancy, scColor;
+  PetscInt redundancy;
   Mat B;
 
   PetscFunctionBeginI;
