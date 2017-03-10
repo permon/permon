@@ -533,6 +533,7 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   /* initiate CG method */
   TRY( VecCopy(phi, p) );                         /* p=phi */
 
+  alpha = mpgp->alpha;
   qps->iteration = 0;                             /* main iteration counter */
   while (1)                                       /* main cycle */
   {
