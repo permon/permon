@@ -205,7 +205,7 @@ PetscErrorCode QPSReset(QPS qps)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   if (qps->ops->reset) TRY( (*qps->ops->reset)(qps) );
-  if (qps->topQP) TRY( QPReset(qps->topQP) );
+  if (qps->topQP) TRY( QPDestroy(&qps->topQP) );
   TRY( VecDestroyVecs(qps->nwork,&qps->work) );
   TRY( PetscFree(qps->work_state) );
   qps->setupcalled = PETSC_FALSE;
