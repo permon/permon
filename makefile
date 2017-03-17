@@ -188,7 +188,6 @@ alldoc1: chk_loc deletemanualpages
 # Builds .html versions of the source
 alldoc2: chk_loc
 	-${OMAKE} ACTION=permon_html PETSC_DIR=${PETSC_DIR} alltree LOC=${LOC}
-	cp ${LOC}/docs/manual.htm ${LOC}/docs/index.html
 
 # Deletes documentation
 alldocclean: deletemanualpages allcleanhtml

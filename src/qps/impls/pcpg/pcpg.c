@@ -2,14 +2,14 @@
 
 #undef __FUNCT__  
 #define __FUNCT__ "QPSIsQPCompatible_PCPG"
-/*@
+/*
 QPSIsQPCompatible_PCPG - verify if the algorithm is able to solve given QP problem
 
 Parameters:
 + qps - QP solver
 . qp - quadratic programming problem
 - flg - the pointer to result
-@*/
+*/
 PetscErrorCode QPSIsQPCompatible_PCPG(QPS qps,QP qp,PetscBool *flg){
     PetscFunctionBegin;
     if (qp->lb || qp->ub || qp->BI || !qp->BE) {
@@ -25,12 +25,12 @@ PetscErrorCode QPSIsQPCompatible_PCPG(QPS qps,QP qp,PetscBool *flg){
 
 #undef __FUNCT__  
 #define __FUNCT__ "QPSSetup_PCPG"
-/*@
+/*
  * QPSSetup_PCPG - the setup function of PCPG algorithm
  *
  * Parameters:
  * . qps - QP solver
- * @*/
+ * */
 PetscErrorCode QPSSetup_PCPG(QPS qps){
   PetscFunctionBegin;
   TRY( QPSSetWorkVecs(qps,6) );
@@ -43,12 +43,12 @@ PetscErrorCode QPSSetup_PCPG(QPS qps){
 
 #undef __FUNCT__  
 #define __FUNCT__ "QPSSolve_PCPG"
-/*@
+/*
  * QPSSolve_PCPG - the solver; solve the problem using PCPG algorithm 
  *
  * Parameters:
  * . qps - QP solver
- * @*/
+ * */
 PetscErrorCode QPSSolve_PCPG(QPS qps){
   QP qp;
   QPPF cp;

@@ -1,7 +1,7 @@
 
 ALL: lib
 
-SOURCEH  = ../../include/private/fllopvecstructs.h ../../include/fllopvec.h
+SOURCEH  = ../../include/fllopvec.h
 DIRS     = interface
 LOCDIR   = src/vec/
 MANSEC   = Vec

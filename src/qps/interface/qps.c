@@ -44,13 +44,19 @@ static PetscErrorCode QPSDetachQP_Private(QPS qps) {
 #undef __FUNCT__  
 #define __FUNCT__ "QPSCreate"
 /*@
-QPSCreate - create QP Solver instance
+   QPSCreate - create QP Solver instance
 
-  Input Parameters:
-. comm - MPI comm 
+   Collective on MPI_Comm
 
-  Output Parameters:
-. inqps - pointer to created QPS 
+   Input Parameters:
+.  comm - MPI comm 
+
+   Output Parameters:
+.  inqps - pointer to created QPS 
+
+   Level: beginner
+
+.seealso QPSDestroy()
 @*/
 PetscErrorCode QPSCreate(MPI_Comm comm,QPS *inqps)
 {
@@ -103,11 +109,17 @@ PetscErrorCode QPSCreate(MPI_Comm comm,QPS *inqps)
 #undef __FUNCT__  
 #define __FUNCT__ "QPSGetQP"
 /*@
-QPSGetQP - return inner QP from QPS
+   QPSGetQP - return the user's QP from QPS
 
-Parameters:
-+ qps - instance of QPS 
-- qp - pointer to returning QP 
+   Not Collective
+
+   Parameters:
++  qps - instance of QPS 
+-  qp - pointer to returning QP 
+
+   Level: intermediate
+
+.seealso QPSSetQP(), QPSGetSolvedQP(), QPSSolve()
 @*/
 PetscErrorCode QPSGetQP(QPS qps,QP *qp)
 {
@@ -121,13 +133,19 @@ PetscErrorCode QPSGetQP(QPS qps,QP *qp)
 #undef __FUNCT__  
 #define __FUNCT__ "QPSGetSolvedQP"
 /*@
-QPSGetSolvedQP - return solved inner QP from QPS
+   QPSGetSolvedQP - return the actually solved QP from QPS (typically the most derived - last in QP chain)
 
-  Input Parameter:
-. qps - instance of QPS 
+   Not Collective
 
-  Output Parameter:
-. qp - pointer to returning QP 
+   Input Parameter:
+.  qps - instance of QPS 
+
+   Output Parameter:
+.  qp - pointer to returning QP 
+
+   Level: advanced
+
+.seealso QPSGetQP(), QPSSolve()
 @*/
 PetscErrorCode QPSGetSolvedQP(QPS qps,QP *qp)
 {
@@ -141,11 +159,15 @@ PetscErrorCode QPSGetSolvedQP(QPS qps,QP *qp)
 #undef __FUNCT__  
 #define __FUNCT__ "QPSSetQP"
 /*@
-QPSSetQP - set inner QP in QPS
+   QPSSetQP - set the user's QP to QPS
 
-  Input parameters:
-+ qps - instance of QPS 
-- qp - instance of QP 
+   Not Collective, but the QPS and QP objects must live on the same MPI_Comm
+
+   Input parameters:
++  qps - instance of QPS 
+-  qp - instance of QP 
+
+   Level: beginner
 @*/
 PetscErrorCode QPSSetQP(QPS qps,QP qp)
 {
@@ -163,10 +185,16 @@ PetscErrorCode QPSSetQP(QPS qps,QP qp)
 #undef __FUNCT__  
 #define __FUNCT__ "QPSSetUp"
 /*@
-QPSSetUp - set up the QPS; prepare QP chain, check up the QPS compatibility, set up the PC preconditioner  
+   QPSSetUp - set up the QPS; prepare QP chain, check up the QPS compatibility, set up the PC preconditioner  
 
-  Input parameter:
-. qps - instance of QPS 
+   Collective on QPS
+
+   Input parameter:
+.  qps - instance of QPS 
+
+   Level: advanced
+
+.seealso QPSSolve(), QPSReset(), QPChainSetUp(), QPSIsQPCompatible()
 @*/
 PetscErrorCode QPSSetUp(QPS qps)
 {
@@ -195,10 +223,16 @@ PetscErrorCode QPSSetUp(QPS qps)
 #undef __FUNCT__  
 #define __FUNCT__ "QPSReset"
 /*@
-QPSReset - reset QPS; prepare the instance to new data
+   QPSReset - reset QPS; prepare the instance to new data
 
-  Input parameter:
-. qps - instance of QPS 
+   Collective on QPS
+
+   Input parameter:
+.  qps - instance of QPS 
+
+   Level: beginner
+
+.seealso QPSSolve(), QPSSetUp()
 @*/
 PetscErrorCode QPSReset(QPS qps)
 {
@@ -217,11 +251,17 @@ PetscErrorCode QPSReset(QPS qps)
 #undef __FUNCT__  
 #define __FUNCT__ "QPSView"
 /*@
-QPSView - view the basic properties of QPS
+   QPSView - view the basic properties of QPS
 
-  Input parameters:
-+ qps - instance of QPS 
-- v - viewer
+   Collective on QPS
+
+   Input parameters:
++  qps - instance of QPS 
+-  v - viewer
+
+   Level: beginner
+
+.seealso QPSViewConvergence()
 @*/
 PetscErrorCode QPSView(QPS qps,PetscViewer v)
 {
@@ -241,12 +281,16 @@ PetscErrorCode QPSView(QPS qps,PetscViewer v)
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSDestroyDefault"
-/*@
-QPSDestroyDefault - destroy the QPS content
+/*
+   QPSDestroyDefault - destroy the QPS content
 
-  Input parameter:
-. qps - instance of QPS 
-@*/
+   Input parameter:
+.  qps - instance of QPS 
+
+   Developers Note: This is PETSC_EXTERN because it may be used by user written plugin QPS implementations
+
+   Level: developer
+*/
 PetscErrorCode QPSDestroyDefault(QPS qps)
 {
   PetscFunctionBegin;
@@ -259,10 +303,14 @@ PetscErrorCode QPSDestroyDefault(QPS qps)
 #undef __FUNCT__  
 #define __FUNCT__ "QPSDestroy"
 /*@
-QPSDestroy - destroy the QPS content
+   QPSDestroy - destroy the QPS instance
 
-  Input parameter:
-. qps - pointer to instance of QPS 
+   Input parameter:
+.  qps - pointer to instance of QPS 
+
+   Level: beginner
+
+.seealso QPSCreate()
 @*/
 PetscErrorCode QPSDestroy(QPS *qps)
 {
@@ -296,11 +344,17 @@ PetscErrorCode QPSDestroy(QPS *qps)
 #undef __FUNCT__
 #define __FUNCT__ "QPSSetType"
 /*@
-QPSSetType - set the type of solver
+   QPSSetType - set the type of solver
 
-  Input parameters:
-+ qps - instance of QPS 
-- type - type of the solver (QPSKSP, QPSMPGP, QPSSMALXE) 
+   Collective on QPS
+
+   Input parameters:
++  qps - instance of QPS 
+-  type - type of the solver (QPSKSP, QPSMPGP, QPSSMALXE) 
+
+   Level: intermediate
+
+.seealso QPSCreate()
 @*/
 PetscErrorCode QPSSetType(QPS qps, const QPSType type)
 {
@@ -334,10 +388,16 @@ PetscErrorCode QPSSetType(QPS qps, const QPSType type)
 #undef __FUNCT__
 #define __FUNCT__ "QPSSetDefaultType"
 /*@
-QPSSetDefaultType - set the type of solver subject to the properties of QP
+   QPSSetDefaultType - set the type of solver to the default one corresponding to prescribed constraints
 
-  Input parameters:
-. qps - instance of QPS 
+   Collective on QPS
+
+   Input parameters:
+.  qps - instance of QPS 
+
+   Level: advanced
+
+.seealso QPSSetType()
 @*/
 PetscErrorCode QPSSetDefaultType(QPS qps)
 {
@@ -395,13 +455,19 @@ PetscErrorCode QPSSetDefaultTypeIfNotSpecified(QPS qps)
 #undef __FUNCT__  
 #define __FUNCT__ "QPSGetType"
 /*@
-QPSGetType - return the type of solver
+   QPSGetType - return the type of solver
 
-  Input parameter:
-. qps - instance of QPS 
+   Not Collective
 
-  Output parameter:
-. type - type of the solver (QPSKSP, QPSMPGP, QPSSMALXE) 
+   Input parameter:
+.  qps - instance of QPS 
+
+   Output parameter:
+.  type - type of the solver
+
+   Level: developer
+
+.seealso QPSSetType()
 @*/
 PetscErrorCode QPSGetType(QPS qps,const QPSType *type) 
 {
@@ -414,14 +480,20 @@ PetscErrorCode QPSGetType(QPS qps,const QPSType *type)
 #undef __FUNCT__  
 #define __FUNCT__ "QPSIsQPCompatible"
 /*@
-QPSIsQPCompatible - check the compatibility of solver and given QP
+   QPSIsQPCompatible - check that given solver is able to solve given QP
 
-  Input parameters:
-+ qps - instance of QPS 
-- qp - QP  
+   Not Collective
 
-  Output parameter: 
-. flg - return value 
+   Input parameters:
++  qps - instance of QPS 
+-  qp - QP  
+
+   Output parameter: 
+.  flg - return value 
+
+   Level: developer
+
+.seealso QPSSolve(), QPSetQP()
 @*/
 PetscErrorCode QPSIsQPCompatible(QPS qps,QP qp,PetscBool *flg)
 {
@@ -436,10 +508,16 @@ PetscErrorCode QPSIsQPCompatible(QPS qps,QP qp,PetscBool *flg)
 #undef __FUNCT__  
 #define __FUNCT__ "QPSSolve"
 /*@
-QPSSolve - solve the QP using QPS; initiate the solver
+   QPSSolve - solve the QP using QPS; initiate the solver
 
-  Input parameter:
-. qps - instance of QPS 
+   Collective on QPS
+
+   Input parameter:
+.  qps - instance of QPS 
+
+   Level: beginner
+
+.seealso QPSSetQP(), QPSSetUp(), QPIsSolved(), QPGetSolutionVector()
 @*/
 PetscErrorCode QPSSolve(QPS qps)
 {
@@ -465,6 +543,26 @@ PetscErrorCode QPSSolve(QPS qps)
 
 #undef __FUNCT__  
 #define __FUNCT__ "QPSPostSolve"
+/*@
+   QPSPostSolve - Apply post solve functions and optionally view. 
+
+   Collective on QP
+
+   Input Parameter:
+.  qp   - the QP
+  
+   Options Database Keys:
++  -qps_view             - view information about QPS
+.  -qps_view_convergence - view information about QPS type and convergence
+.  -qp_view              - view information about QP
+.  -qp_chain_view        - view information about all QPs in the chain
+.  -qp_chain_view_qppf   - view information about all QPPFs in the chain
+-  -qp_chain_view_kkt    - view how well are KKT conditions satisfied for each QP in the chain 
+
+   Level: advanced
+
+.seealso QPSSolve(), QPChainPostSolve(), QPSView(), QPSViewConvergence(), QPChainView(), QPChainViewKKT(), QPChainViewQPPF()
+@*/
 PetscErrorCode QPSPostSolve(QPS qps)
 {
   QP qp;
@@ -495,7 +593,7 @@ PetscErrorCode QPSPostSolve(QPS qps)
   }
 
   TRY( QPSGetQP(qps,&qp) );
-  TRY( QPPostSolve(qp) );
+  TRY( QPChainPostSolve(qp) );
   qps->postsolvecalled = PETSC_TRUE;
   TRY( PetscLogEventEnd(  QPS_PostSolve,qps,0,0,0) );  
   PetscFunctionReturnI(0);
@@ -536,24 +634,23 @@ PetscErrorCode QPSGetConvergenceContext(QPS qps,void **ctx)
    Input Parameters:
 +  qps   - iterative context
 .  i     - iteration number
-.  rnorm - 2-norm residual value (may be estimated)
+-  rnorm - 2-norm residual value (may be estimated)
 
-   reason is set to:
-+   positive - if the iteration has converged;
-.   negative - if residual norm exceeds divergence threshold;
--   0 - otherwise.
+   Reason is set to:
++  positive - if the iteration has converged;
+.  negative - if residual norm exceeds divergence threshold;
+-  0 - otherwise.
 
    Notes:
    QPSConvergedDefault() reaches convergence when
 $      rnorm < MAX (rtol * rnorm_0, abstol);
    Divergence is detected if
 $      rnorm > dtol * rnorm_0,
-
    where 
-+     rtol = relative tolerance,
-.     abstol = absolute tolerance,
-.     dtol = divergence tolerance,
--     rnorm_0 is the two norm of the right hand side.
++  rtol - relative tolerance,
+.  abstol - absolute tolerance,
+.  dtol - divergence tolerance,
+-  rnorm_0 - the 2-norm of the right hand side.
    Use QPSSetTolerances() to alter the defaults for rtol, abstol, dtol.
 
    The precise values of reason are macros such as KSP_CONVERGED_RTOL, which
@@ -563,7 +660,7 @@ $      rnorm > dtol * rnorm_0,
 
 .keywords: QPS, default, convergence, residual
 
-.seealso: QPSSetConvergenceTest(), QPSSetTolerances(), QPSSkipConverged(), KSPConvergedReason, QPSGetConvergedReason(),
+.seealso: QPSSetConvergenceTest(), QPSSetTolerances(), QPSConvergedSkip(), KSPConvergedReason, QPSGetConvergedReason(),
           QPSConvergedDefaultCreate(), QPSConvergedDefaultDestroy()
 @*/
 PetscErrorCode QPSConvergedDefault(QPS qps,QP qp,PetscInt i,PetscReal rnorm,KSPConvergedReason *reason,void *ctx)
@@ -876,14 +973,14 @@ PetscErrorCode QPSViewConvergence(QPS qps, PetscViewer v)
 #undef __FUNCT__
 #define __FUNCT__ "QPSGetVecs"
 /*@C
-  QPSGetVecs - Gets a number of work vectors.
+   QPSGetVecs - Gets a number of work vectors.
 
-  Input Parameters:
-+ qps  - iterative context
-. rightn  - number of right work vectors
-- leftn   - number of left work vectors to allocate
+   Input Parameters:
++  qps  - iterative context
+.  rightn  - number of right work vectors
+-  leftn   - number of left work vectors to allocate
 
-  Output Parameters:
+   Output Parameters:
 +  right - the array of vectors created
 -  left - the array of left vectors
 
@@ -893,7 +990,6 @@ PetscErrorCode QPSViewConvergence(QPS qps, PetscViewer v)
    Level: advanced
 
 .seealso: MatCreateVecs()
-
 @*/
 PetscErrorCode QPSGetVecs(QPS qps,PetscInt rightn, Vec **right,PetscInt leftn,Vec **left)
 {
@@ -918,11 +1014,15 @@ PetscErrorCode QPSGetVecs(QPS qps,PetscInt rightn, Vec **right,PetscInt leftn,Ve
 #undef __FUNCT__
 #define __FUNCT__ "QPSSetWorkVecs"
 /*
-  QPSSetWorkVecs - Sets a number of work vectors into a QPS object
+   QPSSetWorkVecs - Sets a number of work vectors into a QPS object
 
-  Input Parameters:
-+ qps  - iterative context
-- nw   - number of work vectors to allocate
+   Input Parameters:
++  qps  - iterative context
+-  nw   - number of work vectors to allocate
+
+   Developers Note: This is PETSC_EXTERN because it may be used by user written plugin QPS implementations
+
+   Level: developer
 */
 PetscErrorCode QPSSetWorkVecs(QPS qps,PetscInt nw)
 {
@@ -989,20 +1089,20 @@ PetscErrorCode QPSSolutionVecStateChanged(QPS qps,PetscBool *flg)
 #undef __FUNCT__
 #define __FUNCT__ "QPSMonitor"
 /*@
-QPSMonitor - runs the user provided monitor routines, if they exist
+   QPSMonitor - runs the user provided monitor routines, if they exist
 
-Collective on QPS
+   Collective on QPS
 
-Input Parameters:
-+ qps - iterative context obtained from QPSCreate()
-. it - iteration number
-- rnorm - relative norm of the residual
+   Input Parameters:
++  qps - iterative context obtained from QPSCreate()
+.  it - iteration number
+-  rnorm - relative norm of the residual
 
-Notes:
- This routine is called by the KSP implementations.
- It does not typically need to be called by the user.
+   Notes:
+   This routine is called by the KSP implementations.
+   It does not typically need to be called by the user.
 
-Level: developer
+   Level: developer
 
 .seealso: QPSMonitorSet()
 @*/
@@ -1020,54 +1120,54 @@ PetscErrorCode QPSMonitor(QPS qps, PetscInt it, PetscReal rnorm)
 #undef __FUNCT__
 #define __FUNCT__ "QPSMonitorSet"
 /*@
-QPSMonitorSet - Sets an ADDITIONAL function to be called at every iteration to monitor
+   QPSMonitorSet - Sets an ADDITIONAL function to be called at every iteration to monitor
     the residual/error etc.
 
-Logically Collective on QPS
+   Logically Collective on QPS
 
-Input Parameters:
-+ qps - iterative context obtained from QPSCreate()
-. monitor - pointer to function (if this is NULL, it turns off monitoring
-. mctx    - [optional] context for private data for the
-             monitor routine (use NULL if no context is desired)
-- monitordestroy - [optional] routine that frees monitor context
-                   (may be NULL)
+   Input Parameters:
++  qps - iterative context obtained from QPSCreate()
+.  monitor - pointer to function (if this is NULL, it turns off monitoring
+.  mctx    - [optional] context for private data for the
+              monitor routine (use NULL if no context is desired)
+-  monitordestroy - [optional] routine that frees monitor context
+                    (may be NULL)
 
-Calling Sequence of monitor:
+   Calling Sequence of monitor:
 $     monitor (QPS qps, int it, PetscReal rnorm, void *mctx)
 
-+ qps - iterative context obtained from QPSCreate()
-. it - iteration number
-. rnorm - (estimated) 2-norm of (preconditioned) residual
-- mctx  - optional monitoring context, as set by QPSMonitorSet()
++  qps - iterative context obtained from QPSCreate()
+.  it - iteration number
+.  rnorm - (estimated) 2-norm of (preconditioned) residual
+-  mctx  - optional monitoring context, as set by QPSMonitorSet()
 
-Options Database Keys:
-+ -qps_monitor - sets QPSMonitorDefault()
-. -qps_monitor_true_residual    - sets QPSMonitorTrueResidualNorm()
-. -qps_monitor_max    - sets QPSMonitorTrueResidualMaxNorm()
-. -qps_monitor_lg_residualnorm    - sets line graph monitor,
-                            uses QPSMonitorLGResidualNormCreate()
-. -qps_monitor_lg_true_residualnorm   - sets line graph monitor,
-                            uses KSPMonitorLGResidualNormCreate()
-. -qps_monitor_singular_value    - sets QPSMonitorSingularValue()
-- -qps_monitor_cancel - cancels all monitors that have
-        been hardwired into a code by
-        calls to QPSMonitorSet(), but
-        does not cancel those set via
-        the options database.
+   Options Database Keys:
++  -qps_monitor - sets QPSMonitorDefault()
+.  -qps_monitor_true_residual    - sets QPSMonitorTrueResidualNorm()
+.  -qps_monitor_max    - sets QPSMonitorTrueResidualMaxNorm()
+.  -qps_monitor_lg_residualnorm    - sets line graph monitor,
+                             uses QPSMonitorLGResidualNormCreate()
+.  -qps_monitor_lg_true_residualnorm   - sets line graph monitor,
+                             uses KSPMonitorLGResidualNormCreate()
+.  -qps_monitor_singular_value    - sets QPSMonitorSingularValue()
+-  -qps_monitor_cancel - cancels all monitors that have
+         been hardwired into a code by
+         calls to QPSMonitorSet(), but
+         does not cancel those set via
+         the options database.
 
-Notes:
-The default is to do nothing.  To print the residual, or preconditioned
-residual if QPSSetNormType(qps,QPS_NORM_PRECONDITIONED) was called, use
-QPSMonitorDefault() as the monitoring routine, with a null monitoring
-context.
-
-Several different monitoring routines may be set by calling
-QPSMonitorSet() multiple times; all will be called in the
-order in which they were set.
-
-
-Level: beginner
+   Notes:
+   The default is to do nothing.  To print the residual, or preconditioned
+   residual if QPSSetNormType(qps,QPS_NORM_PRECONDITIONED) was called, use
+   QPSMonitorDefault() as the monitoring routine, with a null monitoring
+   context.
+   
+   Several different monitoring routines may be set by calling
+   QPSMonitorSet() multiple times; all will be called in the
+   order in which they were set.
+   
+   
+   Level: beginner
 
 .keywords: QPS, set, monitor
 
@@ -1103,19 +1203,19 @@ PetscErrorCode  QPSMonitorSet(QPS qps,PetscErrorCode (*monitor)(QPS,PetscInt,Pet
 #undef __FUNCT__  
 #define __FUNCT__ "QPSMonitorCancel"
 /*@
-QPSMonitorCancel - Clears all monitors for a QPS object.
-
-Logically Collective on QPS
-
-Input Parameters:
+   QPSMonitorCancel - Clears all monitors for a QPS object.
+   
+   Logically Collective on QPS
+   
+   Input Parameters:
 .  qps - iterative context obtained from QPSCreate()
 
-Options Database Key:
+   Options Database Key:
 .  -qps_monitor_cancel - Cancels all monitors that have
      been hardwired into a code by calls to QPSMonitorSet(),
      but does not cancel those set via the options database.
 
-Level: intermediate
+   Level: intermediate
 
 .keywords: QPS, set, monitor
 
@@ -1138,18 +1238,18 @@ PetscErrorCode  QPSMonitorCancel(QPS qps)
 #undef __FUNCT__  
 #define __FUNCT__ "QPSGetMonitorContext"
 /*@
-QPSGetMonitorContext - Gets the monitoring context, as set by
-    QPSMonitorSet() for the FIRST monitor only.
+   QPSGetMonitorContext - Gets the monitoring context, as set by
+     QPSMonitorSet() for the FIRST monitor only.
 
-Not Collective
+   Not Collective
+   
+   Input Parameter:
+.  qps - iterative context obtained from QPSCreate()
 
-Input Parameter:
-. qps - iterative context obtained from QPSCreate()
+   Output Parameter:
+.  qps - monitoring context
 
-Output Parameter:
-. qps - monitoring context
-
-Level: intermediate
+   Level: intermediate
 
 .keywords: QPS, get, monitor, context
 
@@ -1165,31 +1265,31 @@ PetscErrorCode  QPSGetMonitorContext(QPS qps,void **ctx)
 #undef __FUNCT__  
 #define __FUNCT__ "QPSSetResidualHistory"
 /*@
-QPSSetResidualHistory - Sets the array used to hold the residual history.
-    If set, this array will contain the residual norms computed at each
-    iteration of the solver.
+   QPSSetResidualHistory - Sets the array used to hold the residual history.
+     If set, this array will contain the residual norms computed at each
+     iteration of the solver.
 
-    Not Collective
+   Not Collective
 
-Input Parameters:
-+ qps - iterative context obtained from QPSCreate()
-. a   - array to hold history
-. na  - size of a
-- reset - PETSC_TRUE indicates the history counter is reset to zero
-          for each new linear solve
+   Input Parameters:
++  qps - iterative context obtained from QPSCreate()
+.  a   - array to hold history
+.  na  - size of a
+-  reset - PETSC_TRUE indicates the history counter is reset to zero
+           for each new linear solve
 
-Level: advanced
+   Level: advanced
 
-Notes: The array is NOT freed by PETSc so the user needs to keep track of
-       it and destroy once the QPS object is destroyed.
+   Notes:
+   Array is NOT freed by PETSc so the user needs to keep track of
+    and destroy once the QPS object is destroyed.
 
-       If 'a' is NULL then space is allocated for the history. If 'na' PETSC_DECIDE or PETSC_DEFAULT then a
-       default array of length 10000 is allocated.
+    'a' is NULL then space is allocated for the history.
+    If 'na' PETSC_DECIDE or PETSC_DEFAULT then an array of length 10000 is allocated.
 
 .keywords: QPS, set, residual, history, norm
 
 .seealso: QPSGetResidualHistory()
-
 @*/
 PetscErrorCode  QPSSetResidualHistory(QPS qps,PetscReal a[],PetscInt na,PetscBool reset)
 {
@@ -1213,27 +1313,26 @@ PetscErrorCode  QPSSetResidualHistory(QPS qps,PetscReal a[],PetscInt na,PetscBoo
 #undef __FUNCT__  
 #define __FUNCT__ "QPSGetResidualHistory"
 /*@
-QPSGetResidualHistory - Gets the array used to hold the residual history
-    and the number of residuals it contains.
+   QPSGetResidualHistory - Gets the array used to hold the residual history
+       and the number of residuals it contains.
+   
+   Not Collective
+   
+   Input Parameter:
+.  qps - iterative context obtained from QPSCreate()
 
-Not Collective
+   Output Parameters:
++  a   - pointer to array to hold history (or NULL)
+-  na  - number of used entries in a (or NULL)
 
-Input Parameter:
-. qps - iterative context obtained from QPSCreate()
+   Level: advanced
 
-Output Parameters:
-+ a   - pointer to array to hold history (or NULL)
-- na  - number of used entries in a (or NULL)
-
-Level: advanced
-
-Notes:
+   Notes:
      Can only be called after a QPSSetResidualHistory() otherwise a and na are set to zero
 
 .keywords: QPS, get, residual, history, norm
 
 .seealso: QPSGetResidualHistory()
-
 @*/
 PetscErrorCode  QPSGetResidualHistory(QPS qps,PetscReal *a[],PetscInt *na)
 {
@@ -1246,18 +1345,18 @@ PetscErrorCode  QPSGetResidualHistory(QPS qps,PetscReal *a[],PetscInt *na)
 #undef __FUNCT__  
 #define __FUNCT__ "QPSMonitorDefault"
 /*@
-QPSMonitorDefault - Print the projected gradient norm at each iteration of an
-                    iterative solver. 
+   QPSMonitorDefault - Print the projected gradient norm at each iteration of an
+                       iterative solver. 
+   
+   Collective on QPS
+   
+   Input Parameters:
++  qps   - iterative context
+.  n     - iteration number
+.  rnorm - 2-norm residual value (may be estimated).
+-  dummy - unused monitor context
 
-Collective on QPS
-
-Input Parameters:
-+ qps   - iterative context
-. n     - iteration number
-. rnorm - 2-norm residual value (may be estimated).
-- dummy - unused monitor context
-
-Level: intermediate
+   Level: intermediate
 
 .keywords: QPS, default, monitor, residual
 

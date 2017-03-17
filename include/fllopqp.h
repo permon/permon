@@ -15,6 +15,7 @@ FLLOP_EXTERN PetscErrorCode QPChainAdd(QP qp,QPDuplicateOption opt,QP *newchild)
 FLLOP_EXTERN PetscErrorCode QPChainPop(QP qp);
 FLLOP_EXTERN PetscErrorCode QPChainFind(QP qp,PetscErrorCode(*transform)(QP),QP *child);
 FLLOP_EXTERN PetscErrorCode QPChainGetLast(QP qp,QP *child);
+FLLOP_EXTERN PetscErrorCode QPChainPostSolve(QP qp);
 FLLOP_EXTERN PetscErrorCode QPChainSetFromOptions(QP qp);
 FLLOP_EXTERN PetscErrorCode QPChainSetUp(QP qp);
 FLLOP_EXTERN PetscErrorCode QPChainView(QP qp,PetscViewer v);
@@ -36,7 +37,6 @@ FLLOP_EXTERN PetscErrorCode QPViewKKT(QP qp,PetscViewer v);
 FLLOP_EXTERN PetscErrorCode QPReset(QP qp);
 FLLOP_EXTERN PetscErrorCode QPSetUpInnerObjects(QP qp);
 FLLOP_EXTERN PetscErrorCode QPSetUp(QP qp);
-FLLOP_EXTERN PetscErrorCode QPPostSolve(QP qp);
 FLLOP_EXTERN PetscErrorCode QPDestroy(QP *qp);
 FLLOP_EXTERN PetscErrorCode QPDump(QP qp);
 

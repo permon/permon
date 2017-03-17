@@ -369,27 +369,28 @@ static PetscErrorCode MatOrthColumns_GS(Mat A, MatOrthType type, MatOrthForm for
 #undef __FUNCT__
 #define __FUNCT__ "MatOrthColumns"
 /*@
-  MatOrthColumns - Perform a QR factorization.
+   MatOrthColumns - Perform a QR factorization.
 
-  Collective on Mat
+   Collective on Mat
 
-  Input Parameter:
-+ A - the matrix whose columns will be orthonormalized
-- type - the algorithm used for orthonormalization
-  (one of MAT_ORTH_NONE, MAT_ORTH_GS, MAT_ORTH_CHOLESKY, MAT_ORTH_CHOLESKY_EXPLICIT)
+   Input Parameter:
++  A - the matrix whose columns will be orthonormalized
+.  type - the algorithm used for orthonormalization
+     (one of MAT_ORTH_NONE, MAT_ORTH_GS, MAT_ORTH_CHOLESKY, MAT_ORTH_CHOLESKY_EXPLICIT)
+-  form - specify whether Q is computed explicitly or as an implicit product of A and S
+     (one of MAT_ORTH_FORM_IMPLICIT, MAT_ORTH_FORM_EXPLICIT)
  
-  Output Parameter:
-+ Q_new - (optional) the Q factor of the same size as A 
-- S_new - (optional) the inverse of the R factor
+   Output Parameter:
++  Q_new - (optional) the Q factor of the same size as A 
+-  S_new - (optional) the inverse of the R factor
  
-  Notes:
-  This routine computes Q and S so that A = Q*inv(S), Q = A*S.
+   Notes:
+   This routine computes Q and S so that A = Q*inv(S), Q = A*S.
 
-  Level: beginner
+   Level: intermediate
 
-.seealso: MatOrthRows, MatOrthType
+.seealso: MatOrthRows(), MatOrthType
 @*/
-//TODO new arg - explicit vs implicit Q
 PetscErrorCode MatOrthColumns(Mat A, MatOrthType type, MatOrthForm form, Mat *Q_new, Mat *S_new)
 {
   static PetscBool registered = PETSC_FALSE;
@@ -483,9 +484,9 @@ PetscErrorCode MatOrthColumns(Mat A, MatOrthType type, MatOrthForm form, Mat *Q_
   Notes:
   This routine computes Qt and T so that A = inv(T)*Qt, Qt = T*A.
 
-  Level: beginner
+  Level: intermediate
 
-.seealso: MatOrthColumns, MatOrthType
+.seealso: MatOrthColumns(), MatOrthType
 @*/
 #undef __FUNCT__
 #define __FUNCT__ "MatOrthRows"

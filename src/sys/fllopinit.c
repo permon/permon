@@ -29,6 +29,8 @@ FLLOP   fllop;
 +  -skip_flloprc  - skip reading flloprc file
 -  -options_table - print table of options
 
+   Level: beginner
+
 .seealso FllopFinalize()
 @*/
 PetscErrorCode FllopInitialize(int *argc, char ***args, const char file[])
@@ -96,6 +98,8 @@ PetscErrorCode FllopInitialize(int *argc, char ***args, const char file[])
 #define __FUNCT__ "FllopFinalize"
 /*@
    FllopFinalize - Fllop cleanup, PetscFinalize() (if FLLOP started petsc), etc.
+
+   Level: beginner
 
 .seealso FllopInitialize()
 @*/

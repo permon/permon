@@ -6,10 +6,14 @@
 /*@
    QPChainAdd - Append QP into the QP chain.
 
+   Collective on QP
+
    Input Parameters:
 +  qp - a QP that is member of the chain to which we want to append
 .  opt - either QP_DUPLICATE_DO_NOT_COPY or QP_DUPLICATE_COPY_POINTERS
 -  newchild - a pointer to QP that should be appended
+
+   Level: developer
 @*/
 PetscErrorCode QPChainAdd(QP qp, QPDuplicateOption opt, QP *newchild)
 {
@@ -30,6 +34,8 @@ PetscErrorCode QPChainAdd(QP qp, QPDuplicateOption opt, QP *newchild)
 
    Input Parameters:
 .  qp - a QP that is member of the chain from which we want to delete the last QP
+
+   Level: developer
 @*/
 PetscErrorCode QPChainPop(QP qp)
 {
@@ -47,12 +53,16 @@ PetscErrorCode QPChainPop(QP qp)
 /*@
    QPChainFind - Find QP in the chain.
 
+   Not Collective
+
    Input Parameters:
 +  qp - a QP that is member of the chain; specifies the starting point of search
 -  transform - a tranformation function that was used to create QP we search for
 
    Output Parameters:
 .  child - first QP in chain that was transformed by transform; NULL if such QP does not exist
+
+   Level: advanced
 @*/
 PetscErrorCode QPChainFind(QP qp,PetscErrorCode(*transform)(QP),QP *child)
 {
@@ -83,11 +93,15 @@ PetscErrorCode QPChainFind(QP qp,PetscErrorCode(*transform)(QP),QP *child)
 /*@
    QPChainGetLast - Get last QP in the chain.
 
+   Not Collective
+
    Input Parameters:
 .  qp - a QP that is member of the chain
 
    Output Parameters:
 .  child - last QP in the chain
+
+   Level: advanced
 @*/
 PetscErrorCode QPChainGetLast(QP qp,QP *last)
 {
@@ -112,8 +126,12 @@ PetscErrorCode QPChainGetLast(QP qp,QP *last)
 /*@
    QPChainSetUp - Calls QPSetUP() on QP and its descendants in the chain.
 
+   Collective on QP
+
    Input Parameters:
 .  qp - a first QP to call QPSetUp() on
+
+   Level: developer
 @*/
 PetscErrorCode QPChainSetUp(QP qp)
 {
@@ -131,8 +149,12 @@ PetscErrorCode QPChainSetUp(QP qp)
 /*@
    QPChainSetFromOptions - Calls QPSetFromOptions() on QP and its descendants in the chain.
 
+   Collective on QP
+
    Input Parameters:
 .  qp - a first QP to call QPSetFromOptions on
+
+   Level: advanced
 @*/
 PetscErrorCode QPChainSetFromOptions(QP qp)
 {
@@ -155,13 +177,120 @@ PetscErrorCode QPChainSetFromOptions(QP qp)
 }
 
 #undef __FUNCT__
+#define __FUNCT__ "QPChainPostSolve"
+/*@
+   QPChainPostSolve - Apply post solve functions and optionally view. 
+
+   Collective on QP
+
+   Input Parameter:
+.  qp   - the QP
+  
+   Options Database Keys:
++  -qp_view            - view information about QP
+.  -qp_chain_view      - view information about all QPs in the chain
+.  -qp_chain_view_qppf - view information about all QPPFs in the chain
+-  -qp_chain_view_kkt  - view how well are KKT conditions satisfied for each QP in the chain 
+
+   Notes:
+   This is called automatically by QPSPostSolve.
+
+   Level: developer
+
+.seealso QPSSolve(), QPSPostSolve(), QPChainView(), QPChainViewKKT(), QPChainViewQPPF()
+@*/
+PetscErrorCode QPChainPostSolve(QP qp)
+{
+  PetscErrorCode (*postSolve)(QP,QP);
+  QP parent, cqp;
+  PetscBool flg, solved, view, first;
+  PetscViewer v=NULL;
+  PetscViewerFormat format;
+  MPI_Comm comm;
+  const char *prefix;
+
+  PetscFunctionBeginI;
+  PetscValidHeaderSpecific(qp,QP_CLASSID,1);
+  TRY( PetscObjectGetComm((PetscObject)qp,&comm) );
+  TRY( PetscObjectGetOptionsPrefix((PetscObject)qp,&prefix) );
+
+  TRY( PetscOptionsGetViewer(comm,prefix,"-qp_view",&v,&format,&view) );
+  if (view & !PetscPreLoadingOn) {
+    TRY( PetscViewerPushFormat(v,format) );
+    TRY( QPView(qp,v) );
+    TRY( PetscViewerPopFormat(v) );
+    TRY( PetscViewerDestroy(&v) );
+  }
+
+  TRY( PetscOptionsGetViewer(comm,prefix,"-qp_chain_view",&v,&format,&view) );
+  if (view & !PetscPreLoadingOn) {
+    TRY( PetscViewerPushFormat(v,format) );
+    TRY( QPChainView(qp,v) );
+    TRY( PetscViewerPopFormat(v) );
+    TRY( PetscViewerDestroy(&v) );
+  }
+
+  TRY( PetscOptionsGetViewer(comm,prefix,"-qp_chain_view_qppf",&v,&format,&view) );
+  if (view & !PetscPreLoadingOn) {
+    TRY( PetscViewerPushFormat(v,format) );
+    TRY( QPChainViewQPPF(qp,v) );
+    TRY( PetscViewerPopFormat(v) );
+    TRY( PetscViewerDestroy(&v) );
+  }
+
+  TRY( PetscOptionsGetViewer(comm,prefix,"-qp_chain_view_kkt",&v,&format,&view) );
+  view &= !PetscPreLoadingOn;
+  if (view) {
+    TRY( PetscObjectTypeCompare((PetscObject)v,PETSCVIEWERASCII,&flg) );
+    if (!flg) FLLOP_SETERRQ1(comm,PETSC_ERR_SUP,"Viewer type %s not supported",((PetscObject)v)->type_name);
+    TRY( PetscViewerASCIIPrintf(v,"=====================\n") );
+  }
+
+  TRY( QPChainGetLast(qp,&cqp) );
+  solved = cqp->solved;
+  first = PETSC_TRUE;
+  while (1) {
+    TRY( QPRemoveInactiveBounds(cqp) );
+    TRY( QPComputeMissingBoxMultipliers(cqp) );
+    TRY( QPComputeMissingEqMultiplier(cqp) );
+    parent = cqp->parent;
+    postSolve = cqp->postSolve;
+    if (postSolve) TRY( (*postSolve)(cqp,parent) );
+
+    if (view) {
+      if (first) {
+        first = PETSC_FALSE;
+      } else {
+        TRY( PetscViewerASCIIPrintf(v, "-------------------\n") );
+      }
+      TRY( QPViewKKT(cqp,v) );
+    }
+
+    if (!parent) break;
+    parent->solved = solved;
+    if (cqp == qp) break;
+    cqp = parent;
+  }
+
+  if (view) {
+    TRY( PetscViewerASCIIPrintf(v,"=====================\n") );
+    TRY( PetscViewerDestroy(&v) );
+  }
+  PetscFunctionReturnI(0);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ "QPChainViewKKT"
 /*@
    QPChainViewKKT - Calls QPViewKKT() on each QP in the chain.
 
+   Collective on QP
+
    Input Parameters:
 +  qp - a QP specifying the chain
 -  v - viewer
+
+   Level: advanced
 @*/
 PetscErrorCode QPChainViewKKT(QP qp, PetscViewer v)
 {
@@ -200,9 +329,13 @@ PetscErrorCode QPChainViewKKT(QP qp, PetscViewer v)
 /*@
    QPChainView - Calls QPView() on each QP in the chain.
 
+   Collective on QP
+
    Input Parameters:
 +  qp - a QP specifying the chain
 -  v - viewer
+
+   Level: advanced
 @*/
 PetscErrorCode QPChainView(QP qp, PetscViewer v)
 {
@@ -237,9 +370,13 @@ PetscErrorCode QPChainView(QP qp, PetscViewer v)
 /*@
    QPChainViewQPPF - Calls QPViewQPPF() on each QP in the chain.
 
+   Collective on QP
+
    Input Parameters:
 +  qp - a QP specifying the chain
 -  v - viewer
+
+   Level: advanced
 @*/
 PetscErrorCode QPChainViewQPPF(QP qp,PetscViewer v)
 {

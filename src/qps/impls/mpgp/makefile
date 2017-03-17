@@ -9,7 +9,7 @@ SOURCEH  = mpgpimpl.h
 OBJSC    = ${SOURCEC:.c=.o}
 OBJSF    =
 LIBBASE  = libpermon
-MANSEC   = MPGP
+MANSEC   = QPS
 LOCDIR   = src/qps/impls/mpgp/
 
 include ${PERMON_DIR}/lib/permon/conf/permon_base

@@ -1,0 +1,12 @@
+<HTML>
+<HEAD>
+<TITLE>QP Projector Factory - QPPF</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+
+<H2> QP Projector Factory - QPPF : <!-- <A HREF="PERMON_DIRsrc/qppf/examples/tutorials/index.html">Examples</A> --></H2>
+
+QPPF create projectors onto nullspace and/or onto transpose of image of specified MAT.
+
+<P>
+

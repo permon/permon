@@ -79,18 +79,26 @@ PetscErrorCode QPRemoveChild(QP qp)
 #undef __FUNCT__
 #define __FUNCT__ "QPCreate"
 /*@
-QPCreate - create instance of quadratic programming problem
+   QPCreate - Creates a quadratic programming problem (QP) object.
+   
+   Collective on MPI_Comm
+   
+   Input Parameter:
+.  comm - MPI comm 
+   
+   Output Parameter:
+-  qp_new - the new QP 
+   
+   Level: beginner
 
-Parameters:
-+ comm - MPI comm 
-- qp_out - pointer to created QP 
+.seealso: QPDestroy()
 @*/
-PetscErrorCode QPCreate(MPI_Comm comm, QP *qp_out)
+PetscErrorCode QPCreate(MPI_Comm comm, QP *qp_new)
 {
   QP               qp;
 
   PetscFunctionBegin;
-  PetscValidPointer(qp_out,2);
+  PetscValidPointer(qp_new,2);
 
 #if !defined(PETSC_USE_DYNAMIC_LIBRARIES)
   TRY( QPInitializePackage() );
@@ -139,14 +147,16 @@ PetscErrorCode QPCreate(MPI_Comm comm, QP *qp_out)
   /* initialize preconditioner */
   TRY( QPGetPC(qp,&qp->pc) );
 
-  *qp_out = qp;
+  *qp_new = qp;
   PetscFunctionReturn(0);
 }
 
 #undef __FUNCT__
 #define __FUNCT__ "QPDuplicate"
 /*@
-   QPDuplicate - Duplicate QP.
+   QPDuplicate - Duplicate QP object.
+
+   Collective on QP
 
    Input Parameters:
 +  qp1 - QP to duplicate
@@ -154,6 +164,10 @@ PetscErrorCode QPCreate(MPI_Comm comm, QP *qp_out)
 
    Output Parameter:
 .  qp2 - duplicated QP
+
+   Level: advanced
+
+.seealso: QPCreate()
 @*/
 PetscErrorCode QPDuplicate(QP qp1,QPDuplicateOption opt,QP *qp2)
 {
@@ -224,13 +238,17 @@ PetscErrorCode QPCompareEqMultiplierWithLeastSquare(QP qp,PetscReal *norm)
 #undef __FUNCT__
 #define __FUNCT__ "QPViewKKT"
 /*@
-   QPViewKKT - View how well are satisfied KKT conditions.
+   QPViewKKT - Print how well are KKT conditions satisfied with the computed minimizer and Lagrange multipliers.
+
+   Collective on QP
 
    Input Parameters:
 +  qp - the QP
 -  v - visualization context
 
-.seealso: QPChainViewKKT()
+   Level: intermediate
+
+.seealso: QPChainViewKKT(), QPSSolve()
 @*/
 PetscErrorCode QPViewKKT(QP qp,PetscViewer v)
 {
@@ -482,11 +500,17 @@ PetscErrorCode QPViewKKT(QP qp,PetscViewer v)
 #undef __FUNCT__
 #define __FUNCT__ "QPView"
 /*@
-   QPView - View information about QP.
+   QPView - Print information about the QP.
+
+   Collective on QP
 
    Input Parameters:
 +  qp - the QP
 -  v - visualization context
+
+  Level: beginner
+
+.seealso QPChainView()
 @*/
 PetscErrorCode QPView(QP qp,PetscViewer v)
 {
@@ -529,7 +553,6 @@ PetscErrorCode QPView(QP qp,PetscViewer v)
   TRY( QPView_PrintObjectLoaded(v, BI,  "linear ineq. constraint") );
   TRY( QPView_PrintObjectLoaded(v, cI,  "linear ineq. constraint RHS") );
 
-  //TODO print FETI flag
   if (A)   TRY( MatPrintInfo(A) );
   if (b)   TRY( VecPrintInfo(b) );
   if (R)   TRY( MatPrintInfo(R) );
@@ -545,12 +568,17 @@ PetscErrorCode QPView(QP qp,PetscViewer v)
 #undef __FUNCT__
 #define __FUNCT__ "QPReset"
 /*@
-   QPReset - Resets a QP context to the QPsetupcalled = 0 state, destroys child, PC, Vecs,  Mats, etc.
+   QPReset - Resets a QP context to the setupcalled = 0 and solved = 0 state,
+     and destroys the Vecs and Mats describing the data as well as PC and child QP.
 
    Collective on QP
 
    Input Parameter:
 .  qp - the QP
+
+   Level: beginner
+
+.seealso QPCreate(), QPSetUp(), QPISSolved()
 @*/
 PetscErrorCode QPReset(QP qp)
 {
@@ -723,6 +751,10 @@ PetscErrorCode QPSetUpInnerObjects(QP qp)
 
    Input Parameter:
 .  qp   - the QP
+
+   Level: advanced
+
+.seealso QPChainSetUp(), QPCreate(), QPReset(), QPSSetUp()
 @*/
 PetscErrorCode QPSetUp(QP qp)
 {
@@ -1039,11 +1071,11 @@ PetscErrorCode QPRemoveInactiveBounds(QP qp)
 #undef __FUNCT__
 #define __FUNCT__ "QPComputeObjective"
 /*@
-   QPComputeObjective - Computes the objective.
+   QPComputeObjective - Evaluate the quadratic objective function f(x) = 1/2*x'*A*x - x'*b.
 
    Collective on QP
 
-   Input Parameter:
+   Input Parameters:
 +  qp   - the QP
 -  x    - the state vector
 
@@ -1051,9 +1083,11 @@ PetscErrorCode QPRemoveInactiveBounds(QP qp)
 .  f    - the objective value
    
    Notes:
-   Computes -x^T(b - \frac{1}{2} Ax)
+   Computes f(x) as -x'(b - 1/2*A*x).
 
-.seealso: QPComputeObjectiveGradient(), QPComputeObjectiveFromGradient(), QPComputeObjectiveFromGradient()
+   Level: beginner
+
+.seealso: QPComputeObjectiveGradient(), QPComputeObjectiveFromGradient(), QPComputeObjectiveAndGradient()
 @*/
 PetscErrorCode QPComputeObjective(QP qp, Vec x, PetscReal *f)
 {
@@ -1072,20 +1106,19 @@ PetscErrorCode QPComputeObjective(QP qp, Vec x, PetscReal *f)
 #undef __FUNCT__
 #define __FUNCT__ "QPComputeObjectiveGradient"
 /*@
-   QPComputeObjectiveGradient - Computes the gradient.
+   QPComputeObjectiveGradient - Computes the gradient of the quadratic objective function g(x) = Ax - b.
 
    Collective on QP
 
-   Input Parameter:
+   Input Parameters:
 +  qp   - the QP
 -  x    - the state vector
 
    Output Parameter:
 .  g    - the gradient value
    
-   Notes:
-   Computes Ax - b
-   
+   Level: intermediate
+
 .seealso: QPComputeObjective(), QPComputeObjectiveFromGradient(), QPComputeObjectiveAndGradient()
 @*/
 PetscErrorCode QPComputeObjectiveGradient(QP qp, Vec x, Vec g)
@@ -1103,11 +1136,11 @@ PetscErrorCode QPComputeObjectiveGradient(QP qp, Vec x, Vec g)
 #undef __FUNCT__
 #define __FUNCT__ "QPComputeObjectiveFromGradient"
 /*@
-   QPComputeObjectiveFromGradient - Computes the objective.
+   QPComputeObjectiveFromGradient - Evaluate the quadratic objective function f(x) = 1/2*x'*A*x - x'*b using known gradient.
 
    Collective on QP
 
-   Input Parameter:
+   Input Parameters:
 +  qp   - the QP
 .  x    - the state vector
 -  g    - the gradient
@@ -1116,8 +1149,10 @@ PetscErrorCode QPComputeObjectiveGradient(QP qp, Vec x, Vec g)
 .  f    - the objective value
    
    Notes:
-   Computes x^T(g - b)/2
+   Computes f(x) as x'*(g - b)/2
    
+   Level: intermediate
+
 .seealso: QPComputeObjective(), QPComputeObjectiveGradient(), QPComputeObjectiveAndGradient()
 @*/
 PetscErrorCode QPComputeObjectiveFromGradient(QP qp, Vec x, Vec g, PetscReal *f)
@@ -1139,20 +1174,22 @@ PetscErrorCode QPComputeObjectiveFromGradient(QP qp, Vec x, Vec g, PetscReal *f)
 #undef __FUNCT__
 #define __FUNCT__ "QPComputeObjectiveAndGradient"
 /*@
-   QPComputeObjective - Computes the objective and gradient.
+   QPComputeObjectiveAndGradient - Computes the objective and gradient at once.
 
    Collective on QP
 
-   Input Parameter:
+   Input Parameters:
 +  qp   - the QP
 -  x    - the state vector
 
-   Output Parameter:
+   Output Parameters:
 +  g    - the gradient
 -  f    - the objective value
    
    Notes:
-   Computes -x^T(b - \frac{1}{2} Ax)
+   Computes g(x) = A*x - b and f(x) = x'*(g - b)/2
+
+   Level: intermediate
 
 .seealso: QPComputeObjective(), QPComputeObjectiveGradient(), QPComputeObjectiveFromGradient()
 @*/
@@ -1178,108 +1215,18 @@ PetscErrorCode QPComputeObjectiveAndGradient(QP qp, Vec x, Vec g, PetscReal *f)
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "QPPostSolve"
-/*@
-   QPPostSolve - Apply post solve function and optionaly view 
-
-   Input Parameter:
-.  qp   - the QP
-  
-   Options Database Key:
-+  -qp_view            - view information about QP
-.  -qp_chain_view      - view information about all QPs in the chain
-.  -qp_chain_view_qppf - view information about all QPPFs in the chain
--  -qp_chain_view_kkt  - view how well are satisfied KKT conditions for each QP in the chain 
-@*/
-PetscErrorCode QPPostSolve(QP qp)
-{
-  PetscErrorCode (*postSolve)(QP,QP);
-  QP parent, cqp;
-  PetscBool flg, solved, view, first;
-  PetscViewer v=NULL;
-  PetscViewerFormat format;
-  MPI_Comm comm;
-  const char *prefix;
-
-  PetscFunctionBeginI;
-  PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  TRY( PetscObjectGetComm((PetscObject)qp,&comm) );
-  TRY( PetscObjectGetOptionsPrefix((PetscObject)qp,&prefix) );
-
-  TRY( PetscOptionsGetViewer(comm,prefix,"-qp_view",&v,&format,&view) );
-  if (view & !PetscPreLoadingOn) {
-    TRY( PetscViewerPushFormat(v,format) );
-    TRY( QPView(qp,v) );
-    TRY( PetscViewerPopFormat(v) );
-    TRY( PetscViewerDestroy(&v) );
-  }
-
-  TRY( PetscOptionsGetViewer(comm,prefix,"-qp_chain_view",&v,&format,&view) );
-  if (view & !PetscPreLoadingOn) {
-    TRY( PetscViewerPushFormat(v,format) );
-    TRY( QPChainView(qp,v) );
-    TRY( PetscViewerPopFormat(v) );
-    TRY( PetscViewerDestroy(&v) );
-  }
-
-  TRY( PetscOptionsGetViewer(comm,prefix,"-qp_chain_view_qppf",&v,&format,&view) );
-  if (view & !PetscPreLoadingOn) {
-    TRY( PetscViewerPushFormat(v,format) );
-    TRY( QPChainViewQPPF(qp,v) );
-    TRY( PetscViewerPopFormat(v) );
-    TRY( PetscViewerDestroy(&v) );
-  }
-
-  TRY( PetscOptionsGetViewer(comm,prefix,"-qp_chain_view_kkt",&v,&format,&view) );
-  view &= !PetscPreLoadingOn;
-  if (view) {
-    TRY( PetscObjectTypeCompare((PetscObject)v,PETSCVIEWERASCII,&flg) );
-    if (!flg) FLLOP_SETERRQ1(comm,PETSC_ERR_SUP,"Viewer type %s not supported",((PetscObject)v)->type_name);
-    TRY( PetscViewerASCIIPrintf(v,"=====================\n") );
-  }
-
-  TRY( QPChainGetLast(qp,&cqp) );
-  solved = cqp->solved;
-  first = PETSC_TRUE;
-  while (1) {
-    TRY( QPRemoveInactiveBounds(cqp) );
-    TRY( QPComputeMissingBoxMultipliers(cqp) );
-    TRY( QPComputeMissingEqMultiplier(cqp) );
-    parent = cqp->parent;
-    postSolve = cqp->postSolve;
-    if (postSolve) TRY( (*postSolve)(cqp,parent) );
-
-    if (view) {
-      if (first) {
-        first = PETSC_FALSE;
-      } else {
-        TRY( PetscViewerASCIIPrintf(v, "-------------------\n") );
-      }
-      TRY( QPViewKKT(cqp,v) );
-    }
-
-    if (!parent) break;
-    parent->solved = solved;
-    if (cqp == qp) break;
-    cqp = parent;
-  }
-
-  if (view) {
-    TRY( PetscViewerASCIIPrintf(v,"=====================\n") );
-    TRY( PetscViewerDestroy(&v) );
-  }
-  PetscFunctionReturnI(0);
-}
-
-#undef __FUNCT__
 #define __FUNCT__ "QPDestroy"
 /*@
-   QPDestroy - Destroys QP context.
+   QPDestroy - Destroys the QP object.
 
    Collective on QP
 
    Input Parameter:
 .  qp - QP context
+
+   Level: beginner
+
+.seealso QPCreate()
 @*/
 PetscErrorCode QPDestroy(QP *qp)
 {
@@ -1300,11 +1247,17 @@ PetscErrorCode QPDestroy(QP *qp)
 #undef __FUNCT__
 #define __FUNCT__ "QPSetOperator"
 /*@
-   QPSetOperator - Sets the QP matrix and a symmetry flag.
+   QPSetOperator - Sets the Hessian matrix
 
-   Input Parameter:
+   Collective on QP
+
+   Input Parameters:
 +  qp  - the QP
 -  A   - the Hessian matrix
+
+   Level: beginner
+
+.seealso QPGetOperator(), QPSetRhs(), QPSetEq(), QPAddEq(), QPSetIneq(), QPSetBox(), QPSetInitialVector(), QPSSolve()
 @*/
 PetscErrorCode QPSetOperator(QP qp, Mat A)
 {
@@ -1328,9 +1281,13 @@ PetscErrorCode QPSetOperator(QP qp, Mat A)
 /*@
    QPSetPC - Sets preconditioner context.
 
-   Input Parameter:
+   Collective on QP
+
+   Input Parameters:
 +  qp - the QP
 -  pc - the preconditioner context
+
+   Level: developer
 @*/
 PetscErrorCode QPSetPC(QP qp, PC pc)
 {
@@ -1350,13 +1307,19 @@ PetscErrorCode QPSetPC(QP qp, PC pc)
 #undef __FUNCT__
 #define __FUNCT__ "QPGetOperator"
 /*@
-   QPGetOperator - Get the QP matrix.
+   QPGetOperator - Get the Hessian matrix.
+
+   Not Collective
 
    Input Parameter:
 .  qp  - the QP
 
    Output Parameter:
-.  A   - the matrix
+.  A   - the Hessian matrix
+
+   Level: intermediate
+
+.seealso QPSetOperator(), QPGetRhs(), QPGetEq(), QPGetIneq(), QPGetBox(), QPGetSolutionVector()
 @*/
 PetscErrorCode QPGetOperator(QP qp,Mat *A)
 {
@@ -1372,11 +1335,15 @@ PetscErrorCode QPGetOperator(QP qp,Mat *A)
 /*@
    QPGetPC - Get preconditioner context.
 
+   Not Collective
+
    Input Parameter:
 .  qp - the QP
 
    Output Parameter:
 .  pc - the preconditioner context
+
+   Level: advanced
 @*/
 PetscErrorCode QPGetPC(QP qp,PC *pc)
 {
@@ -1397,11 +1364,17 @@ PetscErrorCode QPGetPC(QP qp,PC *pc)
 #undef __FUNCT__
 #define __FUNCT__ "QPSetOperatorNullSpace"
 /*@
-   QPSetOperatorNullSpace - Sets matrix with columns representing the null space of the QP operator.
+   QPSetOperatorNullSpace - Sets matrix with columns representing the null space of the Hessian operator.
 
-   Input Parameter:
+   Collective on QP
+
+   Input Parameters:
 +  qp - the QP
--  R - null space matrix
+-  R - the null space matrix
+
+   Level: intermediate
+
+.seealso QPGetOperatorNullSpace(), QPSetOperator(), QPSSolve()
 @*/
 PetscErrorCode QPSetOperatorNullSpace(QP qp,Mat R)
 {
@@ -1418,13 +1391,19 @@ PetscErrorCode QPSetOperatorNullSpace(QP qp,Mat R)
 #undef __FUNCT__
 #define __FUNCT__ "QPGetOperatorNullSpace"
 /*@
-   QPGetOperatorNullSpace - Get matrix with columns representing the null space of the QP operator.
+   QPGetOperatorNullSpace - Get matrix with columns representing the null space of the Hessian operator.
+
+   Not Collective
 
    Input Parameter:
 .  qp - the QP
 
    Output Parameter:
-.  R - null space matrix
+.  R - the null space matrix
+
+   Level: advanced
+
+.seealso QPSetOperatorNullSpace(), QPGetOperator()
 @*/
 PetscErrorCode QPGetOperatorNullSpace(QP qp,Mat *R)
 {
@@ -1438,11 +1417,17 @@ PetscErrorCode QPGetOperatorNullSpace(QP qp,Mat *R)
 #undef __FUNCT__
 #define __FUNCT__ "QPSetRhs"
 /*@
-   QPSetRhs - Set the QPs right hand side.
+   QPSetRhs - Set the QP right hand side (linear term).
 
-   Input Parameter:
+   Collective on QP
+
+   Input Parameters:
 +  qp - the QP
 -  b - right hand side
+
+   Level: beginner
+
+.seealso QPGetRhs(), QPSetOperator(), QPSetEq(), QPAddEq(), QPSetIneq(), QPSetBox(), QPSetInitialVector(), QPSSolve()
 @*/
 PetscErrorCode QPSetRhs(QP qp,Vec b)
 {
@@ -1471,11 +1456,17 @@ PetscErrorCode QPSetRhs(QP qp,Vec b)
 /*@
    QPGetRhs - Get the QPs right hand side.
 
+   Not Collective
+
    Input Parameter:
 .  qp - the QP
 
    Output Parameter:
 .  b - right hand side
+
+   Level: intermediate
+
+.seealso QPSetRhs(), QPGetOperator(), QPGetEq(), QPGetIneq(), QPGetBox(), QPGetSolutionVector()
 @*/
 PetscErrorCode QPGetRhs(QP qp,Vec *b)
 {
@@ -1491,10 +1482,16 @@ PetscErrorCode QPGetRhs(QP qp,Vec *b)
 /*@
    QPSetIneq - Sets the inequality constraints.
 
-   Input Parameter:
+   Collective on QP
+
+   Input Parameters:
 +  qp - the QP
 .  Bineq - boolean matrix representing the inequality constraints placement 
 -  cineq - vector prescribing inequality constraints
+
+   Level: beginner
+
+.seealso QPGetIneq(), QPSetOperator(), QPSetRhs(), QPSetEq(), QPAddEq(), QPSetBox(), QPSetInitialVector(), QPSSolve()
 @*/
 PetscErrorCode QPSetIneq(QP qp, Mat Bineq, Vec cineq)
 {
@@ -1559,12 +1556,18 @@ PetscErrorCode QPSetIneq(QP qp, Mat Bineq, Vec cineq)
 /*@
    QPGetIneq - Get the inequality constraints.
 
+   Not Collective
+
    Input Parameter:
 .  qp - the QP
 
    Output Parameter:
 +  Bineq - boolean matrix representing the inequality constraints placement 
 -  cineq - vector prescribing inequality constraints
+
+   Level: intermediate
+
+.seealso QPSetIneq(), QPGetOperator(), QPGetRhs(), QPSetEq(), QPAddEq(), QPSetBox(), QPSetInitialVector()
 @*/
 PetscErrorCode QPGetIneq(QP qp, Mat *Bineq, Vec *cineq)
 {
@@ -1586,10 +1589,16 @@ PetscErrorCode QPGetIneq(QP qp, Mat *Bineq, Vec *cineq)
 /*@
    QPSetEq - Sets the equality constraints.
 
+   Collective on QP
+
    Input Parameter:
 +  qp - the QP
 .  Beq - boolean matrix representing the equality constraints placement 
 -  ceq - vector prescribing equality constraints
+
+   Level: beginner
+
+.seealso QPGetEq(), QPAddEq(), QPSetOperator(), QPSetRhs(), QPSetIneq(), QPSetBox(), QPSetInitialVector(), QPSSolve()
 @*/
 PetscErrorCode QPSetEq(QP qp, Mat Beq, Vec ceq)
 {
@@ -1664,10 +1673,16 @@ PetscErrorCode QPSetEq(QP qp, Mat Beq, Vec ceq)
 /*@
    QPAddEq - Add the equality constraints.
 
+   Collective on QP
+
    Input Parameter:
 +  qp - the QP
 .  Beq - boolean matrix representing the equality constraints placement 
 -  ceq - vector prescribing equality constraints
+
+   Level: beginner
+
+.seealso QPGetEq(), QPSetEq(), QPSetOperator(), QPSetRhs(), QPSetIneq(), QPSetBox(), QPSetInitialVector(), QPSSolve()
 @*/
 PetscErrorCode QPAddEq(QP qp, Mat Beq, Vec ceq)
 {
@@ -1949,12 +1964,18 @@ PetscErrorCode QPGetEqMultiplicityScaling(QP qp, Vec *dE_new, Vec *dI_new)
 /*@
    QPGetEq - Get the equality constraints.
 
+   Not Collective
+
    Input Parameter:
 .  qp - the QP
 
    Output Parameter:
 +  Beq - boolean matrix representing the equality constraints placement 
 -  ceq - vector prescribing equality constraints
+
+   Level: intermediate
+
+.seealso QPSetEq(), QPAddEq(), QPGetOperator(), QPGetRhs(), QPGetIneq(), QPGetBox(), QPGetSolutionVector()
 @*/
 PetscErrorCode QPGetEq(QP qp, Mat *Beq, Vec *ceq)
 {
@@ -1976,10 +1997,16 @@ PetscErrorCode QPGetEq(QP qp, Mat *Beq, Vec *ceq)
 /*@
    QPSetBox - Sets the box constraints.
 
+   Collective on QP
+
    Input Parameter:
 +  qp - the QP
 .  lb - lower bound
 -  ub - upper bound
+
+   Level: beginner
+
+.seealso QPGetBox(), QPSetOperator(), QPSetRhs(), QPSetEq(), QPAddEq(), QPSetIneq(), QPSetInitialVector(), QPSSolve()
 @*/
 PetscErrorCode QPSetBox(QP qp, Vec lb, Vec ub)
 {
@@ -2040,12 +2067,18 @@ PetscErrorCode QPSetBox(QP qp, Vec lb, Vec ub)
 /*@
    QPGetBox - Get the box constraints.
 
+   Not Collective
+
    Input Parameter:
 .  qp - the QP
 
    Output Parameter:
 +  lb - lower bound
 -  ub - upper bound
+
+   Level: advanced
+
+.seealso QPSetBox(), QPGetOperator(), QPGetRhs(), QPGetEq(), QPGetIneq(), QPGetSolutionVector()
 @*/
 PetscErrorCode QPGetBox(QP qp, Vec *lb, Vec *ub)
 {
@@ -2139,11 +2172,17 @@ PetscErrorCode QPSetUpperBoundMultiplier(QP qp, Vec lambda_ub)
 #undef __FUNCT__
 #define __FUNCT__ "QPSetInitialVector"
 /*@
-   QPSetInitialVector - Sets the inital guess.
+   QPSetInitialVector - Sets the inital guess of the solution.
+
+   Collective on QP
 
    Input Parameter:
 .  qp - the QP
 -  x  - initial guess
+
+   Level: beginner
+
+.seealso QPGetSolutionVector(), QPSetOperator(), QPSetRhs(), QPSetEq(), QPAddEq(), QPSetIneq(), QPSetBox(), QPSSolve()
 @*/
 PetscErrorCode QPSetInitialVector(QP qp,Vec x)
 {
@@ -2171,13 +2210,19 @@ PetscErrorCode QPSetInitialVector(QP qp,Vec x)
 #undef __FUNCT__
 #define __FUNCT__ "QPGetSolutionVector"
 /*@
-   QPGetSolutionVector - Get solution vector.
+   QPGetSolutionVector - Get the solution vector.
+
+   Collective on QP
 
    Input Parameter:
 .  qp - the QP
 
    Output Parameter:
 .  x - solution vector
+
+   Level: beginner
+
+.seealso QPGetSolutionVector(), QPGetOperator(), QPGetRhs(), QPGetEq(), QPGetIneq(), QPGetBox(), QPSSolve()
 @*/
 PetscErrorCode QPGetSolutionVector(QP qp,Vec *x)
 {
@@ -2194,9 +2239,13 @@ PetscErrorCode QPGetSolutionVector(QP qp,Vec *x)
 /*@
    QPSetWorkVector - Set work vector.
 
+   Collective on QP
+
    Input Parameter:
 +  qp    - the QP
 -  xwork - work vector
+
+   Level: developer
 @*/
 PetscErrorCode QPSetWorkVector(QP qp,Vec xwork)
 {
@@ -2219,6 +2268,8 @@ PetscErrorCode QPSetWorkVector(QP qp,Vec xwork)
    QPGetVecs - Get vector(s) compatible with the QP operator matrix, i.e. with the same
      parallel layout
 
+   Collective on QP
+
    Input Parameter:
 .  qp - the QP
 
@@ -2226,7 +2277,11 @@ PetscErrorCode QPSetWorkVector(QP qp,Vec xwork)
 +   right - (optional) vector that the matrix can be multiplied against
 -   left - (optional) vector that the matrix vector product can be stored in
 
-   Notes: These are new vectors which are not owned by the QP, they should be destroyed in VecDestroy() when no longer needed
+   Notes: These are new vectors which are not owned by the QP, they should be destroyed by VecDestroy() when no longer needed
+
+   Level: intermediate
+
+.seealso MatCreateVecs()
 @*/
 PetscErrorCode QPGetVecs(QP qp,Vec *right,Vec *left)
 {
@@ -2285,13 +2340,17 @@ PetscErrorCode QPGetChangeListenerContext(QP qp,void *ctx)
 #undef __FUNCT__
 #define __FUNCT__ "QPGetChild"
 /*@
-   QPGetChild - Get QP child.
+   QPGetChild - Get QP child within QP chain.
+
+   Not Collective
 
    Input Parameter:
 .  qp - the QP
 
    Output Parameter:
 .  child - QP child
+
+   Level: advanced
 @*/
 PetscErrorCode QPGetChild(QP qp,QP *child)
 {
@@ -2305,13 +2364,17 @@ PetscErrorCode QPGetChild(QP qp,QP *child)
 #undef __FUNCT__
 #define __FUNCT__ "QPGetParent"
 /*@
-   QPGetParent - Get QP parent.
+   QPGetParent - Get QP parent within QP chain.
+
+   Not Collective
 
    Input Parameter:
 .  qp - the QP
 
    Output Parameter:
 .  parent - QP parent
+
+   Level: advanced
 @*/
 PetscErrorCode QPGetParent(QP qp,QP *parent)
 {
@@ -2327,11 +2390,17 @@ PetscErrorCode QPGetParent(QP qp,QP *parent)
 /*@
    QPGetPostSolve - Get QP post solve function.
 
+   Not Collective
+
    Input Parameter:
 .  qp - the QP
 
    Output Parameter:
 .  f - post solve function
+
+   Level: developer
+
+.seealso QPChainPostSolve()
 @*/
 PetscErrorCode QPGetPostSolve(QP qp, PetscErrorCode (**f)(QP,QP))
 {
@@ -2344,13 +2413,17 @@ PetscErrorCode QPGetPostSolve(QP qp, PetscErrorCode (**f)(QP,QP))
 #undef __FUNCT__
 #define __FUNCT__ "QPGetTransform"
 /*@
-   QPGetTransform - Get QP transform function.
+   QPGetTransform - Get QP transform which derived this QP.
+
+   Not Collective
 
    Input Parameter:
 .  qp - the QP
 
    Output Parameter:
 .  f - transform function
+
+   Level: developer
 @*/
 PetscErrorCode QPGetTransform(QP qp,PetscErrorCode(**f)(QP))
 {
@@ -2365,11 +2438,15 @@ PetscErrorCode QPGetTransform(QP qp,PetscErrorCode(**f)(QP))
 /*@
    QPGetQPPF - Get QPPF associated with QP.
 
+   Not Collective
+
    Input Parameter:
 .  qp - the QP
 
    Output Parameter:
 .  pf - the QPPF
+
+   Level: developer
 @*/
 PetscErrorCode QPGetQPPF(QP qp, QPPF *pf)
 {
@@ -2385,9 +2462,13 @@ PetscErrorCode QPGetQPPF(QP qp, QPPF *pf)
 /*@
    QPSetQPPF - Set QPPF into QP.
 
+   Not Collective, but the QP and QPPF objects must live on the same MPI_Comm
+
    Input Parameter:
 +  qp - the QP
 -  pf - the QPPF
+
+   Level: developer
 @*/
 PetscErrorCode QPSetQPPF(QP qp, QPPF pf)
 {
@@ -2395,6 +2476,7 @@ PetscErrorCode QPSetQPPF(QP qp, QPPF pf)
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
   if (pf) {
     PetscValidHeaderSpecific(pf,QPPF_CLASSID,2);
+    PetscCheckSameComm(qp,1,pf,2);
     TRY( PetscObjectReference((PetscObject)pf) );
   }
   TRY( QPPFDestroy(&qp->pf) );
@@ -2405,13 +2487,20 @@ PetscErrorCode QPSetQPPF(QP qp, QPPF pf)
 #undef __FUNCT__
 #define __FUNCT__ "QPIsSolved"
 /*@
-   QPIsSolved - Flag is true if solved the QP is solved.
+   QPIsSolved - Is the QP solved, i.e. is the vector returned by QPGetSolutionVector() the sought-after minimizer?
+     Set to PETSC_TRUE if QPSSolve() converges (last QP in chain) or the post-solve function has been called.
+
+   Not Collective
 
    Input Parameter:
 .  qp  - the QP
    
    Output Parameter
 .  flg - true if solved
+
+   Level: beginner
+
+.seealso QPGetSolutionVector(), QPSSolve(), QPChainPostSolve()
 @*/
 PetscErrorCode QPIsSolved(QP qp,PetscBool *flg)
 {
@@ -2426,6 +2515,8 @@ PetscErrorCode QPIsSolved(QP qp,PetscBool *flg)
    QPSetOptionsPrefix - Sets the prefix used for searching for all
    QP options in the database.
 
+   Logically Collective on QP
+
    Input Parameters:
 +  qp - the QP
 -  prefix - the prefix string to prepend to all QP option requests
@@ -2434,6 +2525,8 @@ PetscErrorCode QPIsSolved(QP qp,PetscBool *flg)
    A hyphen (-) must NOT be given at the beginning of the prefix name.
    The first character of all runtime options is AUTOMATICALLY the
    hyphen.
+
+   Level: advanced
 
 .seealso: QPAppendOptionsPrefix(), QPGetOptionsPrefix()
 @*/
@@ -2451,6 +2544,8 @@ PetscErrorCode QPSetOptionsPrefix(QP qp,const char prefix[])
    QPAppendOptionsPrefix - Appends to the prefix used for searching for all
    QP options in the database.
 
+   Logically Collective on QP
+
    Input Parameters:
 +  QP - the QP
 -  prefix - the prefix string to prepend to all QP option requests
@@ -2458,6 +2553,8 @@ PetscErrorCode QPSetOptionsPrefix(QP qp,const char prefix[])
    Notes:
    A hyphen (-) must NOT be given at the beginning of the prefix name.
    The first character of all runtime options is AUTOMATICALLY the hyphen.
+
+   Level: advanced
 
 .seealso: QPSetOptionsPrefix(), QPGetOptionsPrefix()
 @*/
@@ -2475,11 +2572,15 @@ PetscErrorCode QPAppendOptionsPrefix(QP qp,const char prefix[])
    QPGetOptionsPrefix - Gets the prefix used for searching for all
    QP options in the database.
 
+   Not Collective
+
    Input Parameters:
 .  qp - the Krylov context
 
    Output Parameters:
 .  prefix - pointer to the prefix string used is returned
+
+   Level: advanced
 
 .seealso: QPSetOptionsPrefix(), QPAppendOptionsPrefix()
 @*/
@@ -2526,12 +2627,6 @@ static PetscErrorCode QPSetFromOptions_Private(QP qp)
 .  qp - the QP context
 
    Options Database Keys:
-+  -qp_E_scale_type multiplicity - 
-.	 -qp_E_remove_gluing_of_dirichlet - 
-.  -qp_E_count_Bd - 
-.  -qp_E_scale_Bd - 
-.  -qp_E_count_Bc - 
-.  -qp_E_scale_Bc - 
 .  -qp_view            - view information about QP
 .  -qp_chain_view      - view information about all QPs in the chain
 .  -qp_chain_view_kkt  - view how well are satisfied KKT conditions for each QP in the chain 
@@ -2540,6 +2635,8 @@ static PetscErrorCode QPSetFromOptions_Private(QP qp)
    Notes:
    To see all options, run your program with the -help option
    or consult Users-Manual: ch_qp
+
+   Level: beginner
 @*/
 PetscErrorCode QPSetFromOptions(QP qp)
 {

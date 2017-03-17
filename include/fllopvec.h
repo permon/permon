@@ -22,6 +22,5 @@ FLLOP_EXTERN PetscErrorCode ISAdd(IS is,PetscInt value,IS *isnew);
 FLLOP_EXTERN PetscErrorCode ISCreateFromVec(Vec vec, IS *is);
 FLLOP_EXTERN PetscErrorCode ISGetVec(IS is, Vec *vec);
 FLLOP_EXTERN PetscErrorCode ISGetVecBlock(IS is, Vec *vec, PetscInt bs);
-FLLOP_EXTERN PetscErrorCode ISViewBlock(IS is,PetscViewer viewer, PetscInt bs);
 
 #endif

@@ -159,6 +159,8 @@ PetscErrorCode FllopPetscInfoDeactivateAll()
 .  -fllop_debug       - enable FLLOP debug messages
 -  -fllop_info        - enable info messages only from FLLOP
  
+   Level: beginner
+
 .seealso FllopInitialize()
 @*/
 PetscErrorCode FllopSetFromOptions()

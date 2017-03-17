@@ -188,14 +188,14 @@ static PetscErrorCode QPSMPGPSetOperatorMaxEigenvalueIterations_MPGP(QPS qps,Pet
 
 #undef __FUNCT__
 #define __FUNCT__ "MPGPProj"
-/*@
+/*
 MPGPProj - realize projection to feasible set
 
 Parameters:
 + x - vector of variables
 . lb - vector of lower bounds
 - ub - vector of upper bounds 
-@*/
+*/
 static PetscErrorCode MPGPProj(Vec x, Vec lb, Vec ub)
 {
   PetscInt          i, m;
@@ -226,13 +226,13 @@ static PetscErrorCode MPGPProj(Vec x, Vec lb, Vec ub)
 
 #undef __FUNCT__
 #define __FUNCT__ "MPGPGrads"
-/*@
+/*
 MPGPGrads - compute projected, chopped, and free gradient
 
 Parameters:
 + qps - QP solver
 - g - gradient  
-@*/
+*/
 static PetscErrorCode MPGPGrads(QPS qps, Vec x, Vec lb, Vec ub, Vec g)
 {
   PetscInt          i;                  /* ... iterator                         */
@@ -312,7 +312,7 @@ static PetscErrorCode MPGPGrads(QPS qps, Vec x, Vec lb, Vec ub, Vec g)
 
 #undef __FUNCT__
 #define __FUNCT__ "MPGPFeas"
-/*@
+/*
 MPGPFeas - compute the largest feasible step alpha,
   i.e. lb <= x-alpha*p <= ub
 
@@ -335,7 +335,7 @@ Parameters:
 . ub - vector of upper bounds
 . p - vector of direction
 - *alpha - pointer to return value  
-@*/
+*/
 static PetscErrorCode MPGPFeas(Vec x, Vec lb, Vec ub, Vec p, PetscScalar *alpha)
 {
   PetscInt          i, m;
@@ -411,12 +411,12 @@ PetscErrorCode QPGetScaledProjectedGradient(QP qp, PetscReal alpha, Vec galpha)
 
 #undef __FUNCT__  
 #define __FUNCT__ "QPSSetup_MPGP"
-/*@
+/*
 QPSSetup_MPGP - the setup function of MPGP algorithm; initialize constant step-size, check the constraints
 
 Parameters:
 . qps - QP solver
-@*/
+*/
 PetscErrorCode QPSSetup_MPGP(QPS qps)
 {
   QPS_MPGP          *mpgp = (QPS_MPGP*)qps->data;
@@ -468,12 +468,12 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
 
 #undef __FUNCT__  
 #define __FUNCT__ "QPSSolve_MPGP"
-/*@
+/*
 QPSSolve_MPGP - the solver; solve the problem using MPGP algorithm
 
 Parameters:
 + qps - QP solver
-@*/
+*/
 PetscErrorCode QPSSolve_MPGP(QPS qps)
 {
   QPS_MPGP          *mpgp = (QPS_MPGP*)qps->data;
@@ -658,12 +658,12 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
 
 #undef __FUNCT__  
 #define __FUNCT__ "QPSDestroy_MPGP"
-/*@
+/*
 QPSDestroy_MPGP - MPGP afterparty
 
 Parameters:
 . qps - QP solver
-@*/
+*/
 PetscErrorCode QPSDestroy_MPGP(QPS qps)
 {
   PetscFunctionBegin;
@@ -683,14 +683,14 @@ PetscErrorCode QPSDestroy_MPGP(QPS qps)
 
 #undef __FUNCT__  
 #define __FUNCT__ "QPSIsQPCompatible_MPGP"
-/*@
+/*
 QPSIsQPCompatible_MPGP - verify if the algorithm is able to solve given QP problem
 
 Parameters:
 + qps - QP solver
 . qp - quadratic programming problem
 - flg - the pointer to result
-@*/
+*/
 PetscErrorCode QPSIsQPCompatible_MPGP(QPS qps,QP qp,PetscBool *flg)
 {
   Vec lb,ub;
@@ -830,6 +830,8 @@ Parameters:
 + qps - QP solver
 . alpha - pointer to store the value
 - argtype -  
+
+Level: advanced
 @*/
 PetscErrorCode QPSMPGPGetAlpha(QPS qps,PetscReal *alpha,QPSScalarArgType *argtype)
 {
@@ -850,6 +852,8 @@ Parameters:
 + qps - QP solver
 . alpha - new value of parameter
 - argtype -  
+
+Level: intermediate
 @*/
 PetscErrorCode QPSMPGPSetAlpha(QPS qps,PetscReal alpha,QPSScalarArgType argtype)
 {
@@ -868,6 +872,8 @@ QPSMPGPGetGamma - get the proportioning parameter used in algorithm
 Parameters:
 + qps - QP solver
 - gamma - pointer to store the value  
+
+Level: advanced
 @*/
 PetscErrorCode QPSMPGPGetGamma(QPS qps,PetscReal *gamma)
 {
@@ -886,6 +892,8 @@ QPSMPGPSetGamma - set the proportioning parameter used in algorithm
 Parameters:
 + qps - QP solver
 - gamma - new value of parameter  
+
+Level: intermediate
 @*/
 PetscErrorCode QPSMPGPSetGamma(QPS qps,PetscReal gamma)
 {
@@ -910,11 +918,13 @@ PetscErrorCode QPSMPGPGetOperatorMaxEigenvalue(QPS qps,PetscReal *maxeig)
 #undef __FUNCT__
 #define __FUNCT__ "QPSMPGPSetOperatorMaxEigenvalue"
 /*@
-QPSMPGPGetGamma - set the estimation of largest eigenvalue
+QPSMPGPSetOperatorMaxEigenvalue - set the estimation of largest eigenvalue
 
 Parameters:
 + qps - QP solver
 - maxeig - new value  
+
+Level: intermediate
 @*/
 PetscErrorCode QPSMPGPSetOperatorMaxEigenvalue(QPS qps,PetscReal maxeig)
 {
@@ -946,6 +956,8 @@ QPSMPGPSetOperatorMaxEigenvalueTolerance - set the tolerance of the largest eige
 Parameters:
 + qps - QP solver
 - tol - new value 
+
+Level: intermediate
 @*/
 PetscErrorCode QPSMPGPSetOperatorMaxEigenvalueTolerance(QPS qps,PetscReal tol)
 {
@@ -964,6 +976,8 @@ QPSMPGPGetOperatorMaxEigenvalueTolerance - get the tolerance of the largest eige
 Parameters:
 + qps - QP solver
 - tol - pointer to returned value 
+
+Level: advanced
 @*/
 PetscErrorCode QPSMPGPGetOperatorMaxEigenvalueTolerance(QPS qps,PetscReal *tol)
 {
@@ -982,6 +996,8 @@ QPSMPGPGetOperatorMaxEigenvalueIterations - get the maximum number of iterations
 Parameters:
 + qps - QP solver
 - numit - pointer to returned value 
+
+Level: advanced
 @*/
 PetscErrorCode QPSMPGPGetOperatorMaxEigenvalueIterations(QPS qps,PetscInt *numit)
 {
@@ -1000,6 +1016,8 @@ QPSMPGPSetOperatorMaxEigenvalueIterations - set the maximum number of iterations
 Parameters:
 + qps - QP solver
 - numit - new value
+
+Level: intermediate
 @*/
 PetscErrorCode QPSMPGPSetOperatorMaxEigenvalueIterations(QPS qps,PetscInt numit)
 {

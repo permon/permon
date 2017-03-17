@@ -428,6 +428,8 @@ PetscErrorCode MatMatIsZero(Mat A, Mat B, PetscReal tol, PetscInt ntrials, Petsc
    Output Parameters:
 +  lambda - approximate maximum eigenvalue of A (optional)
 -  v - corresponding eigenvector (optional)
+
+   Level: intermediate
 @*/
 PetscErrorCode MatGetMaxEigenvalue(Mat A, Vec v, PetscScalar *lambda_out, PetscReal tol, PetscInt maxits)
 {
@@ -734,20 +736,20 @@ PetscErrorCode MatGetRowNormalization2(Mat A, Vec *d_new)
 #undef __FUNCT__
 #define __FUNCT__ "MatGetRowNormalization"
 /*@
-  MatGetRowNormalization - Get a vector d.
+   MatGetRowNormalization - Get a vector d.
 
-  Not Collective
+   Not Collective
 
-  Input Parameter:
-. A - the matrix to be row-normalized
+   Input Parameter:
+.  A - the matrix to be row-normalized
  
-  Output Parameter:
-. d - the vector holding normalization, i.e. MatDiagonalScale(mat,NULL,d)
-  causes mat to have rows with 2-norm equal to 1
+   Output Parameter:
+.  d - the vector holding normalization, i.e. MatDiagonalScale(mat,NULL,d)
+       causes mat to have rows with 2-norm equal to 1
 
-  Level: beginner
+   Level: intermediate
 
-.seealso: MatDiagonalScale
+.seealso: MatDiagonalScale()
 @*/
 PetscErrorCode MatGetRowNormalization(Mat A, Vec *d_new)
 {

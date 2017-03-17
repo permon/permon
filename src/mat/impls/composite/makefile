@@ -5,7 +5,7 @@ CFLAGS   =
 FFLAGS   =
 SOURCEC  = matsum.c matprod.c
 SOURCEF  =
-SOURCEH  = fllopcompositemimpl.h
+SOURCEH  = fllopcompositeimpl.h
 OBJSC    = ${SOURCEC:.c=.o}
 OBJSF    =
 LIBBASE  = libpermon

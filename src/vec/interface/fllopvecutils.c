@@ -152,13 +152,13 @@ PetscErrorCode VecCreateFromIS(IS is, Vec *vecout)
 
 #undef __FUNCT__
 #define __FUNCT__ "ISGetVec"
-/*@
+/*
 ISGetVec - set the layout of vector subject to the layout defined by index set
 
 Parameters:
 + is - index set
 - vec - given vector 
-@*/
+*/
 PetscErrorCode ISGetVec(IS is, Vec *vec)
 {
   PetscInt m,M,bs;
@@ -179,14 +179,14 @@ PetscErrorCode ISGetVec(IS is, Vec *vec)
 
 #undef __FUNCT__
 #define __FUNCT__ "ISGetVecBlock"
-/*@
+/*
 ISGetVecBlock - set the layout of vector subject to the layout defined by index set; each block of IS has one component in vector
 
 Parameters:
 + is - index set with
 . vec - given vector 
 - bs - the size of block
-@*/
+*/
 PetscErrorCode ISGetVecBlock(IS is, Vec *vec, PetscInt bs)
 {
   PetscInt M; /* global size of is = (global size of vec * block size) */ 
@@ -218,32 +218,6 @@ PetscErrorCode ISGetVecBlock(IS is, Vec *vec, PetscInt bs)
 
   TRY( PetscLayoutReference(is->map,&(*vec)->map) );
   PetscFunctionReturn(0);
-}
-
-#undef __FUNCT__
-#define __FUNCT__ "ISGetVecBlock"
-/*@
-ISViewBlock - view the IS with no block subject to manually given size of blocks
-
-Parameters:
-+ is - index set
-. viewer -  
-- bs - the size of block
-@*/
-PetscErrorCode ISViewBlock(IS is,PetscViewer viewer, PetscInt bs)
-{
-   if (!bs) {
-     bs = 1;
-   }
-    
-   if (!viewer) {
-     PetscViewerASCIIGetStdout(PetscObjectComm((PetscObject)is),&viewer);
-   }
-
-   // TODO: I really do not know how to do that
-//   PetscObjectPrintClassNamePrefixType((PetscObject)is,viewer);
-//   (*is->ops->view)(is,viewer);
-   return(0);
 }
 
 #undef __FUNCT__

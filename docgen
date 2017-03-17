@@ -1,0 +1,1 @@
+make alldoc LOC=$PERMON_DIR

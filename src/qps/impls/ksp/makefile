@@ -9,7 +9,7 @@ SOURCEH  = qpskspimpl.h
 OBJSC    = ${SOURCEC:.c=.o}
 OBJSF    =
 LIBBASE  = libpermon
-MANSEC   = KSP
+MANSEC   = QPS
 LOCDIR   = src/qps/impls/ksp/
 
 include ${PERMON_DIR}/lib/permon/conf/permon_base

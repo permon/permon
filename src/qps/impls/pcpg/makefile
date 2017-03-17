@@ -9,7 +9,7 @@ SOURCEH  = pcpgimpl.h
 OBJSC    = ${SOURCEC:.c=.o}
 OBJSF    =
 LIBBASE  = libpermon
-MANSEC   = PCPG
+MANSEC   = QPS
 LOCDIR   = src/qps/impls/PCPG/
 
 include ${PERMON_DIR}/lib/permon/conf/permon_base
