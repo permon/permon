@@ -75,10 +75,8 @@ typedef struct {
 
 FLLOP_EXTERN PetscLogEvent QPS_Solve,QPS_Solve_solve,QPS_PostSolve;
 
-FLLOP_EXTERN PetscErrorCode QPSSetWorkVecs(QPS,PetscInt);
-FLLOP_EXTERN PetscErrorCode QPSWorkVecStateUpdate(QPS qps,PetscInt idx);
-FLLOP_EXTERN PetscErrorCode QPSWorkVecStateChanged(QPS qps,PetscInt idx,PetscBool *flg);
-FLLOP_EXTERN PetscErrorCode QPSSolutionVecStateUpdate(QPS qps);
-FLLOP_EXTERN PetscErrorCode QPSSolutionVecStateChanged(QPS qps,PetscBool *flg);
-FLLOP_EXTERN PetscErrorCode QPSDestroyDefault(QPS);
+FLLOP_INTERN PetscErrorCode QPSWorkVecStateUpdate(QPS qps,PetscInt idx);
+FLLOP_INTERN PetscErrorCode QPSWorkVecStateChanged(QPS qps,PetscInt idx,PetscBool *flg);
+FLLOP_INTERN PetscErrorCode QPSSolutionVecStateUpdate(QPS qps);
+FLLOP_INTERN PetscErrorCode QPSSolutionVecStateChanged(QPS qps,PetscBool *flg);
 #endif

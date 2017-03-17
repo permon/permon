@@ -66,6 +66,9 @@ FLLOP_EXTERN PetscErrorCode QPSConvergedDefaultSetRhsForDivergence(void *cctx, V
 FLLOP_EXTERN PetscErrorCode QPSConvergedDefaultDestroy(void *);
 FLLOP_EXTERN PetscErrorCode QPSConvergedDefaultCreate(void **);
 
+FLLOP_EXTERN PetscErrorCode QPSSetWorkVecs(QPS,PetscInt);
+FLLOP_EXTERN PetscErrorCode QPSDestroyDefault(QPS);
+
 /* QPSMonitor */
 FLLOP_EXTERN PetscErrorCode QPSMonitor(QPS,PetscInt,PetscReal);
 FLLOP_EXTERN PetscErrorCode QPSMonitorSet(QPS,PetscErrorCode (*)(QPS,PetscInt,PetscReal,void*),void *,PetscErrorCode (*)(void**));
