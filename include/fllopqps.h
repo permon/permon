@@ -26,7 +26,7 @@ FLLOP_EXTERN PetscBool  QPSRegisterAllCalled;
 FLLOP_EXTERN PetscErrorCode QPSRegisterAll(void);
 FLLOP_EXTERN PetscErrorCode QPSRegister(const char[],PetscErrorCode (*)(QPS));
 
-FLLOP_EXTERN PetscErrorCode QPSCreate(MPI_Comm comm,QPS *qps);
+FLLOP_EXTERN PetscErrorCode QPSCreate(MPI_Comm comm,QPS *qps_new);
 FLLOP_EXTERN PetscErrorCode QPSView(QPS qps,PetscViewer v);
 FLLOP_EXTERN PetscErrorCode QPSViewConvergence(QPS qps, PetscViewer viewer);
 FLLOP_EXTERN PetscErrorCode QPSDestroy(QPS *qps);

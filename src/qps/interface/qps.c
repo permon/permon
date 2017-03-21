@@ -52,20 +52,20 @@ static PetscErrorCode QPSDetachQP_Private(QPS qps) {
 .  comm - MPI comm 
 
    Output Parameters:
-.  inqps - pointer to created QPS 
+.  qps_new - pointer to created QPS 
 
    Level: beginner
 
 .seealso QPSDestroy()
 @*/
-PetscErrorCode QPSCreate(MPI_Comm comm,QPS *inqps)
+PetscErrorCode QPSCreate(MPI_Comm comm,QPS *qps_new)
 {
   QPS              qps;
   QP               qp;
   void             *ctx;
   
   PetscFunctionBegin;
-  PetscValidPointer(inqps,2);
+  PetscValidPointer(qps_new,2);
   
 #if !defined(PETSC_USE_DYNAMIC_LIBRARIES)
   TRY( QPSInitializePackage() );
@@ -103,7 +103,7 @@ PetscErrorCode QPSCreate(MPI_Comm comm,QPS *inqps)
   TRY( QPSAttachQP_Private(qps,qp) );
   TRY( QPDestroy(&qp) );
 
-  *inqps = qps;
+  *qps_new = qps;
   PetscFunctionReturn(0);
 }
 
