@@ -66,7 +66,6 @@ PetscErrorCode QPSCreate(MPI_Comm comm,QPS *inqps)
   
   PetscFunctionBegin;
   PetscValidPointer(inqps,2);
-  *inqps = 0;
   
 #if !defined(PETSC_USE_DYNAMIC_LIBRARIES)
   TRY( QPSInitializePackage() );
@@ -80,6 +79,7 @@ PetscErrorCode QPSCreate(MPI_Comm comm,QPS *inqps)
   qps->max_it      = 10000;
   qps->autoPostSolve = PETSC_TRUE;
   qps->topQP       = NULL;
+  qps->solQP       = NULL;
   qps->setupcalled = PETSC_FALSE;
   qps->postsolvecalled = PETSC_FALSE;
   qps->user_type   = PETSC_FALSE;
@@ -98,6 +98,7 @@ PetscErrorCode QPSCreate(MPI_Comm comm,QPS *inqps)
   TRY( QPSConvergedDefaultCreate(&ctx) );
   TRY( QPSSetConvergenceTest(qps,QPSConvergedDefault,ctx,QPSConvergedDefaultDestroy) );
 
+  //TODO move to QPSGetQP
   TRY( QPCreate(comm,&qp) );
   TRY( QPSAttachQP_Private(qps,qp) );
   TRY( QPDestroy(&qp) );
@@ -209,6 +210,7 @@ PetscErrorCode QPSSetUp(QPS qps)
   TRY( QPChainSetUp(qps->topQP) );
   TRY( QPChainGetLast(qps->topQP,&qps->solQP) );
   solqp = qps->solQP;
+  TRY( PetscObjectReference((PetscObject)qps->solQP) );
   
   TRY( QPSSetDefaultTypeIfNotSpecified(qps) );
   TRY( QPSIsQPCompatible(qps,solqp,&flg) );
@@ -240,6 +242,7 @@ PetscErrorCode QPSReset(QPS qps)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   if (qps->ops->reset) TRY( (*qps->ops->reset)(qps) );
   if (qps->topQP) TRY( QPDestroy(&qps->topQP) );
+  TRY( QPDestroy(&qps->solQP) );
   TRY( VecDestroyVecs(qps->nwork,&qps->work) );
   TRY( PetscFree(qps->work_state) );
   qps->setupcalled = PETSC_FALSE;
@@ -409,8 +412,7 @@ PetscErrorCode QPSSetDefaultType(QPS qps)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   if (!qps->topQP) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ORDER,"QPS needs QP to be set in order to find a default type");
   
-  TRY( QPChainGetLast(qps->topQP,&qps->solQP) );
-  qp = qps->solQP;
+  TRY( QPChainGetLast(qps->topQP,&qp) );
 
   TRY( QPGetEq(qp,&Beq,&ceq) );
   TRY( QPGetIneq(qp,&Bineq,&cineq) );
