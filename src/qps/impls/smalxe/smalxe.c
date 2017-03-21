@@ -832,6 +832,7 @@ PetscErrorCode QPSSetUp_SMALXE(QPS qps)
   TRY( QPPFSetUp(qp->pf) );
 
   /* setup QP with eq. constraints eliminated for inner loop */
+  TRY( QPRemoveChild(qp) );
   TRY( QPTEnforceEqByPenalty(qp, rho, PETSC_TRUE) );
   TRY( QPChainGetLast(qp,&smalxe->qp_penalized) );
   qp_inner = smalxe->qp_penalized;
@@ -1019,7 +1020,7 @@ PetscErrorCode QPSReset_SMALXE(QPS qps)
   QPS_SMALXE    *smalxe = (QPS_SMALXE*)qps->data;
 
   PetscFunctionBegin;
-  if (smalxe->qp_penalized) TRY( QPRemoveChild(smalxe->qp_penalized->parent) );
+  if (qps->solQP) TRY( QPRemoveChild(qps->solQP) );
   smalxe->qp_penalized = NULL;
   smalxe->normBu                = NAN;
   smalxe->enorm                 = NAN;
@@ -1030,7 +1031,7 @@ PetscErrorCode QPSReset_SMALXE(QPS qps)
   smalxe->eta_hits              = 0;
   smalxe->rho_updates           = 0;
   TRY( VecDestroy(&smalxe->Bu) );
-  TRY( QPSReset(smalxe->inner) );
+  if (smalxe->inner) TRY( QPSReset(smalxe->inner) );
   PetscFunctionReturn(0);
 }
 
