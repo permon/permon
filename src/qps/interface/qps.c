@@ -61,7 +61,6 @@ static PetscErrorCode QPSDetachQP_Private(QPS qps) {
 PetscErrorCode QPSCreate(MPI_Comm comm,QPS *qps_new)
 {
   QPS              qps;
-  QP               qp;
   void             *ctx;
   
   PetscFunctionBegin;
@@ -98,11 +97,6 @@ PetscErrorCode QPSCreate(MPI_Comm comm,QPS *qps_new)
   TRY( QPSConvergedDefaultCreate(&ctx) );
   TRY( QPSSetConvergenceTest(qps,QPSConvergedDefault,ctx,QPSConvergedDefaultDestroy) );
 
-  //TODO move to QPSGetQP
-  TRY( QPCreate(comm,&qp) );
-  TRY( QPSAttachQP_Private(qps,qp) );
-  TRY( QPDestroy(&qp) );
-
   *qps_new = qps;
   PetscFunctionReturn(0);
 }
@@ -110,7 +104,7 @@ PetscErrorCode QPSCreate(MPI_Comm comm,QPS *qps_new)
 #undef __FUNCT__  
 #define __FUNCT__ "QPSGetQP"
 /*@
-   QPSGetQP - return the user's QP from QPS
+   QPSGetQP - Return the user's QP set by QPSSetQP, or a new one if none has been set.
 
    Not Collective
 
@@ -118,7 +112,7 @@ PetscErrorCode QPSCreate(MPI_Comm comm,QPS *qps_new)
 +  qps - instance of QPS 
 -  qp - pointer to returning QP 
 
-   Level: intermediate
+   Level: beginner
 
 .seealso QPSSetQP(), QPSGetSolvedQP(), QPSSolve()
 @*/
@@ -127,6 +121,12 @@ PetscErrorCode QPSGetQP(QPS qps,QP *qp)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidPointer(qp,2);
+  if (!qps->topQP) {
+    QP qp_;
+    TRY( QPCreate(PetscObjectComm((PetscObject)qps),&qp_) );
+    TRY( QPSAttachQP_Private(qps,qp_) );
+    TRY( QPDestroy(&qp_) );
+  }
   *qp = qps->topQP;  
   PetscFunctionReturn(0);
 }
