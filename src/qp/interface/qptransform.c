@@ -1658,6 +1658,10 @@ PetscErrorCode QPTAllInOne(QP qp,MatInvType invType,PetscBool dual,PetscBool pro
   TRY( PetscOptionsBoolGroupBegin("-qp_O_normalize","perform QPTNormalizeObjective","QPTNormalizeObjective",&normalize) );
   TRY( PetscOptionsBoolGroupEnd("-qp_O_normalize_hessian","perform QPTNormalizeHessian","QPTNormalizeHessian",&normalize_hessian) );
   _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
+
+  //TODO do this until QPTFromOptions supports chain updates
+  TRY( QPDestroy(&qp->child) );
+
   if (normalize) {
     TRY( QPTNormalizeObjective(qp) );
   } else if (normalize_hessian) {
