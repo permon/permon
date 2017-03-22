@@ -496,6 +496,24 @@ PetscErrorCode QPSSMALXEUpdate_SMALXE(QPS qps, PetscReal Lag_old, PetscReal Lag,
   PetscFunctionReturn(0);
 }
 
+#undef __FUNCT__
+#define __FUNCT__ "QPSSMALXEGetInnerQPS_SMALXE"
+PetscErrorCode QPSSMALXEGetInnerQPS_SMALXE(QPS qps, QPS *inner)
+{
+  QPS_SMALXE    *smalxe = (QPS_SMALXE*)qps->data;
+  const char    *prefix;
+
+  PetscFunctionBegin;
+  if (!smalxe->inner) {
+    TRY( QPSCreate(PetscObjectComm((PetscObject)qps), &smalxe->inner) );
+    TRY( QPSGetOptionsPrefix(qps, &prefix) );
+    TRY( QPSSetOptionsPrefix(smalxe->inner, prefix) );
+    TRY( QPSAppendOptionsPrefix(smalxe->inner, "smalxe_") );
+  }
+  *inner = smalxe->inner;
+  PetscFunctionReturn(0);
+}
+
 #undef __FUNCT__  
 #define __FUNCT__ "QPSConvergedDestroy_Inner_SMALXE"
 PetscErrorCode QPSConvergedDestroy_Inner_SMALXE(void *ctx)
@@ -784,6 +802,9 @@ PetscErrorCode QPSSetUp_SMALXE(QPS qps)
     qp = qps->solQP;
   }
 
+  /* create inner solver if it is not set */
+  TRY( QPSSMALXEGetInnerQPS_SMALXE(qps, &smalxe->inner) );
+
   /* get the original Hessian */
   TRY( QPGetOperator(qp, &A) );
 
@@ -867,6 +888,7 @@ PetscErrorCode QPSSetUp_SMALXE(QPS qps)
   TRY( PetscInfo2(qps,"maximum operator eigenvalue estimate %.8e is %sinjected to the inner solver\n",maxeig_inner,smalxe->inject_maxeig?"":"NOT ") );
   if (smalxe->inject_maxeig) TRY( QPSMPGPSetOperatorMaxEigenvalue(smalxe->inner, maxeig_inner) );
   
+  TRY( QPSSetAutoPostSolve(smalxe->inner, PETSC_FALSE) );
   TRY( QPSSetUp(smalxe->inner) );
   
   /* inject the special stopping criterion to the inner loop solver */
@@ -1115,6 +1137,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_SMALXE(QPS qps)
   smalxe->updateNormBu       = QPSSMALXEUpdateNormBu_SMALXE;
 
   /* set type-specific functions */
+  TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSSMALXEGetInnerQPS_SMALXE_C",QPSSMALXEGetInnerQPS_SMALXE) );
   TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSSMALXEGetOperatorMaxEigenvalue_SMALXE_C",QPSSMALXEGetOperatorMaxEigenvalue_SMALXE) );
   TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSSMALXESetOperatorMaxEigenvalue_SMALXE_C",QPSSMALXESetOperatorMaxEigenvalue_SMALXE) );
   TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSSMALXEGetM1Initial_SMALXE_C",QPSSMALXEGetM1Initial_SMALXE) );
@@ -1200,15 +1223,22 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_SMALXE(QPS qps)
   /* set SMALXE-specific default maximum number of outer iterations */
   qps->max_it = 100;
 
-  TRY( QPSCreate(comm, &smalxe->inner) );
-  TRY( QPSSetOptionsPrefix(smalxe->inner, "smalxe_") );
-  TRY( QPSSetAutoPostSolve(smalxe->inner, PETSC_FALSE) );
   smalxe->inner_iter_min      = 1;
   smalxe->inner_no_gtol_stop  = PETSC_FALSE;
   PetscFunctionReturn(0);
 }
 
 
+#undef __FUNCT__
+#define __FUNCT__ "QPSSMALXEGetInnerQPS"
+PetscErrorCode QPSSMALXEGetInnerQPS(QPS qps,QPS *inner)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
+  PetscValidPointer(inner,2);
+  TRY( PetscUseMethod(qps,"QPSSMALXEGetInnerQPS_SMALXE_C",(QPS,QPS*),(qps,inner)) );
+  PetscFunctionReturn(0);
+}
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSSMALXEGetOperatorMaxEigenvalue"

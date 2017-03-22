@@ -117,6 +117,7 @@ FLLOP_EXTERN PetscErrorCode QPSMPGPQPCSetOperatorMaxEigenvalueIterations(QPS qps
 FLLOP_EXTERN PetscErrorCode QPGetScaledProjectedGradient(QP qp, PetscReal alpha, Vec galpha);
 
 /* SMALXE */
+FLLOP_EXTERN PetscErrorCode QPSSMALXEGetInnerQPS(QPS qps,QPS *inner);
 FLLOP_EXTERN PetscErrorCode QPSSMALXESetOperatorMaxEigenvalue(QPS qps,PetscReal maxeig);
 FLLOP_EXTERN PetscErrorCode QPSSMALXEGetOperatorMaxEigenvalue(QPS qps,PetscReal *maxeig);
 FLLOP_EXTERN PetscErrorCode QPSSMALXESetOperatorMaxEigenvalueTolerance(QPS qps,PetscReal tol);
