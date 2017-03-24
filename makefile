@@ -48,9 +48,9 @@ all-gnumake: chk_all
 all-legacy: chk_all
 	@${OMAKE} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} PERMON_BUILD_USING_CMAKE="" MAKE_IS_GNUMAKE="" all
 
-all-gnumake-local: permon_info permon_gnumake
+all-gnumake-local: permon_info permon_build_gnumake
 
-all-legacy-local:  permon_info deletelibs build permon_shared
+all-legacy-local:  permon_info deletelibs permon_build_legacy permon_shared
 
 chk_all: chk_permon_dir chk_permon_petsc_dir chklib_dir chk_makej
 
@@ -137,15 +137,24 @@ permon_info:
 	-@echo "=========================================="
 
 #
-# Builds the PERMON library
+# Builds the PERMON library using PETSc legacy buildsystem
 #
-build: chk_makej
+permon_build_legacy: chk_makej
 	-@echo "BEGINNING TO COMPILE LIBRARIES IN ALL DIRECTORIES"
 	-@echo "========================================="
 	-@${OMAKE} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} ACTION=libfast tree
 	-@${RANLIB} ${PERMON_LIB_DIR}/*.${AR_LIB_SUFFIX}  > tmpf 2>&1 ; ${GREP} -v "has no symbols" tmpf; ${RM} tmpf;
 	-@echo "Completed building libraries"
 	-@echo "========================================="
+
+#
+# Builds the PERMON library using PETSc GNU Make parallel buildsystem
+#
+permon_build_gnumake: chk_makej
+	@echo "Building PERMON using GNU Make with ${MAKE_NP} build threads"           
+	@echo "=========================================="
+	@cd ${PERMON_DIR} && ${OMAKE_PRINTDIR} -f gmakefile -j ${MAKE_NP} V=${V}
+	@echo "========================================="
 
 #                                                                                                                       
 # builds the PERMON shared library                                                                                       
@@ -179,37 +188,4 @@ allclean: deletebins
 	fi
 
 clean:: allclean
-
-
-# ------------------------------------------------------------------
-#
-# All remaining rules are intended for PERMON developers.
-# PERMON users should not generally need to use these commands.
-#
-
-# Builds all the documentation
-alldoc: alldoc1 alldoc2
-
-# Build everything that goes into 'doc' dir except html sources
-alldoc1: chk_loc deletemanualpages
-	-${OMAKE} ACTION=manualpages_buildcite tree_basic LOC=${LOC}
-	-@sed -e s%man+../%man+manualpages/% ${LOC}/docs/manualpages/manualpages.cit > ${LOC}/docs/manualpages/htmlmap
-	-@cat ${PETSC_DIR}/src/docs/mpi.www.index >> ${LOC}/docs/manualpages/htmlmap
-	-${OMAKE} ACTION=permon_manualpages tree_basic LOC=${LOC}
-	-${PYTHON} ${PETSC_DIR}/bin/maint/wwwindex.py ${PERMON_DIR} ${LOC}
-	-${OMAKE} ACTION=permon_manexamples tree_basic LOC=${LOC}
-
-# Builds .html versions of the source
-alldoc2: chk_loc
-	-${OMAKE} ACTION=permon_html PETSC_DIR=${PETSC_DIR} alltree LOC=${LOC}
-
-# Deletes documentation
-alldocclean: deletemanualpages allcleanhtml
-deletemanualpages: chk_loc
-	-@if [ -d ${LOC} -a -d ${LOC}/docs/manualpages ]; then \
-          find ${LOC}/docs/manualpages -type f -name "*.html" -exec ${RM} {} \; ;\
-          ${RM} ${LOC}/docs/manualpages/manualpages.cit ;\
-        fi
-allcleanhtml:
-	-${OMAKE} ACTION=cleanhtml PETSC_DIR=${PETSC_DIR} alltree
 

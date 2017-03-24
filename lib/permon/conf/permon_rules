@@ -1,11 +1,31 @@
 # -*- mode: makefile -*-
 #
 
-permon_gnumake: chk_makej
-	@echo "Building PERMON using GNU Make with ${MAKE_NP} build threads"           
-	@echo "=========================================="
-	@cd ${PERMON_DIR} && ${OMAKE_PRINTDIR} -f gmakefile -j ${MAKE_NP} V=${V}
-	@echo "========================================="
+# Builds all the documentation
+alldoc: alldoc1 alldoc2
+
+# Build everything that goes into 'doc' dir except html sources
+alldoc1: chk_loc deletemanualpages
+	-${OMAKE} ACTION=manualpages_buildcite tree_basic LOC=${LOC}
+	-@sed -e s%man+../%man+manualpages/% ${LOC}/docs/manualpages/manualpages.cit > ${LOC}/docs/manualpages/htmlmap
+	-@cat ${PETSC_DIR}/src/docs/mpi.www.index >> ${LOC}/docs/manualpages/htmlmap
+	-${OMAKE} ACTION=permon_manualpages tree_basic LOC=${LOC}
+	-${PYTHON} ${PETSC_DIR}/bin/maint/wwwindex.py ${PERMON_DIR} ${LOC}
+	-${OMAKE} ACTION=permon_manexamples tree_basic LOC=${LOC}
+
+# Builds .html versions of the source
+alldoc2: chk_loc
+	-${OMAKE} ACTION=permon_html PETSC_DIR=${PETSC_DIR} alltree LOC=${LOC}
+
+# Deletes documentation
+alldocclean: deletemanualpages allcleanhtml
+deletemanualpages: chk_loc
+	-@if [ -d ${LOC} -a -d ${LOC}/docs/manualpages ]; then \
+          find ${LOC}/docs/manualpages -type f -name "*.html" -exec ${RM} {} \; ;\
+          ${RM} ${LOC}/docs/manualpages/manualpages.cit ;\
+        fi
+allcleanhtml:
+	-${OMAKE} ACTION=cleanhtml PETSC_DIR=${PETSC_DIR} alltree
 
 permon_manualpages:
 	-@if [ "${MANSEC}" != "" ] ; then \
