@@ -5,6 +5,10 @@
 ALL: all
 LOCDIR = .
 DIRS   = src include docs
+LOG    = ${PERMON_DIR}/${PETSC_ARCH}/lib/permon/conf/make.log
+ERRLOG = ${PERMON_DIR}/${PETSC_ARCH}/lib/permon/conf/error.log
+HGLOG  = ${PERMON_DIR}/${PETSC_ARCH}/lib/permon/conf/hg.log
+MODLOG = ${PERMON_DIR}/${PETSC_ARCH}/lib/permon/conf/modules.log
 
 #  Escape codes to change the text color on xterms and terminals
 PETSC_TEXT_HILIGHT = "\033[1;31m"
@@ -19,21 +23,22 @@ PETSC_TEXT_NORMAL = "\033[0;39m\033[0;49m"
 all: chk_all
 	@mkdir -p ./${PETSC_ARCH}/lib/permon/conf
 	@if [ "${MAKE_IS_GNUMAKE}" != "" ]; then \
-	   ${OMAKE_PRINTDIR} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} all-gnumake-local 2>&1 | tee ./${PETSC_ARCH}/lib/permon/conf/make.log; \
+	   ${OMAKE_PRINTDIR} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} all-gnumake-local 2>&1 | tee ${LOG}; \
 	 else \
-	   ${OMAKE} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} all-legacy-local 2>&1 | tee ./${PETSC_ARCH}/lib/permon/conf/make.log | ${GREP} -v "has no symbols"; \
+	   ${OMAKE} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} all-legacy-local 2>&1 | tee ${LOG} | ${GREP} -v "has no symbols"; \
 	 fi
-	@egrep -i "( error | error: |no such file or directory)" ${PETSC_ARCH}/lib/permon/conf/make.log | tee ./${PETSC_ARCH}/lib/permon/conf/error.log > /dev/null
-	@if test -s ./${PETSC_ARCH}/lib/permon/conf/error.log; then \
-           printf ${PETSC_TEXT_HILIGHT}"*******************************ERROR************************************\n" 2>&1 | tee -a ./${PETSC_ARCH}/lib/permon/conf/make.log; \
-           echo "  Error during compile, check ./${PETSC_ARCH}/lib/permon/conf/make.log" 2>&1 | tee -a ./${PETSC_ARCH}/lib/permon/conf/make.log; \
-           echo "  Send all contents of ./${PETSC_ARCH}/lib/permon/conf to vaclav.hapla@vsb.cz" 2>&1 | tee -a ./${PETSC_ARCH}/lib/permon/conf/make.log;\
-           printf "************************************************************************"${PETSC_TEXT_NORMAL}"\n" 2>&1 | tee -a ./${PETSC_ARCH}/lib/permon/conf/make.log; \
+	@egrep -i "( error | error: |no such file or directory)" ${PETSC_ARCH}/lib/permon/conf/make.log | tee ${ERRLOG} > /dev/null
+	@if test -s ${ERRLOG}; then \
+           printf ${PETSC_TEXT_HILIGHT}"*******************************ERROR************************************\n" 2>&1 | tee -a ${LOG}; \
+           echo "  Error during compile, check ./${PETSC_ARCH}/lib/permon/conf/make.log" 2>&1 | tee -a ${LOG}; \
+           echo "  Send all contents of ./${PETSC_ARCH}/lib/permon/conf to vaclav.hapla@vsb.cz" 2>&1 | tee -a ${LOG};\
+           printf "************************************************************************"${PETSC_TEXT_NORMAL}"\n" 2>&1 | tee -a ${LOG}; \
 					 exit 1; \
 	 else \
-		echo "Completed building libraries in ${PERMON_DIR}/${PETSC_ARCH}"; \
-			echo "========================================="; \
+		 echo "Completed building libraries in ${PERMON_DIR}/${PETSC_ARCH}" | tee -a ${LOG}; \
+ echo "=========================================" | tee -a ${LOG}; \
 	 fi
+	@${OMAKE} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} permon_hginfo
 
 all-gnumake: chk_all
 	@if [ "${MAKE_IS_GNUMAKE}" != "" ]; then \
@@ -45,7 +50,7 @@ all-legacy: chk_all
 
 all-gnumake-local: permon_info permon_gnumake
 
-all-legacy-local:  permon_info deletelibs build permon_shared permon_hginfo
+all-legacy-local:  permon_info deletelibs build permon_shared
 
 chk_all: chk_permon_dir chk_permon_petsc_dir chklib_dir chk_makej
 
@@ -101,6 +106,8 @@ chk_permon_dir:
 	  echo "Current directory: "${mypwd}; \
           printf "********************************************************************"${PETSC_TEXT_NORMAL}"\n"; \
 	  false; fi
+
+permon_hginfo:
 
 #
 # Prints information about the system and version of PERMON being compiled
