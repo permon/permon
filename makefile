@@ -6,6 +6,10 @@ ALL: all
 LOCDIR = .
 DIRS   = src include docs
 
+#  Escape codes to change the text color on xterms and terminals
+PETSC_TEXT_HILIGHT = "\033[1;31m"
+PETSC_TEXT_NORMAL = "\033[0;39m\033[0;49m"
+
 # Include the rest of makefiles
 -include ${PERMON_DIR}/lib/permon/conf/permon_variables
 -include ${PERMON_DIR}/lib/permon/conf/permon_rules
@@ -49,7 +53,7 @@ chk_all: chk_permon_dir chk_permon_petsc_dir chklib_dir chk_makej
 # Check if PETSC_DIR variable specified is valid
 #
 #
-chk_permon_petsc_dir: chk_petscdir
+chk_permon_petsc_dir:
 	@if [ -z ${PETSC_DIR} ]; then \
           printf ${PETSC_TEXT_HILIGHT}"*************************ERROR**************************************\n"; \
 	  echo "PETSC_DIR not specified!"; \
@@ -58,14 +62,17 @@ chk_permon_petsc_dir: chk_petscdir
 	@if [ ! -f ${PETSC_DIR}/include/petscversion.h ]; then \
           printf ${PETSC_TEXT_HILIGHT}"*************************ERROR**************************************\n"; \
 	  echo "Incorrect PETSC_DIR specified: ${PETSC_DIR}!"; \
-	  echo "You need to use / to separate directories, not \\!"; \
+    echo 'File ${PETSC_DIR}/include/petscversion.h does not exist.'; \
+	  echo "Note you need to use / to separate directories, not \\"; \
           printf "********************************************************************"${PETSC_TEXT_NORMAL}"\n"; \
     false; fi
 	@if [ ! -f ${PETSC_DIR}/${PETSC_ARCH}/lib/lib*petsc*.a ] && [ ! -f ${PETSC_DIR}/${PETSC_ARCH}/lib/lib*petsc*.so ]; then \
           printf ${PETSC_TEXT_HILIGHT}"*************************ERROR**************************************\n"; \
-	  echo "Given PETSC_DIR=${PETSC_DIR} and PETSC_ARCH=${PETSC_ARCH} does not contain compiled PETSc library (libpetsc.so or libpetsc.a)!"; \
+	  echo "Given PETSC_DIR=${PETSC_DIR} and PETSC_ARCH=${PETSC_ARCH}"; \
+    echo "  (directory ${PETSC_DIR}/${PETSC_ARCH}/lib)"; \
+    echo "  does not contain compiled PETSc library (libpetsc.so or libpetsc.a)!"; \
 	  echo "You may need to run configure and make in ${PETSC_DIR}"; \
-	  echo "Use / to separate directories, not \\!"; \
+	  echo "Note you need to use / to separate directories, not \\"; \
           printf "********************************************************************"${PETSC_TEXT_NORMAL}"\n"; \
 	  false; fi
 
@@ -84,7 +91,7 @@ chk_permon_dir:
 	@if [ ! -f ${PERMON_DIR}/include/fllopsys.h ]; then \
           printf ${PETSC_TEXT_HILIGHT}"*************************ERROR**************************************\n"; \
 	  echo "Incorrect PERMON_DIR specified: ${PERMON_DIR}!"; \
-	  echo "Note: You need to use / to separate directories, not \\."; \
+	  echo "Note: You need to use / to separate directories, not \\"; \
           printf "********************************************************************"${PETSC_TEXT_NORMAL}"\n"; \
 	  false; fi
 	@if [ "${true_PERMON_DIR}" != "${mypwd}" ]; then \
@@ -98,7 +105,7 @@ chk_permon_dir:
 #
 # Prints information about the system and version of PERMON being compiled
 #
-permon_info: chk_makej
+permon_info:
 	-@echo "=========================================="
 	-@echo Starting on `hostname` at `date`
 	-@echo Machine characteristics: `uname -a`

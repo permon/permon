@@ -1,5 +1,5 @@
 # -*- mode: makefile -*-
 #
 
-include ${PERMON_DIR}/lib/permon/conf/permon_rules
-include ${PERMON_DIR}/lib/permon/conf/permon_variables
+-include ${PERMON_DIR}/lib/permon/conf/permon_rules
+-include ${PERMON_DIR}/lib/permon/conf/permon_variables

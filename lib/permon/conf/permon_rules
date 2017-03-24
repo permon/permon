@@ -97,8 +97,10 @@ permon_html: chk_c2html
 	-@${RM} /tmp/$$USER.htmlmap tmp
 
 
-# include PETSc rules at the end
-# PETSc < 3.6
--include ${PETSC_DIR}/conf/rules
-# PETSc >= 3.6
--include ${PETSC_DIR}/lib/petsc/conf/rules
+# include PETSc rules at the end only if rules and petscrules files exist
+# - this is checked by the chk_permon_petsc_dir rule
+ifneq ("$(wildcard ${PETSC_DIR}/lib/petsc/conf/rules)","")
+ifneq ("$(wildcard ${PETSC_DIR}/${PETSC_ARCH}/lib/petsc/conf/petscrules)","")
+include ${PETSC_DIR}/lib/petsc/conf/rules
+endif
+endif

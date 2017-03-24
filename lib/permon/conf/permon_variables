@@ -1,9 +1,12 @@
 # -*- mode: makefile -*-
-#
-# PETSc < 3.6
--include ${PETSC_DIR}/conf/variables
-# PETSc >= 3.6
--include ${PETSC_DIR}/lib/petsc/conf/variables
+
+# include PETSc variables only if variables and petscvariables files exist
+# - this is checked by the chk_permon_petsc_dir rule
+ifneq ("$(wildcard ${PETSC_DIR}/lib/petsc/conf/variables)","")
+ifneq ("$(wildcard ${PETSC_DIR}/${PETSC_ARCH}/lib/petsc/conf/petscvariables)","")
+include ${PETSC_DIR}/lib/petsc/conf/variables
+endif
+endif
 
 # Variables specific to PERMON that can be employed in user makefiles.
 # PERMON_LIB_DIR          - determines where the PermonQP library is built.
