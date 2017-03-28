@@ -1026,6 +1026,11 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
   TRY( MatInvSetRegularizationType(Kplus,regType) );
   TRY( MatSetFromOptions(Kplus) );
 
+  TRY( PetscLogEventBegin(QPT_Dualize_FactorK,qp,Kplus,0,0) );
+  TRY( MatAssemblyBegin(Kplus, MAT_FINAL_ASSEMBLY) );
+  TRY( MatAssemblyEnd(Kplus, MAT_FINAL_ASSEMBLY) );
+  TRY( PetscLogEventEnd  (QPT_Dualize_FactorK,qp,Kplus,0,0) );
+
   TRY( PetscOptionsGetBool(NULL,NULL,"-qpt_dualize_Kplus_mp",&true_mp,NULL) );
   if (!true_mp) {
     TRY( PetscOptionsGetBool(NULL,NULL,"-qpt_dualize_Kplus_left",&mp,NULL) );
@@ -1088,11 +1093,6 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
   }
 
   TRY( PetscObjectSetName((PetscObject)Kplus,"Kplus") );
-
-  TRY( PetscLogEventBegin(QPT_Dualize_FactorK,qp,Kplus,0,0) );
-  TRY( MatAssemblyBegin(Kplus, MAT_FINAL_ASSEMBLY) );
-  TRY( MatAssemblyEnd(Kplus, MAT_FINAL_ASSEMBLY) );
-  TRY( PetscLogEventEnd  (QPT_Dualize_FactorK,qp,Kplus,0,0) );
 
   /* G = R'*B' */
   TRY( PetscLogEventBegin(QPT_Dualize_AssembleG,qp,0,0,0) );
