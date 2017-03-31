@@ -127,6 +127,9 @@ FLLOP_EXTERN PetscErrorCode FllopMatMatMult(Mat A,Mat B,MatReuse scall,PetscReal
 FLLOP_EXTERN PetscErrorCode FllopMatGetLocalMat(Mat A,Mat *Aloc);
 FLLOP_EXTERN PetscErrorCode FllopMatCreateDenseProductMatrix(Mat A, PetscBool A_transpose, Mat B, Mat *C_new);
 FLLOP_EXTERN PetscErrorCode FllopMatConvertBlocks(Mat A, MatType newtype,MatReuse reuse,Mat *B);
+FLLOP_EXTERN PetscErrorCode PermonMatCopyProperties(Mat A,Mat B);
+FLLOP_EXTERN PetscErrorCode PermonMatSetFromOptions(Mat B);
+FLLOP_EXTERN PetscErrorCode PermonMatConvertInplace(Mat B, MatType type);
 
 /* FETI UTILITIES */
 FLLOP_EXTERN PetscErrorCode MatRemoveGluingOfDirichletDofs(Mat Bgt, Vec cg, Mat Bdt, Mat *Bgt_new, Vec *cg_new, IS *is_new);

@@ -215,7 +215,7 @@ PetscErrorCode MatRegularize(Mat K, Mat R, MatRegularizationType type, Mat *newK
   PetscValidLogicalCollectiveEnum(K,type,3);
   PetscValidPointer(newKreg,4);
 
-  if (!type) {
+  if (type == MAT_REG_NONE) {
     TRY( PetscInfo(K,"MatRegularizationType set to MAT_REG_NONE, returning input matrix\n") );
     *newKreg = K;
     TRY( PetscObjectReference((PetscObject)K) );

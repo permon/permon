@@ -19,7 +19,7 @@ PetscErrorCode MatPrintInfo(Mat mat)
 {
   PetscInt m, n, M, N, i, tablevel;
   PetscScalar fill;
-  const char *name, *type;
+  const char *name, *type, *prefix;
   MPI_Comm comm = PETSC_COMM_WORLD;
   PetscBool flg;
   Mat inmat;
@@ -42,10 +42,11 @@ PetscErrorCode MatPrintInfo(Mat mat)
   TRY( MatGetLocalSize(mat, &m, &n) );
   TRY( MatGetType(mat, &type) );
   TRY( PetscObjectGetName((PetscObject) mat, &name) );
+  TRY( PetscObjectGetOptionsPrefix((PetscObject) mat, &prefix) );
 
   TRY( PetscPrintf(comm,
-      "Mat %8x %-16s %-10s size(m,n,M,N)=[%6d %6d %10d %10d]",
-          mat,name, type,                m, n, M, N) );
+      "Mat %8x %-16s %-10s %-10s sizes %d %d %d %d",
+          mat, name, prefix, type,                m, n, M, N) );
 
   if (mat->ops->getinfo) {
     MatInfo info;
@@ -57,7 +58,7 @@ PetscErrorCode MatPrintInfo(Mat mat)
     fill = ((PetscReal) sumnnz) / M / N;
     TRY( MatGetInfo(mat, MAT_GLOBAL_MAX, &info) );
     maxnnz  =  (PetscInt) info.nz_used;
-    TRY( PetscPrintf(comm,"  [sum(nnz) sum(alloc) max(nnz) fill]=[%7d %7d %5d %2.2f]",sumnnz,sumalloc,maxnnz,fill) );
+    TRY( PetscPrintf(comm,"  [sum(nnz) sum(alloc) max(nnz) fill]=[%d %d %d %.2f]",sumnnz,sumalloc,maxnnz,fill) );
   }
 
   TRY( PetscPrintf(comm, "\n") );
@@ -1016,4 +1017,159 @@ PetscErrorCode  MatTransposeMatMultWorks(Mat A,Mat B,PetscBool *flg)
     if (!transposematmult) *flg = PETSC_FALSE;
   }
   PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "PermonMatSetFromOptions"
+/*@
+   PermonMatSetFromOptions - The same as MatSetFromOptions but converts
+   the matrix if the type has been already set.
+
+   Collective on Mat
+
+   Input Parameter:
+.  A - the matrix
+
+   Options Database Keys:
++    -mat_type seqaij   - AIJ type, uses MatCreateSeqAIJ()
+.    -mat_type mpiaij   - AIJ type, uses MatCreateAIJ()
+.    -mat_type seqdense - dense type, uses MatCreateSeqDense()
+.    -mat_type mpidense - dense type, uses MatCreateDense()
+.    -mat_type seqbaij  - block AIJ type, uses MatCreateSeqBAIJ()
+-    -mat_type mpibaij  - block AIJ type, uses MatCreateBAIJ()
+
+   Even More Options Database Keys:
+   See the manpages for particular formats (e.g., MatCreateSeqAIJ())
+   for additional format-specific options.
+
+   Level: beginner
+
+.keywords: matrix, create
+
+.seealso: MatCreateSeqAIJ((), MatCreateAIJ(),
+          MatCreateSeqDense(), MatCreateDense(),
+          MatCreateSeqBAIJ(), MatCreateBAIJ(),
+          MatCreateSeqSBAIJ(), MatCreateSBAIJ(),
+          MatConvert()
+@*/
+PetscErrorCode  PermonMatSetFromOptions(Mat B)
+{
+  PetscErrorCode ierr;
+  const char     *deft = MATAIJ;
+  char           type[256];
+  PetscBool      flg,set;
+
+  PetscFunctionBeginI;
+  PetscValidHeaderSpecific(B,MAT_CLASSID,1);
+
+  ierr = PetscObjectOptionsBegin((PetscObject)B);CHKERRQ(ierr);
+
+  if (B->rmap->bs < 0) {
+    PetscInt newbs = -1;
+    ierr = PetscOptionsInt("-mat_block_size","Set the blocksize used to store the matrix","MatSetBlockSize",newbs,&newbs,&flg);CHKERRQ(ierr);
+    if (flg) {
+      ierr = PetscLayoutSetBlockSize(B->rmap,newbs);CHKERRQ(ierr);
+      ierr = PetscLayoutSetBlockSize(B->cmap,newbs);CHKERRQ(ierr);
+    }
+  }
+
+  ierr = PetscOptionsFList("-mat_type","Matrix type","MatSetType",MatList,deft,type,256,&flg);CHKERRQ(ierr);
+  if (!((PetscObject)B)->type_name) {
+    if (flg) {
+      ierr = MatSetType(B,type);CHKERRQ(ierr);
+    } else if (!((PetscObject)B)->type_name) {
+      ierr = MatSetType(B,deft);CHKERRQ(ierr);
+    }
+  } else if (flg) {
+    ierr = PermonMatConvertInplace(B,type);CHKERRQ(ierr);
+  }
+
+  ierr = PetscOptionsName("-mat_is_symmetric","Checks if mat is symmetric on MatAssemblyEnd()","MatIsSymmetric",&B->checksymmetryonassembly);CHKERRQ(ierr);
+  ierr = PetscOptionsReal("-mat_is_symmetric","Checks if mat is symmetric on MatAssemblyEnd()","MatIsSymmetric",B->checksymmetrytol,&B->checksymmetrytol,NULL);CHKERRQ(ierr);
+  ierr = PetscOptionsBool("-mat_null_space_test","Checks if provided null space is correct in MatAssemblyEnd()","MatSetNullSpaceTest",B->checknullspaceonassembly,&B->checknullspaceonassembly,NULL);CHKERRQ(ierr);
+
+  if (B->ops->setfromoptions) {
+    ierr = (*B->ops->setfromoptions)(PetscOptionsObject,B);CHKERRQ(ierr);
+  }
+
+  flg  = PETSC_FALSE;
+  ierr = PetscOptionsBool("-mat_new_nonzero_location_err","Generate an error if new nonzeros are created in the matrix structure (useful to test preallocation)","MatSetOption",flg,&flg,&set);CHKERRQ(ierr);
+  if (set) {ierr = MatSetOption(B,MAT_NEW_NONZERO_LOCATION_ERR,flg);CHKERRQ(ierr);}
+  flg  = PETSC_FALSE;
+  ierr = PetscOptionsBool("-mat_new_nonzero_allocation_err","Generate an error if new nonzeros are allocated in the matrix structure (useful to test preallocation)","MatSetOption",flg,&flg,&set);CHKERRQ(ierr);
+  if (set) {ierr = MatSetOption(B,MAT_NEW_NONZERO_ALLOCATION_ERR,flg);CHKERRQ(ierr);}
+
+  /* process any options handlers added with PetscObjectAddOptionsHandler() */
+  ierr = PetscObjectProcessOptionsHandlers(PetscOptionsObject,(PetscObject)B);CHKERRQ(ierr);
+  ierr = PetscOptionsEnd();CHKERRQ(ierr);
+  PetscFunctionReturnI(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "PermonMatCopyProperties"
+PetscErrorCode PermonMatCopyProperties(Mat A,Mat B)
+{
+  PetscFunctionBegin;
+  B->nooffprocentries            = A->nooffprocentries;
+  B->subsetoffprocentries        = A->subsetoffprocentries;
+  B->nooffproczerorows           = A->nooffproczerorows;
+  B->spd_set                     = A->spd_set;
+  B->spd                         = A->spd;
+  B->symmetric                   = A->symmetric;
+  B->symmetric_set               = A->symmetric_set;
+  B->symmetric_eternal           = A->symmetric_eternal;
+  B->structurally_symmetric      = A->structurally_symmetric;
+  B->structurally_symmetric_set  = A->structurally_symmetric_set;
+  B->hermitian                   = A->hermitian;
+  B->hermitian_set               = A->hermitian_set;
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "PermonMatConvertInplace"
+PetscErrorCode PermonMatConvertInplace(Mat A, MatType type)
+{
+  PetscErrorCode   ierr,ierr1;
+  PetscBool        sametype,issame;
+  PetscInt         refct;
+  PetscObjectState state;
+  char             *name,*prefix;
+  Mat              tmp;
+
+  PetscFunctionBeginI;
+  ierr = PetscObjectTypeCompare((PetscObject)A,type,&sametype);CHKERRQ(ierr);
+  ierr = PetscStrcmp(type,MATSAME,&issame);CHKERRQ(ierr);
+  if (issame || sametype) PetscFunctionReturn(0);
+
+  refct = ((PetscObject)A)->refct;
+  state = ((PetscObject)A)->state;
+  name = ((PetscObject)A)->name;
+  prefix = ((PetscObject)A)->prefix;
+
+  ((PetscObject)A)->name = 0;
+  ((PetscObject)A)->prefix = 0;
+
+  ierr = MatCreate(PetscObjectComm((PetscObject)A),&tmp);CHKERRQ(ierr);
+  ierr = PermonMatCopyProperties(A,tmp);CHKERRQ(ierr);
+
+  ierr = PetscPushErrorHandler(PetscReturnErrorHandler,NULL);CHKERRQ(ierr);
+  ierr1 = MatConvert(A,type,MAT_INPLACE_MATRIX,&A);
+  ierr = PetscPopErrorHandler();CHKERRQ(ierr);
+  if (ierr1 == PETSC_ERR_SUP) {
+    ierr = PetscInfo(fllop,"matrix type not supported, trying to convert to MATAIJ first\n");CHKERRQ(ierr);
+    ierr = MatConvert(A,MATAIJ,MAT_INPLACE_MATRIX,&A);CHKERRQ(ierr);
+    ierr = MatConvert(A,type,MAT_INPLACE_MATRIX,&A);CHKERRQ(ierr);
+  } else if (ierr1) {
+    /* re-throw error in other error cases */
+    ierr = MatConvert(A,type,MAT_INPLACE_MATRIX,&A);CHKERRQ(ierr);
+  }
+
+  ierr = PermonMatCopyProperties(tmp,A);CHKERRQ(ierr);
+  ierr = MatDestroy(&tmp);CHKERRQ(ierr);
+
+  ((PetscObject)A)->refct = refct;
+  ((PetscObject)A)->state = state + 1;
+  ((PetscObject)A)->name = name;
+  ((PetscObject)A)->prefix = prefix;
+  PetscFunctionReturnI(0);
 }

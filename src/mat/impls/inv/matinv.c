@@ -320,22 +320,13 @@ static PetscErrorCode MatInvReset_Inv(Mat imat)
 static PetscErrorCode MatInvSetUp_Inv(Mat imat)
 {
   Mat_Inv *inv = (Mat_Inv*) imat->data;
-  PetscBool PetscLogPrintInfo_orig = PetscLogPrintInfo;
-  PetscMPIInt size;
 
   FllopTracedFunctionBegin;
   if (inv->setupcalled) PetscFunctionReturn(0);
   if (inv->type == MAT_INV_BLOCKDIAG && inv->redundancy > 0) FLLOP_SETERRQ(PetscObjectComm((PetscObject)imat),PETSC_ERR_SUP, "Cannot use MAT_INV_BLOCKDIAG and redundancy at the same time");
   if (inv->regtype && !inv->R) FLLOP_SETERRQ(PetscObjectComm((PetscObject)imat),PETSC_ERR_ARG_WRONGSTATE,"regularization is requested but nullspace is not set");
-  TRY( MPI_Comm_size(PetscObjectComm((PetscObject)imat),&size) );
 
   FllopTraceBegin;
-  if (FllopInfoEnabled) {
-    PetscBool info=PETSC_FALSE;
-    TRY( PetscOptionsGetBool(((PetscObject)imat)->options,NULL, "-info", &info, NULL) );
-    if (!info) PetscLogPrintInfo = PETSC_FALSE;
-  }
-  
   TRY( PetscLogEventBegin(Mat_Inv_SetUp,imat,0,0,0) );
   {
     TRY( MatInvCreateInnerObjects_Inv(imat) );
@@ -346,7 +337,6 @@ static PetscErrorCode MatInvSetUp_Inv(Mat imat)
   inv->setupcalled = PETSC_TRUE;
   TRY( MatInheritSymmetry(inv->A,imat) );
   TRY( PetscLogEventEnd(Mat_Inv_SetUp,imat,0,0,0) );
-  PetscLogPrintInfo = PetscLogPrintInfo_orig;
   PetscFunctionReturnI(0);
 }
 
@@ -355,9 +345,9 @@ static PetscErrorCode MatInvSetUp_Inv(Mat imat)
 static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
 {
   Mat_Inv *inv = (Mat_Inv*) imat->data;
-  Mat Areg,A_decisive;
+  Mat Areg,A_inner;
   PC pc;
-  PetscBool factorizable,parallel;
+  PetscBool factorizable,parallel,flg,own;
   KSPType default_ksptype;
   PCType  default_pctype;
   const MatSolverPackage default_pkg;
@@ -376,16 +366,29 @@ static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
     TRY( PetscLogObjectParent((PetscObject)imat,(PetscObject)inv->ksp) );
   }
 
+  own = ((PetscObject)inv->A)->refct == 1 ? PETSC_TRUE : PETSC_FALSE;
   TRY( MatRegularize(inv->A,inv->R,inv->regtype,&Areg) );
+  TRY( PetscOptionsHasName(NULL,((PetscObject)imat)->prefix,"-mat_inv_mat_type",&flg) );
+  if (inv->setfromoptionscalled && flg && inv->A == Areg && !own) {
+    TRY( PetscInfo(fllop,"duplicating inner matrix to allow to apply options only internally\n") );
+    TRY( PetscObjectDereference((PetscObject)Areg) );
+    TRY( MatDuplicate(Areg, MAT_COPY_VALUES, &Areg) );
+  }
   TRY( KSPSetOperators(inv->ksp, Areg, Areg) );
 
   if (inv->type == MAT_INV_BLOCKDIAG) {
-    TRY( MatGetDiagonalBlock(Areg,&A_decisive) );
+    TRY( MatGetDiagonalBlock(Areg,&A_inner) );
   } else {
-    A_decisive = Areg;
+    A_inner = Areg;
   }
 
-  factorizable = A_decisive->ops->getvalues ? PETSC_TRUE : PETSC_FALSE;    /* if elements of matrix are accessible it is likely an explicitly assembled matrix */
+  TRY( FllopPetscObjectInheritPrefixIfNotSet((PetscObject)A_inner,(PetscObject)imat,"mat_inv_") );
+  if (inv->setfromoptionscalled) {
+    TRY( PetscInfo1(fllop,"setting inner matrix with prefix %s from options\n",((PetscObject)A_inner)->prefix) );
+    TRY( PermonMatSetFromOptions(A_inner) );
+  }
+
+  factorizable = A_inner->ops->getvalues ? PETSC_TRUE : PETSC_FALSE;    /* if elements of matrix are accessible it is likely an explicitly assembled matrix */
   default_pkg           = MATSOLVERPETSC;
   if (factorizable) {
 #if defined(PETSC_HAVE_MUMPS) || defined(PETSC_HAVE_PASTIX) || defined(PETSC_HAVE_SUPERLU_DIST)
@@ -395,7 +398,7 @@ static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
     default_pctype      = PCCHOLESKY;
     parallel            = PETSC_FALSE;
 #if defined(PETSC_HAVE_MUMPS)
-    TRY( MatGetFactorAvailable(A_decisive,MATSOLVERMUMPS,MAT_FACTOR_CHOLESKY,&flg) );
+    TRY( MatGetFactorAvailable(A_inner,MATSOLVERMUMPS,MAT_FACTOR_CHOLESKY,&flg) );
     if (flg) {
       default_pkg       = MATSOLVERMUMPS;
       default_pctype    = PCCHOLESKY;
@@ -404,7 +407,7 @@ static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
     }
 #endif
 #if defined(PETSC_HAVE_PASTIX)
-    TRY( MatGetFactorAvailable(A_decisive,MATSOLVERPASTIX,MAT_FACTOR_CHOLESKY,&flg) );
+    TRY( MatGetFactorAvailable(A_inner,MATSOLVERPASTIX,MAT_FACTOR_CHOLESKY,&flg) );
     if (flg) {
       default_pkg       = MATSOLVERPASTIX;
       default_pctype    = PCCHOLESKY;
@@ -413,7 +416,7 @@ static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
     }
 #endif
 #if defined(PETSC_HAVE_SUPERLU_DIST)
-    TRY( MatGetFactorAvailable(A_decisive,MATSOLVERSUPERLU_DIST,MAT_FACTOR_LU,&flg) );
+    TRY( MatGetFactorAvailable(A_inner,MATSOLVERSUPERLU_DIST,MAT_FACTOR_LU,&flg) );
     if (flg) {
       default_pkg       = MATSOLVERSUPERLU_DIST;
       default_pctype    = PCLU;
@@ -422,7 +425,7 @@ static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
     }
 #endif
 #if defined(PETSC_HAVE_MUMPS)
-    TRY( MatGetFactorAvailable(A_decisive,MATSOLVERMUMPS,MAT_FACTOR_LU,&flg) );
+    TRY( MatGetFactorAvailable(A_inner,MATSOLVERMUMPS,MAT_FACTOR_LU,&flg) );
     if (flg) {
       default_pkg       = MATSOLVERMUMPS;
       default_pctype    = PCLU;
@@ -431,7 +434,7 @@ static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
     }
 #endif
 #if defined(PETSC_HAVE_PASTIX)
-    TRY( MatGetFactorAvailable(A_decisive,MATSOLVERPASTIX,MAT_FACTOR_LU,&flg) );
+    TRY( MatGetFactorAvailable(A_inner,MATSOLVERPASTIX,MAT_FACTOR_LU,&flg) );
     if (flg) {
       default_pkg       = MATSOLVERPASTIX;
       default_pctype    = PCLU;

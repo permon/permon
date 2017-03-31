@@ -1619,6 +1619,8 @@ PetscErrorCode QPSetEq(QP qp, Mat Beq, Vec ceq)
         TRY( QPPFCreate(((PetscObject)qp)->comm,&qp->pf) );
         TRY( PetscLogObjectParent((PetscObject)qp,(PetscObject)qp->pf) );
         TRY( PetscObjectIncrementTabLevel((PetscObject)qp->pf,(PetscObject)qp,1) );
+        //TODO dirty that we call it unconditionally
+        TRY( QPPFSetFromOptions(qp->pf) );
       }
       TRY( QPPFSetG(qp->pf, Beq) );
 
@@ -1726,6 +1728,8 @@ PetscErrorCode QPAddEq(QP qp, Mat Beq, Vec ceq)
     TRY( QPPFCreate(((PetscObject) qp)->comm, &qp->pf) );
     TRY( PetscLogObjectParent((PetscObject)qp,(PetscObject)qp->pf) );
     TRY( PetscObjectIncrementTabLevel((PetscObject) qp->pf, (PetscObject) qp, 1) );
+        //TODO dirty that we call it unconditionally
+    TRY( QPPFSetFromOptions(qp->pf) );
   }
   TRY( QPPFSetG(qp->pf, qp->BE) );
 

@@ -14,6 +14,7 @@ struct _p_QPPF {
     PetscReal GGt_relative_fill;
 
     PetscBool setupcalled, dataChange, variantChange, explicitInvChange, GChange;
+    PetscInt setfromoptionscalled;
 
     /* measurements */
     PetscInt it_GGtinvv;

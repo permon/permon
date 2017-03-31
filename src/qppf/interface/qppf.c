@@ -98,6 +98,8 @@ PetscErrorCode QPPFCreate(MPI_Comm comm, QPPF* newcp)
   cp->GGt_relative_fill   = 1.0;
 
   cp->setupcalled         = PETSC_FALSE;
+  cp->setfromoptionscalled= 0;
+
   cp->dataChange          = PETSC_FALSE;
   cp->variantChange       = PETSC_FALSE;
   cp->explicitInvChange   = PETSC_FALSE;
@@ -185,8 +187,7 @@ PetscErrorCode QPPFSetFromOptions(QPPF cp)
   TRY( PetscOptionsInt("-qppf_redundancy", "number of parallel redundant solves of CP, each with (size of CP's comm)/qppf_redundancy processes", "QPPFSetRedundancy", cp->redundancy, &nred, &set) );
   if (set) TRY( QPPFSetRedundancy(cp, nred) );
   
-  if (cp->GGtinv) TRY( MatSetFromOptions(cp->GGtinv) );  
-
+  cp->setfromoptionscalled++;
   _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
   PetscFunctionReturn(0);
 }
@@ -256,22 +257,23 @@ static PetscErrorCode QPPFSetUpGGt_Private(QPPF cp, Mat *newGGt)
 
   TRY( PetscLogEventEnd(  QPPF_SetUp_GGt,cp,0,0,0) );
 
-  if (GGt)
   {
     TRY( PetscObjectSetName((PetscObject)GGt,"GGt") );
     TRY( PetscLogObjectParent((PetscObject)cp,(PetscObject)GGt) );
     TRY( PetscObjectIncrementTabLevel((PetscObject)GGt,(PetscObject)cp,1) );
 
-    TRY( MatSetOptionsPrefix(GGt, ((PetscObject)cp)->prefix) );
-    TRY( MatAppendOptionsPrefix(GGt, "qppf_") );
     TRY( MatSetOption(GGt, MAT_SYMMETRIC, PETSC_TRUE) );
     TRY( MatSetOption(GGt, MAT_SYMMETRY_ETERNAL, PETSC_TRUE) );
-    TRY( MatSetOption(GGt, MAT_SPD, PETSC_TRUE) );
+    /* ignore PETSC_ERR_SUP - setting option missing in the mat format*/
+    /* TODO add this as a macro TRYIGNOREERR*/
+    TRY( PetscPushErrorHandler(PetscReturnErrorHandler,NULL) );
+    _fllop_ierr =  MatSetOption(GGt, MAT_SPD, PETSC_TRUE);
+    TRY( PetscPopErrorHandler() );
+    if (_fllop_ierr != PETSC_ERR_SUP) {
+      TRY( MatSetOption(GGt, MAT_SPD, PETSC_TRUE) );
+    }
     TRY( FllopDebug("assert GGt always PSD (MAT_SYMMETRIC=1, MAT_SYMMETRIC_ETERNAL=1, MAT_SPD=1)\n") );
-
-    TRY( MatPrintInfo(GGt) );
   }
-
   *newGGt = GGt;
   PetscFunctionReturnI(0);
 }
@@ -304,8 +306,9 @@ static PetscErrorCode QPPFSetUpGGtinv_Private(QPPF cp, Mat *GGtinv_new)
   
   TRY( MatInvSetRedundancy(GGtinv, cp->redundancy) );
 
-  //TODO dirty
-  TRY( MatSetFromOptions(GGtinv) );
+  if (cp->setfromoptionscalled) {
+    TRY( PermonMatSetFromOptions(GGtinv) );
+  }
  
   TRY( MatAssemblyBegin(GGtinv, MAT_FINAL_ASSEMBLY) );
   TRY( MatAssemblyEnd(  GGtinv, MAT_FINAL_ASSEMBLY) );
@@ -390,11 +393,6 @@ PetscErrorCode QPPFSetUp(QPPF cp)
   TRY( PetscObjectGetName((PetscObject)cp->G,&name) );
   TRY( PetscInfo7(cp, "cp: %x  Mat %s: %x  change flags: %d %d %d %d\n",  cp, name, cp->G, cp->dataChange,  cp->variantChange,  cp->explicitInvChange,  cp->GChange) );
 
-  //TRY( QPPFReset(cp) );
-
-  //TODO DIRTY
-  TRY( QPPFSetFromOptions(cp) );
-  
   /* detect orthonormal rows quickly */
   if (!cp->G_has_orthonormal_rows_implicitly) {
     TRY( MatHasOrthonormalRows(cp->G,PETSC_SMALL,3,&cp->G_has_orthonormal_rows_explicitly ) );
@@ -419,9 +417,6 @@ PetscErrorCode QPPFSetUp(QPPF cp)
   TRY( VecZeroEntries(cp->alpha_tilde) );
   TRY( PetscLogObjectParent((PetscObject)cp,(PetscObject)cp->G_left) );
   TRY( PetscLogObjectParent((PetscObject)cp,(PetscObject)cp->Gt_right) );
-
-  //TODO DIRTY
-  TRY( QPPFSetFromOptions(cp) );
 
   if (cp->GGtinv && !cp->explicitInv) TRY( MatInvSetUp(cp->GGtinv) );
 
