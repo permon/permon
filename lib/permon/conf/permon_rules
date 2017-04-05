@@ -1,16 +1,5 @@
 # -*- mode: makefile -*-
 
-# variables to set by the package
-# PERMON_PKG_DIR
-# PERMON_PKG_LIB_DIR
-
-PERMON_PKG_LIB_DIR  ?= ${PERMON_PKG_DIR}/${PETSC_ARCH}/lib
-
-PERMON_LOG          ?= ${PERMON_PKG_LIB_DIR}/permon/conf/make.log
-PERMON_ERRLOG       ?= ${PERMON_PKG_LIB_DIR}/permon/conf/error.log
-PERMON_HGLOG        ?= ${PERMON_PKG_LIB_DIR}/permon/conf/hg.log
-PERMON_MODLOG       ?= ${PERMON_PKG_LIB_DIR}/permon/conf/modules.log
-
 
 #
 # Basic targets to build PERMON library
@@ -52,7 +41,7 @@ permon_chk_all: chk_permon_pkg_dir chk_permon_dir chk_permon_petsc_dir chklib_di
 # Builds the PERMON library using PETSc legacy buildsystem
 #
 permon_build_legacy: chk_makej
-	-@echo "BEGINNING TO COMPILE LIBRARIES IN ALL DIRECTORIES"
+	-@echo "Building ${PERMON_PKG_NAME} using PETSc legacy buildsystem"
 	-@echo "========================================="
 	-@${OMAKE} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} ACTION=libfast tree
 	-@${RANLIB} ${LIBNAME}  > tmpf 2>&1 ; ${GREP} -v "has no symbols" tmpf; ${RM} tmpf;
@@ -63,16 +52,16 @@ permon_build_legacy: chk_makej
 # Builds the PERMON library using PETSc GNU Make parallel buildsystem
 #
 permon_build_gnumake: chk_makej
-	@echo "Building PERMON using GNU Make with ${MAKE_NP} build threads"           
+	@echo "Building ${PERMON_PKG_NAME} using GNU Make with ${MAKE_NP} build threads"
 	@echo "=========================================="
 	@cd ${PERMON_PKG_DIR} && ${OMAKE_PRINTDIR} -f gmakefile -j ${MAKE_NP} V=${V}
 	@echo "========================================="
 
-#                                                                                                                       
-# builds the PERMON shared library                                                                                       
-#                                                                                                                       
-permon_shared:                                                                                                           
-	-@echo "BEGINNING TO LINK THE SHARED LIBRARY"                                                                         
+#
+# builds the PERMON shared library
+#
+permon_shared:
+	-@echo "BEGINNING TO LINK THE SHARED LIBRARY"
 	-@${OMAKE} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} OTHERSHAREDLIBS="${OTHERSHAREDLIBS}" shared_nomesg
 
 # Ranlib on the library
@@ -146,20 +135,20 @@ chk_permon_pkg_dir: mypwd := $(realpath .)
 chk_permon_pkg_dir:
 	@if [ -z ${PERMON_PKG_DIR} ]; then \
           printf ${PETSC_TEXT_HILIGHT}"*************************ERROR**************************************\n"; \
-	  echo "${PERMON_PKG_NAME}_DIR not specified!"; \
+	  echo "${PERMON_PKG_PREFIX}_DIR not specified!"; \
           printf "********************************************************************"${PETSC_TEXT_NORMAL}"\n"; \
     false; fi
 	@if [ ! -f ${PERMON_PKG_DIR}/${PERMON_PKG_MAIN_HEADER} ]; then \
           printf ${PETSC_TEXT_HILIGHT}"*************************ERROR**************************************\n"; \
-	  echo "Incorrect ${PERMON_PKG_NAME}_DIR specified: ${PERMON_PKG_DIR}!"; \
+	  echo "Incorrect ${PERMON_PKG_PREFIX}_DIR specified: ${PERMON_PKG_DIR}!"; \
     echo 'File ${PERMON_PKG_DIR}/${PERMON_PKG_MAIN_HEADER} does not exist.'; \
 	  echo "Note: You need to use / to separate directories, not \\"; \
           printf "********************************************************************"${PETSC_TEXT_NORMAL}"\n"; \
 	  false; fi
 	@if [ "${true_PERMON_PKG_DIR}" != "${mypwd}" ]; then \
           printf ${PETSC_TEXT_HILIGHT}"*************************ERROR**************************************\n"; \
-	  echo "Your ${PERMON_PKG_NAME}_DIR does not match the directory you are in"; \
-	  echo "${PERMON_PKG_NAME}_DIR: "${true_PERMON_PKG_DIR}; \
+	  echo "Your ${PERMON_PKG_PREFIX}_DIR does not match the directory you are in"; \
+	  echo "${PERMON_PKG_PREFIX}_DIR: "${true_PERMON_PKG_DIR}; \
 	  echo "Current directory: "${mypwd}; \
           printf "********************************************************************"${PETSC_TEXT_NORMAL}"\n"; \
 	  false; fi

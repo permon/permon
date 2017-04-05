@@ -12,8 +12,8 @@ endif
 # PERMON_LIB_DIR          - determines where the PermonQP library is built.
 # PERMON_CC_INCLUDES      - locations of PERMON, PETSc and external library include files
 # PERMON_[C,F]CPPFLAGS    - preprocessor flags for *.c, *.F preprocessing
-PERMON_name               = permon
-PERMON_NAME               = PERMON
+PERMON_PKG_PREFIX         = PERMON
+PERMON_NAME               = permon
 PERMON_LIB_DIR            = ${PERMON_DIR}/${PETSC_ARCH}/lib
 PERMON_INCLUDE            = -I${PERMON_DIR}/include -I${PERMON_DIR}/${PETSC_ARCH}/include
 PERMON_CC_INCLUDES        = ${PERMON_INCLUDE} ${PETSC_CC_INCLUDES}
@@ -23,32 +23,43 @@ PERMON_FCPPFLAGS          = ${PERMON_INCLUDE} ${PETSC_FCPPFLAGS}
 PERMON_C_SH_LIB_PATH      = ${CC_LINKER_SLFLAG}${PERMON_LIB_DIR}
 PERMON_F_SH_LIB_PATH      = ${FC_LINKER_SLFLAG}${PERMON_LIB_DIR}
 PERMON_DEP_LIBS           = ${PETSC_TAO_LIB}
+PERMON_MAIN_HEADER        = include/fllopsys.h
 
-# Define common PERMON variables for the particular PERMON module.
-PERMON_PKG_DIR            = ${PERMON_DIR}
-PERMON_PKG_name           = ${PERMON_name}
-PERMON_PKG_NAME           = ${PERMON_NAME}
-PERMON_PKG_LIB_DIR        = ${PERMON_LIB_DIR}
-PERMON_PKG_INCLUDE        = ${PERMON_INCLUDE}
-PERMON_PKG_CC_INCLUDES    = ${PERMON_PKG_INCLUDE} ${PERMON_INCLUDE} ${PETSC_CC_INCLUDES}
-PERMON_PKG_FC_INCLUDES    = ${PERMON_PKG_INCLUDE} ${PERMON_INCLUDE} ${PETSC_FC_INCLUDES}
-PERMON_PKG_CCPPFLAGS      = ${PERMON_PKG_INCLUDE} ${PERMON_INCLUDE} ${PETSC_CCPPFLAGS}
-PERMON_PKG_FCPPFLAGS      = ${PERMON_PKG_INCLUDE} ${PERMON_INCLUDE} ${PETSC_FCPPFLAGS}
-PERMON_PKG_MAIN_HEADER    = include/fllopsys.h
-PERMON_PKG_DEP_LIBS       = ${PERMON_DEP_LIBS}
+# Convert ${PERMON_PKG_PREFIX}_<VARIABLE> (e.g. PERMON_DUMMY_DIR)
+# to PERMON_PKG_<VARIABLE> (e.g. PERMON_PKG_DIR).
+# DO NOT ALTER THEM.
+PERMON_PKG_DIR            = ${${PERMON_PKG_PREFIX}_DIR}
+PERMON_PKG_NAME           = ${${PERMON_PKG_PREFIX}_NAME}
+PERMON_PKG_LIB_DIR        = ${${PERMON_PKG_PREFIX}_LIB_DIR}
+PERMON_PKG_INCLUDE        = ${${PERMON_PKG_PREFIX}_INCLUDE}
+PERMON_PKG_CC_INCLUDES    = ${${PERMON_PKG_PREFIX}_CC_INCLUDES}
+PERMON_PKG_FC_INCLUDES    = ${${PERMON_PKG_PREFIX}_FC_INCLUDES}
+PERMON_PKG_CCPPFLAGS      = ${${PERMON_PKG_PREFIX}_CCPPFLAGS}
+PERMON_PKG_FCPPFLAGS      = ${${PERMON_PKG_PREFIX}_FCPPFLAGS}
+PERMON_PKG_C_SH_LIB_PATH  = ${${PERMON_PKG_PREFIX}_C_SH_LIB_PATH}
+PERMON_PKG_F_SH_LIB_PATH  = ${${PERMON_PKG_PREFIX}_F_SH_LIB_PATH}
+PERMON_PKG_DEP_LIBS       = ${${PERMON_PKG_PREFIX}_DEP_LIBS}
+PERMON_PKG_MAIN_HEADER    = ${${PERMON_PKG_PREFIX}_MAIN_HEADER}
+
+
+# Log file paths.
+PERMON_LOG          ?= ${PERMON_PKG_LIB_DIR}/permon/conf/make.log
+PERMON_ERRLOG       ?= ${PERMON_PKG_LIB_DIR}/permon/conf/error.log
+PERMON_HGLOG        ?= ${PERMON_PKG_LIB_DIR}/permon/conf/hg.log
+PERMON_MODLOG       ?= ${PERMON_PKG_LIB_DIR}/permon/conf/modules.log
 
 # Redefine variables in PETSc makefiles for the particular PERMON module.
 # INSTALL_LIB_DIR   - the location where the libraries are built.
 # [C,F]CPPFLAGS     - preprocessor flags for *.c, *.F preprocessing
 INSTALL_LIB_DIR           = ${PERMON_PKG_LIB_DIR}
 OTHERSHAREDLIBS           = ${PERMON_PKG_DEP_LIBS}
-SHLIBS                    = lib${PERMON_PKG_name}
-LIBNAME                   = ${INSTALL_LIB_DIR}/lib${PERMON_PKG_name}.${AR_LIB_SUFFIX}
+SHLIBS                    = lib${PERMON_PKG_NAME}
+LIBNAME                   = ${INSTALL_LIB_DIR}/lib${PERMON_PKG_NAME}.${AR_LIB_SUFFIX}
 CCPPFLAGS                 = ${PERMON_PKG_CCPPFLAGS}
 FCPPFLAGS                 = ${PERMON_PKG_FCPPFLAGS}
 
 # Variables for the different PERMON modules
-PERMON_LIB_BASIC          = -lpermon
+PERMON_LIB_BASIC          = -l${PERMON_NAME}
 
 #
 # PERMON_LIB defines all PERMON libraries,
