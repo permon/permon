@@ -1,5 +1,201 @@
 # -*- mode: makefile -*-
+
+# variables to set by the package
+# PERMON_PKG_DIR
+# PERMON_PKG_LIB_DIR
+
+PERMON_PKG_LIB_DIR  ?= ${PERMON_PKG_DIR}/${PETSC_ARCH}/lib
+
+PERMON_LOG          ?= ${PERMON_PKG_LIB_DIR}/permon/conf/make.log
+PERMON_ERRLOG       ?= ${PERMON_PKG_LIB_DIR}/permon/conf/error.log
+PERMON_HGLOG        ?= ${PERMON_PKG_LIB_DIR}/permon/conf/hg.log
+PERMON_MODLOG       ?= ${PERMON_PKG_LIB_DIR}/permon/conf/modules.log
+
+
 #
+# Basic targets to build PERMON library
+permon-all: permon_chk_all
+	@mkdir -p ./${PETSC_ARCH}/lib/permon/conf
+	@if [ "${MAKE_IS_GNUMAKE}" != "" ]; then \
+	   ${OMAKE_PRINTDIR} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} PERMON_PKG_DIR=${PERMON_PKG_DIR} permon-all-gnumake-local 2>&1 | tee ${PERMON_LOG}; \
+	 else \
+	   ${OMAKE} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} PERMON_PKG_DIR=${PERMON_PKG_DIR} permon-all-legacy-local 2>&1 | tee ${PERMON_LOG} | ${GREP} -v "has no symbols"; \
+	 fi
+	@egrep -i "( error | error: |no such file or directory)" ${PERMON_LOG} | tee ${PERMON_ERRLOG} > /dev/null
+	@if test -s ${PERMON_ERRLOG}; then \
+           printf ${PETSC_TEXT_HILIGHT}"*******************************ERROR************************************\n" 2>&1 | tee -a ${PERMON_LOG}; \
+           echo "  Error during compile, check ${PERMON_LOG}" 2>&1 | tee -a ${PERMON_LOG}; \
+           echo "  Send all contents of ./${PETSC_ARCH}/lib/permon/conf to vaclav.hapla@vsb.cz" 2>&1 | tee -a ${PERMON_LOG};\
+           printf "************************************************************************"${PETSC_TEXT_NORMAL}"\n" 2>&1 | tee -a ${PERMON_LOG}; \
+					 exit 1; \
+	 else \
+		 echo "Completed building libraries in ${PERMON_PKG_DIR}/${PETSC_ARCH}" | tee -a ${PERMON_LOG}; \
+ echo "=========================================" | tee -a ${PERMON_LOG}; \
+	 fi
+	@${OMAKE} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} PERMON_PKG_DIR=${PERMON_PKG_DIR} permon_hginfo
+
+permon-all-gnumake: permon_chk_all
+	@if [ "${MAKE_IS_GNUMAKE}" != "" ]; then \
+          ${OMAKE_PRINTDIR} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} PERMON_PKG_DIR=${PERMON_PKG_DIR} PERMON_BUILD_USING_CMAKE="" permon-all; \
+        else printf ${PETSC_TEXT_HILIGHT}"Build not configured for GNUMAKE. Quiting"${PETSC_TEXT_NORMAL}"\n"; exit 1; fi
+
+permon-all-legacy: permon_chk_all
+	@${OMAKE} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} PERMON_PKG_DIR=${PERMON_PKG_DIR} PERMON_BUILD_USING_CMAKE="" MAKE_IS_GNUMAKE="" permon-all
+
+permon-all-gnumake-local: permon_info permon_build_gnumake
+
+permon-all-legacy-local:  permon_info deletelibs permon_build_legacy permon_shared
+
+permon_chk_all: chk_permon_pkg_dir chk_permon_dir chk_permon_petsc_dir chklib_dir chk_makej
+
+#
+# Builds the PERMON library using PETSc legacy buildsystem
+#
+permon_build_legacy: chk_makej
+	-@echo "BEGINNING TO COMPILE LIBRARIES IN ALL DIRECTORIES"
+	-@echo "========================================="
+	-@${OMAKE} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} ACTION=libfast tree
+	-@${RANLIB} ${LIBNAME}  > tmpf 2>&1 ; ${GREP} -v "has no symbols" tmpf; ${RM} tmpf;
+	-@echo "Completed building libraries"
+	-@echo "========================================="
+
+#
+# Builds the PERMON library using PETSc GNU Make parallel buildsystem
+#
+permon_build_gnumake: chk_makej
+	@echo "Building PERMON using GNU Make with ${MAKE_NP} build threads"           
+	@echo "=========================================="
+	@cd ${PERMON_PKG_DIR} && ${OMAKE_PRINTDIR} -f gmakefile -j ${MAKE_NP} V=${V}
+	@echo "========================================="
+
+#                                                                                                                       
+# builds the PERMON shared library                                                                                       
+#                                                                                                                       
+permon_shared:                                                                                                           
+	-@echo "BEGINNING TO LINK THE SHARED LIBRARY"                                                                         
+	-@${OMAKE} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} OTHERSHAREDLIBS="${OTHERSHAREDLIBS}" shared_nomesg
+
+# Ranlib on the library
+ranlib:
+	${RANLIB} ${PERMON_PKG_LIB_DIR}/*.${AR_LIB_SUFFIX}
+
+# Deletes PERMON library
+deletelibs: chk_makej
+	-@${RM} -r ${PERMON_PKG_LIB_DIR}/lib*.*
+
+# Cleans up build
+allclean-legacy: deletelibs
+	-@${OMAKE} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} PERMON_PKG_DIR=${PERMON_PKG_DIR} ACTION=clean tree
+allclean-gnumake:
+	-@${OMAKE} -f gmakefile clean
+allclean:
+	@if [ "${MAKE_IS_GNUMAKE}" != "" ]; then \
+	   ${OMAKE} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} PERMON_PKG_DIR=${PERMON_PKG_DIR} allclean-gnumake; \
+	else \
+	   ${OMAKE} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} PERMON_PKG_DIR=${PERMON_PKG_DIR} allclean-legacy; \
+	fi
+
+#
+# Check if PETSC_DIR variable specified is valid
+#
+chk_permon_petsc_dir:
+	@if [ -z ${PETSC_DIR} ]; then \
+          printf ${PETSC_TEXT_HILIGHT}"*************************ERROR**************************************\n"; \
+	  echo "PETSC_DIR not specified!"; \
+          printf "********************************************************************"${PETSC_TEXT_NORMAL}"\n"; \
+  false; fi
+	@if [ ! -f ${PETSC_DIR}/include/petscversion.h ]; then \
+          printf ${PETSC_TEXT_HILIGHT}"*************************ERROR**************************************\n"; \
+	  echo "Incorrect PETSC_DIR specified: ${PETSC_DIR}!"; \
+    echo 'File ${PETSC_DIR}/include/petscversion.h does not exist.'; \
+	  echo "Note you need to use / to separate directories, not \\"; \
+          printf "********************************************************************"${PETSC_TEXT_NORMAL}"\n"; \
+    false; fi
+	@if [ ! -f ${PETSC_DIR}/${PETSC_ARCH}/lib/lib*petsc*.a ] && [ ! -f ${PETSC_DIR}/${PETSC_ARCH}/lib/lib*petsc*.so ]; then \
+          printf ${PETSC_TEXT_HILIGHT}"*************************ERROR**************************************\n"; \
+	  echo "Given PETSC_DIR=${PETSC_DIR} and PETSC_ARCH=${PETSC_ARCH}"; \
+    echo "  (directory ${PETSC_DIR}/${PETSC_ARCH}/lib)"; \
+    echo "  does not contain compiled PETSc library (libpetsc.so or libpetsc.a)!"; \
+	  echo "You may need to run configure and make in ${PETSC_DIR}"; \
+	  echo "Note you need to use / to separate directories, not \\"; \
+          printf "********************************************************************"${PETSC_TEXT_NORMAL}"\n"; \
+	  false; fi
+
+#
+# Check if PERMON_DIR variable specified is valid
+#
+chk_permon_dir:
+	@if [ -z ${PERMON_DIR} ]; then \
+          printf ${PETSC_TEXT_HILIGHT}"*************************ERROR**************************************\n"; \
+	  echo "PERMON_DIR not specified!"; \
+          printf "********************************************************************"${PETSC_TEXT_NORMAL}"\n"; \
+    false; fi
+	@if [ ! -f ${PERMON_DIR}/include/fllopsys.h ]; then \
+          printf ${PETSC_TEXT_HILIGHT}"*************************ERROR**************************************\n"; \
+	  echo "Incorrect PERMON_DIR specified: ${PERMON_DIR}!"; \
+    echo 'File ${PERMON_DIR}/include/fllopsys.h does not exist.'; \
+	  echo "Note: You need to use / to separate directories, not \\"; \
+          printf "********************************************************************"${PETSC_TEXT_NORMAL}"\n"; \
+	  false; fi
+
+#
+# Check if PERMON_PKG_DIR variable specified is valid
+#
+chk_permon_pkg_dir: true_PERMON_PKG_DIR := $(realpath $(PERMON_PKG_DIR))
+chk_permon_pkg_dir: mypwd := $(realpath .)
+chk_permon_pkg_dir:
+	@if [ -z ${PERMON_PKG_DIR} ]; then \
+          printf ${PETSC_TEXT_HILIGHT}"*************************ERROR**************************************\n"; \
+	  echo "${PERMON_PKG_NAME}_DIR not specified!"; \
+          printf "********************************************************************"${PETSC_TEXT_NORMAL}"\n"; \
+    false; fi
+	@if [ ! -f ${PERMON_PKG_DIR}/${PERMON_PKG_MAIN_HEADER} ]; then \
+          printf ${PETSC_TEXT_HILIGHT}"*************************ERROR**************************************\n"; \
+	  echo "Incorrect ${PERMON_PKG_NAME}_DIR specified: ${PERMON_PKG_DIR}!"; \
+    echo 'File ${PERMON_PKG_DIR}/${PERMON_PKG_MAIN_HEADER} does not exist.'; \
+	  echo "Note: You need to use / to separate directories, not \\"; \
+          printf "********************************************************************"${PETSC_TEXT_NORMAL}"\n"; \
+	  false; fi
+	@if [ "${true_PERMON_PKG_DIR}" != "${mypwd}" ]; then \
+          printf ${PETSC_TEXT_HILIGHT}"*************************ERROR**************************************\n"; \
+	  echo "Your ${PERMON_PKG_NAME}_DIR does not match the directory you are in"; \
+	  echo "${PERMON_PKG_NAME}_DIR: "${true_PERMON_PKG_DIR}; \
+	  echo "Current directory: "${mypwd}; \
+          printf "********************************************************************"${PETSC_TEXT_NORMAL}"\n"; \
+	  false; fi
+
+permon_hginfo:
+	-@echo "Local changes and state of the repo (saved to ${PERMON_HGLOG})"
+	-@${PERMON_DIR}/bin/hgstat.bash | tee ${PERMON_HGLOG}
+	-@if [ -x ${MODULESHOME}/bin/modulecmd ]; then ${MODULESHOME}/bin/modulecmd bash list 2> ${PERMON_MODLOG}; fi
+	-@echo "========================================="   
+
+#
+# Prints information about the system and version of PERMON being compiled
+#
+permon_info:
+	-@echo "=========================================="
+	-@echo Starting on `hostname` at `date`
+	-@echo Machine characteristics: `uname -a`
+	-@echo "-----------------------------------------"
+	-@echo "Using PERMON directory: ${PERMON_DIR}"
+	-@echo "Using PETSc directory: ${PETSC_DIR}"
+	-@echo "Using PETSc arch: ${PETSC_ARCH}"
+	-@echo "-----------------------------------------"
+	-@grep "define PETSC_VERSION" ${PETSC_DIR}/include/petscversion.h | ${SED} "s/........//"
+	-@echo "-----------------------------------------"
+	-@echo "Using PETSc configure options: ${CONFIGURE_OPTIONS}"
+	-@echo "-----------------------------------------"
+	-@echo "Using C/C++ include paths: ${PERMON_CC_INCLUDES}"
+	-@echo "Using C/C++ compiler: ${PCC} ${PCC_FLAGS} ${COPTFLAGS} ${CFLAGS}"
+	-@echo "-----------------------------------------"
+	-@echo "Using C/C++ linker: ${PCC_LINKER}"
+	-@echo "Using C/C++ flags: ${PCC_LINKER_FLAGS}"
+	-@echo "-----------------------------------------"
+	-@echo "Using libraries: ${PERMON_LIB}"
+	-@echo "------------------------------------------"
+	-@echo "Using mpiexec: ${MPIEXEC}"
+	-@echo "=========================================="
 
 # Builds all the documentation
 alldoc: alldoc1 alldoc2
@@ -10,7 +206,7 @@ alldoc1: chk_loc deletemanualpages
 	-@sed -e s%man+../%man+manualpages/% ${LOC}/docs/manualpages/manualpages.cit > ${LOC}/docs/manualpages/htmlmap
 	-@cat ${PETSC_DIR}/src/docs/mpi.www.index >> ${LOC}/docs/manualpages/htmlmap
 	-${OMAKE} ACTION=permon_manualpages tree_basic LOC=${LOC}
-	-${PYTHON} ${PETSC_DIR}/bin/maint/wwwindex.py ${PERMON_DIR} ${LOC}
+	-${PYTHON} ${PETSC_DIR}/bin/maint/wwwindex.py ${PERMON_PKG_DIR} ${LOC}
 	-${OMAKE} ACTION=permon_manexamples tree_basic LOC=${LOC}
 
 # Builds .html versions of the source
@@ -87,7 +283,7 @@ permon_html: chk_c2html
          done
 	-@ROOT=`echo ${LOCDIR} | sed -e s?/[a-z]*?/..?g -e s?src/??g -e s?include/??g` ;\
           loc=`pwd | sed -e s?\$${PETSC_DIR}?$${LOC}/?g -e s?/disks??g`; ${RM} $${loc}/index.html; \
-          cat ${PERMON_DIR}/src/docs/manualpages-sec/header_${MANSEC} | sed -e "s?<A HREF=\"PERMON_DIR[a-z/]*\">Examples</A>?<A HREF=\"$${ROOT}/docs/manualpages/${MANSEC}\">Manual pages</A>?g" -e "s?PERMON_DIR?$${ROOT}/?g"> $${loc}/index.html; \
+          cat ${PERMON_PKG_DIR}/src/docs/manualpages-sec/header_${MANSEC} | sed -e "s?<A HREF=\"PERMON_DIR[a-z/]*\">Examples</A>?<A HREF=\"$${ROOT}/docs/manualpages/${MANSEC}\">Manual pages</A>?g" -e "s?PERMON_DIR?$${ROOT}/?g"> $${loc}/index.html; \
           echo "<p>" >> $${loc}/index.html
 	-@loc=`pwd | sed -e s?\$${PETSC_DIR}?$${LOC}/?g -e s?/disks??g`;\
             if [ "${EXAMPLESC}" != "" ] ; then \
