@@ -116,11 +116,11 @@ define pkg_template
   $(call libname_function,$(LIBDIR)/libpermon$(1)) : $(call concatlang,$(1))
 endef
 $(foreach pkg,$(pkgs),$(eval $(call pkg_template,$(pkg))))
-$(call libname_function,$(LIBDIR)/libpermoneps) : libdep := $(call libpkg,sys)
-$(call libname_function,$(LIBDIR)/libpermonsvd) : libdep := $(call libpkg,eps sys)
-$(call libname_function,$(LIBDIR)/libpermonpep) : libdep := $(call libpkg,eps sys)
-$(call libname_function,$(LIBDIR)/libpermonnep) : libdep := $(call libpkg,pep eps sys)
-$(call libname_function,$(LIBDIR)/libpermonmfn) : libdep := $(call libpkg,sys)
+#$(call libname_function,$(LIBDIR)/libslepceps) : libdep := $(call libpkg,sys)
+#$(call libname_function,$(LIBDIR)/libslepcsvd) : libdep := $(call libpkg,eps sys)
+#$(call libname_function,$(LIBDIR)/libslepcpep) : libdep := $(call libpkg,eps sys)
+#$(call libname_function,$(LIBDIR)/libslepcnep) : libdep := $(call libpkg,pep eps sys)
+#$(call libname_function,$(LIBDIR)/libslepcmfn) : libdep := $(call libpkg,sys)
 
 # The package libraries technically depend on each other (not just in an order-only way), but only
 # ABI changes like new or removed symbols requires relinking the dependent libraries.  ABI should
@@ -163,11 +163,11 @@ else
 endif
 
 # Hack: manual dependencies on object files
-$(OBJDIR)/src/mfn/f90-mod/permonmfnmod.o   : $(OBJDIR)/src/sys/f90-mod/permonsysmod.o
-$(OBJDIR)/src/eps/f90-mod/permonepsmod.o   : $(OBJDIR)/src/sys/f90-mod/permonsysmod.o
-$(OBJDIR)/src/pep/f90-mod/permonpepmod.o   : $(OBJDIR)/src/eps/f90-mod/permonepsmod.o
-$(OBJDIR)/src/nep/f90-mod/permonnepmod.o   : $(OBJDIR)/src/pep/f90-mod/permonpepmod.o
-$(OBJDIR)/src/svd/f90-mod/permonsvdmod.o   : $(OBJDIR)/src/eps/f90-mod/permonepsmod.o
+#$(OBJDIR)/src/mfn/f90-mod/slepcmfnmod.o   : $(OBJDIR)/src/sys/f90-mod/slepcsysmod.o
+#$(OBJDIR)/src/eps/f90-mod/slepcepsmod.o   : $(OBJDIR)/src/sys/f90-mod/slepcsysmod.o
+#$(OBJDIR)/src/pep/f90-mod/slepcpepmod.o   : $(OBJDIR)/src/eps/f90-mod/slepcepsmod.o
+#$(OBJDIR)/src/nep/f90-mod/slepcnepmod.o   : $(OBJDIR)/src/pep/f90-mod/slepcpepmod.o
+#$(OBJDIR)/src/svd/f90-mod/slepcsvdmod.o   : $(OBJDIR)/src/eps/f90-mod/slepcepsmod.o
 
 # all sources should get recompiled when permonvariables changes (i.e when configure is rerun or when permonvariables is manually edited.)
 $(srcs.o) : $(permonvariables)
