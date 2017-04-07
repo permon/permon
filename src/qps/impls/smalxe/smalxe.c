@@ -742,9 +742,9 @@ PetscErrorCode QPSSetFromOptions_SMALXE(PetscOptionItems *PetscOptionsObject,QPS
 
   M1 = smalxe->M1_user;
   M1_direct = PETSC_FALSE;
-  TRY( PetscOptionsBool("-qps_smalxe_M1_direct","","QPSSMALXESetM1Initial",smalxe->M1_type,&M1_direct,&flg1) );
+  TRY( PetscOptionsBool("-qps_smalxe_M1_direct","","QPSSMALXESetM1Initial",(PetscBool)smalxe->M1_type,&M1_direct,&flg1) );
   TRY( PetscOptionsReal("-qps_smalxe_M1","","QPSSMALXESetM1Initial",smalxe->M1_user,&M1,&flg2) );
-  if (flg1 || flg2) TRY( QPSSMALXESetM1Initial(qps,M1,M1_direct) );
+  if (flg1 || flg2) TRY( QPSSMALXESetM1Initial(qps,M1,(QPSScalarArgType)M1_direct) );
   TRY( PetscOptionsReal("-qps_smalxe_M1_update","","QPSSMALXESetM1Update",smalxe->M1_update,&M1_update,&flg1) );
   if (flg1) TRY( QPSSMALXESetM1Update(qps,M1_update) );
 
