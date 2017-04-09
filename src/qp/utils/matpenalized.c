@@ -1,6 +1,6 @@
 
-#include <fllopqp.h>
-#include <permon/private/fllopmatimpl.h>
+#include <permonqp.h>
+#include <permon/private/permonmatimpl.h>
 
 typedef struct {
   Mat  A,BtB;

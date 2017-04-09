@@ -1,6 +1,6 @@
 #if !defined(__FLLOPQP_H)
 #define	__FLLOPQP_H
-#include "fllopqppf.h"
+#include "permonqppf.h"
 
 typedef struct _p_QP* QP;
 

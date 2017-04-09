@@ -1,8 +1,8 @@
 
-#include <fllopqps.h>
-#include <fllopmat.h>
-#include <flloppc.h>
-#include <permon/private/fllopimpl.h>
+#include <permonqps.h>
+#include <permonmat.h>
+#include <permonpc.h>
+#include <permon/private/permonimpl.h>
 
 PetscBool FllopInitializeCalled = PETSC_FALSE;
 PetscBool FllopBeganPetsc = PETSC_FALSE;

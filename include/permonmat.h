@@ -1,7 +1,7 @@
 #if !defined(__FLLOPMAT_H)
 #define __FLLOPMAT_H
 #include <petscmat.h>
-#include "fllopvec.h"
+#include "permonvec.h"
 
 /* Mat types provided by FLLOP */
 #define MATDUMMY        "dummy"

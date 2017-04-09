@@ -1,7 +1,7 @@
 
 ALL: lib
 
-SOURCEH  = ../../include/fllopksp.h
+SOURCEH  = ../../include/permonksp.h
 DIRS     = interface
 LOCDIR   = src/ksp/
 

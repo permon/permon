@@ -1,6 +1,6 @@
 #if !defined(__FLLOPQPPF_H)
 #define __FLLOPQPPF_H
-#include "fllopmat.h"
+#include "permonmat.h"
 
 typedef struct _p_QPPF* QPPF;
 

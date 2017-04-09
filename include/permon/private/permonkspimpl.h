@@ -1,7 +1,7 @@
 #if !defined(__FLLOPKSPIMPL_H)
 #define	__FLLOPKSPIMPL_H
-#include <fllopksp.h>
+#include <permonksp.h>
 #include <petsc/private/kspimpl.h>
-#include <permon/private/fllopimpl.h>
+#include <permon/private/permonimpl.h>
 
 #endif

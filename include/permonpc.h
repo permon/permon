@@ -1,7 +1,7 @@
 #if !defined(__FLLOPPC_H)
 #define	__FLLOPPC_H
 #include <petscpc.h>
-#include "fllopmat.h" 
+#include "permonmat.h" 
 
 /* subclasses */
 #define PCDUAL "dual"

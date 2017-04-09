@@ -5,7 +5,7 @@ CFLAGS   =
 FFLAGS   =
 SOURCEC  = fllopinit.c petscretro.c utils.c
 SOURCEF  = 
-SOURCEH  = ../../include/flloppetscretro.h
+SOURCEH  = ../../include/permonpetscretro.h
 OBJSC    = ${SOURCEC:.c=.o}
 LIBBASE  = libpermon
 DIRS     =

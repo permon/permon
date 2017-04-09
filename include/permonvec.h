@@ -1,7 +1,7 @@
 #if !defined(__FLLOPVEC_H)
 #define __FLLOPVEC_H
 #include <petscvec.h>
-#include "fllopsys.h"
+#include "permonsys.h"
 
 FLLOP_EXTERN PetscErrorCode VecMergeAndDestroy(MPI_Comm comm, Vec *local, Vec *global);
 FLLOP_EXTERN PetscErrorCode VecPrintInfo(Vec vec);

@@ -1,5 +1,5 @@
-#include <fllopmat.h>
-#include <../src/mat/impls/composite/fllopcompositeimpl.h>
+#include <permonmat.h>
+#include <../src/mat/impls/composite/permoncompositeimpl.h>
 
 #undef __FUNCT__
 #define __FUNCT__ "MatSumGetMat_Sum"

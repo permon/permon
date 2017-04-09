@@ -1,6 +1,6 @@
 
 #include <permon/private/qppfimpl.h>
-#include <fllopksp.h>
+#include <permonksp.h>
 PetscClassId QPPF_CLASSID;
 PetscLogEvent QPPF_SetUp, QPPF_SetUp_Gt, QPPF_SetUp_GGt, QPPF_SetUp_GGtinv;
 PetscLogEvent QPPF_ApplyCP, QPPF_ApplyCP_gt, QPPF_ApplyCP_sc;

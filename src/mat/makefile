@@ -1,7 +1,7 @@
 
 ALL: lib
 
-SOURCEH  = ../../include/permon/private/fllopmatimpl.h ../../include/fllopmat.h
+SOURCEH  = ../../include/permon/private/permonmatimpl.h ../../include/permonmat.h
 DIRS     = interface impls
 LOCDIR   = src/mat/
 MANSEC   = Mat

@@ -1,5 +1,5 @@
 
-#include <permon/private/fllopmatimpl.h>
+#include <permon/private/permonmatimpl.h>
 
 #if defined(MatCreateNormal)
 #undef MatCreateNormal

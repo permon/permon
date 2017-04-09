@@ -2,7 +2,7 @@
 #define	__FLLOPIMPL_H
 #include <petsc/private/petscimpl.h>
 #include <permon/private/petscimpl.h>
-#include <fllopsys.h>
+#include <permonsys.h>
 
 struct _p_FLLOP {
   PETSCHEADER(int);

@@ -1,5 +1,5 @@
 
-#include <permon/private/fllopmatimpl.h>
+#include <permon/private/permonmatimpl.h>
 
 PetscLogEvent Mat_Regularize;
 

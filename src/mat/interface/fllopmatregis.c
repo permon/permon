@@ -1,5 +1,5 @@
 
-#include <fllopmat.h>
+#include <permonmat.h>
 
 FLLOP_EXTERN PetscErrorCode MatCreate_Inv(Mat);
 FLLOP_EXTERN PetscErrorCode MatCreate_BlockDiag(Mat);

@@ -1,7 +1,7 @@
 #if !defined(__QPSIMPL_H)
 #define	__QPSIMPL_H
-#include <fllopqps.h>
-#include <permon/private/fllopimpl.h>
+#include <permonqps.h>
+#include <permon/private/permonimpl.h>
 #include <permon/private/qpimpl.h>
 
 /* Maximum number of monitors you can run with a single QPS */

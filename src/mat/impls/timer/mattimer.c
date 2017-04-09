@@ -1,5 +1,5 @@
 
-#include <permon/private/fllopmatimpl.h>
+#include <permon/private/permonmatimpl.h>
 
 #undef __FUNCT__
 #define __FUNCT__ "MatMult_Timer"

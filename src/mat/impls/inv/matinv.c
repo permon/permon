@@ -1,7 +1,7 @@
 
-#include <permon/private/fllopmatimpl.h>
+#include <permon/private/permonmatimpl.h>
 #include <permon/private/petscimpl.h>
-#include <fllopksp.h>
+#include <permonksp.h>
 #include <petsc/private/pcimpl.h>
 #if defined(PETSC_HAVE_MUMPS)
 #include <permon/private/mumpsimpl.h>

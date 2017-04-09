@@ -1,7 +1,7 @@
 
 ALL: lib
 
-SOURCEH  = ../../include/flloppc.h
+SOURCEH  = ../../include/permonpc.h
 DIRS     = interface impls
 LOCDIR   = src/pc/
 MANSEC   = PC

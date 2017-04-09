@@ -1,8 +1,8 @@
 #if !defined(__FLLOPMATIMPL_H)
 #define	__FLLOPMATIMPL_H
-#include <fllopmat.h>
+#include <permonmat.h>
 #include <petsc/private/matimpl.h>
-#include <permon/private/fllopimpl.h>
+#include <permon/private/permonimpl.h>
 
 typedef struct {
   Mat               A,R;

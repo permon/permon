@@ -1,5 +1,5 @@
 #include <permon/private/qpimpl.h>
-#include <flloppc.h>
+#include <permonpc.h>
 #include <permon/private/qppfimpl.h>
 
 PetscLogEvent QPT_HomogenizeEq, QPT_EnforceEqByProjector, QPT_EnforceEqByPenalty, QPT_OrthonormalizeEq, QPT_SplitBE;

@@ -1,6 +1,6 @@
 #if !defined(__FLLOPQPS_H)
 #define	__FLLOPQPS_H
-#include "fllopqp.h"
+#include "permonqp.h"
 #include <petsctao.h>
         
 typedef struct _p_QPS* QPS;

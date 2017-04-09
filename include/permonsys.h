@@ -19,7 +19,7 @@
 #define FLLOP_EXTERN PETSC_EXTERN
 #define FLLOP_INTERN PETSC_INTERN
 
-#include "flloppetscretro.h"
+#include "permonpetscretro.h"
 
 /* 
   FLLOP is a dummy class, defined in FllopInitialize,
