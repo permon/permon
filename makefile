@@ -3,6 +3,7 @@
 #
 
 ALL: permon-all
+all: permon-all
 LOCDIR = .
 DIRS   = src include
 
