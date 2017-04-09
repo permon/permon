@@ -119,7 +119,7 @@ chk_permon_dir:
 	  echo "PERMON_DIR not specified!"; \
           printf "********************************************************************"${PETSC_TEXT_NORMAL}"\n"; \
     false; fi
-	@if [ ! -f ${PERMON_DIR}/include/fllopsys.h ]; then \
+	@if [ ! -f ${PERMON_DIR}/${PERMON_MAIN_HEADER} ]; then \
           printf ${PETSC_TEXT_HILIGHT}"*************************ERROR**************************************\n"; \
 	  echo "Incorrect PERMON_DIR specified: ${PERMON_DIR}!"; \
     echo 'File ${PERMON_DIR}/include/fllopsys.h does not exist.'; \
