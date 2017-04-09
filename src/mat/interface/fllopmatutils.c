@@ -1,5 +1,5 @@
 
-#include <private/fllopmatimpl.h>
+#include <permon/private/fllopmatimpl.h>
 
 PetscLogEvent Mat_GetMaxEigenvalue,Mat_FilterZeros,Mat_MergeAndDestroy,FllopMat_GetLocalMat;
 PetscInt MatGetMaxEigenvalue_composed_id;

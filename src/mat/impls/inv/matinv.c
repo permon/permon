@@ -1,10 +1,10 @@
 
-#include <private/fllopmatimpl.h>
-#include <private/petscimpl.h>
+#include <permon/private/fllopmatimpl.h>
+#include <permon/private/petscimpl.h>
 #include <fllopksp.h>
 #include <petsc/private/pcimpl.h>
 #if defined(PETSC_HAVE_MUMPS)
-#include <private/mumpsimpl.h>
+#include <permon/private/mumpsimpl.h>
 #endif
 
 PetscLogEvent Mat_Inv_Explicitly, Mat_Inv_SetUp;

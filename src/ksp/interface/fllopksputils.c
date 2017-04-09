@@ -1,5 +1,5 @@
 #include <fllopksp.h>
-#include <private/fllopimpl.h>
+#include <permon/private/fllopimpl.h>
 
 #undef __FUNCT__
 #define __FUNCT__ "KSPViewBriefInfo"

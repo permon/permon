@@ -1,6 +1,6 @@
 
 #include <fllopqp.h>
-#include <private/fllopmatimpl.h>
+#include <permon/private/fllopmatimpl.h>
 
 typedef struct {
   Mat  A,BtB;

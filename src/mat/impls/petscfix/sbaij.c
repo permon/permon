@@ -1,5 +1,5 @@
 
-#include <private/petscimpl.h>
+#include <permon/private/petscimpl.h>
 
 #if defined(MatCreateSeqSBAIJWithArrays)
 #undef MatCreateSeqSBAIJWithArrays

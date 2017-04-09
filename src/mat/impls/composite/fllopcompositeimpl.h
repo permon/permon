@@ -1,6 +1,6 @@
 #if !defined(__COMPOSITEMIMPL_H)
 #define __COMPOSITEMIMPL_H
-#include <private/fllopmatimpl.h>
+#include <permon/private/fllopmatimpl.h>
 
 typedef struct _Mat_CompositeLink *Mat_CompositeLink;
 struct _Mat_CompositeLink {

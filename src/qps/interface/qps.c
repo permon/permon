@@ -1,5 +1,5 @@
 
-#include <private/qpsimpl.h>
+#include <permon/private/qpsimpl.h>
 
 PetscClassId  QPS_CLASSID;
 PetscLogEvent  QPS_Solve,QPS_PostSolve;

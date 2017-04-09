@@ -1,7 +1,7 @@
 #if !defined(__QPIMPL_H)
 #define	__QPIMPL_H
 #include <fllopqp.h>
-#include <private/fllopimpl.h>
+#include <permon/private/fllopimpl.h>
 
 struct _p_QP {
   PETSCHEADER(int);

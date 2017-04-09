@@ -1,5 +1,5 @@
 
-#include <private/fllopmatimpl.h>
+#include <permon/private/fllopmatimpl.h>
 #include <petscblaslapack.h>
 
 PetscLogEvent Mat_OrthColumns;

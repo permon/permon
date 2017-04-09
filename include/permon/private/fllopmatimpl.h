@@ -2,7 +2,7 @@
 #define	__FLLOPMATIMPL_H
 #include <fllopmat.h>
 #include <petsc/private/matimpl.h>
-#include <private/fllopimpl.h>
+#include <permon/private/fllopimpl.h>
 
 typedef struct {
   Mat               A,R;

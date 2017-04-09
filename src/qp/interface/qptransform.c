@@ -1,6 +1,6 @@
-#include <private/qpimpl.h>
+#include <permon/private/qpimpl.h>
 #include <flloppc.h>
-#include <private/qppfimpl.h>
+#include <permon/private/qppfimpl.h>
 
 PetscLogEvent QPT_HomogenizeEq, QPT_EnforceEqByProjector, QPT_EnforceEqByPenalty, QPT_OrthonormalizeEq, QPT_SplitBE;
 PetscLogEvent QPT_Dualize, QPT_Dualize_AssembleG, QPT_Dualize_FactorK, QPT_Dualize_PrepareBt, QPT_AllInOne;

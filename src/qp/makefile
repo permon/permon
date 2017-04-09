@@ -1,7 +1,7 @@
 
 ALL: lib
 
-SOURCEH  = ../../include/private/qpimpl.h ../../include/fllopqp.h
+SOURCEH  = ../../include/permon/private/qpimpl.h ../../include/fllopqp.h
 DIRS     = interface utils
 LOCDIR   = src/qp/
 MANSEC   = QP

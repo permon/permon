@@ -1,5 +1,5 @@
 
-#include <private/qpimpl.h>
+#include <permon/private/qpimpl.h>
 
 PetscClassId  QP_CLASSID;
 

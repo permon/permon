@@ -1,5 +1,5 @@
 
-#include <private/fllopmatimpl.h>
+#include <permon/private/fllopmatimpl.h>
 
 PetscLogEvent Mat_GetColumnVectors, Mat_RestoreColumnVectors, Mat_MatMultByColumns, Mat_TransposeMatMultByColumns;
 

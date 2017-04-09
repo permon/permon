@@ -1,8 +1,8 @@
 #if !defined(__QPSIMPL_H)
 #define	__QPSIMPL_H
 #include <fllopqps.h>
-#include <private/fllopimpl.h>
-#include <private/qpimpl.h>
+#include <permon/private/fllopimpl.h>
+#include <permon/private/qpimpl.h>
 
 /* Maximum number of monitors you can run with a single QPS */
 #define MAXQPSMONITORS 5 

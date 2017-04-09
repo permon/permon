@@ -1,6 +1,6 @@
 #if !defined(__MPGPIMPL_H)
 #define __MPGPIMPL_H
-#include <private/qpsimpl.h>
+#include <permon/private/qpsimpl.h>
 
 typedef struct {
   PetscReal alpha;

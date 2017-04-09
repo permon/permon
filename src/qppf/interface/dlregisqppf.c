@@ -1,6 +1,6 @@
 #define FLLOPQPPF_DLL
 
-#include <private/qppfimpl.h>
+#include <permon/private/qppfimpl.h>
 
 static PetscBool QPPFPackageInitialized = PETSC_FALSE;
 

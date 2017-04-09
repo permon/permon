@@ -1,6 +1,6 @@
 #define FLLOPQPS_DLL
 
-#include <private/qpsimpl.h>
+#include <permon/private/qpsimpl.h>
 
 static PetscBool QPSPackageInitialized = PETSC_FALSE;
 

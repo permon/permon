@@ -1,5 +1,5 @@
 
-#include <private/qppfimpl.h>
+#include <permon/private/qppfimpl.h>
 #include <fllopksp.h>
 PetscClassId QPPF_CLASSID;
 PetscLogEvent QPPF_SetUp, QPPF_SetUp_Gt, QPPF_SetUp_GGt, QPPF_SetUp_GGtinv;

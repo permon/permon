@@ -1,5 +1,5 @@
 
-#include <private/flloppcimpl.h>
+#include <permon/private/flloppcimpl.h>
 #include <petscmat.h>
 
 const char *PCDualTypes[]={"none","lumped","PCDualType","PC_DUAL_",0};

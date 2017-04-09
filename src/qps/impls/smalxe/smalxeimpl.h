@@ -1,6 +1,6 @@
 #if !defined(__SMALXEIMPL_H)
 #define __SMALXEIMPL_H
-#include <private/qpsimpl.h>
+#include <permon/private/qpsimpl.h>
 
 typedef struct {
   PetscReal gtol;

@@ -1,5 +1,5 @@
 
-#include <private/qpsimpl.h>
+#include <permon/private/qpsimpl.h>
 
 FLLOP_EXTERN PetscErrorCode QPSCreate_KSP(QPS);
 FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS);

@@ -1,6 +1,6 @@
 #if !defined(__QPS_TAOIMPL_H)
 #define __QPS_TAOIMPL_H
-#include <private/qpsimpl.h>
+#include <permon/private/qpsimpl.h>
 #include <petsctao.h>
 
 typedef struct {

@@ -1,5 +1,5 @@
 
-#include <private/fllopmatimpl.h>
+#include <permon/private/fllopmatimpl.h>
 
 PETSC_EXTERN PetscErrorCode MatConvert_SeqDense_SeqDensePermon(Mat A,MatType type,MatReuse reuse,Mat *newmat);
 PETSC_EXTERN PetscErrorCode MatConvert_MPIDense_MPIDensePermon(Mat A,MatType type,MatReuse reuse,Mat *newmat);

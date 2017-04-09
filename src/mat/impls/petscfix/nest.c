@@ -1,6 +1,6 @@
 
-#include <private/fllopmatimpl.h>
-#include <private/petscimpl.h>
+#include <permon/private/fllopmatimpl.h>
+#include <permon/private/petscimpl.h>
 
 #undef __FUNCT__
 #define __FUNCT__ "MatGetColumnVectors_NestPermon"

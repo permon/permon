@@ -2,6 +2,6 @@
 #define	__FLLOPKSPIMPL_H
 #include <fllopksp.h>
 #include <petsc/private/kspimpl.h>
-#include <private/fllopimpl.h>
+#include <permon/private/fllopimpl.h>
 
 #endif

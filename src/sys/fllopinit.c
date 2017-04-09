@@ -2,7 +2,7 @@
 #include <fllopqps.h>
 #include <fllopmat.h>
 #include <flloppc.h>
-#include <private/fllopimpl.h>
+#include <permon/private/fllopimpl.h>
 
 PetscBool FllopInitializeCalled = PETSC_FALSE;
 PetscBool FllopBeganPetsc = PETSC_FALSE;

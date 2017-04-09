@@ -1,5 +1,5 @@
 #include <fllopvec.h>
-#include <private/fllopimpl.h>
+#include <permon/private/fllopimpl.h>
 #include <petsc/private/vecimpl.h>
 #include <petsc/private/isimpl.h>
 
