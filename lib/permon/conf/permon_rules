@@ -100,7 +100,7 @@ chk_permon_petsc_dir:
 	  echo "Note you need to use / to separate directories, not \\"; \
           printf "********************************************************************"${PETSC_TEXT_NORMAL}"\n"; \
     false; fi
-	@if [ ! -f ${PETSC_DIR}/${PETSC_ARCH}/lib/lib*petsc*.a ] && [ ! -f ${PETSC_DIR}/${PETSC_ARCH}/lib/lib*petsc*.so ]; then \
+	@if [ ! -f ${PETSC_DIR}/${PETSC_ARCH}/lib/libpetsc*.a ] && [ ! -f ${PETSC_DIR}/${PETSC_ARCH}/lib/libpetsc*.${SL_LINKER_SUFFIX} ]; then \
           printf ${PETSC_TEXT_HILIGHT}"*************************ERROR**************************************\n"; \
 	  echo "Given PETSC_DIR=${PETSC_DIR} and PETSC_ARCH=${PETSC_ARCH}"; \
     echo "  (directory ${PETSC_DIR}/${PETSC_ARCH}/lib)"; \
