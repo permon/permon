@@ -1,4 +1,13 @@
-#Quick guide to PermonQP installation
+PermonQP - the PERMON core QP solver
+================================
+
+Project homepage: <http://permon.it4i.cz>  
+GitHub: <https://github.com/It4innovations/permon>
+
+Please use [GitHub](https://github.com/It4innovations/permon) for issues and pull requests.
+
+Quick guide to PermonQP installation
+------------------------------------
 
 1. set environment variables `PETSC_DIR` and `PETSC_ARCH` pointing to a PETSc instance
    - `PETSC_ARCH` may is empty in case of "prefix" PETSc installation
@@ -11,6 +20,7 @@
    - shared library (.so) is built just if PETSc has been configured with option `--with-shared-libraries`
    - all compiler settings are inherited from PETSc
 
-#Currently supported PETSc versions
+Currently supported PETSc versions
+----------------------------------
 * 3.6.\*
 * 3.7.\*
