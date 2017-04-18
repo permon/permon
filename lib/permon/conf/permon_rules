@@ -74,7 +74,7 @@ deletelibs: chk_makej
 
 # Cleans up build
 allclean-legacy: deletelibs
-	-@${OMAKE} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} PERMON_PKG_DIR=${PERMON_PKG_DIR} ACTION=clean tree
+	-@${OMAKE} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} PERMON_PKG_DIR=${PERMON_PKG_DIR} ACTION=clean-legacy tree
 allclean-gnumake:
 	-@${OMAKE} -f gmakefile clean
 allclean:
