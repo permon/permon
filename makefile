@@ -14,3 +14,4 @@ include lib/permon/conf/permon_rules
 cleanbin:                          
 	-@${RM} ${PERMON_DIR}/${PETSC_ARCH}/bin/*      
 
+clean:: allclean
