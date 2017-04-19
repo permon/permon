@@ -274,8 +274,11 @@ static PetscErrorCode MPGPGrads(QPS qps, Vec x, Vec lb, Vec ub, Vec g)
           /* index of this component is in FREE SET */
           phi_a[i] = g_a[i];
           beta_a[i] = 0.0;
-//TODO  this is valid only if ub = inf !!!
-          gr_a[i] = PetscMin((x_a[i]-lb_a[i])/alpha, phi_a[i]);
+          if (g_a[i] > 0) {
+            gr_a[i] = PetscMin((x_a[i]-lb_a[i])/alpha, g_a[i]);
+          } else {
+            gr_a[i] = PetscMax((x_a[i]-ub_a[i])/alpha, g_a[i]);
+          }
       } else {
           /* index of this component is in ACTIVE SET */
           phi_a[i] = 0.0;
