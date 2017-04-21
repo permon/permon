@@ -4,7 +4,7 @@
 
 ALL: all
 LOCDIR = .
-DIRS   = src include docs
+DIRS   = src include
 LOG    = ${PERMON_DIR}/${PETSC_ARCH}/lib/permon/conf/make.log
 ERRLOG = ${PERMON_DIR}/${PETSC_ARCH}/lib/permon/conf/error.log
 HGLOG  = ${PERMON_DIR}/${PETSC_ARCH}/lib/permon/conf/hg.log
