@@ -2,9 +2,9 @@
 
 include ./lib/permon/conf/permon_variables
 
-OBJDIR := $(PETSC_ARCH)/obj
-MODDIR := $(PETSC_ARCH)/include
-LIBDIR := $(abspath $(PETSC_ARCH)/lib)
+OBJDIR := ./$(PETSC_ARCH)/obj
+MODDIR := ./$(PETSC_ARCH)/include
+LIBDIR := $(abspath ./$(PETSC_ARCH)/lib)
 
 pkgs := sys vec mat ksp qp qpc qppf pc qps interface
 
@@ -40,7 +40,7 @@ else
 endif
 libpermonall := $(if $(filter-out no,$(BUILDSHAREDLIB)),$(libpermonall_shared) $(libpermonall_soname),$(libpermonall_static))
 
-generated      := $(PETSC_ARCH)/lib/permon/conf/files
+generated      := ./$(PETSC_ARCH)/lib/permon/conf/files
 #permonconf      := $(PETSC_ARCH)/include/permonconf.h
 #permonvariables := $(PETSC_ARCH)/lib/permon/conf/permonvariables
 
