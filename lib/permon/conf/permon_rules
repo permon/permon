@@ -154,10 +154,6 @@ chk_permon_pkg_dir:
 	  false; fi
 
 permon_hginfo:
-	-@echo "Local changes and state of the repo (saved to ${PERMON_HGLOG})"
-	-@${PERMON_DIR}/bin/hgstat.bash | tee ${PERMON_HGLOG}
-	-@if [ -x ${MODULESHOME}/bin/modulecmd ]; then ${MODULESHOME}/bin/modulecmd bash list 2> ${PERMON_MODLOG}; fi
-	-@echo "========================================="   
 
 #
 # Prints information about the system and version of PERMON being compiled
