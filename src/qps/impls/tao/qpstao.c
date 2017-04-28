@@ -246,6 +246,10 @@ PetscErrorCode QPSViewConvergence_Tao(QPS qps, PetscViewer v)
     TRY( PetscViewerASCIIPrintf(v, "TaoType: %s\n", taotype) );
     TRY( PetscViewerASCIIPrintf(v, "Number of KSP iterations in last iteration: %d\n", qpstao->tao->ksp_its) );
     TRY( PetscViewerASCIIPrintf(v, "Total number of KSP iterations: %d\n", qpstao->ksp_its) );
+    TRY( PetscViewerASCIIPrintf(v, "Information about last TAOSolve:\n") );
+    TRY( PetscViewerASCIIPushTab(v) );
+    TRY( TaoView(qpstao->tao,v) );
+    TRY( PetscViewerASCIIPopTab(v) );
   }
   PetscFunctionReturn(0);
 }
