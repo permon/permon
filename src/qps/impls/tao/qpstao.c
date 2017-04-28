@@ -82,13 +82,24 @@ PetscErrorCode QPSTaoGetTao(QPS qps,Tao *tao)
 {
   PetscBool flg;
   QPS_Tao *qpstao;
+  const char* prefix;
   
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidPointer(tao,2);
   TRY( PetscObjectTypeCompare((PetscObject)qps,QPSTAO,&flg) );
-  if (!flg) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"This is a QPSTAO specific routine!");
+  if (!flg) FLLOP_SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_SUP,"This is a QPSTAO specific routine!");
   qpstao = (QPS_Tao*)qps->data;
+  if (!qpstao->tao) {
+    TRY( QPSGetOptionsPrefix(qps,&prefix) );
+    TRY( TaoCreate(PetscObjectComm((PetscObject)qps),&qpstao->tao) );
+    TRY( TaoSetOptionsPrefix(qpstao->tao,prefix) );
+    TRY( TaoAppendOptionsPrefix(qpstao->tao,"qps_") );
+    TRY( PetscLogObjectParent((PetscObject)qps,(PetscObject)qpstao->tao) );
+    TRY( PetscObjectIncrementTabLevel((PetscObject)qpstao->tao,(PetscObject)qps,1) );
+    TRY( TaoSetType(qpstao->tao,TAOGPCG) );
+    TRY( TaoSetTolerances( qpstao->tao, 1e-50, 1e-5, 1e-50) );
+  }
   *tao = qpstao->tao;
   PetscFunctionReturn(0);
 }
@@ -105,6 +116,7 @@ PetscErrorCode QPSTaoSetType(QPS qps,TaoType type)
   TRY( PetscObjectTypeCompare((PetscObject)qps,QPSTAO,&flg) );
   if (!flg) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"This is a QPSTAO specific routine!");
   qpstao = (QPS_Tao*)qps->data;
+  TRY( QPSTaoGetTao(qps,&qpstao->tao) );
   TRY( TaoSetType(qpstao->tao,type) );
   PetscFunctionReturn(0);
 }
@@ -121,6 +133,7 @@ PetscErrorCode QPSTaoGetType(QPS qps, const TaoType *type)
   TRY( PetscObjectTypeCompare((PetscObject)qps,QPSTAO,&flg) );
   if (!flg) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"This is a QPSTAO specific routine!");
   qpstao = (QPS_Tao*)qps->data;
+  TRY( QPSTaoGetTao(qps,&qpstao->tao) );
   TRY( TaoGetType(qpstao->tao,type) );
   PetscFunctionReturn(0);
 }
@@ -130,7 +143,7 @@ PetscErrorCode QPSTaoGetType(QPS qps, const TaoType *type)
 PetscErrorCode QPSSetUp_Tao(QPS qps)
 {
   QPS_Tao          *qpstao = (QPS_Tao*)qps->data;
-  Tao              tao = qpstao->tao;
+  Tao              tao;
   QP               qp;
   Vec              b,x,lb,ub;
   KSP              ksp;
@@ -142,6 +155,7 @@ PetscErrorCode QPSSetUp_Tao(QPS qps)
   TRY( QPGetSolutionVector(qp,&x) );
   TRY( QPGetBox(qp,&lb,&ub) );
   
+  TRY( QPSTaoGetTao(qps,&tao) );
   TRY( TaoSetInitialVector(tao,x) );
 
   /* Set routines for function, gradient and hessian evaluation */
@@ -180,11 +194,12 @@ PetscErrorCode QPSSetUp_Tao(QPS qps)
 PetscErrorCode QPSSolve_Tao(QPS qps)
 {
   QPS_Tao          *qpstao = (QPS_Tao*)qps->data;
-  Tao              tao = qpstao->tao;
+  Tao              tao;
   
   PetscFunctionBegin;
+  TRY( QPSTaoGetTao(qps,&tao) );
   TRY( TaoSolve(tao) );
-  qpstao->ksp_its = qpstao->ksp_its + qpstao->tao->ksp_its;
+  qpstao->ksp_its = qpstao->ksp_its + tao->ksp_its;
   PetscFunctionReturn(0);
 }
 
@@ -193,7 +208,6 @@ PetscErrorCode QPSSolve_Tao(QPS qps)
 PetscErrorCode QPSSetFromOptions_Tao(PetscOptionItems *PetscOptionsObject,QPS qps)
 {
   QPS_Tao          *qpstao = (QPS_Tao*)qps->data;
-  //Tao              tao = qpstao->tao;
   
   PetscFunctionBegin;
   qpstao->setfromoptionscalled = PETSC_TRUE;
@@ -204,10 +218,10 @@ PetscErrorCode QPSSetFromOptions_Tao(PetscOptionItems *PetscOptionsObject,QPS qp
 #define __FUNCT__ "QPSView_Tao"
 PetscErrorCode QPSView_Tao(QPS qps, PetscViewer v)
 {
-  QPS_Tao          *qpstao = (QPS_Tao*)qps->data;
-  Tao              tao = qpstao->tao;
+  Tao              tao;
   
   PetscFunctionBegin;
+  TRY( QPSTaoGetTao(qps,&tao) );
   TRY( TaoView(tao, v) );
   PetscFunctionReturn(0);  
 }
@@ -223,6 +237,7 @@ PetscErrorCode QPSViewConvergence_Tao(QPS qps, PetscViewer v)
   PetscFunctionBegin;
   TRY( PetscObjectTypeCompare((PetscObject)v,PETSCVIEWERASCII,&iascii) );
   if (iascii) {
+    TRY( QPSTaoGetTao(qps,&qpstao->tao) );
     TRY( TaoGetType(qpstao->tao,&taotype) );
     TRY( PetscViewerASCIIPrintf(v, "TaoType: %s\n", taotype) );
     TRY( PetscViewerASCIIPrintf(v, "Number of KSP iterations in last iteration: %d\n", qpstao->tao->ksp_its) );
@@ -231,15 +246,23 @@ PetscErrorCode QPSViewConvergence_Tao(QPS qps, PetscViewer v)
   PetscFunctionReturn(0);
 }
 
-
-#undef __FUNCT__  
-#define __FUNCT__ "QPSDestroy_Tao"
-PetscErrorCode QPSDestroy_Tao(QPS qps)
+#undef __FUNCT__
+#define __FUNCT__ "QPSReset_Tao"
+PetscErrorCode QPSReset_Tao(QPS qps)
 {
   QPS_Tao         *qpstao = (QPS_Tao*)qps->data;
 
   PetscFunctionBegin;
   TRY( TaoDestroy(&qpstao->tao) );
+  qpstao->ksp_its = 0;
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__  
+#define __FUNCT__ "QPSDestroy_Tao"
+PetscErrorCode QPSDestroy_Tao(QPS qps)
+{
+  PetscFunctionBegin;
   TRY( QPSDestroyDefault(qps) );
   PetscFunctionReturn(0);  
 }
@@ -274,6 +297,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_Tao(QPS qps)
   TRY( PetscNewLog(qps,&qpstao) );
   qps->data                  = (void*)qpstao;
   qpstao->setfromoptionscalled = PETSC_FALSE;
+  qpstao->tao                = NULL;
   
   /*
        Sets the functions that are associated with this data structure 
@@ -282,16 +306,10 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_Tao(QPS qps)
   qps->ops->setup            = QPSSetUp_Tao;
   qps->ops->solve            = QPSSolve_Tao;
   qps->ops->destroy          = QPSDestroy_Tao;
+  qps->ops->reset            = QPSReset_Tao;
   qps->ops->isqpcompatible   = QPSIsQPCompatible_Tao;
   qps->ops->setfromoptions   = QPSSetFromOptions_Tao;
   qps->ops->view             = QPSView_Tao;
   qps->ops->viewconvergence  = QPSViewConvergence_Tao;
-  
-  TRY( TaoCreate(comm,&qpstao->tao) );
-  TRY( TaoSetOptionsPrefix(qpstao->tao,"qps_") );
-  TRY( PetscLogObjectParent((PetscObject)qps,(PetscObject)qpstao->tao) );
-  TRY( PetscObjectIncrementTabLevel((PetscObject)qpstao->tao,(PetscObject)qps,1) );
-  TRY( TaoSetType(qpstao->tao,TAOGPCG) );
-  TRY( TaoSetTolerances( qpstao->tao, 1e-50, 1e-5, 1e-50) );
   PetscFunctionReturn(0);
 }
