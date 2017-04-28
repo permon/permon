@@ -174,8 +174,10 @@ PetscErrorCode QPSSetUp_Tao(QPS qps)
   TRY( TaoSetVariableBounds(tao,lb,ub) );
 
   TRY( TaoGetKSP(tao,&ksp) );
-  TRY( KSPGetPC(ksp,&pc) );
-  TRY( PCSetType(pc,PCNONE) );
+  if (ksp) {
+    TRY( KSPGetPC(ksp,&pc) );
+    TRY( PCSetType(pc,PCNONE) );
+  }
   
   TRY( TaoSetConvergenceTest(tao,QPSTaoConverged_Tao,qps) );
   TRY( TaoSetTolerances( tao, qps->atol, qps->rtol, PETSC_DEFAULT ) );
