@@ -197,11 +197,13 @@ PetscErrorCode QPSSolve_Tao(QPS qps)
 {
   QPS_Tao          *qpstao = (QPS_Tao*)qps->data;
   Tao              tao;
+  PetscInt         its;
   
   PetscFunctionBegin;
   TRY( QPSTaoGetTao(qps,&tao) );
   TRY( TaoSolve(tao) );
-  qpstao->ksp_its = qpstao->ksp_its + tao->ksp_its;
+  TRY( TaoGetLinearSolveIterations(tao,&its) );
+  qpstao->ksp_its += its;
   PetscFunctionReturn(0);
 }
 
@@ -299,6 +301,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_Tao(QPS qps)
   TRY( PetscNewLog(qps,&qpstao) );
   qps->data                  = (void*)qpstao;
   qpstao->setfromoptionscalled = PETSC_FALSE;
+  qpstao->ksp_its            = 0;
   qpstao->tao                = NULL;
   
   /*
