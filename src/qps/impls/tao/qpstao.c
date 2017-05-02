@@ -67,12 +67,7 @@ static PetscErrorCode FormFunctionGradientQPS(Tao tao, Vec X, PetscReal *fcn, Ve
 #define __FUNCT__ "FormHessianQPS"
 static PetscErrorCode FormHessianQPS(Tao tao,Vec X,Mat Hptr, Mat Hpc, void *qps_void)
 {
-  QPS         qps = (QPS) qps_void;
-  QP          qp;
-  
   PetscFunctionBegin; 
-  TRY( QPSGetSolvedQP(qps,&qp) );
-  Hptr = qp->A;   
   PetscFunctionReturn(0);
 }
 
