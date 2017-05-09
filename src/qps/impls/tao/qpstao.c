@@ -92,8 +92,6 @@ PetscErrorCode QPSTaoGetTao(QPS qps,Tao *tao)
     TRY( TaoAppendOptionsPrefix(qpstao->tao,"qps_") );
     TRY( PetscLogObjectParent((PetscObject)qps,(PetscObject)qpstao->tao) );
     TRY( PetscObjectIncrementTabLevel((PetscObject)qpstao->tao,(PetscObject)qps,1) );
-    TRY( TaoSetType(qpstao->tao,TAOGPCG) );
-    TRY( TaoSetTolerances( qpstao->tao, 1e-50, 1e-5, 1e-50) );
   }
   *tao = qpstao->tao;
   PetscFunctionReturn(0);
@@ -168,18 +166,27 @@ PetscErrorCode QPSSetUp_Tao(QPS qps)
   }
   TRY( TaoSetVariableBounds(tao,lb,ub) );
 
-  TRY( TaoGetKSP(tao,&ksp) );
-  if (ksp) {
-    TRY( KSPGetPC(ksp,&pc) );
-    TRY( PCSetType(pc,PCNONE) );
-  }
-  
+  /* set specific defaults for TAO inside QPSTAO */
+  TRY( TaoSetType(qpstao->tao,TAOGPCG) );
   TRY( TaoSetConvergenceTest(tao,QPSTaoConverged_Tao,qps) );
   TRY( TaoSetTolerances( tao, qps->atol, qps->rtol, PETSC_DEFAULT ) );
-  
+
   /* Check for any tao command line options */
   if (qpstao->setfromoptionscalled) {
     TRY( TaoSetFromOptions(tao) );
+  }
+
+  TRY( TaoGetKSP(tao,&ksp) );
+  if (ksp) {
+    /* set KSP defaults after TaoSetFromOptions as it can create new KSP instance */
+    const char *prefix;
+    TRY( QPSGetOptionsPrefix(qps,&prefix) );
+    TRY( KSPSetOptionsPrefix(ksp,prefix) );
+    TRY( KSPAppendOptionsPrefix(ksp,"qps_tao_") );
+    TRY( KSPGetPC(ksp,&pc) );
+    TRY( PCSetType(pc,PCNONE) );
+    TRY( KSPSetFromOptions(ksp) );
+    TRY( KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD) );
   }
 
   TRY( TaoSetUp(tao) );
