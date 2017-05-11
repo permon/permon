@@ -195,7 +195,7 @@ PetscErrorCode QPDuplicate(QP qp1,QPDuplicateOption opt,QP *qp2)
   TRY( QPSetLowerBoundMultiplier(qp2_,qp1->lambda_lb) );
   TRY( QPSetOperator(qp2_,qp1->A) );
   TRY( QPSetOperatorNullSpace(qp2_,qp1->R) );
-  TRY( QPSetPC(qp2_,qp1->pc) );
+  if (qp1->pc) TRY( QPSetPC(qp2_,qp1->pc) );
   TRY( QPSetQPPF(qp2_,qp1->pf) );
   TRY( QPSetRhs(qp2_,qp1->b) );
   TRY( QPSetUpperBoundMultiplier(qp2_,qp1->lambda_ub) );
@@ -635,6 +635,9 @@ PetscErrorCode QPSetUpInnerObjects(QP qp)
   FllopTraceBegin;
   TRY( PetscInfo1(qp,"setup inner objects for QP #%d\n",qp->id) );
 
+  if (!qp->pc) TRY( QPGetPC(qp,&qp->pc) );
+  TRY( PCSetOperators(qp->pc,qp->A,qp->A) );
+
   TRY( QPInitializeInitialVector_Private(qp) );
 
   if (!qp->xwork) TRY( VecDuplicate(qp->x,&qp->xwork) );
@@ -771,8 +774,6 @@ PetscErrorCode QPSetUp(QP qp)
   FllopTraceBegin;
   TRY( PetscInfo1(qp,"setup QP #%d\n",qp->id) );
   TRY( QPSetUpInnerObjects(qp) );
-  if (!qp->pc) TRY( QPGetPC(qp,&qp->pc) );
-  TRY( PCSetOperators(qp->pc,qp->A,qp->A) );
   TRY( QPSetFromOptions_Private(qp) );
   TRY( PCSetUp(qp->pc) );
   qp->setupcalled = PETSC_TRUE;
@@ -1265,7 +1266,6 @@ PetscErrorCode QPSetOperator(QP qp, Mat A)
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
   PetscValidHeaderSpecific(A,MAT_CLASSID,2);
   PetscCheckSameComm(qp,1,A,2);
-  TRY( PCSetOperators(qp->pc,A,A) );
   if (A == qp->A) PetscFunctionReturn(0);
 
   TRY( MatDestroy(&qp->A) );
