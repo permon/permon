@@ -445,11 +445,9 @@ PetscErrorCode QPSSetDefaultType(QPS qps)
 PetscErrorCode QPSSetDefaultTypeIfNotSpecified(QPS qps)
 {
   PetscFunctionBegin;
-  if (!((PetscObject)qps)->type_name || !qps->user_type) {
+  if (!((PetscObject)qps)->type_name) {
     TRY( QPSSetDefaultType(qps) );
     qps->user_type = PETSC_FALSE;
-  } else {
-    qps->user_type = PETSC_TRUE;
   }
   PetscFunctionReturn(0);
 }
