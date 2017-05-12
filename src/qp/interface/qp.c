@@ -184,8 +184,6 @@ PetscErrorCode QPDuplicate(QP qp1,QPDuplicateOption opt,QP *qp2)
   }
 
   TRY( QPSetBox(qp2_,qp1->lb,qp1->ub) );
-  TRY( QPSetChangeListener(qp2_,qp1->changeListener) );
-  TRY( QPSetChangeListenerContext(qp2_,qp1->changeListenerCtx) );
   TRY( QPSetEq(qp2_,qp1->BE,qp1->cE) );
   TRY( QPSetEqMultiplier(qp2_,qp1->lambda_E) );
   qp2_->BE_nest_count = qp1->BE_nest_count;
