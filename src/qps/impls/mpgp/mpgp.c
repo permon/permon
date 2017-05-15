@@ -459,6 +459,7 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
       FLLOP_SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_INCOMP,"lower bounds must be less than upper bounds");
     }
   } else {
+    //TODO make MPGP compatible with ub = NULL
     /* create ub=inf(size(lb)) */
     TRY( VecDuplicate(lb,&ub) );
     TRY( VecDuplicate(ub,&qps->solQP->lambda_ub) );
@@ -523,6 +524,16 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   TRY( QPGetOperator(qp, &A ) );                  /* get hessian matrix */
   TRY( QPGetRhs(qp, &b  ) );                      /* get right-hand side vector */
   TRY( QPGetBox(qp, &lb, &ub ) );                 /* get lower and upper bounds */
+
+  //TODO make MPGP compatible with ub = NULL
+  if (!ub) {
+    /* create ub=inf(size(lb)) */
+    TRY( VecDuplicate(lb,&ub) );
+    TRY( VecDuplicate(ub,&qp->lambda_ub) );
+    TRY( VecSet(ub,PETSC_INFINITY) );
+    TRY( VecSet(qp->lambda_ub,0.0) );
+    qp->ub = ub;
+  }
 
   TRY( MPGPProj(x, lb, ub) );                     /* project x initial guess to feasible set */
 
