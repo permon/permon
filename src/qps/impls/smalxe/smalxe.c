@@ -966,6 +966,7 @@ PetscErrorCode QPSSolve_SMALXE(QPS qps)
   qps->iteration = 0;
   smalxe->inner_iter_accu = 0;
   qps->reason = KSP_CONVERGED_ITERATING;
+  TRY( QPSResetStatistics(qps_inner) );
 
   for (i=0; i<maxits; i++) {
     qps->iteration = i+1;
