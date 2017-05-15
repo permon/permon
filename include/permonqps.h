@@ -57,6 +57,7 @@ FLLOP_EXTERN PetscErrorCode QPSGetConvergenceContext(QPS,void **);
 FLLOP_EXTERN PetscErrorCode QPSGetConvergedReason(QPS,KSPConvergedReason *);
 FLLOP_EXTERN PetscErrorCode QPSGetResidualNorm(QPS qps,PetscReal *rnorm);
 FLLOP_EXTERN PetscErrorCode QPSGetIterationNumber(QPS qps,PetscInt *its);
+FLLOP_EXTERN PetscErrorCode QPSGetAccumulatedIterationNumber(QPS qps,PetscInt *its);
 FLLOP_EXTERN PetscErrorCode QPSGetAutoPostSolve(QPS qps,PetscBool *flg);
 FLLOP_EXTERN PetscErrorCode QPSGetVecs(QPS qps,PetscInt rightn, Vec **right,PetscInt leftn,Vec **left);
 

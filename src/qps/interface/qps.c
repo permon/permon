@@ -825,6 +825,17 @@ PetscErrorCode QPSGetIterationNumber(QPS qps,PetscInt *its)
 }
 
 #undef __FUNCT__  
+#define __FUNCT__ "QPSGetAccumulatedIterationNumber"
+PetscErrorCode QPSGetAccumulatedIterationNumber(QPS qps,PetscInt *its)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
+  PetscValidIntPointer(its,2);
+  *its = qps->iterations_accumulated;
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__  
 #define __FUNCT__ "QPSSetOptionsPrefix"
 PetscErrorCode QPSSetOptionsPrefix(QPS qps,const char prefix[])
 {
