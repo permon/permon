@@ -208,7 +208,7 @@ PetscErrorCode QPSSetUp(QPS qps)
 
   FllopTraceBegin;
   TRY( QPChainSetUp(qps->topQP) );
-  TRY( QPChainGetLast(qps->topQP,&qps->solQP) );
+  if (!qps->solQP) { TRY( QPChainGetLast(qps->topQP,&qps->solQP) ); }
   solqp = qps->solQP;
   TRY( PetscObjectReference((PetscObject)qps->solQP) );
   
@@ -216,7 +216,7 @@ PetscErrorCode QPSSetUp(QPS qps)
   TRY( QPSIsQPCompatible(qps,solqp,&flg) );
   if (!flg) FLLOP_SETERRQ1(((PetscObject)qps)->comm,PETSC_ERR_ARG_INCOMP,"QPS solver %s is not compatible with its attached QP",((PetscObject)qps)->type_name);
   
-  if (qps->ops->setup) TRY( (*qps->ops->setup)(qps) );
+  if (qps->ops->setup) { TRY( (*qps->ops->setup)(qps) ); }
   TRY( QPChainSetUp(solqp) );
   qps->setupcalled = PETSC_TRUE;  
   PetscFunctionReturnI(0);
