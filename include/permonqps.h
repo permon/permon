@@ -33,6 +33,7 @@ FLLOP_EXTERN PetscErrorCode QPSDestroy(QPS *qps);
 FLLOP_EXTERN PetscErrorCode QPSSetFromOptions(QPS qps);
 FLLOP_EXTERN PetscErrorCode QPSSetUp(QPS qps);
 FLLOP_EXTERN PetscErrorCode QPSReset(QPS qps);
+FLLOP_EXTERN PetscErrorCode QPSResetStatistics(QPS qps);
 FLLOP_EXTERN PetscErrorCode QPSSolve(QPS qps);
 FLLOP_EXTERN PetscErrorCode QPSPostSolve(QPS qps);
 FLLOP_EXTERN PetscErrorCode QPSIsQPCompatible(QPS qps,QP qp,PetscBool *flg);

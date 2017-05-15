@@ -246,6 +246,29 @@ PetscErrorCode QPSReset(QPS qps)
   TRY( VecDestroyVecs(qps->nwork,&qps->work) );
   TRY( PetscFree(qps->work_state) );
   qps->setupcalled = PETSC_FALSE;
+  TRY( QPSResetStatistics(qps) );
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "QPSResetStatistics"
+/*@
+   QPSResetStatistics - Reset QPSSolve statistics. Called in QPSReset().
+
+   Collective on QPS
+
+   Input parameter:
+.  qps - instance of QPS
+
+   Level: beginner
+
+.seealso QPSSolve(), QPSReset()
+@*/
+PetscErrorCode QPSResetStatistics(QPS qps)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
+  qps->iteration = 0;
   qps->iterations_accumulated = 0;
   qps->nsolves = 0;
   PetscFunctionReturn(0);
@@ -958,7 +981,7 @@ PetscErrorCode QPSViewConvergence(QPS qps, PetscViewer v)
   TRY( PetscObjectPrintClassNamePrefixType((PetscObject)qps,v) );
   TRY( PetscViewerASCIIPushTab(v) );
   TRY( PetscViewerASCIIPrintf(v,"last QPSSolve %s due to %s, KSPReason=%d, required %d iterations\n", (reason>0)?"CONVERGED":"DIVERGED", KSPConvergedReasons[reason], reason, its) );
-  TRY( PetscViewerASCIIPrintf(v,"all %d QPSSolves from the last QPSReset have required %d iterations\n", qps->nsolves, qps->iterations_accumulated) );
+  TRY( PetscViewerASCIIPrintf(v,"all %d QPSSolves from last QPSReset/QPSResetStatistics have required %d iterations\n", qps->nsolves, qps->iterations_accumulated) );
   TRY( PetscViewerASCIIPrintf(v,"tolerances: rtol=%.1e, abstol=%.1e, dtol=%.1e, maxits=%d\n",rtol,abstol,dtol,maxits) );
   if (*qps->ops->viewconvergence) {
     TRY( PetscViewerASCIIPrintf(v,"%s specific:\n", qpstype) );
