@@ -969,8 +969,6 @@ PetscErrorCode QPSSolve_SMALXE(QPS qps)
   TRY( QPSResetStatistics(qps_inner) );
 
   for (i=0; i<maxits; i++) {
-    qps->iteration = i+1;
-
     /* update Btmu (eq. con. multiplier pre-multiplied by eq. con. matrix transpose) */
     TRY( QPSSMALXEUpdateLambda_SMALXE(qps,rho) );
 
@@ -986,6 +984,7 @@ PetscErrorCode QPSSolve_SMALXE(QPS qps)
     TRY( QPSSolve(qps_inner) );
     TRY( QPSGetIterationNumber(qps_inner, &it_inner) );
     smalxe->inner_iter_accu += it_inner;
+    qps->iteration = i+1;
 
     /* update BtBu and normBu */
     TRY( smalxe->updateNormBu(qps,u,&smalxe->normBu,&smalxe->enorm) );
