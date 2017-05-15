@@ -984,7 +984,7 @@ PetscErrorCode QPSSolve_SMALXE(QPS qps)
     TRY( QPSConvergedSetUp_Inner_SMALXE(qps_inner) );
     TRY( QPSSolve(qps_inner) );
     TRY( QPSGetIterationNumber(qps_inner, &it_inner) );
-    smalxe->inner_iter_accu += it_inner+1;
+    smalxe->inner_iter_accu += it_inner;
 
     /* update BtBu and normBu */
     TRY( smalxe->updateNormBu(qps,u,&smalxe->normBu,&smalxe->enorm) );
