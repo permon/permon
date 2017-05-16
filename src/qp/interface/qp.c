@@ -1613,15 +1613,8 @@ PetscErrorCode QPSetEq(QP qp, Mat Beq, Vec ceq)
 
   if (Beq != qp->BE) {
     if (Beq) {
-      if (!qp->pf) {
-        TRY( QPPFCreate(((PetscObject)qp)->comm,&qp->pf) );
-        TRY( PetscLogObjectParent((PetscObject)qp,(PetscObject)qp->pf) );
-        TRY( PetscObjectIncrementTabLevel((PetscObject)qp->pf,(PetscObject)qp,1) );
-        //TODO dirty that we call it unconditionally
-        TRY( QPPFSetFromOptions(qp->pf) );
-      }
+      TRY( QPGetQPPF(qp, &qp->pf) );
       TRY( QPPFSetG(qp->pf, Beq) );
-
       TRY( PetscObjectReference((PetscObject)Beq) );
     }
     TRY( MatDestroy(&qp->BE) );
@@ -1722,13 +1715,7 @@ PetscErrorCode QPAddEq(QP qp, Mat Beq, Vec ceq)
   TRY( MatCreateNestPermon(PetscObjectComm((PetscObject) qp), M+1, NULL, 1, NULL, subBE, &qp->BE) );
   TRY( PetscObjectSetName((PetscObject)qp->BE,"BE") );
 
-  if (!qp->pf) {
-    TRY( QPPFCreate(((PetscObject) qp)->comm, &qp->pf) );
-    TRY( PetscLogObjectParent((PetscObject)qp,(PetscObject)qp->pf) );
-    TRY( PetscObjectIncrementTabLevel((PetscObject) qp->pf, (PetscObject) qp, 1) );
-        //TODO dirty that we call it unconditionally
-    TRY( QPPFSetFromOptions(qp->pf) );
-  }
+  TRY( QPGetQPPF(qp, &qp->pf) );
   TRY( QPPFSetG(qp->pf, qp->BE) );
 
   if (ceq) {
@@ -2455,6 +2442,14 @@ PetscErrorCode QPGetQPPF(QP qp, QPPF *pf)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
   PetscValidPointer(pf,2);
+  if (!qp->pf) {
+    TRY( QPPFCreate(PetscObjectComm((PetscObject)qp),&qp->pf) );
+    TRY( PetscLogObjectParent((PetscObject)qp,(PetscObject)qp->pf) );
+    TRY( PetscObjectIncrementTabLevel((PetscObject)qp->pf,(PetscObject)qp,1) );
+    TRY( PetscObjectSetOptionsPrefix((PetscObject)qp->pf,((PetscObject)qp)->prefix) );
+    //TODO dirty that we call it unconditionally
+    TRY( QPPFSetFromOptions(qp->pf) );
+  }
   *pf = qp->pf;
   PetscFunctionReturn(0);
 }
@@ -2537,6 +2532,10 @@ PetscErrorCode QPSetOptionsPrefix(QP qp,const char prefix[])
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
   TRY( PetscObjectSetOptionsPrefix((PetscObject)qp,prefix) );
+  if (qp->pf) {
+    TRY( QPGetQPPF(qp, &qp->pf) );
+    TRY( PetscObjectSetOptionsPrefix((PetscObject)qp->pf,prefix) );
+  }
   PetscFunctionReturn(0);
 }
 
@@ -2565,6 +2564,10 @@ PetscErrorCode QPAppendOptionsPrefix(QP qp,const char prefix[])
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
   TRY( PetscObjectAppendOptionsPrefix((PetscObject)qp,prefix) );
+  if (qp->pf) {
+    TRY( QPGetQPPF(qp, &qp->pf) );
+    TRY( PetscObjectAppendOptionsPrefix((PetscObject)qp->pf,prefix) );
+  }
   PetscFunctionReturn(0);
 }
 
