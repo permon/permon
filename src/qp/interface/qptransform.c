@@ -1373,7 +1373,7 @@ PetscErrorCode QPTNormalizeObjective(QP qp)
   TRY( PetscInfo2(qp,"||A||=%.12e, scale A by 1/||A||=%.12e\n",norm_A,1.0/norm_A) );
   TRY( PetscInfo2(qp,"||b||=%.12e, scale b by 1/||b||=%.12e\n",norm_b,1.0/norm_b) );
   TRY( QPTScaleObjectiveByScalar(qp, 1.0/norm_A, 1.0/norm_b) );
-  PetscFunctionReturn(0);
+  PetscFunctionReturnI(0);
 }
 
 #undef __FUNCT__
