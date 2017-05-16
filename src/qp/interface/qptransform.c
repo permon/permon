@@ -253,8 +253,8 @@ PetscErrorCode QPTEnforceEqByProjector(QP qp)
     TRY( QPSetEq(  child, NULL, NULL) );
   } else {
     TRY( PetscInfo(qp, "NOT only lin. eq. con. prescribed ==> lin. eq. con. are NOT eliminated\n") );
-    TRY( QPSetEq(  child, qp->BE, qp->cE) );
     TRY( QPSetQPPF(child, qp->pf) );
+    TRY( QPSetEq(  child, qp->BE, qp->cE) );
   }
   TRY( QPSetBox( child, qp->lb, qp->ub) );
   TRY( QPSetIneq(child, qp->BI, qp->cI) );
@@ -483,8 +483,8 @@ PetscErrorCode QPTHomogenizeEq(QP qp)
         "    ||b_bar||\t= %.12e  b_bar = b-A*xtilde\n",norm1,norm2,norm3,norm4) );
   }
 
-  TRY( QPSetEq(child,qp->BE,NULL) );                                            /* cE is eliminated */
   TRY( QPSetQPPF(child, qp->pf) );
+  TRY( QPSetEq(child,qp->BE,NULL) );                                            /* cE is eliminated */
 
   cineq = NULL;
   if (qp->cI) {
