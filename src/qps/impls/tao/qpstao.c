@@ -159,12 +159,18 @@ PetscErrorCode QPSSetUp_Tao(QPS qps)
   if (!lb) {
     TRY( VecDuplicate(x,&lb) );
     TRY( VecSet(lb,PETSC_NINFINITY) );
+  } else {
+    TRY( PetscObjectReference((PetscObject)lb) );
   }
   if (!ub) {
     TRY( VecDuplicate(x,&ub) );
     TRY( VecSet(ub,PETSC_INFINITY) );
+  } else {
+    TRY( PetscObjectReference((PetscObject)ub) );
   }
   TRY( TaoSetVariableBounds(tao,lb,ub) );
+  TRY( VecDestroy(&lb) );
+  TRY( VecDestroy(&ub) );
 
   /* set specific defaults for TAO inside QPSTAO */
   TRY( TaoSetType(qpstao->tao,TAOGPCG) );
