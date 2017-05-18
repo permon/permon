@@ -192,7 +192,6 @@ PetscErrorCode QPSSetUp_Tao(QPS qps)
     TRY( KSPGetPC(ksp,&pc) );
     TRY( PCSetType(pc,PCNONE) );
     TRY( KSPSetFromOptions(ksp) );
-    TRY( KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD) );
   }
 
   TRY( TaoSetUp(tao) );
