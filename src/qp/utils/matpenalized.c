@@ -75,6 +75,20 @@ PetscErrorCode MatMultTransposeAdd_Penalized(Mat Arho,Vec x,Vec x2,Vec y)
 }
 
 #undef __FUNCT__
+#define __FUNCT__ "MatGetDiagonal_Penalized"
+PetscErrorCode MatGetDiagonal_Penalized(Mat Arho,Vec d)
+{
+  Mat_Penalized *ctx;
+  PetscFunctionBegin;
+  TRY( MatShellGetContext(Arho,(void*)&ctx) );
+  TRY( MatGetDiagonal(ctx->A,d) );
+  if (!ctx->xwork) TRY( VecDuplicate(d,&ctx->xwork) );
+  TRY( MatGetDiagonal(ctx->BtB,ctx->xwork) );
+  TRY( VecAXPY(d,1.0,ctx->xwork) );
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ "MatDestroy_Penalized"
 PetscErrorCode MatDestroy_Penalized(Mat Arho) {
   Mat_Penalized *ctx;
@@ -205,6 +219,7 @@ PetscErrorCode MatCreatePenalized(QP qp,PetscReal rho,Mat *Arho_new)
   TRY( MatShellSetOperation(Arho,MATOP_MULT_ADD,(void(*)(void))MatMultAdd_Penalized) );
   TRY( MatShellSetOperation(Arho,MATOP_MULT_TRANSPOSE,(void(*)(void))MatMultTranspose_Penalized) );
   TRY( MatShellSetOperation(Arho,MATOP_MULT_TRANSPOSE_ADD,(void(*)(void))MatMultTransposeAdd_Penalized) );
+  TRY( MatShellSetOperation(Arho,MATOP_GET_DIAGONAL,(void(*)(void))MatGetDiagonal_Penalized) );
   TRY( PetscObjectComposeFunction((PetscObject)Arho,"MatPenalizedGetPenalty_Penalty_C",MatPenalizedGetPenalty_Penalty) );
   TRY( PetscObjectComposeFunction((PetscObject)Arho,"MatPenalizedSetPenalty_Penalty_C",MatPenalizedSetPenalty_Penalty) );
   TRY( PetscObjectComposeFunction((PetscObject)Arho,"MatPenalizedUpdatePenalty_Penalty_C",MatPenalizedUpdatePenalty_Penalty) );
