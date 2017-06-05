@@ -1111,7 +1111,9 @@ PetscErrorCode PermonMatCopyProperties(Mat A,Mat B)
 {
   PetscFunctionBegin;
   B->nooffprocentries            = A->nooffprocentries;
+#if PETSC_VERSION_MINOR >= 7
   B->subsetoffprocentries        = A->subsetoffprocentries;
+#endif
   B->nooffproczerorows           = A->nooffproczerorows;
   B->spd_set                     = A->spd_set;
   B->spd                         = A->spd;
