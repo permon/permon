@@ -5,6 +5,7 @@
 
 #if PETSC_VERSION_MINOR==6
 #include "private/petsc/3.6/mat/aij.h"
+#include "private/petsc/3.6/mat/dense.h"
 #include "private/petsc/3.6/mat/mpiaij.h"
 #include "private/petsc/3.6/mat/matnestimpl.h"
 #include "private/petsc/3.6/mat/normm.h"
@@ -14,6 +15,7 @@
 #include "private/petsc/3.6/pc/redundant.h"
 #elif PETSC_VERSION_MINOR==7
 #include "private/petsc/3.7/mat/aij.h"
+#include "private/petsc/3.7/mat/dense.h"
 #include "private/petsc/3.7/mat/mpiaij.h"
 #include "private/petsc/3.7/mat/matnestimpl.h"
 #include "private/petsc/3.6/mat/normm.h"
