@@ -11,7 +11,7 @@ Quick guide to PermonQP installation
 
 1. set environment variables `PETSC_DIR` and `PETSC_ARCH` pointing to a PETSc instance
    - `PETSC_ARCH` may is empty in case of "prefix" PETSc installation
-   - for more details about PETSc installation and the two environment variables, see PETSc documentation
+   - for more details about [PETSc](http://www.mcs.anl.gov/petsc/) installation and the two environment variables, see [PETSc documentation](http://www.mcs.anl.gov/petsc/documentation/)
 2. set `PERMON_DIR` variable pointing to the PermonQP directory (probably this file's parent directory)
 3. build PermonQP simply using makefile (makes use of PETSc buildsystem):
 
