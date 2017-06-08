@@ -792,8 +792,6 @@ PetscErrorCode QPSSetUp_SMALXE(QPS qps)
   PetscReal     maxeig_inner, rho;
 
   PetscFunctionBegin;
-  TRY( QPSReset_SMALXE(qps) );
-
   qp = qps->solQP;
   if (qp->cE) {
     TRY( PetscInfo(qps, "nonzero lin. eq. con. RHS prescribed ==> automatically calling QPTHomogenizeEq\n") );
