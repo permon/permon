@@ -1660,7 +1660,7 @@ PetscErrorCode QPTAllInOne(QP qp,MatInvType invType,PetscBool dual,PetscBool pro
   _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
 
   //TODO do this until QPTFromOptions supports chain updates
-  TRY( QPDestroy(&qp->child) );
+  TRY( QPRemoveChild(qp) );
 
   if (normalize) {
     TRY( QPTNormalizeObjective(qp) );
