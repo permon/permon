@@ -92,6 +92,7 @@ PetscErrorCode QPSTaoGetTao(QPS qps,Tao *tao)
     TRY( TaoAppendOptionsPrefix(qpstao->tao,"qps_") );
     TRY( PetscLogObjectParent((PetscObject)qps,(PetscObject)qpstao->tao) );
     TRY( PetscObjectIncrementTabLevel((PetscObject)qpstao->tao,(PetscObject)qps,1) );
+    TRY( TaoSetType(qpstao->tao,TAOGPCG) );
   }
   *tao = qpstao->tao;
   PetscFunctionReturn(0);
@@ -172,8 +173,7 @@ PetscErrorCode QPSSetUp_Tao(QPS qps)
   TRY( VecDestroy(&lb) );
   TRY( VecDestroy(&ub) );
 
-  /* set specific defaults for TAO inside QPSTAO */
-  TRY( TaoSetType(qpstao->tao,TAOGPCG) );
+  /* set specific stopping criterion for TAO inside QPSTAO */
   TRY( TaoSetConvergenceTest(tao,QPSTaoConverged_Tao,qps) );
   TRY( TaoSetTolerances( tao, qps->atol, qps->rtol, PETSC_DEFAULT ) );
 
