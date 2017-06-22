@@ -35,7 +35,7 @@ permon-all-gnumake-local: permon_info permon_build_gnumake
 
 permon-all-legacy-local:  permon_info deletelibs permon_build_legacy permon_shared
 
-permon_chk_all: chk_permon_pkg_dir chk_permon_dir chk_permon_petsc_dir chklib_dir chk_makej
+permon_chk_all: chk_permon_pkg_dir chk_permon_petsc_dir chklib_dir chk_makej
 
 #
 # Builds the PERMON library using PETSc legacy buildsystem
@@ -107,23 +107,6 @@ chk_permon_petsc_dir:
     echo "  does not contain compiled PETSc library (libpetsc.so or libpetsc.a)!"; \
 	  echo "You may need to run configure and make in ${PETSC_DIR}"; \
 	  echo "Note you need to use / to separate directories, not \\"; \
-          printf "********************************************************************"${PETSC_TEXT_NORMAL}"\n"; \
-	  false; fi
-
-#
-# Check if PERMON_DIR variable specified is valid
-#
-chk_permon_dir:
-	@if [ -z ${PERMON_DIR} ]; then \
-          printf ${PETSC_TEXT_HILIGHT}"*************************ERROR**************************************\n"; \
-	  echo "PERMON_DIR not specified!"; \
-          printf "********************************************************************"${PETSC_TEXT_NORMAL}"\n"; \
-    false; fi
-	@if [ ! -f ${PERMON_DIR}/${PERMON_MAIN_HEADER} ]; then \
-          printf ${PETSC_TEXT_HILIGHT}"*************************ERROR**************************************\n"; \
-	  echo "Incorrect PERMON_DIR specified: ${PERMON_DIR}!"; \
-    echo 'File ${PERMON_DIR}/${PERMON_MAIN_HEADER} does not exist.'; \
-	  echo "Note: You need to use / to separate directories, not \\"; \
           printf "********************************************************************"${PETSC_TEXT_NORMAL}"\n"; \
 	  false; fi
 
