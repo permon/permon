@@ -122,7 +122,7 @@ chk_permon_dir:
 	@if [ ! -f ${PERMON_DIR}/${PERMON_MAIN_HEADER} ]; then \
           printf ${PETSC_TEXT_HILIGHT}"*************************ERROR**************************************\n"; \
 	  echo "Incorrect PERMON_DIR specified: ${PERMON_DIR}!"; \
-    echo 'File ${PERMON_DIR}/include/fllopsys.h does not exist.'; \
+    echo 'File ${PERMON_DIR}/${PERMON_MAIN_HEADER} does not exist.'; \
 	  echo "Note: You need to use / to separate directories, not \\"; \
           printf "********************************************************************"${PETSC_TEXT_NORMAL}"\n"; \
 	  false; fi
