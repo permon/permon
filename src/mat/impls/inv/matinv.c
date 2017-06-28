@@ -78,13 +78,15 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
   mumps->id.nrhs = info;
   mumps->id.lrhs = m;
   TRY( MatCreateDensePermon(PETSC_COMM_SELF,m,info,m,info,NULL,&Rl) );
-  TRY( MatDenseGetArray(Rl,&array) );
-  mumps->id.rhs = (MumpsScalar*)array;
-  TRY( MatMumpsSetIcntl(F,25,-1) ); /* compute complete null space */
-  mumps->id.job = JOB_SOLVE;
-  PetscMUMPS_c(&mumps->id);
-  if (mumps->id.INFOG(1) < 0) SETERRQ2(PETSC_COMM_SELF,PETSC_ERR_LIB,"Error reported by MUMPS in solve phase: INFOG(1)=%d,INFOG(2)=%d\n",mumps->id.INFOG(1),mumps->id.INFOG(2));
-  TRY( MatDenseRestoreArray(Rl,&array) );
+  if (info) {
+    TRY( MatDenseGetArray(Rl,&array) );
+    mumps->id.rhs = (MumpsScalar*)array;
+    TRY( MatMumpsSetIcntl(F,25,-1) ); /* compute complete null space */
+    mumps->id.job = JOB_SOLVE;
+    PetscMUMPS_c(&mumps->id);
+    if (mumps->id.INFOG(1) < 0) SETERRQ2(PETSC_COMM_SELF,PETSC_ERR_LIB,"Error reported by MUMPS in solve phase: INFOG(1)=%d,INFOG(2)=%d\n",mumps->id.INFOG(1),mumps->id.INFOG(2));
+    TRY( MatDenseRestoreArray(Rl,&array) );
+  }
 
   TRY( MatMumpsSetIcntl(F,25,0) ); /* compute a solution next time*/
   TRY( MatCreateBlockDiag(PETSC_COMM_WORLD,Rl,&R) );
