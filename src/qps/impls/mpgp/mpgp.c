@@ -198,28 +198,9 @@ Parameters:
 */
 static PetscErrorCode MPGPProj(Vec x, Vec lb, Vec ub)
 {
-  PetscInt          i, m;
-  PetscScalar       *x_a, *lb_a, *ub_a;
-
   PetscFunctionBegin;
-  TRY( VecGetLocalSize(x,&m) );
-  TRY( VecGetArray(x,     &x_a) );
-  TRY( VecGetArray(lb,    &lb_a) );
-  if (ub) {
-    /* there is also upper bound */  
-    TRY( VecGetArray(ub,    &ub_a) ); 
-    for (i = 0; i < m; i++) {
-      x_a[i] = PetscMax(PetscMin(x_a[i],ub_a[i]),lb_a[i]);
-    }
-    TRY( VecRestoreArray(ub,&ub_a) );
-  } else {
-    /* there is only lower bound */  
-    for (i = 0; i < m; i++) {
-      x_a[i]=PetscMax(x_a[i],lb_a[i]);
-    }
-  }
-  TRY( VecRestoreArray(x, &x_a) );
-  TRY( VecRestoreArray(lb,&lb_a) );
+  if (ub) TRY( VecPointwiseMin(x,x,ub) );
+  if (lb) TRY( VecPointwiseMax(x,x,lb) );
   PetscFunctionReturn(0);
 }
 
