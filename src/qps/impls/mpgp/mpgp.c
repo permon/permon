@@ -239,6 +239,8 @@ static PetscErrorCode MPGPGrads(QPS qps, Vec x, Vec lb, Vec ub, Vec g)
   beta              = qps->work[2];
   alpha             = mpgp->alpha;
 
+  TRY( VecWAXPY(gr,-1.0,lb,x) ); /* gr = x-lb */
+  TRY( VecWAXPY(gP,-1.0,ub,x) ); /* gP = x-ub */
   /* get local arrays */
   TRY( VecGetArray(x, &x_a) );
   TRY( VecGetArray(lb, &lb_a) );
@@ -251,30 +253,29 @@ static PetscErrorCode MPGPGrads(QPS qps, Vec x, Vec lb, Vec ub, Vec g)
 
   /* go through the local array and fill the gradients */
   for (i = 0; i < m; i++){
-      if(x_a[i] > lb_a[i] && x_a[i] < ub_a[i]){
-          /* index of this component is in FREE SET */
-          phi_a[i] = g_a[i];
-          beta_a[i] = 0.0;
-          if (g_a[i] > 0) {
-            gr_a[i] = PetscMin((x_a[i]-lb_a[i])/alpha, g_a[i]);
-          } else {
-            gr_a[i] = PetscMax((x_a[i]-ub_a[i])/alpha, g_a[i]);
-          }
-      } else {
+      if (PetscAbsScalar(gr_a[i]) < mpgp->btol) {
           /* index of this component is in ACTIVE SET */
           phi_a[i] = 0.0;
           gr_a[i] = 0.0;
-
-          /* which one is active? (lower/upper) */
-          if(x_a[i] <= lb_a[i]){
-               /* active lower bound */
-               beta_a[i]= PetscMin(g_a[i],0.0);
-          }  
-
-          if(x_a[i] >= ub_a[i]){
-               /* active upper bound */
-               beta_a[i]=PetscMax(g_a[i],0.0);
-          }  
+          /* active lower bound */
+          beta_a[i]= PetscMin(g_a[i],0.0);
+      } else if (PetscAbsScalar(gP_a[i]) < mpgp->btol) {
+         /* index of this component is in ACTIVE SET */
+          phi_a[i] = 0.0;
+          gr_a[i] = 0.0;
+          /* active upper bound */
+          beta_a[i]= PetscMax(g_a[i],0.0);
+      } else {
+          /* index of this component is in FREE SET */
+          phi_a[i] = g_a[i];
+          beta_a[i] = 0.0;
+          gr_a[i] = alpha*gr_a[i];
+          if (g_a[i] > 0 && g_a[i] < gr_a[i]) {
+            gr_a[i] = g_a[i];
+          } else {
+            gr_a[i] = alpha*gP_a[i];
+            gr_a[i] = PetscMax(gr_a[i],g_a[i]);
+          }
       }
       
       /* compute projected gradient */
@@ -731,6 +732,7 @@ PetscErrorCode QPSSetFromOptions_MPGP(PetscOptionItems *PetscOptionsObject,QPS q
   if (flg1) TRY( QPSMPGPSetOperatorMaxEigenvalueTolerance(qps,maxeig_tol) );
   TRY( PetscOptionsInt("-qps_mpgp_maxeig_iter","Number of iterations to find an approximate maximum eigenvalue of the Hessian","QPSMPGPSetOperatorMaxEigenvalueIterations",mpgp->maxeig_iter,&maxeig_iter,&flg1) );
   if (flg1) TRY( QPSMPGPSetOperatorMaxEigenvalueIterations(qps,maxeig_iter) );
+  TRY( PetscOptionsReal("-qps_mpgp_btol","Boundary overshoot tolerance; default: 10*PETSC_MACHINE_EPSILON","",mpgp->btol,&mpgp->btol,&flg1) );
   TRY( PetscOptionsTail() );
   PetscFunctionReturn(0);
 }
@@ -769,6 +771,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
   mpgp->maxeig               = PETSC_DECIDE;
   mpgp->maxeig_tol           = PETSC_DECIDE;
   mpgp->maxeig_iter          = PETSC_DECIDE;
+  mpgp->btol                 = 10*PETSC_MACHINE_EPSILON; /* boundary tol */
 
   /* set the computed norms of gradients */
   //TODO: set from options/command line
