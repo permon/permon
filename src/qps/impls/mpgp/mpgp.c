@@ -419,6 +419,10 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
   ub                = qps->solQP->ub;
   y                 = qps->work[5];     /* here is used temporarily Ap vector */
   
+  if (mpgp->bchop_tol) {
+    if (lb) TRY( VecChop(lb,mpgp->bchop_tol) );
+    if (ub) TRY( VecChop(ub,mpgp->bchop_tol) );
+  }
   /* initialize alpha */
   if (mpgp->alpha_type == QPS_ARG_MULTIPLE) {
     if (mpgp->maxeig == PETSC_DECIDE) {
@@ -733,6 +737,7 @@ PetscErrorCode QPSSetFromOptions_MPGP(PetscOptionItems *PetscOptionsObject,QPS q
   TRY( PetscOptionsInt("-qps_mpgp_maxeig_iter","Number of iterations to find an approximate maximum eigenvalue of the Hessian","QPSMPGPSetOperatorMaxEigenvalueIterations",mpgp->maxeig_iter,&maxeig_iter,&flg1) );
   if (flg1) TRY( QPSMPGPSetOperatorMaxEigenvalueIterations(qps,maxeig_iter) );
   TRY( PetscOptionsReal("-qps_mpgp_btol","Boundary overshoot tolerance; default: 10*PETSC_MACHINE_EPSILON","",mpgp->btol,&mpgp->btol,&flg1) );
+  TRY( PetscOptionsReal("-qps_mpgp_bound_chop_tol","Sets boundary to 0 for |boundary|<tol ; default: 0","",mpgp->bchop_tol,&mpgp->bchop_tol,NULL) );
   TRY( PetscOptionsTail() );
   PetscFunctionReturn(0);
 }
@@ -772,6 +777,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
   mpgp->maxeig_tol           = PETSC_DECIDE;
   mpgp->maxeig_iter          = PETSC_DECIDE;
   mpgp->btol                 = 10*PETSC_MACHINE_EPSILON; /* boundary tol */
+  mpgp->bchop_tol            = 0.0; /* chop of bounds */
 
   /* set the computed norms of gradients */
   //TODO: set from options/command line

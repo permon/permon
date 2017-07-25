@@ -11,6 +11,7 @@ typedef struct {
   PetscReal maxeig_tol;
   PetscInt  maxeig_iter;
   PetscReal btol;
+  PetscReal bchop_tol;
 
   PetscReal phinorm;
   PetscReal betanorm;
