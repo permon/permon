@@ -342,13 +342,15 @@ static PetscErrorCode MPGPFeas(Vec x, Vec lb, Vec ub, Vec p, PetscScalar *alpha)
   for (i=0; i<m; i++) {
     /* max step to lower bound */
     if (p_a[i] > 0.0) {
-      alpha_temp=(x_a[i]-lb_a[i])/p_a[i];
+      alpha_temp=x_a[i]-lb_a[i];
+      alpha_temp=alpha_temp/p_a[i];
       if (alpha_temp < alpha_loc) alpha_loc=alpha_temp;
     }
 
     /* max step to upper bound */
     if (p_a[i] < 0.0) {
-      alpha_temp=(x_a[i]-ub_a[i])/p_a[i];
+      alpha_temp=x_a[i]-ub_a[i];
+      alpha_temp=alpha_temp/p_a[i];
       if (alpha_temp < alpha_loc) alpha_loc=alpha_temp;
     }
   }
