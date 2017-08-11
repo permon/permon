@@ -20,6 +20,7 @@ struct _p_QP {
   Mat              A;
   Mat              R;
   Vec              b;
+  PetscBool        b_plus;
 
   /* preconditioner */
   PC               pc;

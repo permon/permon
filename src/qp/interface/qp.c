@@ -109,6 +109,7 @@ PetscErrorCode QPCreate(MPI_Comm comm, QP *qp_new)
   qp->A            = NULL;
   qp->R            = NULL;
   qp->b            = NULL;
+  qp->b_plus       = PETSC_FALSE;
   qp->BE           = NULL;
   qp->BE_nest_count= 0;
   qp->cE           = NULL;
@@ -1415,7 +1416,7 @@ PetscErrorCode QPGetOperatorNullSpace(QP qp,Mat *R)
 #undef __FUNCT__
 #define __FUNCT__ "QPSetRhs"
 /*@
-   QPSetRhs - Set the QP right hand side (linear term).
+   QPSetRhs - Set the QP right hand side (linear term) b with '-' sign, i.e. objective function 1/2*x'*A'*x - x'*b.
 
    Collective on QP
 
@@ -1425,7 +1426,7 @@ PetscErrorCode QPGetOperatorNullSpace(QP qp,Mat *R)
 
    Level: beginner
 
-.seealso QPGetRhs(), QPSetOperator(), QPSetEq(), QPAddEq(), QPSetIneq(), QPSetBox(), QPSetInitialVector(), QPSSolve()
+.seealso QPSetRhsPlus(), QPGetRhs(), QPSetOperator(), QPSetEq(), QPAddEq(), QPSetIneq(), QPSetBox(), QPSetInitialVector(), QPSSolve()
 @*/
 PetscErrorCode QPSetRhs(QP qp,Vec b)
 {
@@ -1433,12 +1434,51 @@ PetscErrorCode QPSetRhs(QP qp,Vec b)
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
   PetscValidHeaderSpecific(b,VEC_CLASSID,2);
   PetscCheckSameComm(qp,1,b,2);
-  if (b == qp->b) PetscFunctionReturn(0);
+  if (b == qp->b && qp->b_plus == PETSC_FALSE) PetscFunctionReturn(0);
 
   TRY( VecDestroy(&qp->b) );
   qp->b = b;
   TRY( PetscObjectReference((PetscObject)b) );
+  qp->b_plus = PETSC_FALSE;
 
+  if (FllopDebugEnabled) {
+    PetscReal norm;
+    TRY( VecNorm(b,NORM_2,&norm) );
+    TRY( FllopDebug1("||b|| = %0.2e\n", norm) );
+  }
+
+  if (qp->changeListener) TRY( (*qp->changeListener)(qp) );
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "QPSetRhsPlus"
+/*@
+   QPSetRhsPlus - Set the QP right hand side (linear term) b with '+' sign, i.e. objective function 1/2*x'*A'*x + x'*b.
+
+   Collective on QP
+
+   Input Parameters:
++  qp - the QP
+-  b - right hand side
+
+   Level: beginner
+
+.seealso QPSetRhs(), QPGetRhs(), QPSetOperator(), QPSetEq(), QPAddEq(), QPSetIneq(), QPSetBox(), QPSetInitialVector(), QPSSolve()
+@*/
+PetscErrorCode QPSetRhsPlus(QP qp,Vec b)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(qp,QP_CLASSID,1);
+  PetscValidHeaderSpecific(b,VEC_CLASSID,2);
+  PetscCheckSameComm(qp,1,b,2);
+  if (b == qp->b && qp->b_plus == PETSC_TRUE) PetscFunctionReturn(0);
+  
+  TRY( VecDuplicate(b,&qp->b) );
+  TRY( VecCopy(b,qp->b) );
+  TRY( VecScale(qp->b,-1.0) );
+  qp->b_plus = PETSC_TRUE;
+  
   if (FllopDebugEnabled) {
     PetscReal norm;
     TRY( VecNorm(b,NORM_2,&norm) );

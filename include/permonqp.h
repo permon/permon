@@ -57,6 +57,7 @@ FLLOP_EXTERN PetscErrorCode QPSetOperator(QP qp,Mat A);
 FLLOP_EXTERN PetscErrorCode QPSetPC(QP qp,PC pc);
 FLLOP_EXTERN PetscErrorCode QPSetOperatorNullSpace(QP qp,Mat R);
 FLLOP_EXTERN PetscErrorCode QPSetRhs(QP qp,Vec b);
+FLLOP_EXTERN PetscErrorCode QPSetRhsPlus(QP qp,Vec b);
 FLLOP_EXTERN PetscErrorCode QPAddEq(QP qp,Mat Beq,Vec ceq);
 FLLOP_EXTERN PetscErrorCode QPSetEq(QP qp,Mat Beq,Vec ceq);
 FLLOP_EXTERN PetscErrorCode QPGetEqMultiplicityScaling(QP qp, Vec *dE, Vec *dI);
