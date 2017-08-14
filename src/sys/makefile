@@ -3,7 +3,7 @@ ALL: lib
 
 CFLAGS   =
 FFLAGS   =
-SOURCEC  = fllopinit.c petscretro.c utils.c
+SOURCEC  = permoninit.c petscretro.c utils.c
 SOURCEF  = 
 SOURCEH  = ../../include/permonpetscretro.h
 OBJSC    = ${SOURCEC:.c=.o}
