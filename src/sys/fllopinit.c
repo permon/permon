@@ -33,7 +33,7 @@ FLLOP   fllop;
 
 .seealso FllopFinalize()
 @*/
-PetscErrorCode FllopInitialize(int *argc, char ***args, const char file[])
+PetscErrorCode FllopInitialize(int *argc, char ***args, const char file[], const char help[])
 {
   PetscErrorCode ierr;
   PetscBool flg=PETSC_FALSE;
@@ -46,9 +46,9 @@ PetscErrorCode FllopInitialize(int *argc, char ***args, const char file[])
 
   if (!PetscInitializeCalled) {
     if (argc&&args) {
-      ierr = PetscInitialize(argc,args,file,(char*)0);CHKERRQ(ierr);
+      ierr = PetscInitialize(argc,args,file,help);CHKERRQ(ierr);
     } else {
-      ierr = PetscInitialize(&fllop_one,&fllop_executablePtr,file,(char*)0);CHKERRQ(ierr);
+      ierr = PetscInitialize(&fllop_one,&fllop_executablePtr,file,help);CHKERRQ(ierr);
     }
     FllopBeganPetsc=PETSC_TRUE;
     ierr=PetscInfo(0,"FLLOP successfully started PETSc.\n");CHKERRQ(ierr);
