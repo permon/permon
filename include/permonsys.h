@@ -120,8 +120,8 @@ if (FllopTraceEnabled) {\
 }\
 }
 
-FLLOP_EXTERN PetscErrorCode FllopInitialize(int *argc, char ***args, const char file[], const char help[]);
-FLLOP_EXTERN PetscErrorCode FllopFinalize();
+FLLOP_EXTERN PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], const char help[]);
+FLLOP_EXTERN PetscErrorCode PermonFinalize();
 FLLOP_EXTERN PetscErrorCode FllopProcessInfoExclusions(PetscClassId id, const char *className);
 FLLOP_EXTERN PetscErrorCode FllopMakePath(const char *dir, mode_t mode);
 

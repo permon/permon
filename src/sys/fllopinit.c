@@ -15,7 +15,7 @@ PetscClassId  FLLOP_CLASSID;
 FLLOP   fllop;
 
 #undef __FUNCT__
-#define __FUNCT__ "FllopInitialize"
+#define __FUNCT__ "PermonInitialize"
 /*@
    FllopInitialize - Initializes PETSc (if not already initialized), init FLLOP, register functions, etc.
    This function must be called in order to use the FLLOP library!
@@ -33,7 +33,7 @@ FLLOP   fllop;
 
 .seealso FllopFinalize()
 @*/
-PetscErrorCode FllopInitialize(int *argc, char ***args, const char file[], const char help[])
+PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], const char help[])
 {
   PetscErrorCode ierr;
   PetscBool flg=PETSC_FALSE;
@@ -95,7 +95,7 @@ PetscErrorCode FllopInitialize(int *argc, char ***args, const char file[], const
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "FllopFinalize"
+#define __FUNCT__ "PermonFinalize"
 /*@
    FllopFinalize - Fllop cleanup, PetscFinalize() (if FLLOP started petsc), etc.
 
@@ -103,7 +103,7 @@ PetscErrorCode FllopInitialize(int *argc, char ***args, const char file[], const
 
 .seealso FllopInitialize()
 @*/
-PetscErrorCode FllopFinalize()
+PetscErrorCode PermonFinalize()
 {
   PetscErrorCode ierr;
 
