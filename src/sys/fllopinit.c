@@ -121,7 +121,7 @@ PetscErrorCode PermonFinalize()
   PetscFunctionReturn(0);
 }
 
-#if defined(PETSC_USE_DYNAMIC_LIBRARIES)
+#if defined(PETSC_HAVE_DYNAMIC_LIBRARIES)
 /*
   PetscDLLibraryRegister_fllop - This function is called when the dynamic library
   it is in is opened.
@@ -129,8 +129,8 @@ PetscErrorCode PermonFinalize()
   This one registers all the QP methods in the libfllop.a library.
  */
 #undef __FUNCT__
-#define __FUNCT__ "PetscDLLibraryRegister_fllop"
-PetscErrorCode PetscDLLibraryRegister_fllop()
+#define __FUNCT__ "PetscDLLibraryRegister_permon"
+PetscErrorCode PetscDLLibraryRegister_permon()
 {
   PetscErrorCode ierr;
 
@@ -140,4 +140,4 @@ PetscErrorCode PetscDLLibraryRegister_fllop()
   ierr = QPSInitializePackage();CHKERRQ(ierr);
   PetscFunctionReturn(0);
 }
-#endif /* PETSC_USE_DYNAMIC_LIBRARIES */
+#endif /* PETSC_HAVE_DYNAMIC_LIBRARIES */

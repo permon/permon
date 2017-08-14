@@ -99,10 +99,8 @@ PetscErrorCode QPCreate(MPI_Comm comm, QP *qp_new)
 
   PetscFunctionBegin;
   PetscValidPointer(qp_new,2);
-
-#if !defined(PETSC_USE_DYNAMIC_LIBRARIES)
+  *qp_new = 0;
   TRY( QPInitializePackage() );
-#endif
 
   TRY( PetscHeaderCreate(qp,QP_CLASSID,"QP","Quadratic Programming Problem","QP",comm,QPDestroy,QPView) );
   TRY( PetscObjectChangeTypeName((PetscObject)qp,"QP") );

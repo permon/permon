@@ -65,10 +65,8 @@ PetscErrorCode QPSCreate(MPI_Comm comm,QPS *qps_new)
   
   PetscFunctionBegin;
   PetscValidPointer(qps_new,2);
-  
-#if !defined(PETSC_USE_DYNAMIC_LIBRARIES)
+  *qps_new = 0;
   TRY( QPSInitializePackage() );
-#endif
   
   TRY( PetscHeaderCreate(qps,QPS_CLASSID,"QPS","Quadratic Programming Solver","QPS",comm,QPSDestroy,QPSView) );
   

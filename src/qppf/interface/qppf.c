@@ -74,16 +74,14 @@ static PetscErrorCode QPPFMatMult_GtG(Mat matGtG, Vec v, Vec GtGv)
 
 #undef __FUNCT__
 #define __FUNCT__ "QPPFCreate"
-PetscErrorCode QPPFCreate(MPI_Comm comm, QPPF* newcp)
+PetscErrorCode QPPFCreate(MPI_Comm comm, QPPF* qppf_new)
 {
   QPPF cp;
 
   PetscFunctionBegin;
-  PetscValidPointer(newcp, 2);
-
-#if !defined(PETSC_USE_DYNAMIC_LIBRARIES)
+  PetscValidPointer(qppf_new, 2);
+  *qppf_new = 0;
   TRY( QPPFInitializePackage() );
-#endif
 
   TRY( PetscHeaderCreate(cp,QPPF_CLASSID,"QPPF", "Projector Factory", "QPPF", comm, QPPFDestroy, QPPFView) );
 
@@ -110,7 +108,7 @@ PetscErrorCode QPPFCreate(MPI_Comm comm, QPPF* newcp)
   cp->explicitInv         = PETSC_FALSE;
   cp->redundancy          = PETSC_DEFAULT;
 
-  *newcp = cp;
+  *qppf_new = cp;
   TRY( MPI_Barrier(comm) );
   PetscFunctionReturn(0);
 }
