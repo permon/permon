@@ -58,37 +58,62 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
   Mat Kl,R,Rl,F;
   PetscScalar *array;
   KSP ksp;
-  PetscInt m,info;
-  Mat_MUMPS *mumps;
+  PC pc;
+  PetscInt m,defect;
+  PetscBool flg;
+  const char *pkg;
+  Mat_MUMPS *mumps = NULL;
+  PetscReal null_pivot_threshold = -1e-8;
 
   PetscFunctionBeginI;
   TRY( MatInvGetKSP(imat,&ksp) );
-  TRY( KSPGetOperators(ksp,&Kl,NULL) );
+  TRY( KSPGetPC(ksp,&pc) );
+  TRY( PCGetOperators(pc,&Kl,NULL) );
   TRY( MatGetSize(Kl,&m,NULL) );
   TRY( MatPrintInfo(Kl) );
-  TRY( MatGetFactor(Kl,MATSOLVERMUMPS,MAT_FACTOR_CHOLESKY,&F) );
-  TRY( MatMumpsSetIcntl(F,24,1) ); /* null pivot detection */
-  /* TRY( MatMumpsSetIcntl(F,13,1) ); */ /* dont use ScaLAPACK */
-  TRY( MatMumpsSetCntl(F,3,-1e-8) ); /* null pivot detection */
-  mumps =(Mat_MUMPS*)F->spptr;
-  mumps->id.sym = 2;
-  TRY( MatCholeskyFactorSymbolic(F,Kl,NULL,NULL) );
-  TRY( MatCholeskyFactorNumeric(F,Kl,NULL) );
-  TRY( MatMumpsGetInfog(F,28,&info) );
-  mumps->id.nrhs = info;
-  mumps->id.lrhs = m;
-  TRY( MatCreateDensePermon(PETSC_COMM_SELF,m,info,m,info,NULL,&Rl) );
-  if (info) {
+  
+  if (Kl->spd_set && Kl->spd) {
+    defect = 0;
+  } else {
+    /* MUMPS matrix type (sym) is set to 2 automatically (see MatGetFactor_aij_mumps). */
+    TRY( PCFactorGetMatSolverPackage(pc,&pkg) );
+    TRY( PetscStrcmp(pkg,MATSOLVERMUMPS,&flg) );
+    if (flg) TRY( PetscObjectTypeCompare((PetscObject)pc,PCCHOLESKY,&flg) );
+    if (flg) {
+      /* If MUMPS Cholesky is used, avoid doubled factorization. */
+      char opts[128];
+      TRY( PetscSNPrintf(opts,sizeof(opts),"-%smat_mumps_icntl_24 1 -%smat_mumps_cntl_3 %e",((PetscObject)pc)->prefix,((PetscObject)pc)->prefix,null_pivot_threshold) );
+      TRY( PetscOptionsInsertString(NULL,opts) );
+      TRY( PCSetUp(pc) );
+      TRY( PCFactorGetMatrix(pc,&F) );
+      mumps =(Mat_MUMPS*)F->spptr;
+    } else {
+      TRY( PetscPrintf(PetscObjectComm((PetscObject)imat), "WARNING: Performing extra factorization with MUMPS Cholesky just for nullspace detection. Avoid this by setting MUMPS Cholesky as MATINV solver.\n") );
+      TRY( MatGetFactor(Kl,MATSOLVERMUMPS,MAT_FACTOR_CHOLESKY,&F) );
+      TRY( MatMumpsSetIcntl(F,24,1) ); /* null pivot detection */
+      TRY( MatMumpsSetCntl(F,3,null_pivot_threshold) ); /* null pivot threshold */
+      mumps =(Mat_MUMPS*)F->spptr;
+      TRY( MatCholeskyFactorSymbolic(F,Kl,NULL,NULL) );
+      TRY( MatCholeskyFactorNumeric(F,Kl,NULL) );
+    }
+    TRY( MatMumpsGetInfog(F,28,&defect) ); /* get numerical defect, i.e. number of null pivots encountered during factorization */
+  }
+
+  TRY( MatCreateDensePermon(PETSC_COMM_SELF,m,defect,m,defect,NULL,&Rl) );
+
+  if (defect) {
     TRY( MatDenseGetArray(Rl,&array) );
     mumps->id.rhs = (MumpsScalar*)array;
+    mumps->id.lrhs = m;
+    mumps->id.nrhs = defect;
     TRY( MatMumpsSetIcntl(F,25,-1) ); /* compute complete null space */
     mumps->id.job = JOB_SOLVE;
     PetscMUMPS_c(&mumps->id);
     if (mumps->id.INFOG(1) < 0) SETERRQ2(PETSC_COMM_SELF,PETSC_ERR_LIB,"Error reported by MUMPS in solve phase: INFOG(1)=%d,INFOG(2)=%d\n",mumps->id.INFOG(1),mumps->id.INFOG(2));
     TRY( MatDenseRestoreArray(Rl,&array) );
+    TRY( MatMumpsSetIcntl(F,25,0) ); /* perform a normal solution step next time */
   }
 
-  TRY( MatMumpsSetIcntl(F,25,0) ); /* compute a solution next time*/
   TRY( MatCreateBlockDiag(PETSC_COMM_WORLD,Rl,&R) );
   TRY( PetscObjectSetName((PetscObject)R,"R") );
   TRY( FllopPetscObjectInheritName((PetscObject)Rl,(PetscObject)R,"_loc") );
