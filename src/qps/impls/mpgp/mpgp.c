@@ -270,11 +270,11 @@ static PetscErrorCode MPGPGrads(QPS qps, Vec x, Vec lb, Vec ub, Vec g)
           phi_a[i] = g_a[i];
           beta_a[i] = 0.0;
           gr_a[i] = alpha*gr_a[i];
-          if (g_a[i] > 0 && g_a[i] < gr_a[i]) {
-            gr_a[i] = g_a[i];
+          if (g_a[i] > 0) {
+            if (g_a[i] < gr_a[i]) gr_a[i] = g_a[i];
           } else {
             gr_a[i] = alpha*gP_a[i];
-            gr_a[i] = PetscMax(gr_a[i],g_a[i]);
+            if (g_a[i] > gr_a[i]) gr_a[i] = g_a[i];
           }
       }
       
