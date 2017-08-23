@@ -87,6 +87,9 @@ FLLOP_EXTERN PetscErrorCode QPSKSPGetKSP(QPS qps,KSP *ksp);
 FLLOP_EXTERN PetscErrorCode QPSKSPSetType(QPS qps,KSPType type);
 FLLOP_EXTERN PetscErrorCode QPSKSPGetType(QPS qps,KSPType *type);
 
+/*TAO */
+FLLOP_EXTERN PetscErrorCode QPSTaoSetType(QPS qps,const TaoType type);
+FLLOP_EXTERN PetscErrorCode QPSTaoGetType(QPS qps,const TaoType *type);
 FLLOP_EXTERN PetscErrorCode QPSTaoGetTao(QPS qps,Tao *tao);
 
 /* MPGP */

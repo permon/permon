@@ -100,7 +100,7 @@ PetscErrorCode QPSTaoGetTao(QPS qps,Tao *tao)
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSTaoSetType"
-PetscErrorCode QPSTaoSetType(QPS qps,TaoType type)
+PetscErrorCode QPSTaoSetType(QPS qps,const TaoType type)
 {
   PetscBool flg;
   QPS_Tao *qpstao;
@@ -117,7 +117,7 @@ PetscErrorCode QPSTaoSetType(QPS qps,TaoType type)
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSTaoGetType"
-PetscErrorCode QPSTaoGetType(QPS qps, const TaoType *type)
+PetscErrorCode QPSTaoGetType(QPS qps,const TaoType *type)
 {
   PetscBool flg;
   QPS_Tao *qpstao;
