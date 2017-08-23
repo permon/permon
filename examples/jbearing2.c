@@ -51,6 +51,7 @@ typedef struct {
   DM          dm;           /* distributed array data structure */
   Mat         A;            /* Quadratic Objective term */
   Vec         B;            /* Linear Objective term */
+  Vec         xl,xu;        /* bounds vectors */
 } AppCtx;
 
 /* User-defined routines */
@@ -60,7 +61,7 @@ static PetscErrorCode FormHessian(Tao,Vec,Mat, Mat, void *);
 static PetscErrorCode ComputeB(AppCtx*);
 static PetscErrorCode Monitor(Tao, void*);
 static PetscErrorCode ConvergenceTest(Tao, void*);
-extern PetscErrorCode CallPermonAndCompareResults(Tao, Vec, Vec, void*);
+extern PetscErrorCode CallPermonAndCompareResults(Tao, void*);
 
 #undef __FUNCT__
 #define __FUNCT__ "main"
@@ -70,7 +71,6 @@ int main( int argc, char **argv )
   PetscInt           Nx, Ny;             /* number of processors in x- and y- directions */
   PetscInt           m;               /* number of local elements in vectors */
   Vec                x;                  /* variables vector */
-  Vec                xl,xu;                  /* bounds vectors */
   PetscReal          d1000 = 1000;
   PetscBool          flg;              /* A return variable when checking for user options */
   Tao                tao;                /* Tao solver context */
@@ -143,11 +143,11 @@ int main( int argc, char **argv )
   ierr = TaoSetHessianRoutine(tao,user.A,user.A,FormHessian,(void*)&user);CHKERRQ(ierr);
 
   /* Set a routine that defines the bounds */
-  ierr = VecDuplicate(x,&xl);CHKERRQ(ierr);
-  ierr = VecDuplicate(x,&xu);CHKERRQ(ierr);
-  ierr = VecSet(xl, zero);CHKERRQ(ierr);
-  ierr = VecSet(xu, d1000);CHKERRQ(ierr);
-  ierr = TaoSetVariableBounds(tao,xl,xu);CHKERRQ(ierr);
+  ierr = VecDuplicate(x,&user.xl);CHKERRQ(ierr);
+  ierr = VecDuplicate(x,&user.xu);CHKERRQ(ierr);
+  ierr = VecSet(user.xl, zero);CHKERRQ(ierr);
+  ierr = VecSet(user.xu, d1000);CHKERRQ(ierr);
+  ierr = TaoSetVariableBounds(tao,user.xl,user.xu);CHKERRQ(ierr);
 
   ierr = TaoGetKSP(tao,&ksp);CHKERRQ(ierr);
   if (ksp) {
@@ -170,17 +170,15 @@ int main( int argc, char **argv )
   ierr = TaoSolve(tao);CHKERRQ(ierr);
   
   /* Call PERMON solver and compare results */
-  ierr = CallPermonAndCompareResults(tao, xl, xu, &user);CHKERRQ(ierr);
+  ierr = CallPermonAndCompareResults(tao, &user);CHKERRQ(ierr);
 
   /* Free PETSc data structures */
   ierr = VecDestroy(&x);CHKERRQ(ierr);
-  ierr = VecDestroy(&xl);CHKERRQ(ierr);
-  ierr = VecDestroy(&xu);CHKERRQ(ierr);
+  ierr = VecDestroy(&user.xl);CHKERRQ(ierr);
+  ierr = VecDestroy(&user.xu);CHKERRQ(ierr);
   ierr = MatDestroy(&user.A);CHKERRQ(ierr);
   ierr = VecDestroy(&user.B);CHKERRQ(ierr);
-  /* Free TAO data structures */
   ierr = TaoDestroy(&tao);CHKERRQ(ierr);
-
   ierr = DMDestroy(&user.dm);CHKERRQ(ierr);
 
   PermonFinalize();
@@ -477,13 +475,12 @@ PetscErrorCode ConvergenceTest(Tao tao, void *ctx)
 
 #undef __FUNCT__
 #define __FUNCT__ "CallPermonAndCompareResults"
-PetscErrorCode CallPermonAndCompareResults(Tao tao, Vec lb, Vec ub, void *ctx)
+PetscErrorCode CallPermonAndCompareResults(Tao tao, void *ctx)
 {
   PetscErrorCode     ierr;
   AppCtx*        user=(AppCtx*)ctx;
   QP             qp;
   QPS            qps;
-  //const QPSType  qpstype;
   Vec            x_qp;      /* approx solution for qp */
   Vec            x_tao;     /* approx solution for tao */
   Vec            x_diff;
@@ -496,13 +493,12 @@ PetscErrorCode CallPermonAndCompareResults(Tao tao, Vec lb, Vec ub, void *ctx)
   
   /* Compute Hessian */
   ierr = FormHessian(tao, NULL, user->A, NULL, (void*) user);CHKERRQ(ierr);
-  //ierr = FormFunctionGradient(tao, PETSC_DECIDE, PETSC_DECIDE, PETSC_DECIDE, (void*) user);CHKERRQ(ierr);
   
   /* Prescribe the QP problem. */
   ierr = QPCreate(PETSC_COMM_WORLD, &qp);CHKERRQ(ierr);
   ierr = QPSetOperator(qp, user->A);CHKERRQ(ierr);
   ierr = QPSetRhsPlus(qp, user->B);CHKERRQ(ierr);
-  ierr = QPSetBox(qp, lb, ub);CHKERRQ(ierr);
+  ierr = QPSetBox(qp, user->xl, user->xu);CHKERRQ(ierr);
   ierr = VecDuplicate(user->B,&x_diff);CHKERRQ(ierr);
   
   /* Create the QP solver (QPS). */
@@ -520,12 +516,11 @@ PetscErrorCode CallPermonAndCompareResults(Tao tao, Vec lb, Vec ub, void *ctx)
   ierr = PetscPrintf(PETSC_COMM_WORLD,"Value of Tao are gatol = %e, grtol =  %e, gttol = %e  \n",gatol, grtol, gttol);CHKERRQ(ierr);
 
   /* Set default QPS options. */
-  rtol  = grtol;//1e-10;//1.e-2/((m+1)*(n+1));
-  atol  = gatol;//PETSC_DEFAULT;
+  rtol  = grtol;
+  atol  = gatol;
   dtol  = PETSC_DEFAULT;
   maxit = PETSC_DEFAULT;
   ierr = QPSSetTolerances(qps, rtol, atol, dtol, maxit);CHKERRQ(ierr);  
-  //ierr = QPSSetTolerances(qps, 1e-10,1e-10,1e-10, PETSC_DEFAULT);CHKERRQ(ierr); 
 
   /* Set the QPS monitor */
   ierr = QPSMonitorSet(qps,QPSMonitorDefault,NULL,0);CHKERRQ(ierr);
@@ -548,7 +543,6 @@ PetscErrorCode CallPermonAndCompareResults(Tao tao, Vec lb, Vec ub, void *ctx)
   
   ierr = QPSDestroy(&qps);CHKERRQ(ierr);
   ierr = QPDestroy(&qp);CHKERRQ(ierr);
-  //ierr = VecDestroy(&x_tao);CHKERRQ(ierr);
   ierr = VecDestroy(&x_diff);CHKERRQ(ierr);
   PetscFunctionReturnI(0);
   
