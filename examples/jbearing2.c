@@ -508,8 +508,9 @@ PetscErrorCode CallPermonAndCompareResults(Tao tao, Vec lb, Vec ub, void *ctx)
   /* Create the QP solver (QPS). */
   ierr = QPSCreate(PETSC_COMM_WORLD, &qps);CHKERRQ(ierr);
   
-  /* Set QPS type to TAO (QPS TAO wrapper). */
+  /* Set QPS type to TAO within QPS TAO wrapper. */
   ierr = QPSSetType(qps,QPSTAO);CHKERRQ(ierr);
+  ierr = QPSTaoSetType(qps,TAOBLMVM);CHKERRQ(ierr);
 
   /* Insert the QP problem into the solver. */
   ierr = QPSSetQP(qps, qp);CHKERRQ(ierr);
