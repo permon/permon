@@ -84,6 +84,7 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
       char opts[128];
       TRY( PetscSNPrintf(opts,sizeof(opts),"-%smat_mumps_icntl_24 1 -%smat_mumps_cntl_3 %e",((PetscObject)pc)->prefix,((PetscObject)pc)->prefix,null_pivot_threshold) );
       TRY( PetscOptionsInsertString(NULL,opts) );
+      TRY( PCSetFromOptions(pc) );
       TRY( PCSetUp(pc) );
       TRY( PCFactorGetMatrix(pc,&F) );
       mumps =(Mat_MUMPS*)F->spptr;
@@ -409,6 +410,7 @@ static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
     A_inner = Areg;
   }
 
+  TRY( FllopPetscObjectInheritPrefixIfNotSet((PetscObject)Areg,(PetscObject)imat,"mat_inv_") );
   TRY( FllopPetscObjectInheritPrefixIfNotSet((PetscObject)A_inner,(PetscObject)imat,"mat_inv_") );
   if (inv->setfromoptionscalled) {
     TRY( PetscInfo1(fllop,"setting inner matrix with prefix %s from options\n",((PetscObject)A_inner)->prefix) );
