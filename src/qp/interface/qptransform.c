@@ -1027,8 +1027,7 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
   TRY( MatSetFromOptions(Kplus) );
 
   TRY( PetscLogEventBegin(QPT_Dualize_FactorK,qp,Kplus,0,0) );
-  TRY( MatAssemblyBegin(Kplus, MAT_FINAL_ASSEMBLY) );
-  TRY( MatAssemblyEnd(Kplus, MAT_FINAL_ASSEMBLY) );
+  TRY( MatInvSetUp(Kplus) );
   TRY( PetscLogEventEnd  (QPT_Dualize_FactorK,qp,Kplus,0,0) );
 
   TRY( PetscOptionsGetBool(NULL,NULL,"-qpt_dualize_Kplus_mp",&true_mp,NULL) );
