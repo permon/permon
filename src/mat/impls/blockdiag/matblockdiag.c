@@ -240,7 +240,7 @@ PetscErrorCode MatMultTransposeAdd_BlockDiag(Mat mat,Vec v1,Vec v2,Vec v3)
   TRY( VecGetLocalVectorRead(v1,data->yloc) );
   TRY( VecGetLocalVector(v2,data->xloc1) ); /* v2 can be same as v3 */
   TRY( VecGetLocalVector(v3,data->xloc) );
-  TRY( MatMultAddTranspose(data->localBlock, data->yloc, data->xloc1, data->xloc) );
+  TRY( MatMultTransposeAdd(data->localBlock, data->yloc, data->xloc1, data->xloc) );
   TRY( VecRestoreLocalVectorRead(v1,data->yloc) );
   TRY( VecRestoreLocalVector(v2,data->xloc1) );
   TRY( VecRestoreLocalVector(v3,data->xloc) );
