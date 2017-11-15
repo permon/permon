@@ -16,7 +16,7 @@ typedef struct {
 
 typedef struct {
 	Mat localBlock;	                  /* local (sequential) blocks of BlockDiag */
-	Vec xloc, yloc, yloc1;            /* local work vectors */ 
+	Vec xloc, yloc, xloc1, yloc1;            /* local work vectors */ 
   Vec *cols_loc;
 } Mat_BlockDiag;
 

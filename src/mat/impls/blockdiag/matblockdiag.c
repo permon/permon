@@ -237,10 +237,13 @@ PetscErrorCode MatMultTransposeAdd_BlockDiag(Mat mat,Vec v1,Vec v2,Vec v3)
 {
   Mat_BlockDiag *data = (Mat_BlockDiag*) mat->data;
   PetscFunctionBegin;
-  TRY( VecCopy(v1, data->xloc) );
-  TRY( VecCopy(v2, data->yloc1) );
-  TRY( MatMultTransposeAdd(data->localBlock, data->xloc, data->yloc1, data->yloc) );
-  TRY( VecCopy(data->yloc, v3) );
+  TRY( VecGetLocalVectorRead(v1,data->yloc) );
+  TRY( VecGetLocalVector(v2,data->xloc1) ); /* v2 can be same as v3 */
+  TRY( VecGetLocalVector(v3,data->xloc) );
+  TRY( MatMultAddTranspose(data->localBlock, data->yloc, data->xloc1, data->xloc) );
+  TRY( VecRestoreLocalVectorRead(v1,data->yloc) );
+  TRY( VecRestoreLocalVector(v2,data->xloc1) );
+  TRY( VecRestoreLocalVector(v3,data->xloc) );
   PetscFunctionReturn(0);
 }
 
@@ -340,6 +343,7 @@ PetscErrorCode MatDestroy_BlockDiag(Mat mat) {
   TRY( MatDestroy(&data->localBlock) );
   TRY( VecDestroy(&data->xloc) );
   TRY( VecDestroy(&data->yloc) );
+  TRY( VecDestroy(&data->xloc1) );
   TRY( VecDestroy(&data->yloc1) );
   TRY( PetscFree(data) );
   PetscFunctionReturn(0);
@@ -626,6 +630,7 @@ FLLOP_EXTERN PetscErrorCode MatCreate_BlockDiag(Mat B) {
   data->localBlock           = NULL;
   data->xloc                 = NULL;
   data->yloc                 = NULL;
+  data->xloc1                = NULL;
   data->yloc1                = NULL;
 
   /* Set operations of matrix. */
@@ -704,6 +709,7 @@ PetscErrorCode MatCreateBlockDiag(MPI_Comm comm, Mat block, Mat *B_new) {
   /* Intermediate vectors for MatMult. */
   TRY( MatCreateVecs(block, &data->xloc, &data->yloc) );
   TRY( VecDuplicate(data->yloc, &data->yloc1));
+  TRY( VecDuplicate(data->xloc, &data->xloc1));
 
   {
     IS l2gris,l2gcis;
