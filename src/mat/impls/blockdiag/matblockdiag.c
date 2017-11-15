@@ -21,17 +21,18 @@ PetscErrorCode MatZeroRowsColumns_BlockDiag(Mat A,PetscInt n,const PetscInt rows
   TRY( PetscMalloc(n*sizeof(PetscInt),&rows_loc) );
   TRY( ISGlobalToLocalMappingApply(A->rmap->mapping,IS_GTOLM_DROP,n,rows,NULL,rows_loc) );
   if (x) {
-    TRY( VecCopy(x,xloc) );
+    TRY( VecGetLocalVectorRead(x,xloc) );
   } else {
     xloc = NULL;
   }
   if (b) {
-    TRY( VecCopy(b,bloc) );
+    TRY( VecGetLocalVector(b,bloc) );
   } else {
     bloc = NULL;
   }
   TRY( MatZeroRowsColumns(Aloc,nloc,rows_loc,diag,xloc,bloc) );
-  if (b) TRY( VecCopy(bloc,b) );
+  if (x) TRY( VecRestoreLocalVectorRead(x,xloc) );
+  if (b) TRY( VecRestoreLocalVector(b,bloc) );
   TRY( PetscFree(rows_loc) );
   PetscFunctionReturn(0);
 }
@@ -51,17 +52,18 @@ PetscErrorCode MatZeroRows_BlockDiag(Mat A,PetscInt n,const PetscInt rows[],Pets
   TRY( PetscMalloc(n*sizeof(PetscInt),&rows_loc) );
   TRY( ISGlobalToLocalMappingApply(A->rmap->mapping,IS_GTOLM_DROP,n,rows,NULL,rows_loc) );
   if (x) {
-    TRY( VecCopy(x,xloc) );
+    TRY( VecGetLocalVectorRead(x,xloc) );
   } else {
     xloc = NULL;
   }
   if (b) {
-    TRY( VecCopy(b,bloc) );
+    TRY( VecGetLocalVector(b,bloc) );
   } else {
     bloc = NULL;
   }
   TRY( MatZeroRows(Aloc,nloc,rows_loc,diag,xloc,bloc) );
-  if (b) TRY( VecCopy(bloc,b) );
+  if (x) TRY( VecRestoreLocalVectorRead(x,xloc) );
+  if (b) TRY( VecRestoreLocalVector(b,bloc) );
   TRY( PetscFree(rows_loc) );
   PetscFunctionReturn(0);
 }
@@ -190,9 +192,11 @@ PetscErrorCode MatMult_BlockDiag(Mat mat, Vec right, Vec left) {
   Mat_BlockDiag *data = (Mat_BlockDiag*) mat->data;
 
   PetscFunctionBegin;
-  TRY( VecCopy(right, data->xloc) );
+  TRY( VecGetLocalVectorRead(right,data->xloc) );
+  TRY( VecGetLocalVector(left,data->yloc) );
   TRY( MatMult(data->localBlock, data->xloc, data->yloc) );
-  TRY( VecCopy(data->yloc, left) );
+  TRY( VecRestoreLocalVectorRead(right,data->xloc) );
+  TRY( VecRestoreLocalVector(left,data->yloc) );
   PetscFunctionReturn(0);
 }
 
@@ -202,9 +206,11 @@ PetscErrorCode MatMultTranspose_BlockDiag(Mat mat, Vec right, Vec left) {
   Mat_BlockDiag *data = (Mat_BlockDiag*) mat->data;
 
   PetscFunctionBegin;
-  TRY( VecCopy(right, data->yloc) );
+  TRY( VecGetLocalVectorRead(right,data->yloc) );
+  TRY( VecGetLocalVector(left,data->xloc) );
   TRY( MatMultTranspose(data->localBlock, data->yloc, data->xloc) );
-  TRY( VecCopy(data->xloc, left) );
+  TRY( VecRestoreLocalVectorRead(right,data->yloc) );
+  TRY( VecRestoreLocalVector(left,data->xloc) );
   PetscFunctionReturn(0);
 }
 
@@ -215,10 +221,13 @@ PetscErrorCode MatMultAdd_BlockDiag(Mat mat,Vec v1,Vec v2,Vec v3)
   Mat_BlockDiag *data = (Mat_BlockDiag*) mat->data;
 
   PetscFunctionBegin;
-  TRY( VecCopy(v1, data->xloc) );
-  TRY( VecCopy(v2, data->yloc1) );
+  TRY( VecGetLocalVectorRead(v1,data->xloc) );
+  TRY( VecGetLocalVector(v2,data->yloc1) ); /* v2 can be same as v3 */
+  TRY( VecGetLocalVector(v3,data->yloc) );
   TRY( MatMultAdd(data->localBlock, data->xloc, data->yloc1, data->yloc) );
-  TRY( VecCopy(data->yloc, v3) );
+  TRY( VecRestoreLocalVectorRead(v1,data->xloc) );
+  TRY( VecRestoreLocalVector(v2,data->yloc1) );
+  TRY( VecRestoreLocalVector(v3,data->yloc) );
   PetscFunctionReturn(0);
 }
 
@@ -227,7 +236,6 @@ PetscErrorCode MatMultAdd_BlockDiag(Mat mat,Vec v1,Vec v2,Vec v3)
 PetscErrorCode MatMultTransposeAdd_BlockDiag(Mat mat,Vec v1,Vec v2,Vec v3)
 {
   Mat_BlockDiag *data = (Mat_BlockDiag*) mat->data;
-
   PetscFunctionBegin;
   TRY( VecCopy(v1, data->xloc) );
   TRY( VecCopy(v2, data->yloc1) );
