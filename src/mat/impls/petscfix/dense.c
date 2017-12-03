@@ -52,6 +52,39 @@ PetscErrorCode MatRestoreColumnVectors_DensePermon(Mat A, Vec *cols[])
   PetscFunctionReturn(0);
 }
 
+/* TODO: remove in 3.8 */
+#undef __FUNCT__
+#define __FUNCT__ "MatMatTransposeMult_SeqDensePermon_SeqDensePermon"
+PetscErrorCode MatMatTransposeMult_SeqDensePermon_SeqDensePermon(Mat A,Mat B,MatReuse scall, PetscReal fill,Mat *C)
+{
+  PetscInt       m=A->rmap->n,n=B->rmap->n;
+  Mat            Cmat;
+	Mat_SeqDense   *a = (Mat_SeqDense*)A->data;
+  Mat_SeqDense   *b = (Mat_SeqDense*)B->data;
+  PetscBLASInt   bm,bn,bk;
+  PetscScalar    _DOne=1.0,_DZero=0.0;
+
+  PetscFunctionBegin;
+  if (A->rmap->n != B->rmap->n) SETERRQ2(PETSC_COMM_SELF,PETSC_ERR_ARG_SIZ,"A->rmap->n %d != B->rmap->n %d\n",A->rmap->n,B->rmap->n);
+	if (scall == MAT_INITIAL_MATRIX){
+	  TRY( MatCreate(PETSC_COMM_SELF,&Cmat) );
+  	TRY( MatSetSizes(Cmat,m,n,m,n) );
+  	TRY( MatSetType(Cmat,MATSEQDENSE) );
+  	TRY( MatSeqDenseSetPreallocation(Cmat,NULL) );
+  	Cmat->assembled = PETSC_TRUE;
+	}
+  Mat_SeqDense   *c = (Mat_SeqDense*)Cmat->data;
+
+  TRY( PetscBLASIntCast(A->rmap->n,&bm) );
+  TRY( PetscBLASIntCast(B->rmap->n,&bn) );
+  TRY( PetscBLASIntCast(A->cmap->n,&bk) );
+
+  PetscStackCallBLAS("BLASgemm",BLASgemm_("N","T",&bm,&bn,&bk,&_DOne,a->v,&a->lda,b->v,&b->lda,&_DZero,c->v,&c->lda));
+	MatConvert_SeqDense_SeqDensePermon(Cmat,MATSEQDENSEPERMON,MAT_INPLACE_MATRIX,&Cmat);
+  *C = Cmat;
+  PetscFunctionReturn(0);
+}
+
 #undef __FUNCT__
 #define __FUNCT__ "MatMultTranspose_SeqDensePermon"
 PetscErrorCode MatMultTranspose_SeqDensePermon(Mat A,Vec xx,Vec yy)
@@ -148,6 +181,7 @@ PETSC_EXTERN PetscErrorCode MatConvert_SeqDense_SeqDensePermon(Mat A,MatType typ
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatGetColumnVectors_C",MatGetColumnVectors_DensePermon) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatRestoreColumnVectors_C",MatRestoreColumnVectors_DensePermon) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatConvert_seqdense_seqdensepermon",MatConvert_SeqDense_SeqDensePermon) );
+  TRY( PetscObjectComposeFunction((PetscObject)B,"MatMatTransposeMult_seqdensepermon_seqdensepermon_C",MatMatTransposeMult_SeqDensePermon_SeqDensePermon) );
   
   *newmat = B;
   PetscFunctionReturn(0);
