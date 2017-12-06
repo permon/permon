@@ -946,7 +946,20 @@ PetscErrorCode FllopMatMatMult(Mat A,Mat B,MatReuse scall,PetscReal fill,Mat *C)
     TRY( MatTransposeMatMult(T,B,scall,fill,C) );
   } else if (flg_B) {
     TRY( MatTransposeGetMat(B,&T) );
-    TRY( MatMatTransposeMult(A,T,scall,fill,C) );
+    //TODO PETSc workaround MatMatTransposeMult
+    PetscErrorCode (*transposematmult)(Mat,Mat,MatReuse,PetscReal,Mat*) = NULL;
+    char multname[256];
+    TRY( PetscStrcpy(multname,"MatMatTransposeMult_") );
+    TRY( PetscStrcat(multname,((PetscObject)A)->type_name) );
+    TRY( PetscStrcat(multname,"_") );
+    TRY( PetscStrcat(multname,((PetscObject)T)->type_name) );
+    TRY( PetscStrcat(multname,"_C") ); /* e.g., multname = "MatMatMult_seqdense_seqaij_C" */
+    TRY( PetscObjectQueryFunction((PetscObject)A,multname,&transposematmult) );
+    if (!transposematmult) SETERRQ2(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_INCOMP,"MatMatTransposeMult requires A, %s, to be compatible with B, %s",((PetscObject)A)->type_name,((PetscObject)T)->type_name);
+    TRY( PetscLogEventBegin(MAT_TransposeMatMult,A,T,0,0) );
+    TRY( (*transposematmult)(A,T,scall,fill,C) );
+    TRY( PetscLogEventEnd(MAT_TransposeMatMult,A,T,0,0) );
+    //TRY( MatMatTransposeMult(A,T,scall,fill,C) );
   } else {
     TRY( MatMatMult(A,B,scall,fill,C) );
   }
