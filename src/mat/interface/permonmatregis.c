@@ -9,7 +9,7 @@ FLLOP_EXTERN PetscErrorCode MatCreate_SeqDensePermon(Mat);
 FLLOP_EXTERN PetscErrorCode MatCreate_MPIDensePermon(Mat);
   
 #undef __FUNCT__  
-#define __FUNCT__ "FllopMatRegisterAll"
+#define __FUNCT__ "PermonMatRegisterAll"
 PetscErrorCode  FllopMatRegisterAll()
 {
   PetscFunctionBegin;

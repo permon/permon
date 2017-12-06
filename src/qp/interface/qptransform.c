@@ -891,7 +891,7 @@ static PetscErrorCode MatTransposeMatMult_R_Bt(Mat R, Mat Bt, Mat *G_new)
     Mat G_arr[2];
     Mat Rt;
 
-    TRY( FllopMatTranspose(R,MAT_TRANSPOSE_CHEAPEST,&Rt) );
+    TRY( PermonMatTranspose(R,MAT_TRANSPOSE_CHEAPEST,&Rt) );
 
     TRY( MatCreateTimer(Rt,&G_arr[1]) );
     TRY( MatCreateTimer(Bt,&G_arr[0]) );
@@ -916,7 +916,7 @@ static PetscErrorCode MatTransposeMatMult_R_Bt(Mat R, Mat Bt, Mat *G_new)
     } else {
       TRY( PetscPrintf(PetscObjectComm((PetscObject)Bt), "WARNING: MatTransposeMatMult not applicable, falling back to MatMatMultByColumns\n") );
       TRY( MatTransposeMatMultByColumns(Bt,R,PETSC_TRUE,&Gt) );
-      TRY( FllopMatTranspose(Gt,MAT_TRANSPOSE_CHEAPEST,&G) );
+      TRY( PermonMatTranspose(Gt,MAT_TRANSPOSE_CHEAPEST,&G) );
       TRY( MatDestroy(&Gt) );
     }
   } else {
@@ -979,9 +979,9 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
 
   TRY( PetscLogEventBegin(QPT_Dualize_PrepareBt,qp,0,0,0) );
   {
-    TRY( FllopMatTranspose(qp->B,MAT_TRANSPOSE_CHEAPEST,&Bt) );
+    TRY( PermonMatTranspose(qp->B,MAT_TRANSPOSE_CHEAPEST,&Bt) );
     if (B_explicit) {
-      TRY( FllopMatTranspose(Bt,MAT_TRANSPOSE_EXPLICIT,&B) );
+      TRY( PermonMatTranspose(Bt,MAT_TRANSPOSE_EXPLICIT,&B) );
     } else {
       /* in this case B remains the same */
       B = qp->B;
@@ -1049,7 +1049,7 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
     } else {
       TRY( PetscInfo(qp,"creating left generalized inverse\n") );
     }
-    TRY( FllopMatTranspose(R,MAT_TRANSPOSE_CHEAPEST,&Rt) );
+    TRY( PermonMatTranspose(R,MAT_TRANSPOSE_CHEAPEST,&Rt) );
     TRY( PetscObjectSetName((PetscObject)Rt,"Rt") );
     TRY( QPPFCreate(comm,&pf_R) );
     TRY( PetscObjectSetOptionsPrefix((PetscObject)pf_R,"Kplus_") );
@@ -1588,8 +1588,8 @@ PetscErrorCode QPTSplitBE(QP qp)
   TRY( PetscLogEventBegin(QPT_SplitBE,qp,0,0,0) );
   TRY( QPTransformBegin(QPTSplitBE, NULL, NULL, QP_DUPLICATE_COPY_POINTERS, &qp, &child, &comm) );
 
-  TRY( FllopMatTranspose(child->BE, MAT_TRANSPOSE_CHEAPEST, &Bet) );
-  TRY( FllopMatTranspose(Bet, MAT_TRANSPOSE_EXPLICIT, &Be) );
+  TRY( PermonMatTranspose(child->BE, MAT_TRANSPOSE_CHEAPEST, &Bet) );
+  TRY( PermonMatTranspose(Bet, MAT_TRANSPOSE_EXPLICIT, &Be) );
   TRY( MatDestroy(&Bet) );
 
   TRY( MatGetOwnershipRange(Be, &ilo, &ihi) );
@@ -1621,13 +1621,13 @@ PetscErrorCode QPTSplitBE(QP qp)
   TRY( MatGetSubMatrix(Be, isrowd, NULL, MAT_INITIAL_MATRIX, &Bd) );
   TRY( MatDestroy(&Be) );
 
-  TRY( FllopMatTranspose(Bg, MAT_TRANSPOSE_EXPLICIT, &Bgt) );
+  TRY( PermonMatTranspose(Bg, MAT_TRANSPOSE_EXPLICIT, &Bgt) );
   TRY( MatDestroy(&Bg) );
-  TRY( FllopMatTranspose(Bgt, MAT_TRANSPOSE_CHEAPEST, &Bg) );
+  TRY( PermonMatTranspose(Bgt, MAT_TRANSPOSE_CHEAPEST, &Bg) );
   
-  TRY( FllopMatTranspose(Bd, MAT_TRANSPOSE_EXPLICIT, &Bdt) );
+  TRY( PermonMatTranspose(Bd, MAT_TRANSPOSE_EXPLICIT, &Bdt) );
   TRY( MatDestroy(&Bd) );
-  TRY( FllopMatTranspose(Bdt, MAT_TRANSPOSE_CHEAPEST, &Bd) );
+  TRY( PermonMatTranspose(Bdt, MAT_TRANSPOSE_CHEAPEST, &Bd) );
 
   TRY( MatDestroy(&child->BE) );
   TRY( QPAddEq(child, Bg, NULL) );

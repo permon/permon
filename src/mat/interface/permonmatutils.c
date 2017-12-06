@@ -1,7 +1,7 @@
 
 #include <permon/private/permonmatimpl.h>
 
-PetscLogEvent Mat_GetMaxEigenvalue,Mat_FilterZeros,Mat_MergeAndDestroy,FllopMat_GetLocalMat;
+PetscLogEvent Mat_GetMaxEigenvalue,Mat_FilterZeros,Mat_MergeAndDestroy,PermonMat_GetLocalMat;
 PetscInt MatGetMaxEigenvalue_composed_id;
 
 #undef __FUNCT__
@@ -296,7 +296,7 @@ PetscErrorCode MatCreateOperatorFromUpperTriangular(Mat U, Mat *A)
   TRY( MatGetDiagonal(U, d) );
   TRY( MatCreateDiag(d, &D) );
   TRY( MatScale(D, -1.0) );
-  TRY( FllopMatTranspose(U, MAT_TRANSPOSE_CHEAPEST, &L) );
+  TRY( PermonMatTranspose(U, MAT_TRANSPOSE_CHEAPEST, &L) );
   A_arr[0] = U;
   A_arr[1] = L;
   A_arr[2] = D;
@@ -723,7 +723,7 @@ PetscErrorCode MatGetRowNormalization2(Mat A, Vec *d_new)
 
   PetscFunctionBegin;
   TRY( MatCreateVecs(A,NULL,&d) );
-  TRY( FllopMatTranspose(A,MAT_TRANSPOSE_EXPLICIT, &At) );
+  TRY( PermonMatTranspose(A,MAT_TRANSPOSE_EXPLICIT, &At) );
   TRY( MatCreateNormal(At,&AAt) );
   TRY( MatGetDiagonal(AAt,d) );
   TRY( VecSqrtAbs(d) );
@@ -799,8 +799,8 @@ PetscErrorCode MatGetRowNormalization(Mat A, Vec *d_new)
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "FllopMatGetLocalMat_Default"
-static PetscErrorCode FllopMatGetLocalMat_Default(Mat A,Mat *Aloc)
+#define __FUNCT__ "PermonMatGetLocalMat_Default"
+static PetscErrorCode PermonMatGetLocalMat_Default(Mat A,Mat *Aloc)
 {
   IS ris,cis;
   Mat *Aloc_ptr;
@@ -816,8 +816,8 @@ static PetscErrorCode FllopMatGetLocalMat_Default(Mat A,Mat *Aloc)
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "FllopMatGetLocalMat_MPIAIJ"
-static PetscErrorCode FllopMatGetLocalMat_MPIAIJ(Mat A,Mat *Aloc)
+#define __FUNCT__ "PermonMatGetLocalMat_MPIAIJ"
+static PetscErrorCode PermonMatGetLocalMat_MPIAIJ(Mat A,Mat *Aloc)
 {
   PetscFunctionBegin;
   TRY( MatMPIAIJGetLocalMat(A, MAT_INITIAL_MATRIX, Aloc) );
@@ -825,8 +825,8 @@ static PetscErrorCode FllopMatGetLocalMat_MPIAIJ(Mat A,Mat *Aloc)
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "FllopMatGetLocalMat_MPIDense"
-static PetscErrorCode FllopMatGetLocalMat_MPIDense(Mat A,Mat *Aloc)
+#define __FUNCT__ "PermonMatGetLocalMat_MPIDense"
+static PetscErrorCode PermonMatGetLocalMat_MPIDense(Mat A,Mat *Aloc)
 {
   PetscFunctionBegin;
   TRY( MatDenseGetLocalMatrix(A, Aloc) );
@@ -835,8 +835,8 @@ static PetscErrorCode FllopMatGetLocalMat_MPIDense(Mat A,Mat *Aloc)
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "FllopMatGetLocalMat"
-PetscErrorCode FllopMatGetLocalMat(Mat A,Mat *Aloc)
+#define __FUNCT__ "PermonMatGetLocalMat"
+PetscErrorCode PermonMatGetLocalMat(Mat A,Mat *Aloc)
 {
   static PetscBool registered = PETSC_FALSE;
   PetscErrorCode (*f)(Mat,Mat*);
@@ -847,26 +847,26 @@ PetscErrorCode FllopMatGetLocalMat(Mat A,Mat *Aloc)
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
   PetscValidPointer(Aloc,2);
   if (!registered) {
-    TRY( PetscLogEventRegister("FlMatGetLocalMat",MAT_CLASSID,&FllopMat_GetLocalMat) );
+    TRY( PetscLogEventRegister("FlMatGetLocalMat",MAT_CLASSID,&PermonMat_GetLocalMat) );
     registered = PETSC_TRUE;
   }
   TRY( MPI_Comm_size(PetscObjectComm((PetscObject)A),&size) );
   if (size > 1) {
-    TRY( PetscObjectQueryFunction((PetscObject)A,"FllopMatGetLocalMat_C",&f) );
+    TRY( PetscObjectQueryFunction((PetscObject)A,"PermonMatGetLocalMat_C",&f) );
 
     /* work-around for MATMPIAIJ to avoid need of a new constructor */
     if (!f) {
       TRY( PetscObjectTypeCompare((PetscObject)A,MATMPIAIJ,&flg) );
-      if (flg) f = FllopMatGetLocalMat_MPIAIJ;
+      if (flg) f = PermonMatGetLocalMat_MPIAIJ;
     }
 
     /* work-around for MATDENSEAIJ to avoid need of a new constructor */
     if (!f) {
       TRY( PetscObjectTypeCompareAny((PetscObject)A,&flg,MATMPIDENSEPERMON,MATMPIDENSE,"") );
-      if (flg) f = FllopMatGetLocalMat_MPIDense;
+      if (flg) f = PermonMatGetLocalMat_MPIDense;
     }
 
-    if (!f) f = FllopMatGetLocalMat_Default;
+    if (!f) f = PermonMatGetLocalMat_Default;
 
     {
       Mat T_loc, Adt, Adt_loc;
@@ -878,7 +878,7 @@ PetscErrorCode FllopMatGetLocalMat(Mat A,Mat *Aloc)
         /* hotfix for B=T*Adt */
         TRY( PetscObjectQuery((PetscObject)Bt,"Adt",(PetscObject*)&Adt) );
         FLLOP_ASSERT(Adt,"Adt");
-        TRY( FllopMatGetLocalMat(Adt, &Adt_loc) );
+        TRY( PermonMatGetLocalMat(Adt, &Adt_loc) );
         Bt_arr[1]=T_loc;
         Bt_arr[0]=Adt_loc;
         TRY( MatCreateProd(PETSC_COMM_SELF, 2, Bt_arr, Aloc) );
@@ -888,9 +888,9 @@ PetscErrorCode FllopMatGetLocalMat(Mat A,Mat *Aloc)
       }
     }
 
-    TRY( PetscLogEventBegin(FllopMat_GetLocalMat,A,0,0,0) );
+    TRY( PetscLogEventBegin(PermonMat_GetLocalMat,A,0,0,0) );
     TRY( (*f)(A,Aloc) );
-    TRY( PetscLogEventEnd(  FllopMat_GetLocalMat,A,0,0,0) );
+    TRY( PetscLogEventEnd(  PermonMat_GetLocalMat,A,0,0,0) );
   } else {
     *Aloc = A;
     TRY( PetscObjectReference((PetscObject)A) );
@@ -899,8 +899,8 @@ PetscErrorCode FllopMatGetLocalMat(Mat A,Mat *Aloc)
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "FllopMatCreateDenseProductMatrix_Default"
-static PetscErrorCode FllopMatCreateDenseProductMatrix_Default(Mat A, PetscBool A_transpose, Mat B, Mat *C)
+#define __FUNCT__ "PermonMatCreateDenseProductMatrix_Default"
+static PetscErrorCode PermonMatCreateDenseProductMatrix_Default(Mat A, PetscBool A_transpose, Mat B, Mat *C)
 {
   PetscFunctionBegin;
   TRY( MatCreateDensePermon(PetscObjectComm((PetscObject)A), (A_transpose) ? A->cmap->n : A->rmap->n, B->cmap->n, (A_transpose) ? A->cmap->N : A->rmap->N, B->cmap->N, NULL, C) );
@@ -908,8 +908,8 @@ static PetscErrorCode FllopMatCreateDenseProductMatrix_Default(Mat A, PetscBool 
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "FllopMatCreateDenseProductMatrix"
-PetscErrorCode FllopMatCreateDenseProductMatrix(Mat A, PetscBool A_transpose, Mat B, Mat *C_new)
+#define __FUNCT__ "PermonMatCreateDenseProductMatrix"
+PetscErrorCode PermonMatCreateDenseProductMatrix(Mat A, PetscBool A_transpose, Mat B, Mat *C_new)
 {
   PetscErrorCode (*f)(Mat,PetscBool,Mat,Mat*);
 
@@ -918,15 +918,15 @@ PetscErrorCode FllopMatCreateDenseProductMatrix(Mat A, PetscBool A_transpose, Ma
   PetscValidLogicalCollectiveBool(A,A_transpose,2);
   PetscValidHeaderSpecific(B,MAT_CLASSID,3);
   PetscValidPointer(C_new,4);
-  TRY( PetscObjectQueryFunction((PetscObject)A,"FllopMatCreateDenseProductMatrix_C",&f) );
-  if (!f) f = FllopMatCreateDenseProductMatrix_Default;
+  TRY( PetscObjectQueryFunction((PetscObject)A,"PermonMatCreateDenseProductMatrix_C",&f) );
+  if (!f) f = PermonMatCreateDenseProductMatrix_Default;
   TRY( (*f)(A,A_transpose,B,C_new) );
   PetscFunctionReturnI(0);
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "FllopMatMatMult"
-PetscErrorCode FllopMatMatMult(Mat A,Mat B,MatReuse scall,PetscReal fill,Mat *C)
+#define __FUNCT__ "PermonMatMatMult"
+PetscErrorCode PermonMatMatMult(Mat A,Mat B,MatReuse scall,PetscReal fill,Mat *C)
 {
   PetscBool flg_A,flg_B;
   Mat T;
@@ -967,8 +967,8 @@ PetscErrorCode FllopMatMatMult(Mat A,Mat B,MatReuse scall,PetscReal fill,Mat *C)
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "FllopMatConvertBlocks"
-PetscErrorCode FllopMatConvertBlocks(Mat A, MatType newtype,MatReuse reuse,Mat *B)
+#define __FUNCT__ "PermonMatConvertBlocks"
+PetscErrorCode PermonMatConvertBlocks(Mat A, MatType newtype,MatReuse reuse,Mat *B)
 {
   PetscErrorCode (*f)(Mat,MatType,MatReuse,Mat*);
   char *name;
@@ -980,8 +980,8 @@ PetscErrorCode FllopMatConvertBlocks(Mat A, MatType newtype,MatReuse reuse,Mat *
 
   TRY( PetscStrallocpy(((PetscObject)A)->name,&name) );
 
-  TRY( PetscObjectQueryFunction((PetscObject)A,"FllopMatConvertBlocks_C",&f) );
-  TRY( PetscInfo2(A,"%sfound FllopMatConvertBlocks implementation for type %s\n", f?"":"NOT ", ((PetscObject)A)->type_name) );
+  TRY( PetscObjectQueryFunction((PetscObject)A,"PermonMatConvertBlocks_C",&f) );
+  TRY( PetscInfo2(A,"%sfound PermonMatConvertBlocks implementation for type %s\n", f?"":"NOT ", ((PetscObject)A)->type_name) );
   if (!f) f = MatConvert;
   TRY( (*f)(A,newtype,reuse,B) );
 

@@ -88,7 +88,7 @@ static PetscErrorCode MatOrthColumns_Cholesky_Default(Mat A, MatOrthType type, M
   TRY( MatDestroy(&AtA) );
 
   if (form == MAT_ORTH_FORM_EXPLICIT) {
-    TRY( FllopMatConvertBlocks(A, MATDENSEPERMON, MAT_INITIAL_MATRIX, &Q) );
+    TRY( PermonMatConvertBlocks(A, MATDENSEPERMON, MAT_INITIAL_MATRIX, &Q) );
     for (i = Alo; i < Ahi; i++) {
       TRY( VecZeroEntries(Arow) );
       TRY( MatGetRow(A, i, &ncols, &cols, &mvals) );
@@ -313,7 +313,7 @@ static PetscErrorCode MatOrthColumns_GS(Mat A, MatOrthType type, MatOrthForm for
   }
 
   TRY( MatGetOwnershipRange(A, &Alo, &Ahi) );
-  TRY( FllopMatConvertBlocks(A, MATDENSEPERMON, MAT_INITIAL_MATRIX, &Q) );
+  TRY( PermonMatConvertBlocks(A, MATDENSEPERMON, MAT_INITIAL_MATRIX, &Q) );
 
   if (computeS) {
     TRY( MatCreateDensePermon(comm, n, n, N, N, NULL, &S) );
@@ -502,15 +502,15 @@ PetscErrorCode MatOrthRows(Mat A, MatOrthType type, MatOrthForm form, Mat *Qt_ne
     PetscFunctionReturn(0);
   }
 
-  TRY( FllopMatTranspose(A,MAT_TRANSPOSE_EXPLICIT,&At) );
+  TRY( PermonMatTranspose(A,MAT_TRANSPOSE_EXPLICIT,&At) );
   TRY( MatOrthColumns(At, type, form, Qt_new?&Qt:NULL, T_new?&Tt:NULL) );
   if (Qt_new) {
-    TRY( FllopMatTranspose(Qt,MAT_TRANSPOSE_CHEAPEST,Qt_new) );
+    TRY( PermonMatTranspose(Qt,MAT_TRANSPOSE_CHEAPEST,Qt_new) );
     TRY( PetscObjectSetName((PetscObject)*Qt_new,"Qt") );
     TRY( MatDestroy(&Qt) );
   }
   if (T_new) {
-    TRY( FllopMatTranspose(Tt,MAT_TRANSPOSE_CHEAPEST,T_new) );
+    TRY( PermonMatTranspose(Tt,MAT_TRANSPOSE_CHEAPEST,T_new) );
     TRY( PetscObjectSetName((PetscObject)*T_new,"T") );
     TRY( MatDestroy(&Tt) );
   }
@@ -559,7 +559,7 @@ PetscErrorCode MatHasOrthonormalRows(Mat A,PetscReal tol,PetscInt ntrials,PetscB
   if (*flg) {
     PetscFunctionReturn(0);
   }
-  TRY( FllopMatTranspose(A,MAT_TRANSPOSE_CHEAPEST,&At) );
+  TRY( PermonMatTranspose(A,MAT_TRANSPOSE_CHEAPEST,&At) );
   TRY( MatCreateNormal(At,&AAt) );
   TRY( MatIsIdentity(AAt,tol,ntrials,flg) );
   TRY( MatDestroy(&At) );

@@ -32,8 +32,8 @@ PetscErrorCode MatIsImplicitTranspose(Mat A,PetscBool *flg)
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "FllopMatTranspose_Transpose"
-static PetscErrorCode FllopMatTranspose_Transpose(Mat A,MatTransposeType type,Mat *At_out)
+#define __FUNCT__ "PermonMatTranspose_Transpose"
+static PetscErrorCode PermonMatTranspose_Transpose(Mat A,MatTransposeType type,Mat *At_out)
 {
   Mat At,Ate,Ae;
 
@@ -55,8 +55,8 @@ static PetscErrorCode FllopMatTranspose_Transpose(Mat A,MatTransposeType type,Ma
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "FllopMatTranspose_Default"
-static PetscErrorCode FllopMatTranspose_Default(Mat A,MatTransposeType type,Mat *At_out)
+#define __FUNCT__ "PermonMatTranspose_Default"
+static PetscErrorCode PermonMatTranspose_Default(Mat A,MatTransposeType type,Mat *At_out)
 {
   Mat At;
 
@@ -111,8 +111,8 @@ PetscErrorCode MatCreateTransposePermon(Mat A,Mat *At)
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "FllopMatTranspose"
-PetscErrorCode FllopMatTranspose(Mat A,MatTransposeType type,Mat *At_out)
+#define __FUNCT__ "PermonMatTranspose"
+PetscErrorCode PermonMatTranspose(Mat A,MatTransposeType type,Mat *At_out)
 {
   PetscErrorCode (*f)(Mat,MatTransposeType,Mat*);
   PetscBool flg;
@@ -123,16 +123,16 @@ PetscErrorCode FllopMatTranspose(Mat A,MatTransposeType type,Mat *At_out)
   PetscValidPointer(At_out,3);
 
   /* try to find a type-specific implementation */
-  TRY( PetscObjectQueryFunction((PetscObject)A,"FllopMatTranspose_C",&f) );
+  TRY( PetscObjectQueryFunction((PetscObject)A,"PermonMatTranspose_C",&f) );
 
   /* work-around for MATTRANSPOSE to avoid need of a new constructor */
   if (!f) {
     TRY( PetscObjectTypeCompare((PetscObject)A,MATTRANSPOSEMAT,&flg) );
-    if (flg) f = FllopMatTranspose_Transpose;
+    if (flg) f = PermonMatTranspose_Transpose;
   }
   
   /* if no type-specific implementation is found, use the default one */
-  if (!f) f = FllopMatTranspose_Default;
+  if (!f) f = PermonMatTranspose_Default;
   
   /* call the implementation */
   TRY( (*f)(A,type,At_out) );

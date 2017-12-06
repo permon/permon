@@ -86,7 +86,7 @@ PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], cons
   if (flg) { ierr = PetscOptionsView(NULL,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr); }
 
   /* register all PERMON implementations of PETSc classes */
-  ierr = FllopMatRegisterAll();CHKERRQ(ierr);
+  ierr = PermonMatRegisterAll();CHKERRQ(ierr);
   ierr = FllopPCRegisterAll();CHKERRQ(ierr);
   
   FllopInitializeCalled = PETSC_TRUE;

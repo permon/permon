@@ -162,8 +162,8 @@ static PetscErrorCode MatConvert_BlockDiag_AIJ(Mat A, MatType newtype, MatReuse 
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "FllopMatConvertBlocks_BlockDiag"
-static PetscErrorCode FllopMatConvertBlocks_BlockDiag(Mat A, MatType newtype, MatReuse reuse, Mat* B)
+#define __FUNCT__ "PermonMatConvertBlocks_BlockDiag"
+static PetscErrorCode PermonMatConvertBlocks_BlockDiag(Mat A, MatType newtype, MatReuse reuse, Mat* B)
 {
   Mat_BlockDiag *data = (Mat_BlockDiag*) A->data;
   Mat cblock = NULL;
@@ -661,7 +661,7 @@ FLLOP_EXTERN PetscErrorCode MatCreate_BlockDiag(Mat B) {
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatTransposeMatMult_blockdiag_aij_C",MatTransposeMatMult_BlockDiag_AIJ) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatConvert_blockdiag_aij_C",MatConvert_BlockDiag_AIJ) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatOrthColumns_C",MatOrthColumns_BlockDiag) );
-  TRY( PetscObjectComposeFunction((PetscObject)B,"FllopMatConvertBlocks_C",FllopMatConvertBlocks_BlockDiag) );
+  TRY( PetscObjectComposeFunction((PetscObject)B,"PermonMatConvertBlocks_C",PermonMatConvertBlocks_BlockDiag) );
   PetscFunctionReturn(0);
 }
 
