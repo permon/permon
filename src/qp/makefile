@@ -2,7 +2,7 @@
 ALL: lib
 
 SOURCEH  = ../../include/permon/private/qpimpl.h ../../include/permonqp.h
-DIRS     = interface utils
+DIRS     = impls interface utils
 LOCDIR   = src/qp/
 MANSEC   = QP
 
