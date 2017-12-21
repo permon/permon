@@ -1,8 +1,8 @@
 
 ALL: lib
 
-SOURCEH  = ../../include/permon/private/qpimpl.h ../../include/permonqp.h
-DIRS     = impls interface utils
+SOURCEH  = ../../include/permon/private/qpimpl.h ../../include/permonqp.h ../../include/permonqpfeti.h
+DIRS     = interface impls utils
 LOCDIR   = src/qp/
 MANSEC   = QP
 
