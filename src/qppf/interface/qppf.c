@@ -196,9 +196,16 @@ static PetscErrorCode QPPFSetUpGt_Private(QPPF cp, Mat *newGt)
 {
   Mat Gt;
   MatTransposeType ttype;
+  PetscBool flg = PETSC_FALSE;
 
   PetscFunctionBeginI;
   ttype = cp->G_has_orthonormal_rows_explicitly ? MAT_TRANSPOSE_CHEAPEST : MAT_TRANSPOSE_EXPLICIT;
+  _fllop_ierr = PetscObjectOptionsBegin((PetscObject)cp);CHKERRQ(_fllop_ierr);
+  TRY( PetscOptionsBool("-MatTrMatMult_2extension","MatTransposeMatMult_BlockDiag_Extension_2extension","Mat type of resulting matrix will be extension",flg,&flg,NULL) );
+  _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
+  if (flg) {
+    ttype = MAT_TRANSPOSE_CHEAPEST;
+  }
   TRY( PermonMatTranspose(cp->G,ttype,&Gt) );
   TRY( PetscLogObjectParent((PetscObject)cp,(PetscObject)Gt) );
   TRY( PetscObjectSetName((PetscObject)Gt,"Gt") );

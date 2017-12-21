@@ -66,13 +66,13 @@ PetscErrorCode MatMatTransposeMult_SeqDensePermon_SeqDensePermon(Mat A,Mat B,Mat
 
   PetscFunctionBegin;
   if (A->rmap->n != B->rmap->n) SETERRQ2(PETSC_COMM_SELF,PETSC_ERR_ARG_SIZ,"A->rmap->n %d != B->rmap->n %d\n",A->rmap->n,B->rmap->n);
-	if (scall == MAT_INITIAL_MATRIX){
-	  TRY( MatCreate(PETSC_COMM_SELF,&Cmat) );
-  	TRY( MatSetSizes(Cmat,m,n,m,n) );
-  	TRY( MatSetType(Cmat,MATSEQDENSE) );
-  	TRY( MatSeqDenseSetPreallocation(Cmat,NULL) );
-  	Cmat->assembled = PETSC_TRUE;
-	}
+	if (scall != MAT_INITIAL_MATRIX) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_INCOMP,"Implemented only for MAT_INITIAL_MATRIX \n");
+
+	TRY( MatCreate(PETSC_COMM_SELF,&Cmat) );
+  TRY( MatSetSizes(Cmat,m,n,m,n) );
+  TRY( MatSetType(Cmat,MATSEQDENSE) );
+  TRY( MatSeqDenseSetPreallocation(Cmat,NULL) );
+  Cmat->assembled = PETSC_TRUE;
   Mat_SeqDense   *c = (Mat_SeqDense*)Cmat->data;
 
   TRY( PetscBLASIntCast(A->rmap->n,&bm) );

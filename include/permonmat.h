@@ -7,12 +7,14 @@
 #define MATDUMMY        "dummy"
 #define MATINV          "inv"
 #define MATBLOCKDIAG    "blockdiag"
+#define MATGLUING       "gluing"
 #define MATSUM          "sum"
 #define MATPROD         "prod"
 #define MATDENSEPERMON    "densepermon"
 #define MATSEQDENSEPERMON "seqdensepermon"
 #define MATMPIDENSEPERMON "mpidensepermon"
 #define MATNESTPERMON   "nestpermon"
+#define MATEXTENSION    "extension"
 
 FLLOP_EXTERN PetscErrorCode PermonMatRegisterAll();
 FLLOP_EXTERN PetscBool PermonMatRegisterAllCalled;
@@ -54,6 +56,18 @@ FLLOP_EXTERN PetscErrorCode MatCreateTransposePermon(Mat A,Mat *At);
 typedef enum {MAT_REG_NONE=0, MAT_REG_EXPLICIT=1, MAT_REG_IMPLICIT=2} MatRegularizationType;
 FLLOP_EXTERN PetscErrorCode MatRegularize(Mat K, Mat R, MatRegularizationType type, Mat *newKreg);
 
+/* MATEXTENSION specific methods */
+FLLOP_EXTERN PetscErrorCode MatExtensionCreateCondensedRows(Mat TA,Mat *A,IS *ris_local);
+FLLOP_EXTERN PetscErrorCode MatExtensionCreateLocalMat(Mat TA,Mat *local);
+FLLOP_EXTERN PetscErrorCode MatExtensionGetColumnIS(Mat TA,IS *cis);
+FLLOP_EXTERN PetscErrorCode MatExtensionGetRowIS(Mat TA,IS *ris);
+FLLOP_EXTERN PetscErrorCode MatExtensionGetRowISLocal(Mat TA,IS *ris);
+FLLOP_EXTERN PetscErrorCode MatExtensionGetCondensed(Mat TA,Mat *A);
+FLLOP_EXTERN PetscErrorCode MatExtensionSetColumnIS(Mat TA,IS  cis);
+FLLOP_EXTERN PetscErrorCode MatExtensionSetRowIS(Mat TA,IS  ris,PetscBool rows_use_global_numbering);
+FLLOP_EXTERN PetscErrorCode MatExtensionSetCondensed(Mat TA,Mat  A);
+FLLOP_EXTERN PetscErrorCode MatExtensionSetUp(Mat TA);
+
 /* MATINV specific methods */
 FLLOP_EXTERN PetscErrorCode MatInvGetMat(Mat imat, Mat *A);
 FLLOP_EXTERN PetscErrorCode MatInvGetRegularizedMat(Mat imat, Mat *A);
@@ -82,6 +96,10 @@ FLLOP_EXTERN PetscErrorCode MatInvCreateInnerObjects(Mat imat);
 /* MATTIMER specific methods */
 FLLOP_EXTERN PetscErrorCode MatTimerGetMat(Mat W, Mat *A);
 FLLOP_EXTERN PetscErrorCode MatTimerSetOperation(Mat mat,MatOperation op,const char *opname,void(*opf)(void));
+
+/* MATGLUING specific methods */
+FLLOP_EXTERN PetscErrorCode MatGluingSetLocalBlock(Mat B,Mat Block,PetscInt nghosts);
+FLLOP_EXTERN PetscErrorCode MatGluingLayoutSetUp(Mat B);
 
 /* MATTRANSPOSE specific methods */
 typedef enum {MAT_TRANSPOSE_EXPLICIT, MAT_TRANSPOSE_IMPLICIT, MAT_TRANSPOSE_CHEAPEST} MatTransposeType;

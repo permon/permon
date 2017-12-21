@@ -517,6 +517,53 @@ static PetscErrorCode MatAXPY_NestPermon(Mat Y, PetscScalar a, Mat X, MatStructu
   PetscFunctionReturn(0);
 }
 
+#undef __FUNCT__
+#define __FUNCT__ "MatExtensionCreateCondensedRows_NestPermon"
+static PetscErrorCode MatExtensionCreateCondensedRows_NestPermon(Mat TA,Mat *A,IS *ris_local)
+{
+  PetscInt j,Mn,Nn,m;
+  Mat **mats_in,*mats_out;
+  IS cis,ris_block,*ris_block_orig,ris_union;
+  Mat block,block_A;
+  PetscBool flg;
+
+  PetscFunctionBegin;
+  TRY( MatNestGetSubMats(TA,&Mn,&Nn,&mats_in) );
+  FLLOP_ASSERT(Mn==1,"Mn==1");
+  TRY( PetscMalloc1(Nn,&mats_out) );
+  TRY( PetscMalloc1(Nn,&ris_block_orig) );
+
+  for (j=0; j<Nn; j++) {
+    block = mats_in[0][j];
+    TRY( PetscObjectTypeCompare((PetscObject)block,MATEXTENSION,&flg) );
+    if (!flg) FLLOP_SETERRQ1(PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONG,"nested block %d,0 is not extension",j);
+    TRY( MatExtensionGetRowISLocal(block,&ris_block_orig[j]) );
+  }
+
+  TRY( ISConcatenate(PETSC_COMM_SELF,Nn,ris_block_orig,&ris_union) );
+  TRY( ISSortRemoveDups(ris_union) );
+  TRY( ISGetLocalSize(ris_union,&m) );
+
+  for (j=0; j<Nn; j++) {
+    block = mats_in[0][j];
+    TRY( ISEmbed(ris_block_orig[j],ris_union,PETSC_TRUE,&ris_block) );
+    TRY( MatExtensionGetCondensed(block,&block_A) );
+    TRY( MatExtensionGetColumnIS(block,&cis) );
+    TRY( MatCreateExtension(PetscObjectComm((PetscObject)TA),m,block->cmap->n,PETSC_DECIDE,block->cmap->N,block_A,ris_block,PETSC_FALSE,cis,&mats_out[j]) );
+    TRY( ISDestroy(&ris_block) );
+  }
+
+  TRY( MatCreateNestPermon(PetscObjectComm((PetscObject)TA),1,NULL,Nn,NULL,mats_out,A) );
+  if (ris_local) {
+    *ris_local = ris_union;
+  } else {
+    TRY( ISDestroy(&ris_union) );
+  }
+
+  TRY( PetscFree(mats_out) );
+  TRY( PetscFree(ris_block_orig) );
+  PetscFunctionReturn(0);
+}
 
 #undef __FUNCT__
 #define __FUNCT__ "MatConvert_Nest_NestPermon"
@@ -546,6 +593,7 @@ PETSC_EXTERN PetscErrorCode MatConvert_Nest_NestPermon(Mat A,MatType type,MatReu
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatNestPermonGetColumnISs_NestPermon_C",MatNestPermonGetColumnISs_NestPermon) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatNestSetVecType_C",  MatNestSetVecType_NestPermon) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatConvert_nest_nestpermon_C", MatConvert_Nest_NestPermon) );
+  TRY( PetscObjectComposeFunction((PetscObject)B,"MatExtensionCreateCondensedRows_Extension_C",MatExtensionCreateCondensedRows_NestPermon) );
 
   *newmat = B;
   PetscFunctionReturn(0);
