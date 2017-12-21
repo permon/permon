@@ -2,6 +2,7 @@
 #include <permonqps.h>
 #include <permonmat.h>
 #include <permonpc.h>
+#include <permonksp.h>
 #include <permon/private/permonimpl.h>
 
 PetscBool FllopInitializeCalled = PETSC_FALSE;
@@ -88,6 +89,7 @@ PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], cons
   /* register all PERMON implementations of PETSc classes */
   ierr = PermonMatRegisterAll();CHKERRQ(ierr);
   ierr = FllopPCRegisterAll();CHKERRQ(ierr);
+  ierr = PermonKSPRegisterAll();CHKERRQ(ierr);
   
   FllopInitializeCalled = PETSC_TRUE;
   ierr = PetscInfo(fllop,"FLLOP successfully initialized.\n");CHKERRQ(ierr);
