@@ -1,9 +1,12 @@
 #include <permon/private/qpimpl.h>
 #include <permonpc.h>
 #include <permon/private/qppfimpl.h>
+#include <permonqpfeti.h>
 
 PetscLogEvent QPT_HomogenizeEq, QPT_EnforceEqByProjector, QPT_EnforceEqByPenalty, QPT_OrthonormalizeEq, QPT_SplitBE;
-PetscLogEvent QPT_Dualize, QPT_Dualize_AssembleG, QPT_Dualize_FactorK, QPT_Dualize_PrepareBt, QPT_AllInOne;
+PetscLogEvent QPT_Dualize, QPT_Dualize_AssembleG, QPT_Dualize_FactorK, QPT_Dualize_PrepareBt, QPT_FetiPrepare, QPT_AllInOne, QPT_RemoveGluingOfDirichletDofs;
+
+static QPPF QPReusedCP = NULL;
 
 /* common tasks during a QP transform - should be called in the beginning of each transform function */
 #undef __FUNCT__
@@ -891,7 +894,7 @@ static PetscErrorCode MatTransposeMatMult_R_Bt(Mat R, Mat Bt, Mat *G_new)
     Mat G_arr[2];
     Mat Rt;
 
-    TRY( FllopMatTranspose(R,MAT_TRANSPOSE_CHEAPEST,&Rt) );
+    TRY( PermonMatTranspose(R,MAT_TRANSPOSE_CHEAPEST,&Rt) );
 
     TRY( MatCreateTimer(Rt,&G_arr[1]) );
     TRY( MatCreateTimer(Bt,&G_arr[0]) );
@@ -916,7 +919,7 @@ static PetscErrorCode MatTransposeMatMult_R_Bt(Mat R, Mat Bt, Mat *G_new)
     } else {
       TRY( PetscPrintf(PetscObjectComm((PetscObject)Bt), "WARNING: MatTransposeMatMult not applicable, falling back to MatMatMultByColumns\n") );
       TRY( MatTransposeMatMultByColumns(Bt,R,PETSC_TRUE,&Gt) );
-      TRY( FllopMatTranspose(Gt,MAT_TRANSPOSE_CHEAPEST,&G) );
+      TRY( PermonMatTranspose(Gt,MAT_TRANSPOSE_CHEAPEST,&G) );
       TRY( MatDestroy(&Gt) );
     }
   } else {
@@ -949,7 +952,8 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
   QP               child;
   Mat              R,B,Bt,F,G,K,Kplus,Kplus_orig;
   Vec              c,d,e,f,lb,tprim,lambda;
-  PetscBool        B_explicit = PETSC_FALSE, B_view_spectra = PETSC_FALSE;
+  PetscBool        B_explicit = PETSC_FALSE, B_extension = PETSC_FALSE, B_view_spectra = PETSC_FALSE;
+  PetscBool        B_nest_extension = PETSC_TRUE;
   PetscBool        mp = PETSC_FALSE;
   PetscBool        true_mp = PETSC_FALSE;
 
@@ -969,6 +973,8 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
   if (!qp->BE) FLLOP_SETERRQ_WORLD(PETSC_ERR_ARG_NULL,"lin. eq. constraint matrix (BE) is needed for dualization");
 
   TRY( PetscOptionsGetBool(NULL,NULL,"-qpt_dualize_B_explicit",&B_explicit,NULL) );
+  TRY( PetscOptionsGetBool(NULL,NULL,"-qpt_dualize_B_extension",&B_extension,NULL) );
+  TRY( PetscOptionsGetBool(NULL,NULL,"-qpt_dualize_B_nest_extension",&B_nest_extension,NULL) );
   TRY( PetscOptionsGetBool(NULL,NULL,"-qpt_dualize_B_view_spectra",&B_view_spectra,NULL) );
 
   if (B_view_spectra) {
@@ -978,10 +984,22 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
   TRY( MatPrintInfo(qp->B) );
 
   TRY( PetscLogEventBegin(QPT_Dualize_PrepareBt,qp,0,0,0) );
-  {
-    TRY( FllopMatTranspose(qp->B,MAT_TRANSPOSE_CHEAPEST,&Bt) );
+  if (B_extension || B_nest_extension) {
+    Mat B_merged;
+    MatTransposeType ttype = B_explicit ? MAT_TRANSPOSE_EXPLICIT : MAT_TRANSPOSE_CHEAPEST;
+    TRY( MatCreateNestPermonVerticalMerge(comm,1,&qp->B,&B_merged) );
+    TRY( PermonMatTranspose(B_merged,MAT_TRANSPOSE_EXPLICIT,&Bt) );
+    TRY( MatDestroy(&B_merged) );
+    if (B_extension) {
+      TRY( MatConvert(Bt,MATEXTENSION,MAT_INPLACE_MATRIX,&Bt) );
+    } else {
+      TRY( PermonMatConvertBlocks(Bt,MATEXTENSION,MAT_INPLACE_MATRIX,&Bt) );
+    }
+    TRY( PermonMatTranspose(Bt,ttype,&B) );
+  } else {
+    TRY( PermonMatTranspose(qp->B,MAT_TRANSPOSE_CHEAPEST,&Bt) );
     if (B_explicit) {
-      TRY( FllopMatTranspose(Bt,MAT_TRANSPOSE_EXPLICIT,&B) );
+      TRY( PermonMatTranspose(Bt,MAT_TRANSPOSE_EXPLICIT,&B) );
     } else {
       /* in this case B remains the same */
       B = qp->B;
@@ -1049,7 +1067,7 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
     } else {
       TRY( PetscInfo(qp,"creating left generalized inverse\n") );
     }
-    TRY( FllopMatTranspose(R,MAT_TRANSPOSE_CHEAPEST,&Rt) );
+    TRY( PermonMatTranspose(R,MAT_TRANSPOSE_CHEAPEST,&Rt) );
     TRY( PetscObjectSetName((PetscObject)Rt,"Rt") );
     TRY( QPPFCreate(comm,&pf_R) );
     TRY( PetscObjectSetOptionsPrefix((PetscObject)pf_R,"Kplus_") );
@@ -1195,6 +1213,204 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
 }
 
 #undef __FUNCT__
+#define __FUNCT__ "QPTFetiPrepare"
+PetscErrorCode QPTFetiPrepare(QP qp,PetscBool regularize)
+{
+  PetscFunctionBeginI;
+  TRY( PetscLogEventBegin(QPT_FetiPrepare,qp,0,0,0) );
+  TRY( QPTDualize(qp, MAT_INV_BLOCKDIAG, regularize ? MAT_REG_EXPLICIT : MAT_REG_NONE) );
+  TRY( QPTHomogenizeEq(qp) );
+  TRY( QPTEnforceEqByProjector(qp) );
+  TRY( PetscLogEventEnd  (QPT_FetiPrepare,qp,0,0,0) );
+  PetscFunctionReturnI(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "QPTFetiPrepareReuseCP"
+PetscErrorCode QPTFetiPrepareReuseCP(QP qp,PetscBool regularize)
+{
+  QP dualQP;
+
+  PetscFunctionBeginI;
+  TRY( QPTDualize(qp, MAT_INV_BLOCKDIAG, regularize ? MAT_REG_EXPLICIT : MAT_REG_NONE) );
+
+  TRY( QPChainGetLast(qp, &dualQP) );
+  if (QPReusedCP) {
+    Mat G;
+    Vec e;
+
+    /* reuse the coarse problem from the 0th iteration */
+    TRY( QPSetQPPF(dualQP, QPReusedCP) );
+    TRY( QPPFGetG(QPReusedCP, &G) );
+    TRY( QPGetEq(dualQP, NULL, &e) );
+    TRY( QPSetEq(dualQP, G, e) );
+  } else {
+    /* store the coarse problem from the 0th iteration */
+    TRY( QPGetQPPF(dualQP, &QPReusedCP) );
+    TRY( QPPFSetUp(QPReusedCP) );
+    TRY( PetscObjectReference((PetscObject) QPReusedCP) );
+  }
+
+  TRY( QPTHomogenizeEq(qp) );
+  TRY( QPTEnforceEqByProjector(qp) );
+  PetscFunctionReturnI(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "QPTFetiPrepareReuseCPReset"
+PetscErrorCode QPTFetiPrepareReuseCPReset()
+{
+  PetscFunctionBegin;
+  TRY( QPPFDestroy(&QPReusedCP) );
+  QPReusedCP = NULL;
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "QPTPostSolve_QPTRemoveGluingOfDirichletDofs"
+static PetscErrorCode QPTPostSolve_QPTRemoveGluingOfDirichletDofs(QP child,QP parent)
+{
+  IS is = (IS) child->postSolveCtx;
+  IS *iss_parent, *iss_child;
+  Vec *lambda_parent, *lambda_child;
+  PetscInt Mn,II;
+
+  PetscFunctionBegin;
+  Mn = child->BE_nest_count;
+  FLLOP_ASSERT(Mn>=1,"child->BE_nest_count >= 2");
+  TRY( PetscMalloc4(Mn,&iss_parent,Mn,&iss_child,Mn,&lambda_parent,Mn,&lambda_child) );
+
+  TRY( MatNestGetISs(parent->BE,iss_parent,NULL) );
+  TRY( MatNestGetISs(child->BE,iss_child,NULL) );
+
+  /* 0,1 corresponds to gluing and Dirichlet part, respectively */
+  for (II=0; II<Mn; II++) {
+    TRY( VecGetSubVector(parent->lambda_E,iss_parent[II],&lambda_parent[II]) );
+    TRY( VecGetSubVector(child->lambda_E, iss_child[II], &lambda_child[II]) );
+  }
+
+#if 0
+  {
+    PetscInt start, end;
+    IS is_removed;
+
+    TRY( VecGetOwnershipRange(lambda_parent[0],&start,&end) );
+    TRY( ISComplement(is,start,end,&is_removed) );
+
+    TRY( PetscPrintf(PETSC_COMM_WORLD, "#### "__FUNCT__": is_removed:\n") );
+    TRY( ISView(is_removed,PETSC_VIEWER_STDOUT_WORLD) );
+
+    TRY( PetscPrintf(PETSC_COMM_WORLD, "\n\n") );
+  }
+#endif
+
+  /* copy values from the multiplier related to the restricted Bg to the multiplier
+     corresponding to the original Bg, pad with zeros */
+  TRY( VecZeroEntries(lambda_parent[0]) );
+  //TODO PETSc 3.5+ VecGetSubVector,VecRestoreSubVector
+  {
+    VecScatter sc;
+    TRY( VecScatterCreate(lambda_child[0],NULL,lambda_parent[0],is,&sc) );
+    TRY( VecScatterBegin(sc,lambda_child[0],lambda_parent[0],INSERT_VALUES,SCATTER_FORWARD) );
+    TRY( VecScatterEnd(  sc,lambda_child[0],lambda_parent[0],INSERT_VALUES,SCATTER_FORWARD) );
+    TRY( VecScatterDestroy(&sc) );
+  }
+
+  /* Bd is the same, just copy values */
+  for (II=1; II<Mn; II++) {
+    TRY( VecCopy(lambda_child[II],lambda_parent[II]) );
+  }
+
+  for (II=0; II<Mn; II++) {
+    TRY( VecRestoreSubVector(parent->lambda_E,iss_parent[II],&lambda_parent[II]) );
+    TRY( VecRestoreSubVector(child->lambda_E, iss_child[II], &lambda_child[II]) );
+  }
+
+  TRY( PetscFree4(iss_parent,iss_child,lambda_parent,lambda_child) );
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "QPTPostSolveDestroy_QPTRemoveGluingOfDirichletDofs"
+static PetscErrorCode QPTPostSolveDestroy_QPTRemoveGluingOfDirichletDofs(void *ctx)
+{
+  IS is = (IS) ctx;
+
+  PetscFunctionBegin;
+  TRY( ISDestroy(&is) );
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "QPTRemoveGluingOfDirichletDofs"
+PetscErrorCode QPTRemoveGluingOfDirichletDofs(QP qp)
+{
+  QP child;
+  MPI_Comm comm;
+  PetscBool flg;
+  Mat Bg, Bgt, Bgt_new, Bg_new, Bd, Bdt;
+  Mat **mats;
+  PetscInt Mn,Nn,II;
+  IS is;
+
+  PetscFunctionBeginI;
+  TRY( PetscObjectTypeCompareAny((PetscObject)qp->BE,&flg,MATNEST,MATNESTPERMON,"") );
+  if (!flg) FLLOP_SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_SUP,"only for eq. con. matrix qp->BE of type MATNEST or MATNESTPERMON");
+
+  TRY( PetscLogEventBegin(QPT_RemoveGluingOfDirichletDofs,qp,0,0,0) );
+  TRY( MatNestGetSize(qp->BE,&Mn,&Nn) );
+  TRY( MatNestGetSubMats(qp->BE,&Mn,&Nn,&mats) );
+  FLLOP_ASSERT(Mn>=2,"Mn==2");
+  FLLOP_ASSERT(Nn==1,"Nn==1");
+  FLLOP_ASSERT(!qp->cE,"!qp->cE");
+  Bg = mats[0][0];
+  Bd = mats[1][0];
+
+  TRY( QPTransformBegin(QPTRemoveGluingOfDirichletDofs,
+      QPTPostSolve_QPTRemoveGluingOfDirichletDofs, QPTPostSolveDestroy_QPTRemoveGluingOfDirichletDofs,
+      QP_DUPLICATE_COPY_POINTERS, &qp, &child, &comm) );
+  TRY( VecDestroy(&child->lambda_E) );
+  TRY( MatDestroy(&child->B) );
+  TRY( MatDestroy(&child->BE) );
+  child->BE_nest_count = 0;
+
+  TRY( PermonMatTranspose(Bg,MAT_TRANSPOSE_CHEAPEST,&Bgt) );
+  TRY( PermonMatTranspose(Bd,MAT_TRANSPOSE_CHEAPEST,&Bdt) );
+
+  flg = PETSC_FALSE;
+  TRY( PetscOptionsGetBool(NULL,NULL,"-qpt_remove_gluing_dirichlet_old",&flg,NULL) );
+  if (flg) {
+    FLLOP_EXTERN PetscErrorCode MatRemoveGluingOfDirichletDofs_old(Mat,Vec,Mat,Mat*,Vec*,IS*);
+    TRY( MatRemoveGluingOfDirichletDofs_old(Bgt,NULL,Bdt,&Bgt_new,NULL,&is) );
+  } else {
+    TRY( MatRemoveGluingOfDirichletDofs(Bgt,NULL,Bdt,&Bgt_new,NULL,&is) );
+  }
+
+  TRY( MatDestroy(&Bdt) );
+
+  TRY( PermonMatTranspose(Bgt_new,MAT_TRANSPOSE_CHEAPEST,&Bg_new) );
+  TRY( QPAddEq(child,Bg_new,NULL) );
+  for (II=1; II<Mn; II++) {
+    TRY( QPAddEq(child,mats[II][0],NULL) );
+  }
+  TRY( MatDestroy(&Bgt_new) );
+
+  //TODO use VecGetSubVector with PETSc 3.5+
+  TRY( MatCreateVecs(child->BE,NULL,&child->lambda_E) );
+  TRY( VecInvalidate(child->lambda_E) );
+  child->postSolveCtx = (void*) is;
+
+  TRY( MatPrintInfo(Bg) );
+  TRY( VecPrintInfo(qp->lambda_E) );
+  TRY( MatPrintInfo(Bg_new) );
+  TRY( VecPrintInfo(child->lambda_E) );
+
+  TRY( MatDestroy(&Bg_new) );
+  TRY( PetscLogEventEnd(QPT_RemoveGluingOfDirichletDofs,qp,0,0,0) );
+  PetscFunctionReturnI(0);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ "QPTPostSolve_QPTScale"
 static PetscErrorCode QPTPostSolve_QPTScale(QP child,QP parent)
 {
@@ -1251,6 +1467,7 @@ PetscErrorCode QPTScale(QP qp)
   QPScaleType ScalType;
   MatOrthType R_orth_type=MAT_ORTH_GS;
   MatOrthForm R_orth_form=MAT_ORTH_FORM_EXPLICIT;
+  PetscBool remove_gluing_of_dirichlet=PETSC_FALSE;
   PetscBool set;
   QP child;
   Mat A,DA;
@@ -1259,6 +1476,14 @@ PetscErrorCode QPTScale(QP qp)
 
   PetscFunctionBeginI;
   TRY( QPChainGetLast(qp,&qp) );
+
+  _fllop_ierr = PetscObjectOptionsBegin((PetscObject)qp);CHKERRQ(_fllop_ierr);
+  TRY( PetscOptionsBool("-qp_E_remove_gluing_of_dirichlet","remove gluing of DOFs on Dirichlet boundary","QPTRemoveGluingOfDirichletDofs",remove_gluing_of_dirichlet,&remove_gluing_of_dirichlet,NULL) );
+  _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
+  TRY( PetscInfo1(qp, "-qp_E_remove_gluing_of_dirichlet %d\n",remove_gluing_of_dirichlet) );
+  if (remove_gluing_of_dirichlet) {
+    TRY( QPTRemoveGluingOfDirichletDofs(qp) );
+  }
 
   TRY( QPTransformBegin(QPTScale,
       QPTPostSolve_QPTScale, QPTPostSolveDestroy_QPTScale,
@@ -1588,8 +1813,8 @@ PetscErrorCode QPTSplitBE(QP qp)
   TRY( PetscLogEventBegin(QPT_SplitBE,qp,0,0,0) );
   TRY( QPTransformBegin(QPTSplitBE, NULL, NULL, QP_DUPLICATE_COPY_POINTERS, &qp, &child, &comm) );
 
-  TRY( FllopMatTranspose(child->BE, MAT_TRANSPOSE_CHEAPEST, &Bet) );
-  TRY( FllopMatTranspose(Bet, MAT_TRANSPOSE_EXPLICIT, &Be) );
+  TRY( PermonMatTranspose(child->BE, MAT_TRANSPOSE_CHEAPEST, &Bet) );
+  TRY( PermonMatTranspose(Bet, MAT_TRANSPOSE_EXPLICIT, &Be) );
   TRY( MatDestroy(&Bet) );
 
   TRY( MatGetOwnershipRange(Be, &ilo, &ihi) );
@@ -1621,13 +1846,13 @@ PetscErrorCode QPTSplitBE(QP qp)
   TRY( MatGetSubMatrix(Be, isrowd, NULL, MAT_INITIAL_MATRIX, &Bd) );
   TRY( MatDestroy(&Be) );
 
-  TRY( FllopMatTranspose(Bg, MAT_TRANSPOSE_EXPLICIT, &Bgt) );
+  TRY( PermonMatTranspose(Bg, MAT_TRANSPOSE_EXPLICIT, &Bgt) );
   TRY( MatDestroy(&Bg) );
-  TRY( FllopMatTranspose(Bgt, MAT_TRANSPOSE_CHEAPEST, &Bg) );
+  TRY( PermonMatTranspose(Bgt, MAT_TRANSPOSE_CHEAPEST, &Bg) );
   
-  TRY( FllopMatTranspose(Bd, MAT_TRANSPOSE_EXPLICIT, &Bdt) );
+  TRY( PermonMatTranspose(Bd, MAT_TRANSPOSE_EXPLICIT, &Bdt) );
   TRY( MatDestroy(&Bd) );
-  TRY( FllopMatTranspose(Bdt, MAT_TRANSPOSE_CHEAPEST, &Bd) );
+  TRY( PermonMatTranspose(Bdt, MAT_TRANSPOSE_CHEAPEST, &Bd) );
 
   TRY( MatDestroy(&child->BE) );
   TRY( QPAddEq(child, Bg, NULL) );
@@ -1637,6 +1862,260 @@ PetscErrorCode QPTSplitBE(QP qp)
 
   TRY( ISDestroy(&isrowg) );
   TRY( ISDestroy(&isrowd) );
+  PetscFunctionReturnI(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "QPTPostSolve_QPTMatISToBlockDiag"
+static PetscErrorCode QPTPostSolve_QPTMatISToBlockDiag(QP child,QP parent)
+{
+  Mat AsubCopy;
+  Vec dir,b_adjust,b_adjustU,resid;
+  Mat_IS *matis  = (Mat_IS*)parent->A->data;
+  QPTMatISToBlockDiag_Ctx *ctx = (QPTMatISToBlockDiag_Ctx*)child->postSolveCtx;
+  PetscReal norm=0.0,normb=0.0;
+  PetscBool computeNorm = PETSC_FALSE;
+  PetscInt lock;
+
+  PetscFunctionBegin;
+  TRY( PetscOptionsGetBool(NULL,NULL,"-qpt_matis_to_diag_norm",&computeNorm,NULL) );
+  if (ctx->isDir) {
+    if (computeNorm) {
+      /* TODO: change implementation for submat copies for PETSc>=3.8 */
+      MatDuplicate(child->A,MAT_COPY_VALUES,&AsubCopy);
+      //TRY( MatGetLocalToGlobalMapping(child->A,&l2g,NULL) );
+      //TRY( ISGlobalToLocalMappingApplyIS(l2g,IS_GTOLM_DROP,ctx->isDir,&isDirLoc) );
+      //TRY( MatGetLocalSubMatrix(parent->A,isDirLoc,isDirLoc,&Asub) );
+      //TRY( MatDuplicate(Asub,MAT_COPY_VALUES,&AsubCopy) );
+      TRY( VecDuplicate(child->x,&dir) );
+      TRY( VecDuplicate(child->b,&b_adjustU) );
+      TRY( VecCopy(child->b,b_adjustU) );
+      TRY( VecGetLocalVector(dir,matis->y) );
+      TRY( VecScatterBegin(matis->cctx,parent->x,matis->y,INSERT_VALUES,SCATTER_FORWARD) ); /* set local vec */
+      TRY( VecScatterEnd(matis->cctx,parent->x,matis->y,INSERT_VALUES,SCATTER_FORWARD) );
+      TRY( VecRestoreLocalVector(dir,matis->y) );
+      TRY( MatZeroRowsColumnsIS(child->A,ctx->isDir,1.0,dir,b_adjustU) );
+    }
+  } else {
+    /* propagate changed RHS */
+    /* TODO: flag for pure Neumann? */
+    TRY( VecGetLocalVector(child->b,matis->y) );
+    TRY( VecLockGet(parent->b,&lock) );
+    if (lock) TRY( VecLockPop(parent->b) ); /* TODO: safe? */
+    TRY( VecSet(parent->b,0.0) );
+    TRY( VecScatterBegin(matis->rctx,matis->y,parent->b,ADD_VALUES,SCATTER_REVERSE) );
+    TRY( VecScatterEnd(matis->rctx,matis->y,parent->b,ADD_VALUES,SCATTER_REVERSE) );
+    if (lock) TRY( VecLockPush(parent->b) );
+    TRY( VecRestoreLocalVector(child->b,matis->y) );
+  }
+
+  /* assemble solution */
+  TRY( VecGetLocalVector(child->x,matis->x) );
+  TRY( VecScatterBegin(matis->rctx,matis->x,parent->x,INSERT_VALUES,SCATTER_REVERSE) );
+  TRY( VecScatterEnd(matis->rctx,matis->x,parent->x,INSERT_VALUES,SCATTER_REVERSE) );
+  TRY( VecRestoreLocalVector(child->x,matis->x) );
+  
+  if (computeNorm) {
+    /* compute norm */
+    TRY( VecDuplicate(parent->b,&resid) );
+    if (ctx->isDir) {
+      TRY( VecDuplicate(parent->b,&b_adjust) );
+      TRY( VecSet(b_adjust,.0) );
+      TRY( VecGetLocalVector(b_adjustU,matis->y) );
+      TRY( VecScatterBegin(matis->rctx,matis->y,b_adjust,ADD_VALUES,SCATTER_REVERSE) );
+      TRY( VecScatterEnd(matis->rctx,matis->y,b_adjust,ADD_VALUES,SCATTER_REVERSE) );
+      TRY( VecRestoreLocalVector(b_adjustU,matis->y) );
+      TRY( MatMult(parent->A,parent->x,resid) );
+      TRY( VecAXPY(resid,-1.0,b_adjust) ); /* Ax-b */ 
+      TRY( VecNorm(b_adjust,NORM_2,&normb) );
+      TRY( MatCopy(AsubCopy,child->A,SAME_NONZERO_PATTERN) );
+      //TRY( MatCopy(AsubCopy,Asub,SAME_NONZERO_PATTERN) );
+      TRY( VecDestroy(&b_adjustU) );
+      TRY( VecDestroy(&b_adjust) );
+    } else {
+      TRY( MatMult(parent->A,parent->x,resid) );
+      TRY( VecAXPY(resid,-1.0,parent->b) ); /* Ax-b */ 
+      TRY( VecNorm(parent->b,NORM_2,&normb) );
+    } 
+    TRY( VecNorm(resid,NORM_2,&norm) );
+    TRY( PetscPrintf(PETSC_COMM_WORLD,"Dirichlet in Hess: %d, r = ||Ax-b|| = %e, r/||b|| = %e\n",!ctx->isDir,norm,norm/normb) );
+    TRY( VecDestroy(&resid) );
+  }
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "QPTPostSolveDestroy_QPTMatISToBlockDiag"
+static PetscErrorCode QPTPostSolveDestroy_QPTMatISToBlockDiag(void *ctx)
+{
+  QPTMatISToBlockDiag_Ctx *cctx = (QPTMatISToBlockDiag_Ctx*)ctx;
+
+  PetscFunctionBegin;
+  TRY( ISDestroy(&cctx->isDir) );
+  TRY( PetscFree(cctx) );
+  PetscFunctionReturn(0);
+}
+
+/*@
+   QPTMatISToBlockDiag - Transforms system matrix from MATIS format to BlockDiag.
+
+   Collective on QP
+
+   Input Parameter:
+.  qp   - the QP
+
+   Level: developer
+@*/
+#undef __FUNCT__
+#define __FUNCT__ "QPTMatISToBlockDiag"
+PetscErrorCode QPTMatISToBlockDiag(QP qp)
+{
+  QP child;
+  Mat A;
+  IS l2g;
+  const PetscInt *idx_l2g;
+  QPTMatISToBlockDiag_Ctx *ctx;
+  ISLocalToGlobalMapping mapping;
+  PetscInt n;         /* number of nodes (interior+interface) in this subdomain */
+  PetscInt n_B;       /* number of interface nodes in this subdomain */
+  PetscInt n_I;
+  PetscInt n_neigh;   /* number of neighbours this subdomain has (by now, INCLUDING OR NOT the subdomain itself). */
+                      /* Once this is definitively decided, the code can be simplifies and some if's eliminated.  */
+  PetscInt *neigh;    /* list of neighbouring subdomains                                                          */
+  PetscInt *n_shared; /* n_shared[j] is the number of nodes shared with subdomain neigh[j]                        */
+  PetscInt **shared;  /* shared[j][i] is the local index of the i-th node shared with subdomain neigh[j]          */
+  PetscInt *idx_I_local,*idx_B_local,*idx_I_global,*idx_B_global;
+  PetscInt *array;
+  PetscInt i,j;
+  IS is_B_local,is_I_local,is_B_global, is_I_global; /* local (seq) index sets for interface (B) and interior (I) nodes */
+  VecScatter N_to_B;      /* scattering context from all local nodes to local interface nodes */
+  VecScatter global_to_B; /* scattering context from global to local interface nodes */
+  Vec b,counter,D,vec1_B;
+  MPI_Comm comm;
+  
+  PetscFunctionBeginI;
+  PetscValidHeaderSpecific(qp,QP_CLASSID,1);
+  TRY( PetscObjectGetComm((PetscObject)qp,&comm) );
+  TRY( QPTransformBegin(QPTMatISToBlockDiag,QPTPostSolve_QPTMatISToBlockDiag,QPTPostSolveDestroy_QPTMatISToBlockDiag,QP_DUPLICATE_DO_NOT_COPY,&qp,&child,&comm) );
+  TRY( PetscNew(&ctx) );
+  child->postSolveCtx = ctx;
+  ctx->isDir = NULL; /* set by QPFetiSetDirichlet() */
+  TRY( PCDestroy(&child->pc) );
+  TRY( QPGetPC(child,&child->pc) );
+
+  /* create block diag */
+  Mat_IS *matis  = (Mat_IS*)qp->A->data;
+  TRY( MatCreateBlockDiag(comm,matis->A,&A) );
+  TRY( QPSetOperator(child,A) );
+  TRY( QPSetEq(child,qp->BE,NULL) );
+  TRY( QPSetOperatorNullSpace(child,qp->R) );
+  TRY( MatDestroy(&qp->BE) );
+
+  /* get mappings for RHS decomposition
+  *  create interface mappings
+  *  adapted from PCISSetUp */
+  /* get info on mapping */
+  mapping = qp->A->rmap->mapping;
+  TRY( ISLocalToGlobalMappingGetSize(mapping,&n) );
+  TRY( ISLocalToGlobalMappingGetInfo(mapping,&n_neigh,&neigh,&n_shared,&shared) );
+
+  /* Identifying interior and interface nodes, in local numbering */
+  TRY( PetscMalloc1(n,&array) );
+  TRY( PetscMemzero(array,n*sizeof(PetscInt)) );
+  for (i=0;i<n_neigh;i++)
+    for (j=0;j<n_shared[i];j++)
+        array[shared[i][j]] += 1;
+
+  /* Creating local and global index sets for interior and inteface nodes. */
+  TRY( PetscMalloc1(n,&idx_I_local) );
+  TRY( PetscMalloc1(n,&idx_B_local) );
+  for (i=0, n_B=0, n_I=0; i<n; i++) {
+    if (!array[i]) {
+      idx_I_local[n_I] = i;
+      n_I++;
+    } else {
+      idx_B_local[n_B] = i;
+      n_B++;
+    }
+  }
+  /* Getting the global numbering */
+  idx_B_global = idx_I_local + n_I; /* Just avoiding allocating extra memory, since we have vacant space */
+  idx_I_global = idx_B_local + n_B;
+  TRY( ISLocalToGlobalMappingApply(mapping,n_B,idx_B_local,idx_B_global) );
+  TRY( ISLocalToGlobalMappingApply(mapping,n_I,idx_I_local,idx_I_global) );
+
+  /* Creating the index sets */
+  TRY( ISCreateGeneral(PETSC_COMM_SELF,n_B,idx_B_local,PETSC_COPY_VALUES, &is_B_local) );
+  TRY( ISCreateGeneral(PETSC_COMM_SELF,n_B,idx_B_global,PETSC_COPY_VALUES,&is_B_global) );
+  /* TODO remove interior idx sets */
+  TRY( ISCreateGeneral(PETSC_COMM_SELF,n_I,idx_I_local,PETSC_COPY_VALUES, &is_I_local) );
+  TRY( ISCreateGeneral(PETSC_COMM_SELF,n_I,idx_I_global,PETSC_COPY_VALUES,&is_I_global) );
+
+    /* Creating work vectors and arrays */
+  TRY( VecCreateSeq(PETSC_COMM_SELF,n_B,&vec1_B) );
+  TRY( VecDuplicate(vec1_B, &D) );
+
+  /* Creating the scatter contexts */
+  TRY( VecScatterCreate(matis->x,is_B_local,vec1_B,NULL,&N_to_B) );
+  TRY( VecScatterCreate(qp->x,is_B_global,vec1_B,NULL,&global_to_B) );
+
+  /* Creating scaling "matrix" D */
+  TRY( MatGetDiagonal(matis->A,matis->x) );
+  TRY( VecScatterBegin(N_to_B,matis->x,D,INSERT_VALUES,SCATTER_FORWARD) );
+  TRY( VecScatterEnd(N_to_B,matis->x,D,INSERT_VALUES,SCATTER_FORWARD) );
+  TRY( VecCopy(D,vec1_B) );
+  TRY( VecDuplicate(qp->x,&counter) ); /* temporary auxiliar vector */
+  TRY( VecSet(counter,0.0) );
+  TRY( VecScatterBegin(global_to_B,vec1_B,counter,ADD_VALUES,SCATTER_REVERSE) );
+  TRY( VecScatterEnd(global_to_B,vec1_B,counter,ADD_VALUES,SCATTER_REVERSE) );
+  TRY( VecScatterBegin(global_to_B,counter,vec1_B,INSERT_VALUES,SCATTER_FORWARD) );
+  TRY( VecScatterEnd(global_to_B,counter,vec1_B,INSERT_VALUES,SCATTER_FORWARD) );
+  TRY( VecPointwiseDivide(D,D,vec1_B) );
+  TRY( VecDestroy(&counter) );
+
+  /* decompose assembled vecs */
+  TRY( MatCreateVecs(A,&child->x,&child->b) );
+  /* assemble b */
+  TRY( VecGetLocalVector(child->b,matis->y) );
+  TRY( VecDuplicate(qp->b,&b) );
+  TRY( VecCopy(qp->b,b) );
+  TRY( VecScatterBegin(global_to_B,qp->b,vec1_B,INSERT_VALUES,SCATTER_FORWARD) ); /* get interface DOFs */
+  TRY( VecScatterEnd(global_to_B,qp->b,vec1_B,INSERT_VALUES,SCATTER_FORWARD) );
+  TRY( VecPointwiseMult(vec1_B,D,vec1_B) ); /* DOF/(number of subdomains it belongs to) */
+  TRY( VecScatterBegin(global_to_B,vec1_B,b,INSERT_VALUES,SCATTER_REVERSE) ); /* replace values in RHS */
+  TRY( VecScatterEnd(global_to_B,vec1_B,b,INSERT_VALUES,SCATTER_REVERSE) );
+  TRY( VecScatterBegin(matis->cctx,b,matis->y,INSERT_VALUES,SCATTER_FORWARD) ); /* set local vec */
+  TRY( VecScatterEnd(matis->cctx,b,matis->y,INSERT_VALUES,SCATTER_FORWARD) );
+  /* assemble x */
+  TRY( VecGetLocalVector(child->x,matis->x) );
+  TRY( VecScatterBegin(matis->cctx,qp->x,matis->x,INSERT_VALUES,SCATTER_FORWARD) ); /* set local vec */
+  TRY( VecScatterEnd(matis->cctx,qp->x,matis->x,INSERT_VALUES,SCATTER_FORWARD) );
+
+  /* inherit l2g and i2g */
+  TRY( ISLocalToGlobalMappingGetIndices(mapping,&idx_l2g) );
+  TRY( ISCreateGeneral(PetscObjectComm((PetscObject)qp),n,idx_l2g,PETSC_COPY_VALUES,&l2g) );
+  TRY( ISLocalToGlobalMappingRestoreIndices(mapping,&idx_l2g) );
+  TRY( QPFetiSetLocalToGlobalMapping(child,l2g) );
+  TRY( QPFetiSetInterfaceToGlobalMapping(child,is_B_global) );
+
+  TRY( ISDestroy(&l2g) );
+  TRY( VecRestoreLocalVector(child->x,matis->x) );
+  TRY( VecRestoreLocalVector(child->b,matis->y) );
+  TRY( ISLocalToGlobalMappingRestoreInfo(mapping,&n_neigh,&neigh,&n_shared,&shared) );
+  TRY( ISDestroy(&is_B_local) );
+  TRY( ISDestroy(&is_B_global) );
+  TRY( ISDestroy(&is_I_local) );
+  TRY( ISDestroy(&is_I_global) );
+  TRY( VecScatterDestroy(&N_to_B) );
+  TRY( VecScatterDestroy(&global_to_B) );
+  TRY( PetscFree(idx_B_local) );
+  TRY( PetscFree(idx_I_local) );
+  TRY( PetscFree(array) );
+  TRY( VecDestroy(&D) );
+  TRY( VecDestroy(&vec1_B) );
+  TRY( VecDestroy(&b) );
+  TRY( MatDestroy(&A) );
+  
   PetscFunctionReturnI(0);
 }
 

@@ -1861,7 +1861,7 @@ PetscErrorCode QPGetEqMultiplicityScaling(QP qp, Vec *dE_new, Vec *dI_new)
   {
     TRY( MatIsImplicitTranspose(Bg,&flg) );
     FLLOP_ASSERT(flg,"Bg must be implicit transpose");
-    TRY( FllopMatTranspose(Bg,MAT_TRANSPOSE_EXPLICIT,&Bgt) );
+    TRY( PermonMatTranspose(Bg,MAT_TRANSPOSE_EXPLICIT,&Bgt) );
     for (i=ilo; i<ihi; i++) {
       TRY( MatGetRow(Bgt,i,&ncols,&cols,&vals) );
       k=0;
@@ -1879,7 +1879,7 @@ PetscErrorCode QPGetEqMultiplicityScaling(QP qp, Vec *dE_new, Vec *dI_new)
   if (count_Bd) {
     TRY( MatIsImplicitTranspose(Bd,&flg) );
     FLLOP_ASSERT(flg,"Bd must be implicit transpose");
-    TRY( FllopMatTranspose(Bd,MAT_TRANSPOSE_EXPLICIT,&Bdt) );
+    TRY( PermonMatTranspose(Bd,MAT_TRANSPOSE_EXPLICIT,&Bdt) );
     for (i=ilo; i<ihi; i++) {
       TRY( MatGetRow(Bdt,i,&ncols,&cols,&vals) );
       k=0;
@@ -1899,7 +1899,7 @@ PetscErrorCode QPGetEqMultiplicityScaling(QP qp, Vec *dE_new, Vec *dI_new)
   if (count_Bc) {
     TRY( MatIsImplicitTranspose(Bc,&flg) );
     FLLOP_ASSERT(flg,"Bc must be implicit transpose");
-    TRY( FllopMatTranspose(Bc,MAT_TRANSPOSE_EXPLICIT,&Bct) );
+    TRY( PermonMatTranspose(Bc,MAT_TRANSPOSE_EXPLICIT,&Bct) );
     for (i=ilo; i<ihi; i++) {
       TRY( MatGetRow(Bct,i,&ncols,&cols,&vals) );
       k=0;
@@ -1938,7 +1938,7 @@ PetscErrorCode QPGetEqMultiplicityScaling(QP qp, Vec *dE_new, Vec *dI_new)
   }
 
   if (scale_Bd) {
-    TRY( FllopMatTranspose(Bd,MAT_TRANSPOSE_EXPLICIT,&Bdt) );
+    TRY( PermonMatTranspose(Bd,MAT_TRANSPOSE_EXPLICIT,&Bdt) );
     for (i=ilo; i<ihi; i++) {
       TRY( MatGetRow(Bdt,i,&ncols,&cols,NULL) );
       if (ncols) {
@@ -1955,7 +1955,7 @@ PetscErrorCode QPGetEqMultiplicityScaling(QP qp, Vec *dE_new, Vec *dI_new)
   }
 
   if (scale_Bc) {
-    TRY( FllopMatTranspose(Bc,MAT_TRANSPOSE_EXPLICIT,&Bct) );
+    TRY( PermonMatTranspose(Bc,MAT_TRANSPOSE_EXPLICIT,&Bct) );
     for (i=ilo; i<ihi; i++) {
       TRY( MatGetRow(Bct,i,&ncols,&cols,NULL) );
       if (ncols) {

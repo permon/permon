@@ -1,14 +1,15 @@
 
-ALL: lib
+ALL: lib 
 
 CFLAGS   =
 FFLAGS   =
-SOURCEC  = permonkspregis.c permonksputils.c
-SOURCEF  = 
+SOURCEC  = extension.c
+SOURCEF  =
 SOURCEH  = 
 OBJSC    = ${SOURCEC:.c=.o}
-OBJSF    = 
+OBJSF    =
 LIBBASE  = libpermon
-LOCDIR   = src/ksp/interface/
+MANSEC   = Mat
+LOCDIR   = src/mat/impls/extension/
 
 include ${PERMON_DIR}/lib/permon/conf/permon_base

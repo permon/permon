@@ -3,7 +3,7 @@ ALL: lib
 
 CFLAGS   =
 FFLAGS   =
-SOURCEC  = fllopmatregis.c fllopmatutils.c fllopmatregularize.c fllopmatcomplete.c fllopmatmatmult.c fllopmatorth.c
+SOURCEC  = permonmatregis.c permonmatutils.c permonmatregularize.c permonmatcomplete.c permonmatmatmult.c permonmatorth.c
 SOURCEF  = 
 SOURCEH  = 
 OBJSC    = ${SOURCEC:.c=.o}

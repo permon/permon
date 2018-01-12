@@ -21,8 +21,10 @@ PetscErrorCode QPInitializePackage()
   TRY( PetscLogEventRegister("QPTDualize:G",      QP_CLASSID, &QPT_Dualize_AssembleG) );
   TRY( PetscLogEventRegister("QPTDualize:FactK",  QP_CLASSID, &QPT_Dualize_FactorK) );
   TRY( PetscLogEventRegister("QPTDualize:Bt",     QP_CLASSID, &QPT_Dualize_PrepareBt) );
+  TRY( PetscLogEventRegister("QPTFetiPrepare",    QP_CLASSID, &QPT_FetiPrepare) );
   TRY( PetscLogEventRegister("QPTAllInOne",       QP_CLASSID, &QPT_AllInOne) );
   TRY( PetscLogEventRegister("QPTOrthonormEq",    QP_CLASSID, &QPT_OrthonormalizeEq) );
+  TRY( PetscLogEventRegister("QPTRemoveGluing",   QP_CLASSID, &QPT_RemoveGluingOfDirichletDofs) );
   TRY( PetscLogEventRegister("QPTSplitBE",        QP_CLASSID, &QPT_SplitBE) );
   /* Process info & summary exclusions */
   TRY( FllopProcessInfoExclusions(QP_CLASSID, QP_CLASS_NAME) );

@@ -20,6 +20,14 @@ typedef struct {
   Vec *cols_loc;
 } Mat_BlockDiag;
 
+typedef struct {         
+	PetscSF SF;              /* SF for communication (column index) */
+	const PetscReal *leaves_sign; /* +-1 */
+	const PetscInt *leaves_row; /* row index */
+  PetscInt n_nonzeroRow; 
+	PetscInt n_leaves;
+} Mat_Gluing;
+
 typedef struct {
   Mat  A;                               /* the wrapped matrix */
   PetscLogEvent events[256];
@@ -37,6 +45,6 @@ typedef struct _n_MatCompleteCtx *MatCompleteCtx;
 
 FLLOP_EXTERN PetscLogEvent Mat_OrthColumns,Mat_Inv_Explicitly,Mat_Inv_SetUp;
 FLLOP_EXTERN PetscLogEvent Mat_Regularize,Mat_GetColumnVectors,Mat_RestoreColumnVectors,Mat_MatMultByColumns,Mat_TransposeMatMultByColumns;
-FLLOP_EXTERN PetscLogEvent Mat_GetMaxEigenvalue,Mat_FilterZeros,Mat_MergeAndDestroy,FllopMat_GetLocalMat;
+FLLOP_EXTERN PetscLogEvent Mat_GetMaxEigenvalue,Mat_FilterZeros,Mat_MergeAndDestroy,PermonMat_GetLocalMat;
 
 #endif

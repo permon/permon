@@ -7,15 +7,17 @@
 #define MATDUMMY        "dummy"
 #define MATINV          "inv"
 #define MATBLOCKDIAG    "blockdiag"
+#define MATGLUING       "gluing"
 #define MATSUM          "sum"
 #define MATPROD         "prod"
 #define MATDENSEPERMON    "densepermon"
 #define MATSEQDENSEPERMON "seqdensepermon"
 #define MATMPIDENSEPERMON "mpidensepermon"
 #define MATNESTPERMON   "nestpermon"
+#define MATEXTENSION    "extension"
 
-FLLOP_EXTERN PetscErrorCode FllopMatRegisterAll();
-FLLOP_EXTERN PetscBool FllopMatRegisterAllCalled;
+FLLOP_EXTERN PetscErrorCode PermonMatRegisterAll();
+FLLOP_EXTERN PetscBool PermonMatRegisterAllCalled;
 
 typedef enum {MAT_INV_MONOLITHIC=0, MAT_INV_BLOCKDIAG=1} MatInvType;
 
@@ -31,7 +33,6 @@ FLLOP_EXTERN PetscErrorCode MatCreateIdentity(MPI_Comm comm, PetscInt m, PetscIn
 FLLOP_EXTERN PetscErrorCode MatCreateZero(MPI_Comm comm, PetscInt m, PetscInt n, PetscInt M, PetscInt N, Mat *O);
 FLLOP_EXTERN PetscErrorCode MatCreateDiag(Vec d, Mat *D);
 FLLOP_EXTERN PetscErrorCode MatCreateOperatorFromUpperTriangular(Mat U, Mat *A);
-FLLOP_EXTERN PetscErrorCode MatCreateBlockDiagSeq(MPI_Comm comm, Mat localBlocks[], PetscInt N, Mat *B);
 FLLOP_EXTERN PetscErrorCode MatCreateExtension(MPI_Comm comm, PetscInt m, PetscInt n, PetscInt M, PetscInt N, Mat A, IS ris, PetscBool rows_use_global_numbering, IS cis, Mat *TA_new);
 FLLOP_EXTERN PetscErrorCode MatCreateOneRow(Vec a, Mat *A_new);
 
@@ -54,6 +55,18 @@ FLLOP_EXTERN PetscErrorCode MatCreateTransposePermon(Mat A,Mat *At);
 /*   REGULARIZATION   */
 typedef enum {MAT_REG_NONE=0, MAT_REG_EXPLICIT=1, MAT_REG_IMPLICIT=2} MatRegularizationType;
 FLLOP_EXTERN PetscErrorCode MatRegularize(Mat K, Mat R, MatRegularizationType type, Mat *newKreg);
+
+/* MATEXTENSION specific methods */
+FLLOP_EXTERN PetscErrorCode MatExtensionCreateCondensedRows(Mat TA,Mat *A,IS *ris_local);
+FLLOP_EXTERN PetscErrorCode MatExtensionCreateLocalMat(Mat TA,Mat *local);
+FLLOP_EXTERN PetscErrorCode MatExtensionGetColumnIS(Mat TA,IS *cis);
+FLLOP_EXTERN PetscErrorCode MatExtensionGetRowIS(Mat TA,IS *ris);
+FLLOP_EXTERN PetscErrorCode MatExtensionGetRowISLocal(Mat TA,IS *ris);
+FLLOP_EXTERN PetscErrorCode MatExtensionGetCondensed(Mat TA,Mat *A);
+FLLOP_EXTERN PetscErrorCode MatExtensionSetColumnIS(Mat TA,IS  cis);
+FLLOP_EXTERN PetscErrorCode MatExtensionSetRowIS(Mat TA,IS  ris,PetscBool rows_use_global_numbering);
+FLLOP_EXTERN PetscErrorCode MatExtensionSetCondensed(Mat TA,Mat  A);
+FLLOP_EXTERN PetscErrorCode MatExtensionSetUp(Mat TA);
 
 /* MATINV specific methods */
 FLLOP_EXTERN PetscErrorCode MatInvGetMat(Mat imat, Mat *A);
@@ -83,6 +96,10 @@ FLLOP_EXTERN PetscErrorCode MatInvCreateInnerObjects(Mat imat);
 /* MATTIMER specific methods */
 FLLOP_EXTERN PetscErrorCode MatTimerGetMat(Mat W, Mat *A);
 FLLOP_EXTERN PetscErrorCode MatTimerSetOperation(Mat mat,MatOperation op,const char *opname,void(*opf)(void));
+
+/* MATGLUING specific methods */
+FLLOP_EXTERN PetscErrorCode MatGluingSetLocalBlock(Mat B,Mat Block,PetscInt nghosts);
+FLLOP_EXTERN PetscErrorCode MatGluingLayoutSetUp(Mat B);
 
 /* MATTRANSPOSE specific methods */
 typedef enum {MAT_TRANSPOSE_EXPLICIT, MAT_TRANSPOSE_IMPLICIT, MAT_TRANSPOSE_CHEAPEST} MatTransposeType;
@@ -123,11 +140,11 @@ FLLOP_EXTERN PetscErrorCode MatGetRowNormalization2(Mat A, Vec *d);
 FLLOP_EXTERN PetscErrorCode MatMatMultByColumns(Mat A, Mat B, PetscBool filter, Mat *C_new);
 FLLOP_EXTERN PetscErrorCode MatTransposeMatMultByColumns(Mat A, Mat B, PetscBool filter, Mat *C_new);
 FLLOP_EXTERN PetscErrorCode MatTransposeMatMultWorks(Mat A,Mat B,PetscBool *flg);
-FLLOP_EXTERN PetscErrorCode FllopMatTranspose(Mat A,MatTransposeType type,Mat *At_out);
-FLLOP_EXTERN PetscErrorCode FllopMatMatMult(Mat A,Mat B,MatReuse scall,PetscReal fill,Mat *C);
-FLLOP_EXTERN PetscErrorCode FllopMatGetLocalMat(Mat A,Mat *Aloc);
-FLLOP_EXTERN PetscErrorCode FllopMatCreateDenseProductMatrix(Mat A, PetscBool A_transpose, Mat B, Mat *C_new);
-FLLOP_EXTERN PetscErrorCode FllopMatConvertBlocks(Mat A, MatType newtype,MatReuse reuse,Mat *B);
+FLLOP_EXTERN PetscErrorCode PermonMatTranspose(Mat A,MatTransposeType type,Mat *At_out);
+FLLOP_EXTERN PetscErrorCode PermonMatMatMult(Mat A,Mat B,MatReuse scall,PetscReal fill,Mat *C);
+FLLOP_EXTERN PetscErrorCode PermonMatGetLocalMat(Mat A,Mat *Aloc);
+FLLOP_EXTERN PetscErrorCode PermonMatCreateDenseProductMatrix(Mat A, PetscBool A_transpose, Mat B, Mat *C_new);
+FLLOP_EXTERN PetscErrorCode PermonMatConvertBlocks(Mat A, MatType newtype,MatReuse reuse,Mat *B);
 FLLOP_EXTERN PetscErrorCode PermonMatCopyProperties(Mat A,Mat B);
 FLLOP_EXTERN PetscErrorCode PermonMatSetFromOptions(Mat B);
 FLLOP_EXTERN PetscErrorCode PermonMatConvertInplace(Mat B, MatType type);

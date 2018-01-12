@@ -2,7 +2,7 @@
 ALL: lib
 
 SOURCEH  = ../../include/permon/private/permonmatimpl.h ../../include/permonmat.h
-DIRS     = interface impls
+DIRS     = interface impls utils
 LOCDIR   = src/mat/
 MANSEC   = Mat
 

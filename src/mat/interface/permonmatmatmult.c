@@ -174,12 +174,12 @@ static PetscErrorCode MatMatBlockDiagMultByColumns_Private(Mat B, PetscBool B_tr
     Bt = B;
   } else {
     /* transpose matrix B */
-    TRY( FllopMatTranspose(B, MAT_TRANSPOSE_EXPLICIT, &Bt) );
+    TRY( PermonMatTranspose(B, MAT_TRANSPOSE_EXPLICIT, &Bt) );
   }
   TRY( MatNestPermonGetVecs(Bt,&lambda,NULL) );
 
   /* get "local" part of matrix Bt */
-  TRY( FllopMatGetLocalMat(Bt, &Bt_loc) );
+  TRY( PermonMatGetLocalMat(Bt, &Bt_loc) );
   
   /* multiply Bt_loc' * R_loc = Gt_loc */
   TRY( MatMatMultByColumns_Private(Bt_loc, PETSC_TRUE, R_loc, PETSC_FALSE, &Gt_loc) );
@@ -188,12 +188,12 @@ static PetscErrorCode MatMatBlockDiagMultByColumns_Private(Mat B, PetscBool B_tr
   if (!B_transpose) TRY( MatDestroy(&Bt) );
   
   /* create global distributed G by vertical concatenating local sequential G_loc=Gt_loc' */
-  TRY( FllopMatTranspose(Gt_loc, MAT_TRANSPOSE_EXPLICIT, &G_loc) );
+  TRY( PermonMatTranspose(Gt_loc, MAT_TRANSPOSE_EXPLICIT, &G_loc) );
   TRY( MatMatMultByColumns_MatFilterZeros_Private(&G_loc,filter) );
   TRY( MatMergeAndDestroy(PetscObjectComm((PetscObject)B), &G_loc, lambda, &G) );
 
   /* return Gt as implicit transpose of G */
-  TRY( FllopMatTranspose(G, MAT_TRANSPOSE_CHEAPEST, Gt_new) );
+  TRY( PermonMatTranspose(G, MAT_TRANSPOSE_CHEAPEST, Gt_new) );
   TRY( MatDestroy(&G) );
 
   TRY( VecDestroy(&lambda) );
@@ -212,7 +212,7 @@ PETSC_STATIC_INLINE PetscErrorCode MatMatMultByColumns_Private(Mat A, PetscBool 
   if (flg) {
     TRY( MatMatBlockDiagMultByColumns_Private(A,A_transpose,B,filter,C_new) );
   } else {
-    TRY( FllopMatCreateDenseProductMatrix(A,A_transpose,B,C_new) );
+    TRY( PermonMatCreateDenseProductMatrix(A,A_transpose,B,C_new) );
     TRY( MatMatMultByColumns_MatMult_Private(A,A_transpose,B,*C_new) );
     TRY( MatMatMultByColumns_MatFilterZeros_Private(C_new,filter) );
   }
