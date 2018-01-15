@@ -93,6 +93,10 @@ FLLOP_EXTERN PetscErrorCode QPTHomogenizeEq(QP qp);
 FLLOP_EXTERN PetscErrorCode QPTOrthonormalizeEq(QP qp,MatOrthType type,MatOrthForm form);
 FLLOP_EXTERN PetscErrorCode QPTOrthonormalizeEqFromOptions(QP qp);
 FLLOP_EXTERN PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType);
+FLLOP_EXTERN PetscErrorCode QPTRemoveGluingOfDirichletDofs(QP qp);
+FLLOP_EXTERN PetscErrorCode QPTFetiPrepare(QP qp,PetscBool regularize);
+FLLOP_EXTERN PetscErrorCode QPTFetiPrepareReuseCP(QP qp,PetscBool regularize);
+FLLOP_EXTERN PetscErrorCode QPTFetiPrepareReuseCPReset();
 FLLOP_EXTERN PetscErrorCode QPTFreezeIneq(QP qp);
 FLLOP_EXTERN PetscErrorCode QPTSplitBE(QP qp);
 FLLOP_EXTERN PetscErrorCode QPTAllInOne(QP qp,MatInvType invType,PetscBool dual,PetscBool project,PetscReal penalty,PetscBool penalty_direct,PetscBool regularize);
@@ -101,6 +105,7 @@ FLLOP_EXTERN PetscErrorCode QPTScale(QP qp);
 FLLOP_EXTERN PetscErrorCode QPTScaleObjectiveByScalar(QP qp,PetscScalar scale_A,PetscScalar scale_b);
 FLLOP_EXTERN PetscErrorCode QPTNormalizeHessian(QP qp);
 FLLOP_EXTERN PetscErrorCode QPTNormalizeObjective(QP qp);
+FLLOP_EXTERN PetscErrorCode QPTMatISToBlockDiag(QP qp);
 
 /* MatPenalized */
 FLLOP_EXTERN PetscErrorCode MatCreatePenalized(QP qp,PetscReal rho,Mat *A_inner);

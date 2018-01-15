@@ -107,8 +107,8 @@ static PetscErrorCode MatFilterZeros_NestPermon(Mat A, PetscReal tol, Mat *Af_ne
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "FllopMatCreateDenseProductMatrix_NestPermon"
-static PetscErrorCode FllopMatCreateDenseProductMatrix_NestPermon(Mat A, PetscBool A_transpose, Mat B, Mat *C_new)
+#define __FUNCT__ "PermonMatCreateDenseProductMatrix_NestPermon"
+static PetscErrorCode PermonMatCreateDenseProductMatrix_NestPermon(Mat A, PetscBool A_transpose, Mat B, Mat *C_new)
 {
   PetscInt i,j,Mn,Nn,MnNn;
   Mat *mats_out,**A_mats,**B_mats,*B_p;
@@ -132,14 +132,14 @@ static PetscErrorCode FllopMatCreateDenseProductMatrix_NestPermon(Mat A, PetscBo
   }
 
   if (Mn==1 && Nn==1) {
-    TRY( FllopMatCreateDenseProductMatrix(A_mats[0][0],A_transpose,B_mats[0][0],C_new) );
+    TRY( PermonMatCreateDenseProductMatrix(A_mats[0][0],A_transpose,B_mats[0][0],C_new) );
     PetscFunctionReturn(0);
   }
 
   MnNn = Mn*Nn;
   TRY( PetscMalloc(MnNn*sizeof(Mat),&mats_out) );
   for (i=0; i<Mn; i++) for (j=0; j<Nn; j++) {
-    TRY( FllopMatCreateDenseProductMatrix(A_transpose?A_mats[0][i]:A_mats[i][0],A_transpose,B_mats[0][j],&mats_out[i*Nn+j]) );
+    TRY( PermonMatCreateDenseProductMatrix(A_transpose?A_mats[0][i]:A_mats[i][0],A_transpose,B_mats[0][j],&mats_out[i*Nn+j]) );
   }
   TRY( MatCreateNestPermon(PetscObjectComm((PetscObject)A),Mn,NULL,Nn,NULL,mats_out,C_new) );
   for (i=0; i<MnNn; i++) TRY( MatDestroy(&mats_out[i]) );
@@ -148,8 +148,8 @@ static PetscErrorCode FllopMatCreateDenseProductMatrix_NestPermon(Mat A, PetscBo
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "FllopMatTranspose_NestPermon"
-static PetscErrorCode FllopMatTranspose_NestPermon(Mat A,MatTransposeType type,Mat *At_out)
+#define __FUNCT__ "PermonMatTranspose_NestPermon"
+static PetscErrorCode PermonMatTranspose_NestPermon(Mat A,MatTransposeType type,Mat *At_out)
 {
   PetscInt i,j,Mn,Nn,MnNn;
   Mat *mats_out,**mats_in;
@@ -160,7 +160,7 @@ static PetscErrorCode FllopMatTranspose_NestPermon(Mat A,MatTransposeType type,M
   TRY( PetscMalloc(MnNn*sizeof(Mat),&mats_out) );
   for (i=0; i<Mn; i++) for (j=0; j<Nn; j++) {
     if (mats_in[i][j]) {
-      TRY( FllopMatTranspose(mats_in[i][j],type,&mats_out[j*Mn+i]) );
+      TRY( PermonMatTranspose(mats_in[i][j],type,&mats_out[j*Mn+i]) );
     } else {
       mats_out[j*Mn+i] = NULL;
     }
@@ -172,8 +172,8 @@ static PetscErrorCode FllopMatTranspose_NestPermon(Mat A,MatTransposeType type,M
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "FllopMatGetLocalMat_NestPermon"
-static PetscErrorCode FllopMatGetLocalMat_NestPermon(Mat A,Mat *Aloc)
+#define __FUNCT__ "PermonMatGetLocalMat_NestPermon"
+static PetscErrorCode PermonMatGetLocalMat_NestPermon(Mat A,Mat *Aloc)
 {
   PetscInt i,j,Mn,Nn,MnNn;
   Mat *mats_out,**mats_in;
@@ -183,7 +183,7 @@ static PetscErrorCode FllopMatGetLocalMat_NestPermon(Mat A,Mat *Aloc)
   MnNn = Mn*Nn;
   TRY( PetscMalloc(MnNn*sizeof(Mat),&mats_out) );
   for (i=0; i<Mn; i++) for (j=0; j<Nn; j++) {
-    TRY( FllopMatGetLocalMat(mats_in[i][j],&mats_out[i*Nn+j]) );
+    TRY( PermonMatGetLocalMat(mats_in[i][j],&mats_out[i*Nn+j]) );
   }
   TRY( MatCreateNestPermon(PETSC_COMM_SELF,Mn,NULL,Nn,NULL,mats_out,Aloc) );
   for (i=0; i<MnNn; i++) TRY( MatDestroy(&mats_out[i]) );
@@ -235,8 +235,8 @@ static PetscErrorCode MatMergeAndDestroy_NestPermon(MPI_Comm comm, Mat *local_in
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "FllopMatConvertBlocks_NestPermon"
-static PetscErrorCode FllopMatConvertBlocks_NestPermon(Mat A, MatType newtype, MatReuse reuse, Mat* B)
+#define __FUNCT__ "PermonMatConvertBlocks_NestPermon"
+static PetscErrorCode PermonMatConvertBlocks_NestPermon(Mat A, MatType newtype, MatReuse reuse, Mat* B)
 {
   PetscInt i,j,Mn,Nn,MnNn;
   Mat *mats_out,**mats_in;
@@ -250,7 +250,7 @@ static PetscErrorCode FllopMatConvertBlocks_NestPermon(Mat A, MatType newtype, M
   for (i=0; i<Mn; i++) for (j=0; j<Nn; j++) {
     block = mats_in[i][j];
     cblock = (reuse == MAT_INPLACE_MATRIX) ? block : NULL;
-    TRY( FllopMatConvertBlocks(block,newtype,reuse,&cblock) );
+    TRY( PermonMatConvertBlocks(block,newtype,reuse,&cblock) );
     mats_out[i*Nn+j] = cblock;
   }
   TRY( MatCreateNestPermon(PetscObjectComm((PetscObject)A),Mn,NULL,Nn,NULL,mats_out,&B_) );
@@ -439,7 +439,7 @@ static PetscErrorCode MatMatMult_NestPermon_NestPermon(Mat A,Mat B,MatReuse scal
     for (j=0; j<N; j++) {
       for (k=0; k<K1; k++) {
         if (A_mats_in[i][k]) {
-          TRY( FllopMatMatMult(A_mats_in[i][k],B_mats_in[k][j],MAT_INITIAL_MATRIX,fill,&AB) );
+          TRY( PermonMatMatMult(A_mats_in[i][k],B_mats_in[k][j],MAT_INITIAL_MATRIX,fill,&AB) );
         } else {
           AB = NULL;
         }
@@ -517,6 +517,53 @@ static PetscErrorCode MatAXPY_NestPermon(Mat Y, PetscScalar a, Mat X, MatStructu
   PetscFunctionReturn(0);
 }
 
+#undef __FUNCT__
+#define __FUNCT__ "MatExtensionCreateCondensedRows_NestPermon"
+static PetscErrorCode MatExtensionCreateCondensedRows_NestPermon(Mat TA,Mat *A,IS *ris_local)
+{
+  PetscInt j,Mn,Nn,m;
+  Mat **mats_in,*mats_out;
+  IS cis,ris_block,*ris_block_orig,ris_union;
+  Mat block,block_A;
+  PetscBool flg;
+
+  PetscFunctionBegin;
+  TRY( MatNestGetSubMats(TA,&Mn,&Nn,&mats_in) );
+  FLLOP_ASSERT(Mn==1,"Mn==1");
+  TRY( PetscMalloc1(Nn,&mats_out) );
+  TRY( PetscMalloc1(Nn,&ris_block_orig) );
+
+  for (j=0; j<Nn; j++) {
+    block = mats_in[0][j];
+    TRY( PetscObjectTypeCompare((PetscObject)block,MATEXTENSION,&flg) );
+    if (!flg) FLLOP_SETERRQ1(PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONG,"nested block %d,0 is not extension",j);
+    TRY( MatExtensionGetRowISLocal(block,&ris_block_orig[j]) );
+  }
+
+  TRY( ISConcatenate(PETSC_COMM_SELF,Nn,ris_block_orig,&ris_union) );
+  TRY( ISSortRemoveDups(ris_union) );
+  TRY( ISGetLocalSize(ris_union,&m) );
+
+  for (j=0; j<Nn; j++) {
+    block = mats_in[0][j];
+    TRY( ISEmbed(ris_block_orig[j],ris_union,PETSC_TRUE,&ris_block) );
+    TRY( MatExtensionGetCondensed(block,&block_A) );
+    TRY( MatExtensionGetColumnIS(block,&cis) );
+    TRY( MatCreateExtension(PetscObjectComm((PetscObject)TA),m,block->cmap->n,PETSC_DECIDE,block->cmap->N,block_A,ris_block,PETSC_FALSE,cis,&mats_out[j]) );
+    TRY( ISDestroy(&ris_block) );
+  }
+
+  TRY( MatCreateNestPermon(PetscObjectComm((PetscObject)TA),1,NULL,Nn,NULL,mats_out,A) );
+  if (ris_local) {
+    *ris_local = ris_union;
+  } else {
+    TRY( ISDestroy(&ris_union) );
+  }
+
+  TRY( PetscFree(mats_out) );
+  TRY( PetscFree(ris_block_orig) );
+  PetscFunctionReturn(0);
+}
 
 #undef __FUNCT__
 #define __FUNCT__ "MatConvert_Nest_NestPermon"
@@ -537,15 +584,16 @@ PETSC_EXTERN PetscErrorCode MatConvert_Nest_NestPermon(Mat A,MatType type,MatReu
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatGetColumnVectors_C",MatGetColumnVectors_NestPermon) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatRestoreColumnVectors_C",MatRestoreColumnVectors_NestPermon) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatFilterZeros_C",MatFilterZeros_NestPermon) );
-  TRY( PetscObjectComposeFunction((PetscObject)B,"FllopMatCreateDenseProductMatrix_C",FllopMatCreateDenseProductMatrix_NestPermon) );
-  TRY( PetscObjectComposeFunction((PetscObject)B,"FllopMatTranspose_C",FllopMatTranspose_NestPermon) );
-  TRY( PetscObjectComposeFunction((PetscObject)B,"FllopMatGetLocalMat_C",FllopMatGetLocalMat_NestPermon) );
+  TRY( PetscObjectComposeFunction((PetscObject)B,"PermonMatCreateDenseProductMatrix_C",PermonMatCreateDenseProductMatrix_NestPermon) );
+  TRY( PetscObjectComposeFunction((PetscObject)B,"PermonMatTranspose_C",PermonMatTranspose_NestPermon) );
+  TRY( PetscObjectComposeFunction((PetscObject)B,"PermonMatGetLocalMat_C",PermonMatGetLocalMat_NestPermon) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatMergeAndDestroy_C",MatMergeAndDestroy_NestPermon) );
-  TRY( PetscObjectComposeFunction((PetscObject)B,"FllopMatConvertBlocks_C",FllopMatConvertBlocks_NestPermon) );
+  TRY( PetscObjectComposeFunction((PetscObject)B,"PermonMatConvertBlocks_C",PermonMatConvertBlocks_NestPermon) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatNestPermonGetVecs_C",MatNestPermonGetVecs_NestPermon) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatNestPermonGetColumnISs_NestPermon_C",MatNestPermonGetColumnISs_NestPermon) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatNestSetVecType_C",  MatNestSetVecType_NestPermon) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatConvert_nest_nestpermon_C", MatConvert_Nest_NestPermon) );
+  TRY( PetscObjectComposeFunction((PetscObject)B,"MatExtensionCreateCondensedRows_Extension_C",MatExtensionCreateCondensedRows_NestPermon) );
 
   *newmat = B;
   PetscFunctionReturn(0);
