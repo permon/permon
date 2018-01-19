@@ -59,7 +59,7 @@ PetscErrorCode MatRemoveGluingOfDirichletDofs_old(Mat Bgt, Vec cg, Mat Bdt, Mat 
   }
   TRY( ISCreateGeneral(comm,k,idx,PETSC_COPY_VALUES,&iscol) );
   TRY( ISCreateStride(comm,n,lo,1,&isrow) );     /* all rows */
-  TRY( MatGetSubMatrix(Bgt,isrow,iscol,MAT_INITIAL_MATRIX,Bgt_new) );
+  TRY( MatCreateSubMatrix(Bgt,isrow,iscol,MAT_INITIAL_MATRIX,Bgt_new) );
   TRY( FllopPetscObjectInheritName((PetscObject)*Bgt_new,(PetscObject)Bgt,NULL) );
   if (cg_new) {
     FLLOP_ASSERT(cg,"cg vector specified");
@@ -154,7 +154,7 @@ PetscErrorCode MatRemoveGluingOfDirichletDofs(Mat Bgt, Vec cg, Mat Bdt, Mat *Bgt
   TRY( ISDestroy(&iscol_self) );
 
   TRY( MatGetOwnershipIS(Bgt,&isrow,NULL) );
-  TRY( MatGetSubMatrix(Bgt,isrow,iscol,MAT_INITIAL_MATRIX,Bgt_new) );
+  TRY( MatCreateSubMatrix(Bgt,isrow,iscol,MAT_INITIAL_MATRIX,Bgt_new) );
   TRY( FllopPetscObjectInheritName((PetscObject)*Bgt_new,(PetscObject)Bgt,NULL) );
   if (cg_new) {
     FLLOP_ASSERT(cg,"cg vector specified");

@@ -1842,8 +1842,8 @@ PetscErrorCode QPTSplitBE(QP qp)
   TRY( ISCreateGeneral(comm, ng, idxg, PETSC_OWN_POINTER, &isrowg) );
   TRY( ISCreateGeneral(comm, nd, idxd, PETSC_OWN_POINTER, &isrowd) );
   
-  TRY( MatGetSubMatrix(Be, isrowg, NULL, MAT_INITIAL_MATRIX, &Bg) );
-  TRY( MatGetSubMatrix(Be, isrowd, NULL, MAT_INITIAL_MATRIX, &Bd) );
+  TRY( MatCreateSubMatrix(Be, isrowg, NULL, MAT_INITIAL_MATRIX, &Bg) );
+  TRY( MatCreateSubMatrix(Be, isrowd, NULL, MAT_INITIAL_MATRIX, &Bd) );
   TRY( MatDestroy(&Be) );
 
   TRY( PermonMatTranspose(Bg, MAT_TRANSPOSE_EXPLICIT, &Bgt) );
