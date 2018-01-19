@@ -644,6 +644,7 @@ FLLOP_EXTERN PetscErrorCode MatCreate_BlockDiag(Mat B) {
   B->ops->getinfo            = MatGetInfo_BlockDiag;
   B->ops->setoption          = MatSetOption_BlockDiag;
   B->ops->getdiagonal        = MatGetDiagonal_BlockDiag;
+  B->ops->getdiagonalblock   = MatGetDiagonalBlock_BlockDiag;
   B->ops->view               = MatView_BlockDiag;
   B->ops->assemblybegin      = MatAssemblyBegin_BlockDiag;
   B->ops->assemblyend        = MatAssemblyEnd_BlockDiag;
@@ -654,7 +655,6 @@ FLLOP_EXTERN PetscErrorCode MatCreate_BlockDiag(Mat B) {
   B->ops->zerorowscolumns    = MatZeroRowsColumns_BlockDiag;
   B->ops->transposematmult   = MatTransposeMatMult_BlockDiag_BlockDiag;
   B->ops->scale              = MatScale_BlockDiag;
-  TRY( PetscObjectComposeFunction((PetscObject)B,"MatGetDiagonalBlock_C",MatGetDiagonalBlock_BlockDiag) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatGetColumnVectors_C",MatGetColumnVectors_BlockDiag) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatRestoreColumnVectors_C",MatRestoreColumnVectors_BlockDiag) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatMatMult_blockdiag_aij_C",MatMatMult_BlockDiag_AIJ) );
