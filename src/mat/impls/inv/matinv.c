@@ -4,7 +4,7 @@
 #include <permonksp.h>
 #include <petsc/private/pcimpl.h>
 #if defined(PETSC_HAVE_MUMPS)
-#include <permon/private/mumpsimpl.h>
+#include <permon/private/petsc/mat/mumpsimpl.h>
 #endif
 
 PetscLogEvent Mat_Inv_Explicitly, Mat_Inv_SetUp;
@@ -87,13 +87,13 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
       TRY( PCSetFromOptions(pc) );
       TRY( PCSetUp(pc) );
       TRY( PCFactorGetMatrix(pc,&F) );
-      mumps =(Mat_MUMPS*)F->spptr;
+      mumps =(Mat_MUMPS*)F->data;
     } else {
       TRY( PetscPrintf(PetscObjectComm((PetscObject)imat), "WARNING: Performing extra factorization with MUMPS Cholesky just for nullspace detection. Avoid this by setting MUMPS Cholesky as MATINV solver.\n") );
       TRY( MatGetFactor(Kl,MATSOLVERMUMPS,MAT_FACTOR_CHOLESKY,&F) );
       TRY( MatMumpsSetIcntl(F,24,1) ); /* null pivot detection */
       TRY( MatMumpsSetCntl(F,3,null_pivot_threshold) ); /* null pivot threshold */
-      mumps =(Mat_MUMPS*)F->spptr;
+      mumps =(Mat_MUMPS*)F->data;
       TRY( MatCholeskyFactorSymbolic(F,Kl,NULL,NULL) );
       TRY( MatCholeskyFactorNumeric(F,Kl,NULL) );
     }
