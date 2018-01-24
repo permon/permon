@@ -136,7 +136,7 @@ static PetscErrorCode MatRegularize_GetRegularization_Private(Mat K_loc, Mat R_l
     /* R_all_cols = 0:1:defect_loc-1 */
     TRY( ISCreateStride(PETSC_COMM_SELF, defect_loc, 0, 1, &R_all_cols) );
     
-    TRY( MatGetSubMatrix(R_loc, pivots, R_all_cols, MAT_INITIAL_MATRIX, &RI) );
+    TRY( MatCreateSubMatrix(R_loc, pivots, R_all_cols, MAT_INITIAL_MATRIX, &RI) );
     TRY( MatConvert(RI,MATDENSE,MAT_INPLACE_MATRIX,&RI) );
     TRY( ISDestroy(&R_all_cols) );
 

@@ -35,8 +35,9 @@
   PetscScalar       *solve_work;      /* work space used in MatSolve */                    \
   IS                row, col, icol;   /* index sets, used for reorderings */ \
   PetscBool         pivotinblocks;    /* pivot inside factorization of each diagonal block */ \
-  Mat               parent             /* set if this matrix was formed with MatDuplicate(...,MAT_SHARE_NONZERO_PATTERN,....);
-                                         means that this shares some data structures with the parent including diag, ilen, imax, i, j */
+  Mat               parent;           /* set if this matrix was formed with MatDuplicate(...,MAT_SHARE_NONZERO_PATTERN,....); \
+                                         means that this shares some data structures with the parent including diag, ilen, imax, i, j */\
+  Mat_SubSppt       *submatis1         /* used by MatCreateSubMatrices_MPIXAIJ_Local */
 
 typedef struct {
   MatTransposeColoring matcoloring;
@@ -105,13 +106,13 @@ typedef struct {
   PetscBool   ibdiagvalid;                    /* inverses of block diagonals are valid. */
   PetscScalar fshift,omega;                   /* last used omega and fshift */
 
-  ISColoring coloring;                        /* set with MatADSetColoring() used by MatADSetValues() */
+  ISColoring  coloring;                       /* set with MatADSetColoring() used by MatADSetValues() */
 
-  PetscScalar       *matmult_abdense;    /* used by MatMatMult() */
-  Mat_PtAP          *ptap;               /* used by MatPtAP() */
-  Mat_MatMatMatMult *matmatmatmult;      /* used by MatMatMatMult() */
-  Mat_RARt          *rart;               /* used by MatRARt() */
-  Mat_MatMatTransMult *abt;              /* used by MatMatTransposeMult() */
+  PetscScalar         *matmult_abdense;    /* used by MatMatMult() */
+  Mat_PtAP            *ptap;               /* used by MatPtAP() */
+  Mat_MatMatMatMult   *matmatmatmult;      /* used by MatMatMatMult() */
+  Mat_RARt            *rart;               /* used by MatRARt() */
+  Mat_MatMatTransMult *abt;                /* used by MatMatTransposeMult() */
 } Mat_SeqAIJ;
 
 #endif

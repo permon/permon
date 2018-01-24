@@ -296,7 +296,7 @@ PetscErrorCode MatConvertFrom_Extension(Mat A,MatType type,MatReuse reuse,Mat *n
   if (!ris) {
     TRY( MatGetOwnershipIS(Aloc,&ris,NULL) );
   }
-  TRY( MatGetSubMatrix(Aloc,ris,NULL,MAT_INITIAL_MATRIX,&As) );
+  TRY( MatCreateSubMatrix(Aloc,ris,NULL,MAT_INITIAL_MATRIX,&As) );
   TRY( MatDestroy(&Aloc) );
 
   TRY( ISAdd(ris,A->rmap->rstart,&tempis) );
@@ -310,7 +310,7 @@ PetscErrorCode MatConvertFrom_Extension(Mat A,MatType type,MatReuse reuse,Mat *n
   if (!cis) {
     TRY( MatGetOwnershipIS(Ast,&cis,NULL) );
   }
-  TRY( MatGetSubMatrix(Ast,cis,NULL,MAT_INITIAL_MATRIX,&Asts) );
+  TRY( MatCreateSubMatrix(Ast,cis,NULL,MAT_INITIAL_MATRIX,&Asts) );
   TRY( MatDestroy(&Ast) );
 
   TRY( MatTranspose(Asts,MAT_INITIAL_MATRIX,&As) );
@@ -391,7 +391,7 @@ PETSC_EXTERN PetscErrorCode MatConvert_NestPermon_Extension(Mat A,MatType type,M
     for (j=0; j<Nn; j++) {
       Aloc = mats_out[i*Nn+j];
 
-      TRY( MatGetSubMatrix(Aloc,risi,NULL,MAT_INITIAL_MATRIX,&As) );
+      TRY( MatCreateSubMatrix(Aloc,risi,NULL,MAT_INITIAL_MATRIX,&As) );
       TRY( MatDestroy(&Aloc) );
 
       TRY( MatTranspose(As,MAT_INITIAL_MATRIX,&Ast) );
@@ -437,7 +437,7 @@ PETSC_EXTERN PetscErrorCode MatConvert_NestPermon_Extension(Mat A,MatType type,M
     for (i=0; i<Mn; i++) {
       Ast = mats_out[i*Nn+j];
 
-      TRY( MatGetSubMatrix(Ast,cis_arr[j],NULL,MAT_INITIAL_MATRIX,&Asts) );
+      TRY( MatCreateSubMatrix(Ast,cis_arr[j],NULL,MAT_INITIAL_MATRIX,&Asts) );
       TRY( MatDestroy(&Ast) );
 
       TRY( MatTranspose(Asts,MAT_INITIAL_MATRIX,&As) );
@@ -876,7 +876,7 @@ PetscErrorCode MatMatTransposeMult_Extension_Extension_same(Mat A, Mat B, MatReu
   TRY( PetscMalloc1(neighborsLt,&submats) );
   TRY( PetscMalloc1(neighborsLt,&data) );
   for (i=0; i < neighborsLt; i++) {
-    TRY( MatGetSubMatrix(dataA->A,isrow,iscol[i],MAT_INITIAL_MATRIX,&submats[i]) );
+    TRY( MatCreateSubMatrix(dataA->A,isrow,iscol[i],MAT_INITIAL_MATRIX,&submats[i]) );
     TRY( MatDenseGetArray(submats[i], &data[i]) );
     TRY( ISDestroy(&iscol[i]) );
   }
@@ -957,7 +957,7 @@ PetscErrorCode MatMatTransposeMult_Extension_Extension_same(Mat A, Mat B, MatReu
   for (i = neighborsLt+1; i <allNeighbors; i++) {
     TRY( ISCreateGeneral(PETSC_COMM_SELF,nElem[j],iElem,PETSC_USE_POINTER,&iscolLoc[j]) );
     iElem += nElem[j];
-    TRY( MatGetSubMatrix(dataA->A,isrow,iscolLoc[j],MAT_INITIAL_MATRIX,&submatsLoc[j]) );
+    TRY( MatCreateSubMatrix(dataA->A,isrow,iscolLoc[j],MAT_INITIAL_MATRIX,&submatsLoc[j]) );
     TRY( MatDenseGetArray(submatsLoc[j],&dataLoc[j]) );
     TRY( ISDestroy(&iscolLoc[j]) );
     j += 1;
