@@ -807,7 +807,7 @@ static PetscErrorCode PermonMatGetLocalMat_Default(Mat A,Mat *Aloc)
 
   PetscFunctionBegin;
   TRY( MatGetOwnershipIS(A,&ris,&cis) );
-  TRY( MatGetSubMatrices(A,1,&ris,&cis,MAT_INITIAL_MATRIX,&Aloc_ptr) );
+  TRY( MatCreateSubMatrices(A,1,&ris,&cis,MAT_INITIAL_MATRIX,&Aloc_ptr) );
   *Aloc = *Aloc_ptr;
   TRY( PetscFree(Aloc_ptr) );
   TRY( ISDestroy(&ris) );
