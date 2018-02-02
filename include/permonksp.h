@@ -6,6 +6,15 @@
 #define KSPFETI             "feti"
 #define KSPDCG              "dcg"
 
+
+
+typedef enum {
+  DCG_SPACE_HAAR,
+  DCG_SPACE_SLEPC,
+  DCG_SPACE_USER
+} KSPDCGSpaceType;
+PETSC_EXTERN const char *const KSPDCGSpaceTypes[];
+
 PETSC_EXTERN PetscErrorCode PermonKSPRegisterAll();
 
 PETSC_EXTERN PetscErrorCode KSPViewBriefInfo(KSP ksp, PetscViewer viewer);

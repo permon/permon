@@ -195,10 +195,15 @@ static PetscErrorCode KSPSetUp_DCG(KSP ksp)
   Mat            Amat;
   PC             pc;
   KSP            innerksp;
+  PetscBool      match;
   const char     *prefix;
 
   PetscFunctionBegin;
-  if (!cgP->W) SETERRQ(PETSC_COMM_WORLD,1,"Deflation space has to be set.");
+  if (cgP->W) {
+    cgP->spacetype = DCG_SPACE_USER;
+  } else {
+    ierr = KSPDCGComputeDeflationSpace(ksp);CHKERRQ(ierr);
+  }
   /* get work vectors needed by CG */
   if (cgP->singlereduction) nwork += 2;
   ierr = KSPSetWorkVecs(ksp,nwork);CHKERRQ(ierr);
@@ -219,7 +224,16 @@ static PetscErrorCode KSPSetUp_DCG(KSP ksp)
   if (!cgP->WtAWinv) {
     if (!cgP->WtAW) {
       ierr = KSPGetOperators(ksp,&Amat,NULL);CHKERRQ(ierr);
-      ierr = MatPtAP(Amat,cgP->W,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&cgP->WtAW);CHKERRQ(ierr);
+      /* TODO add implicit product version */
+      ierr = PetscObjectTypeCompareAny((PetscObject)cgP->W,&match,MATSEQAIJ,MATMPIAIJ,"");CHKERRQ(ierr);
+      if (!match) {
+        Mat W;
+        ierr = MatConvert(cgP->W,MATAIJ,MAT_INITIAL_MATRIX,&W);CHKERRQ(ierr);
+        ierr = MatPtAP(Amat,W,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&cgP->WtAW);CHKERRQ(ierr);
+        ierr = MatDestroy(&W);CHKERRQ(ierr);
+      } else {
+        ierr = MatPtAP(Amat,cgP->W,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&cgP->WtAW);CHKERRQ(ierr);
+      }
     }
 
     ierr = KSPCreate(PetscObjectComm((PetscObject)ksp),&cgP->WtAWinv);CHKERRQ(ierr);
@@ -480,15 +494,18 @@ PetscErrorCode KSPView_DCG(KSP ksp,PetscViewer viewer)
 #define __FUNCT__ "KSPSetFromOptions_DCG"
 PetscErrorCode KSPSetFromOptions_DCG(PetscOptionItems *PetscOptionsObject,KSP ksp)
 {
-  PetscErrorCode ierr;
+  PetscErrorCode  ierr;
   KSP_DCG         *cg = (KSP_DCG*)ksp->data;
 
   PetscFunctionBegin;
+  /* TODO change to PetscOptionsBegin */
   ierr = PetscOptionsHead(PetscOptionsObject,"KSP DCG options");CHKERRQ(ierr);
 #if defined(PETSC_USE_COMPLEX)
   ierr = PetscOptionsEnum("-ksp_cg_type","Matrix is Hermitian or complex symmetric","KSPCGSetType",KSPCGTypes,(PetscEnum)cg->type,
                           (PetscEnum*)&cg->type,NULL);CHKERRQ(ierr);
 #endif
+  ierr = PetscOptionsEnum("-ksp_dcg_compute_space","Compute deflation space","KSPDCGSetDeflationSpace",KSPDCGSpaceTypes,(PetscEnum)cg->spacetype,(PetscEnum*)&cg->spacetype,NULL);CHKERRQ(ierr);
+  ierr = PetscOptionsInt("-ksp_dcg_compute_space_size","Set size of the deflation space to compute","KSPDCGSetDeflationSpace",cg->spacesize,&cg->spacesize,NULL);CHKERRQ(ierr);
 //TODO add set function and fix manpages
   ierr = PetscOptionsBool("-ksp_dcg_initcg","Use only initialization step - InitCG","KSPDCG",cg->initcg,&cg->initcg,NULL);CHKERRQ(ierr);
   ierr = PetscOptionsBool("-ksp_dcg_rnorm0","set rnorm0 as initcg rnorm","KSPDCG",cg->truenorm,&cg->truenorm,NULL);CHKERRQ(ierr);
@@ -561,6 +578,8 @@ PETSC_EXTERN PetscErrorCode KSPCreate_DCG(KSP ksp)
   cg->initcg     = PETSC_FALSE;
   cg->truenorm   = PETSC_TRUE;
   cg->redundancy = -1;
+  cg->spacetype  = DCG_SPACE_HAAR;
+  cg->spacesize  = 1;
   ksp->data = (void*)cg;
 
   ierr = KSPSetSupportedNorm(ksp,KSP_NORM_PRECONDITIONED,PC_LEFT,3);CHKERRQ(ierr);

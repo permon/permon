@@ -3,7 +3,7 @@ ALL: lib
 
 CFLAGS   =
 FFLAGS   =
-SOURCEC  = dcg.c
+SOURCEC  = dcg.c dcgspaces.c
 SOURCEF  =
 SOURCEH  =
 OBJSC    = ${SOURCEC:.c=.o}

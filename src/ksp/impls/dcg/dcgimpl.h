@@ -14,6 +14,7 @@
 /*
         Defines the basic KSP object
 */
+#include <permonksp.h>
 #include <permon/private/permonkspimpl.h>
 
 PETSC_INTERN PetscErrorCode KSPDestroy_DCG(KSP);
@@ -22,7 +23,7 @@ PETSC_INTERN PetscErrorCode KSPView_DCG(KSP,PetscViewer);
 PETSC_INTERN PetscErrorCode KSPSetFromOptions_DCG(PetscOptionItems *PetscOptionsObject,KSP);
 PETSC_INTERN PetscErrorCode KSPCGSetType_DCG(KSP,KSPCGType);
 
-
+PETSC_INTERN PetscErrorCode KSPDCGComputeDeflationSpace(KSP ksp);
 
 typedef struct {
   KSPCGType   type;                 /* type of system (symmetric or Hermitian) */
@@ -38,6 +39,8 @@ typedef struct {
   Mat W,WtAW; /* deflation space, coarse problem mats*/
   KSP WtAWinv; /* deflation coarse problem */
   Vec *work;
+  KSPDCGSpaceType spacetype;
+  PetscInt spacesize;
 } KSP_DCG;
 
 #endif
