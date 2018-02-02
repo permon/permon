@@ -25,6 +25,23 @@ PERMON_F_SH_LIB_PATH      = ${FC_LINKER_SLFLAG}${PERMON_LIB_DIR}
 PERMON_DEP_LIBS           = ${PETSC_TAO_LIB}
 PERMON_MAIN_HEADER        = include/permonsys.h
 
+
+# include SLEPc variables only if slepcvariables and slepc_variables files exist
+# - this is checked by the chk_permon_slepc_dir rule
+ifdef HAVE_SLEPC
+ifneq ("$(wildcard ${SLEPC_DIR}/lib/slepc/conf/slepc_variables)","")
+ifneq ("$(wildcard ${SLEPC_DIR}/${PETSC_ARCH}/lib/slepc/conf/slepcvariables)","")
+include ${SLEPC_DIR}/lib/slepc/conf/slepc_variables
+PERMON_EXTERNAL_LIB += ${SLEPC_LIB}
+PERMON_CC_INCLUDES  += ${SLEPC_INCLUDE} ${SLEPC_CEXT_INCLUDES}
+PERMON_FC_INCLUDES  += ${SLEPC_INCLUDE}
+PERMON_CCPPFLAGS    += ${SLEPC_INCLUDE} ${SLEPC_CEXT_INCLUDES} -DHAVE_SLEPC
+PERMON_FCPPFLAGS    += ${SLEPC_INCLUDE}
+endif
+endif
+endif
+
+
 # Convert ${PERMON_PKG_PREFIX}_<VARIABLE> (e.g. PERMON_DUMMY_DIR)
 # to PERMON_PKG_<VARIABLE> (e.g. PERMON_PKG_DIR).
 # DO NOT ALTER THEM.
@@ -68,7 +85,6 @@ PERMON_LIB_BASIC          = -l${PERMON_NAME}
 # The order of listing these libraries is important!
 #
 PERMON_LIB = ${PERMON_C_SH_LIB_PATH} -L${PERMON_LIB_DIR} ${PERMON_LIB_BASIC} ${PERMON_EXTERNAL_LIB} ${PERMON_DEP_LIBS}
-#TODO PERMON_EXTERNAL_LIB  = ${SLEPC_LIB}
 
 #  Escape codes to change the text color on xterms and terminals
 PETSC_TEXT_HILIGHT ?= "\033[1;31m"

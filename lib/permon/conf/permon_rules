@@ -108,6 +108,34 @@ chk_permon_petsc_dir:
 	  false; fi
 
 #
+# Check if SLEPC_DIR variable specified is valid
+#
+chk_permon_slepc_dir:
+ifdef HAVE_SLEPC
+	@if [ -z ${SLEPC_DIR} ]; then \
+          printf ${PETSC_TEXT_HILIGHT}"*************************ERROR**************************************\n"; \
+	  echo "SLEPC_DIR not specified!"; \
+          printf "********************************************************************"${PETSC_TEXT_NORMAL}"\n"; \
+  false; fi
+	@if [ ! -f ${SLEPC_DIR}/include/slepcversion.h ]; then \
+          printf ${PETSC_TEXT_HILIGHT}"*************************ERROR**************************************\n"; \
+	  echo "Incorrect SLEPC_DIR specified: ${SLEPC_DIR}!"; \
+    echo 'File ${SLEPC_DIR}/include/slepcversion.h does not exist.'; \
+	  echo "Note you need to use / to separate directories, not \\"; \
+          printf "********************************************************************"${PETSC_TEXT_NORMAL}"\n"; \
+    false; fi
+	@if [ ! -f ${SLEPC_DIR}/${PETSC_ARCH}/lib/lib*slepc.a ] && [ ! -f ${SLEPC_DIR}/${PETSC_ARCH}/lib/lib*slepc*.${SL_LINKER_SUFFIX} ]; then \
+          printf ${PETSC_TEXT_HILIGHT}"*************************ERROR**************************************\n"; \
+	  echo "Given SLEPC_DIR=${SLEPC_DIR} and PETSC_ARCH=${PETSC_ARCH}"; \
+    echo "  (directory ${SLEPC_DIR}/${PETSC_ARCH}/lib)"; \
+    echo "  does not contain compiled PETSc library (libpetsc.so or libpetsc.a)!"; \
+	  echo "You may need to run configure and make in ${PETSC_DIR}"; \
+	  echo "Note you need to use / to separate directories, not \\"; \
+          printf "********************************************************************"${PETSC_TEXT_NORMAL}"\n"; \
+	  false; fi
+endif
+
+#
 # Check if PERMON_PKG_DIR variable specified is valid
 #
 chk_permon_pkg_dir: true_PERMON_PKG_DIR := $(realpath $(PERMON_PKG_DIR))
