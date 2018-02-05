@@ -2,24 +2,6 @@
 #include <permon/private/permonmatimpl.h>
 #include <permon/private/petscimpl.h>
 
-#undef __FUNCT__  
-#define __FUNCT__ "MatTransposeGetMat"
-PetscErrorCode MatTransposeGetMat(Mat N,Mat *A)
-{
-  Mat_Transpose  *Na;
-  PetscBool      match;
-
-  PetscFunctionBegin;
-  PetscValidHeaderSpecific(N,MAT_CLASSID,1);
-  PetscValidPointer(A,2);
-  TRY( PetscObjectTypeCompare((PetscObject) N, MATTRANSPOSEMAT, &match) );
-  if (!match) FLLOP_SETERRQ(((PetscObject)N)->comm, PETSC_ERR_SUP,"Requires MATTRANSPOSEMAT matrix as input");
-      
-  Na = (Mat_Transpose*)N->data;
-  *A = Na->A;
-  PetscFunctionReturn(0);
-}
-
 #undef __FUNCT__
 #define __FUNCT__ "MatIsImplicitTranspose"
 PetscErrorCode MatIsImplicitTranspose(Mat A,PetscBool *flg)
