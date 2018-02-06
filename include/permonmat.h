@@ -24,7 +24,6 @@ typedef enum {MAT_INV_MONOLITHIC=0, MAT_INV_BLOCKDIAG=1} MatInvType;
 /* Mat constructors */
 FLLOP_EXTERN PetscErrorCode MatCreateBlockDiag(MPI_Comm comm, Mat localBlock, Mat *BlockDiag);
 FLLOP_EXTERN PetscErrorCode MatCreateGluing(MPI_Comm comm, PetscInt n_localRow, PetscInt r,  PetscInt c, const PetscInt *leaves_lrow,	const PetscReal *leaves_sign, PetscSF SF, Mat *B_out); //Alik
-FLLOP_EXTERN PetscErrorCode MatTransposeGetMat(Mat N,Mat *A);
 FLLOP_EXTERN PetscErrorCode MatCreateSum( MPI_Comm comm,PetscInt nmat,const Mat *mats,Mat *mat);
 FLLOP_EXTERN PetscErrorCode MatCreateProd(MPI_Comm comm,PetscInt nmat,const Mat *mats,Mat *mat);
 FLLOP_EXTERN PetscErrorCode MatCreateInv(Mat A, MatInvType invType, Mat *imat);
@@ -103,7 +102,6 @@ FLLOP_EXTERN PetscErrorCode MatGluingLayoutSetUp(Mat B);
 
 /* MATTRANSPOSE specific methods */
 typedef enum {MAT_TRANSPOSE_EXPLICIT, MAT_TRANSPOSE_IMPLICIT, MAT_TRANSPOSE_CHEAPEST} MatTransposeType;
-FLLOP_EXTERN PetscErrorCode MatTransposeGetMat(Mat N,Mat *A);
 FLLOP_EXTERN PetscErrorCode MatIsImplicitTranspose(Mat A,PetscBool *flg);
 
 /* MATNEST specific methods */
