@@ -237,10 +237,11 @@ static PetscErrorCode MPGPGrads(QPS qps, Vec x, Vec lb, Vec ub, Vec g)
   gr                = qps->work[6];
   phi               = qps->work[1];
   beta              = qps->work[2];
-  alpha             = mpgp->alpha;
+  alpha             = 1.0/mpgp->alpha;
 
   TRY( VecWAXPY(gr,-1.0,lb,x) ); /* gr = x-lb */
   TRY( VecWAXPY(gP,-1.0,ub,x) ); /* gP = x-ub */
+
   /* get local arrays */
   TRY( VecGetArray(x, &x_a) );
   TRY( VecGetArray(lb, &lb_a) );
@@ -423,6 +424,7 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
     if (lb) TRY( VecChop(lb,mpgp->bchop_tol) );
     if (ub) TRY( VecChop(ub,mpgp->bchop_tol) );
   }
+
   /* initialize alpha */
   if (mpgp->alpha_type == QPS_ARG_MULTIPLE) {
     if (mpgp->maxeig == PETSC_DECIDE) {
@@ -477,6 +479,7 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   Vec               gP;                 /* ... projected gradient               */
   Vec               beta;               /* ... chopped gradient                 */
   Vec               phi;                /* ... free gradient                    */
+  Vec               gr;                 /* ... reduced free gradient            */
   Vec               g;                  /* ... gradient                         */
   Vec               p;                  /* ... conjugate gradient               */
   Vec               Ap;                 /* ... multiplicated vector             */
@@ -496,6 +499,7 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   PetscFunctionBegin;
   /* set working vectors */
   gP                = qps->work[0];
+  gr                = qps->work[6];
   phi               = qps->work[1];
   beta              = qps->work[2];
 
@@ -544,7 +548,7 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
 
     /* compute dot products to control the proportionality */
     TRY( VecDot(beta, beta, &betaTbeta) );        /* betaTbeta=beta'*beta   */
-    TRY( VecDot(phi, phi, &phiTphi) );            /* phiTphi=phi'*phi   */
+    TRY( VecDot(gr, phi, &phiTphi) );            /* phiTphi=gr'*phi   */
 
     /* compute norm of phi, beta from computed dot products */
     if (qps->numbermonitors) {
@@ -597,7 +601,6 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
         TRY( MPGPGrads(qps, x, lb, ub, g) );      /* grad. splitting  gP,phi,beta,gr */
 
         /* make one more projected gradient step with constant step-length */
-        alpha = mpgp->alpha;
         TRY( VecAXPY(x, -alpha, phi) );           /* x=x-abar*phi */
         TRY( MPGPProj(x, lb, ub) );               /* project x to feas.set */
 
