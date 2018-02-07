@@ -191,7 +191,7 @@ static PetscErrorCode KSPSetUp_DCG(KSP ksp)
 {
   KSP_DCG        *cgP = (KSP_DCG*)ksp->data;
   PetscErrorCode ierr;
-  PetscInt       maxit = ksp->max_it,nwork = 4,commsize,red,m;
+  PetscInt       maxit = ksp->max_it,nwork = 4,commsize,red,m,i;
   Mat            Amat;
   PC             pc;
   KSP            innerksp;
@@ -220,7 +220,6 @@ static PetscErrorCode KSPSetUp_DCG(KSP ksp)
     //ksp->ops->computeextremesingularvalues = KSPComputeExtremeSingularValues_CG;
     //ksp->ops->computeeigenvalues           = KSPComputeEigenvalues_CG;
   }
-  //TODO add prefix
   if (!cgP->WtAWinv) {
     if (!cgP->WtAW) {
       ierr = KSPGetOperators(ksp,&Amat,NULL);CHKERRQ(ierr);
@@ -228,9 +227,18 @@ static PetscErrorCode KSPSetUp_DCG(KSP ksp)
       ierr = PetscObjectTypeCompareAny((PetscObject)cgP->W,&match,MATSEQAIJ,MATMPIAIJ,"");CHKERRQ(ierr);
       if (!match) {
         Mat AW,WtAW;
+        PetscReal *norms;
         ierr = MatMatMult(Amat,cgP->W,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&AW);CHKERRQ(ierr);
         ierr = MatTransposeMatMult(cgP->W,AW,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&WtAW);CHKERRQ(ierr);
         ierr = MatConvert(WtAW,MATAIJ,MAT_INITIAL_MATRIX,&cgP->WtAW);CHKERRQ(ierr);
+        /* Check W is not sigular */
+        //ierr = MatGetSize(cgP->W,NULL,&m);CHKERRQ(ierr);
+        //ierr = PetscMalloc1(m,&norms);CHKERRQ(ierr);
+        //ierr = MatGetColumnNorms(cgP->WtAW,NORM_INFINITY,norms);CHKERRQ(ierr);
+        //for (i=0; i<m; i++) {
+        //  if (norms[i] < 10*PETSC_MACHINE_EPSILON) SETERRQ1(PetscObjectComm((PetscObject)ksp),PETSC_ERR_SUP,"Column %d of W is in kernel of A.",i);
+        //}
+        //ierr = PetscFree(norms);CHKERRQ(ierr);
         ierr = MatDestroy(&AW);CHKERRQ(ierr);
         ierr = MatDestroy(&WtAW);CHKERRQ(ierr);
         //Mat W;
