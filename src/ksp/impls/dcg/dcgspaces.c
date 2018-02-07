@@ -52,7 +52,71 @@ PetscErrorCode KSPDCGGeDeflationSpacetHaar(KSP ksp,Mat *W,PetscInt size)
   ierr = MatSetUp(defl);CHKERRQ(ierr);
   ierr = MatSeqAIJSetPreallocation(defl,size,NULL);CHKERRQ(ierr);
   ierr = MatMPIAIJSetPreallocation(defl,size,NULL,size,NULL);CHKERRQ(ierr);
+  ierr = MatSetOption(defl,MAT_NEW_NONZERO_ALLOCATION_ERR,PETSC_TRUE);CHKERRQ(ierr);
   
+  ierr = MatGetOwnershipRangeColumn(defl,&ilo,&ihi);CHKERRQ(ierr);
+  for (i=0; i<len; i++) Iidx[i] = i+ilo*len;
+  for (i=ilo; i<ihi; i++) {
+    ierr = MatSetValues(defl,len,Iidx,1,&i,col,INSERT_VALUES);CHKERRQ(ierr);
+    for (j=0; j<len; j++) Iidx[j] += len;
+  }
+  ierr = MatAssemblyBegin(defl,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+  ierr = MatAssemblyEnd(defl,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+  
+  ierr = PetscFree(col);CHKERRQ(ierr);
+  ierr = PetscFree(Iidx);CHKERRQ(ierr);
+  *W = defl;
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "KSPDCGGeDeflationSpacetHaarExtended"
+PetscErrorCode KSPDCGGeDeflationSpacetHaarExtended(KSP ksp,Mat *W,PetscInt size)
+{
+  PetscErrorCode ierr;
+  Mat A,defl;
+  PetscInt i,j,len,start=2,ilo,ihi,*Iidx,m,M,Mdefl;
+  PetscReal *col,val;
+  PetscBool jh=PETSC_FALSE;
+
+  PetscFunctionBegin;
+  /* Haar basis wavelet, level=size */
+  len = pow(2,size);
+  ierr = PetscMalloc1(len,&col);CHKERRQ(ierr);
+  ierr = PetscMalloc1(len,&Iidx);CHKERRQ(ierr);
+  val = 1./pow(2,size/2.);
+  /* mat G
+  col[0] = val;
+  col[1] = -val;
+  while (2*start <= len) {
+    for (i=start; i<2*start; i++) {
+      col[i] = -col[i-start];
+    }
+    start = 2*start;
+  }
+  */
+  for (i=0; i<len; i++) {
+      col[i] = val;
+  }
+
+  /* TODO pass A instead of KSP? */
+  Mdefl = M/len;
+  if (Mdefl*len < M) {
+    Mdefl += 1; /* M is odd -> extra row for Jacket-Haar */
+    size += 1; /* TODO improve prealloc */
+
+  }
+  ierr = KSPGetOperators(ksp,&A,NULL);CHKERRQ(ierr); /* NOTE: Get Pmat instead? */
+  ierr = MatGetLocalSize(A,&m,NULL);CHKERRQ(ierr);
+  ierr = MatGetSize(A,&M,NULL);CHKERRQ(ierr);
+  ierr = MatCreate(PetscObjectComm((PetscObject)A),&defl);CHKERRQ(ierr);
+  ierr = MatSetSizes(defl,m,PETSC_DECIDE,M,Mdefl);CHKERRQ(ierr);
+  ierr = MatSetUp(defl);CHKERRQ(ierr);
+  ierr = MatSeqAIJSetPreallocation(defl,size,NULL);CHKERRQ(ierr);
+  ierr = MatMPIAIJSetPreallocation(defl,size,NULL,size,NULL);CHKERRQ(ierr);
+  ierr = MatSetOption(defl,MAT_NEW_NONZERO_ALLOCATION_ERR,PETSC_TRUE);CHKERRQ(ierr);
+  
+  /* TODO change to transpose assembly, add MAT_IGNORE_OFF_PROC_ENTRIES */
   ierr = MatGetOwnershipRangeColumn(defl,&ilo,&ihi);CHKERRQ(ierr);
   for (i=0; i<len; i++) Iidx[i] = i+ilo*len;
   for (i=ilo; i<ihi; i++) {
@@ -92,7 +156,7 @@ PetscErrorCode KSPDCGGeDeflationSpaceSLEPc(KSP ksp,Mat *W,PetscInt size)
   ierr = EPSCreate(comm,&eps);CHKERRQ(ierr);
   ierr = EPSSetOperators(eps,A,NULL);CHKERRQ(ierr);
   ierr = EPSSetProblemType(eps,EPS_HEP);CHKERRQ(ierr); /* Implemented only for CG */
-  ierr = EPSSetWhichEigenpairs(eps,EPS_SMALLEST_MAGNITUDE);CHKERRQ(ierr);
+  ierr = EPSSetWhichEigenpairs(eps,EPS_SMALLEST_REAL);CHKERRQ(ierr);
   ierr = EPSSetDimensions(eps,size,PETSC_DEFAULT,PETSC_DEFAULT);CHKERRQ(ierr);
   ierr = EPSSetFromOptions(eps);CHKERRQ(ierr);
 
