@@ -139,9 +139,10 @@ PetscErrorCode KSPDCGGeDeflationSpaceSLEPc(KSP ksp,Mat *W,PetscInt size)
 #if defined(HAVE_SLEPC)
   PetscErrorCode ierr;
   Mat A,defl;
+  Vec vec;
   EPS eps;
-  BV bv;
-  PetscInt nconv;
+  PetscScalar *data;
+  PetscInt i,nconv,m,M;
   PetscBool slepcinit;
   MPI_Comm comm;
 
@@ -163,9 +164,20 @@ PetscErrorCode KSPDCGGeDeflationSpaceSLEPc(KSP ksp,Mat *W,PetscInt size)
   ierr = EPSSolve(eps);CHKERRQ(ierr);
   ierr = EPSGetConverged(eps,&nconv);CHKERRQ(ierr);
   if (!nconv) SETERRQ(comm,PETSC_ERR_CONV_FAILED,"SLEPc: Number of converged eigenpairs is 0");
-  
-  ierr = EPSGetBV(eps,&bv);CHKERRQ(ierr);
-  ierr = BVCreateMat(bv,&defl);CHKERRQ(ierr);
+  ierr = MatCreateVecs(A,NULL,&vec);CHKERRQ(ierr);
+  ierr = MatGetSize(A,&M,NULL);CHKERRQ(ierr);
+  ierr = MatGetLocalSize(A,&m,NULL);CHKERRQ(ierr);
+  ierr = PetscMalloc1(m*nconv,&data);CHKERRQ(ierr);
+  /* TODO check that eigenvalue is not 0 -> vec is not in Ker A */
+  for (i=0; i<nconv; i++) {
+    ierr = VecPlaceArray(vec,&data[i*m]);CHKERRQ(ierr);
+    ierr = EPSGetEigenvector(eps,i,vec,NULL);CHKERRQ(ierr);
+    ierr = VecResetArray(vec);CHKERRQ(ierr);
+  }
+  ierr = MatCreateDense(comm,m,PETSC_DECIDE,M,nconv,data,&defl);CHKERRQ(ierr);
+
+  //ierr = EPSGetBV(eps,&bv);CHKERRQ(ierr);
+  //ierr = BVCreateMat(bv,&defl);CHKERRQ(ierr);
   *W = defl;
 
   ierr = EPSDestroy(&eps);CHKERRQ(ierr);
