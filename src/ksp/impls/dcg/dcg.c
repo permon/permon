@@ -204,6 +204,7 @@ static PetscErrorCode KSPSetUp_DCG(KSP ksp)
   } else {
     ierr = KSPDCGComputeDeflationSpace(ksp);CHKERRQ(ierr);
   }
+
   /* get work vectors needed by CG */
   if (cgP->singlereduction) nwork += 2;
   ierr = KSPSetWorkVecs(ksp,nwork);CHKERRQ(ierr);
@@ -220,6 +221,8 @@ static PetscErrorCode KSPSetUp_DCG(KSP ksp)
     //ksp->ops->computeextremesingularvalues = KSPComputeExtremeSingularValues_CG;
     //ksp->ops->computeeigenvalues           = KSPComputeEigenvalues_CG;
   }
+  ierr = MatGetSize(cgP->W,NULL,&m);CHKERRQ(ierr);
+  PetscPrintf(PETSC_COMM_WORLD,"Deflation Space size: %d\n",m);
   if (!cgP->WtAWinv) {
     if (!cgP->WtAW) {
       ierr = KSPGetOperators(ksp,&Amat,NULL);CHKERRQ(ierr);
@@ -227,18 +230,9 @@ static PetscErrorCode KSPSetUp_DCG(KSP ksp)
       ierr = PetscObjectTypeCompareAny((PetscObject)cgP->W,&match,MATSEQAIJ,MATMPIAIJ,"");CHKERRQ(ierr);
       if (!match) {
         Mat AW,WtAW;
-        PetscReal *norms;
         ierr = MatMatMult(Amat,cgP->W,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&AW);CHKERRQ(ierr);
         ierr = MatTransposeMatMult(cgP->W,AW,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&WtAW);CHKERRQ(ierr);
         ierr = MatConvert(WtAW,MATAIJ,MAT_INITIAL_MATRIX,&cgP->WtAW);CHKERRQ(ierr);
-        /* Check W is not sigular */
-        //ierr = MatGetSize(cgP->W,NULL,&m);CHKERRQ(ierr);
-        //ierr = PetscMalloc1(m,&norms);CHKERRQ(ierr);
-        //ierr = MatGetColumnNorms(cgP->WtAW,NORM_INFINITY,norms);CHKERRQ(ierr);
-        //for (i=0; i<m; i++) {
-        //  if (norms[i] < 10*PETSC_MACHINE_EPSILON) SETERRQ1(PetscObjectComm((PetscObject)ksp),PETSC_ERR_SUP,"Column %d of W is in kernel of A.",i);
-        //}
-        //ierr = PetscFree(norms);CHKERRQ(ierr);
         ierr = MatDestroy(&AW);CHKERRQ(ierr);
         ierr = MatDestroy(&WtAW);CHKERRQ(ierr);
         //Mat W;
@@ -248,21 +242,32 @@ static PetscErrorCode KSPSetUp_DCG(KSP ksp)
       } else {
         ierr = MatPtAP(Amat,cgP->W,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&cgP->WtAW);CHKERRQ(ierr);
       }
+        /* Check W is not sigular */
+      //PetscReal *norms;
+      //ierr = PetscMalloc1(m,&norms);CHKERRQ(ierr);
+      //ierr = MatGetColumnNorms(cgP->WtAW,NORM_INFINITY,norms);CHKERRQ(ierr);
+      //for (i=0; i<m; i++) {
+      //  if (norms[i] < 10*PETSC_MACHINE_EPSILON) {
+      //    MatView(cgP->W, PETSC_VIEWER_STDOUT_WORLD);
+      //    SETERRQ1(PetscObjectComm((PetscObject)ksp),PETSC_ERR_SUP,"Column %d of W is in kernel of A.",i);
+      //  }
+      //}
+      //ierr = PetscFree(norms);CHKERRQ(ierr);
     }
+    ierr = MatSetOption(cgP->WtAW,MAT_SPD,PETSC_TRUE);CHKERRQ(ierr);
 
     ierr = KSPCreate(PetscObjectComm((PetscObject)ksp),&cgP->WtAWinv);CHKERRQ(ierr);
     ierr = KSPSetOperators(cgP->WtAWinv,cgP->WtAW,cgP->WtAW);CHKERRQ(ierr);
     ierr = KSPSetType(cgP->WtAWinv,KSPPREONLY);CHKERRQ(ierr);
-    ierr = KSPSetUp(cgP->WtAWinv);CHKERRQ(ierr);
     ierr = KSPGetPC(cgP->WtAWinv,&pc);CHKERRQ(ierr);
     ierr = PCSetType(pc,PCREDUNDANT);CHKERRQ(ierr);
     /* Redundancy choice */
 
     red = cgP->redundancy;
     if (red < 0) {
-      ierr = MatGetSize(cgP->W,NULL,&m);CHKERRQ(ierr);
       ierr = MPI_Comm_size(PetscObjectComm((PetscObject)ksp),&commsize);CHKERRQ(ierr);
       red  = ceil((float)commsize/ceil((float)m/commsize));
+      PetscPrintf(PETSC_COMM_WORLD,"Auto choosing redundancy %d\n",red);
     }
     ierr = PCRedundantSetNumber(pc,red);CHKERRQ(ierr);
     ierr = PCRedundantGetKSP(pc,&innerksp);CHKERRQ(ierr);
@@ -280,8 +285,13 @@ static PetscErrorCode KSPSetUp_DCG(KSP ksp)
     } else {
       ierr = KSPSetOptionsPrefix(innerksp,"dcg_");CHKERRQ(ierr);
     }
-    ierr = KSPGetOptionsPrefix(innerksp,&prefix);CHKERRQ(ierr);
-    ierr = KSPSetFromOptions(innerksp);CHKERRQ(ierr);
+    /* TODO: check if WtAWinv is KSP and move following from this if */
+    ierr = KSPSetFromOptions(cgP->WtAWinv);CHKERRQ(ierr);
+    ierr = KSPSetUp(cgP->WtAWinv);CHKERRQ(ierr);
+
+    Mat WtAW;
+    ierr = KSPGetOperators(innerksp,&WtAW,NULL);CHKERRQ(ierr);
+    PetscPrintf(PETSC_COMM_WORLD,"spd %d set %d \n",WtAW->spd,WtAW->spd_set);
   }
   //TODO may not cover all cases
   ierr = KSPCreateVecs(cgP->WtAWinv,2,&cgP->work,0,NULL);CHKERRQ(ierr);
