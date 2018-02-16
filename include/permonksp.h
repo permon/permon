@@ -10,6 +10,7 @@
 
 typedef enum {
   DCG_SPACE_HAAR,
+  DCG_SPACE_JACKET_HAAR,
   DCG_SPACE_SLEPC,
   DCG_SPACE_USER
 } KSPDCGSpaceType;
