@@ -7,7 +7,8 @@
 
 const char *const KSPDCGSpaceTypes[] = {
   "haar",
-  "jh",
+  "jacket-haar",
+  "aggregation",
   "slepc",
   "user",
   "DCGSpaceType",
@@ -230,6 +231,50 @@ PetscErrorCode KSPDCGGetDeflationSpaceJacketHaar(KSP ksp,Mat *W,PetscInt size)
 }
 
 #undef __FUNCT__
+#define __FUNCT__ "KSPDCGGetDeflationSpaceAggregation"
+PetscErrorCode KSPDCGGetDeflationSpaceAggregation(KSP ksp,Mat *W)
+{
+  PetscErrorCode ierr;
+  Mat A,defl;
+  PetscInt i,ilo,ihi,*Iidx,m,M;
+  PetscReal *col;
+  MPI_Comm comm;
+
+  PetscFunctionBegin;
+  /* TODO pass A instead of KSP? */
+  ierr = KSPGetOperators(ksp,&A,NULL);CHKERRQ(ierr); /* NOTE: Get Pmat instead? */
+  ierr = MatGetOwnershipRangeColumn(A,&ilo,&ihi);CHKERRQ(ierr);
+  ierr = MatGetSize(A,&M,NULL);CHKERRQ(ierr);
+  ierr = PetscObjectGetComm((PetscObject)A,&comm);CHKERRQ(ierr);
+  ierr = MPI_Comm_size(comm,&m);CHKERRQ(ierr);
+  ierr = MatCreate(comm,&defl);CHKERRQ(ierr);
+  ierr = MatSetSizes(defl,ihi-ilo,1,M,m);CHKERRQ(ierr);
+  ierr = MatSetUp(defl);CHKERRQ(ierr);
+  ierr = MatSeqAIJSetPreallocation(defl,1,NULL);CHKERRQ(ierr);
+  ierr = MatMPIAIJSetPreallocation(defl,1,NULL,0,NULL);CHKERRQ(ierr);
+  ierr = MatSetOption(defl,MAT_NEW_NONZERO_ALLOCATION_ERR,PETSC_TRUE);CHKERRQ(ierr);
+  ierr = MatSetOption(defl,MAT_IGNORE_OFF_PROC_ENTRIES,PETSC_TRUE);CHKERRQ(ierr);
+  
+
+  ierr = PetscMalloc1(ihi-ilo,&col);CHKERRQ(ierr);
+  ierr = PetscMalloc1(ihi-ilo,&Iidx);CHKERRQ(ierr);
+  for (i=ilo; i<ihi; i++) {
+    Iidx[i-ilo] = i;
+    col[i-ilo] = 1;
+  }
+  ierr = MPI_Comm_rank(comm,&i);CHKERRQ(ierr);
+  ierr = MatSetValues(defl,ihi-ilo,Iidx,1,&i,col,INSERT_VALUES);CHKERRQ(ierr);
+    
+  ierr = MatAssemblyBegin(defl,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+  ierr = MatAssemblyEnd(defl,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+  
+  ierr = PetscFree(col);CHKERRQ(ierr);
+  ierr = PetscFree(Iidx);CHKERRQ(ierr);
+  *W = defl;
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ "KSPDCGGetDeflationSpaceSLEPc"
 PetscErrorCode KSPDCGGetDeflationSpaceSLEPc(KSP ksp,Mat *W,PetscInt size)
 {
@@ -299,6 +344,8 @@ PetscErrorCode KSPDCGComputeDeflationSpace(KSP ksp)
   switch (cg->spacetype) {
     case DCG_SPACE_HAAR:
       ierr = KSPDCGGetDeflationSpaceHaar(ksp,&defl,cg->spacesize);CHKERRQ(ierr);break;
+    case DCG_SPACE_AGGREGATION:
+      ierr = KSPDCGGetDeflationSpaceAggregation(ksp,&defl);CHKERRQ(ierr);break;
     case DCG_SPACE_JACKET_HAAR:
       ierr = KSPDCGGetDeflationSpaceJacketHaar(ksp,&defl,cg->spacesize);CHKERRQ(ierr);break;
     case DCG_SPACE_SLEPC:
