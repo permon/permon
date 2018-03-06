@@ -191,7 +191,7 @@ static PetscErrorCode KSPSetUp_DCG(KSP ksp)
 {
   KSP_DCG        *cgP = (KSP_DCG*)ksp->data;
   PetscErrorCode ierr;
-  PetscInt       maxit = ksp->max_it,nwork = 4,commsize,red,m,i;
+  PetscInt       maxit = ksp->max_it,nwork = 4,commsize,red,m;
   Mat            Amat;
   PC             pc;
   KSP            innerksp;
@@ -242,17 +242,18 @@ static PetscErrorCode KSPSetUp_DCG(KSP ksp)
       } else {
         ierr = MatPtAP(Amat,cgP->W,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&cgP->WtAW);CHKERRQ(ierr);
       }
-        /* Check W is not sigular */
-      //PetscReal *norms;
-      //ierr = PetscMalloc1(m,&norms);CHKERRQ(ierr);
-      //ierr = MatGetColumnNorms(cgP->WtAW,NORM_INFINITY,norms);CHKERRQ(ierr);
-      //for (i=0; i<m; i++) {
-      //  if (norms[i] < 10*PETSC_MACHINE_EPSILON) {
-      //    MatView(cgP->W, PETSC_VIEWER_STDOUT_WORLD);
-      //    SETERRQ1(PetscObjectComm((PetscObject)ksp),PETSC_ERR_SUP,"Column %d of W is in kernel of A.",i);
-      //  }
-      //}
-      //ierr = PetscFree(norms);CHKERRQ(ierr);
+        /* Check WtAW is not sigular */
+      PetscReal *norms;
+      PetscInt i;
+      ierr = PetscMalloc1(m,&norms);CHKERRQ(ierr);
+      ierr = MatGetColumnNorms(cgP->WtAW,NORM_INFINITY,norms);CHKERRQ(ierr);
+      for (i=0; i<m; i++) {
+        if (norms[i] < 10*PETSC_MACHINE_EPSILON) {
+          MatView(cgP->W, PETSC_VIEWER_STDOUT_WORLD);
+          SETERRQ1(PetscObjectComm((PetscObject)ksp),PETSC_ERR_SUP,"Column %d of W is in kernel of A.",i);
+        }
+      }
+      ierr = PetscFree(norms);CHKERRQ(ierr);
     }
     ierr = MatSetOption(cgP->WtAW,MAT_SPD,PETSC_TRUE);CHKERRQ(ierr);
 
@@ -530,6 +531,7 @@ PetscErrorCode KSPSetFromOptions_DCG(PetscOptionItems *PetscOptionsObject,KSP ks
 #endif
   ierr = PetscOptionsEnum("-ksp_dcg_compute_space","Compute deflation space","KSPDCGSetDeflationSpace",KSPDCGSpaceTypes,(PetscEnum)cg->spacetype,(PetscEnum*)&cg->spacetype,NULL);CHKERRQ(ierr);
   ierr = PetscOptionsInt("-ksp_dcg_compute_space_size","Set size of the deflation space to compute","KSPDCGSetDeflationSpace",cg->spacesize,&cg->spacesize,NULL);CHKERRQ(ierr);
+  ierr = PetscOptionsBool("-ksp_dcg_space_extend","extend deflation space instead of truncating","KSPDCG",cg->extendsp,&cg->extendsp,NULL);CHKERRQ(ierr);
 //TODO add set function and fix manpages
   ierr = PetscOptionsBool("-ksp_dcg_initcg","Use only initialization step - InitCG","KSPDCG",cg->initcg,&cg->initcg,NULL);CHKERRQ(ierr);
   ierr = PetscOptionsBool("-ksp_dcg_rnorm0","set rnorm0 as initcg rnorm","KSPDCG",cg->truenorm,&cg->truenorm,NULL);CHKERRQ(ierr);
@@ -604,6 +606,7 @@ PETSC_EXTERN PetscErrorCode KSPCreate_DCG(KSP ksp)
   cg->redundancy = -1;
   cg->spacetype  = DCG_SPACE_HAAR;
   cg->spacesize  = 1;
+  cg->extendsp  = PETSC_FALSE;
   ksp->data = (void*)cg;
 
   ierr = KSPSetSupportedNorm(ksp,KSP_NORM_PRECONDITIONED,PC_LEFT,3);CHKERRQ(ierr);
