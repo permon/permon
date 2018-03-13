@@ -34,6 +34,7 @@ typedef struct {
 
   PetscBool singlereduction;          /* use variant of CG that combines both inner products */
   PetscBool initcg;          /* do only init step - error correction of direction is omitted */
+  PetscBool correct;         /* add Qr correction to descent direction */
   PetscBool truenorm;          
   PetscInt redundancy;
   Mat W,WtAW; /* deflation space, coarse problem mats*/

@@ -162,9 +162,10 @@ static PetscErrorCode KSPDCGDeflationApply(KSP ksp)
   KSP_DCG        *cgP = (KSP_DCG*)ksp->data;
   PetscErrorCode ierr;
   Mat            Amat;
-  Vec            Z,P,U,W1,W2;
+  Vec            R,Z,P,U,W1,W2;
 
   PetscFunctionBegin;
+  R =  ksp->work[0];
   Z =  ksp->work[1];
   P =  ksp->work[2];
   U =  ksp->work[3];
@@ -173,7 +174,8 @@ static PetscErrorCode KSPDCGDeflationApply(KSP ksp)
   ierr = KSPGetOperators(ksp,&Amat,NULL);CHKERRQ(ierr);
   
   ierr = PetscLogEventBegin(KSPDCG_APPLY,ksp,0,0,0);CHKERRQ(ierr);
-  ierr = MatMult(Amat,Z,U);CHKERRQ(ierr);              /*    p <- p - W*(W'*A*W)^{-1}*W'*A*z    */ 
+  ierr = MatMult(Amat,Z,U);CHKERRQ(ierr);                   /*    p <- p - W*(W'*A*W)^{-1}*W'*A*z      */ 
+  if (cgP->correct) ierr = VecAXPY(U,-1.0,R);CHKERRQ(ierr); /*    p <- p - W*(W'*A*W)^{-1}*W'*(A*z -r) */
   ierr = MatMultTranspose(cgP->W,U,W1);CHKERRQ(ierr);
   ierr = KSPSolve(cgP->WtAWinv,W1,W2);CHKERRQ(ierr);
   ierr = MatMult(cgP->W,W2,Z);CHKERRQ(ierr);
@@ -534,6 +536,7 @@ PetscErrorCode KSPSetFromOptions_DCG(PetscOptionItems *PetscOptionsObject,KSP ks
   ierr = PetscOptionsBool("-ksp_dcg_space_extend","extend deflation space instead of truncating","KSPDCG",cg->extendsp,&cg->extendsp,NULL);CHKERRQ(ierr);
 //TODO add set function and fix manpages
   ierr = PetscOptionsBool("-ksp_dcg_initcg","Use only initialization step - InitCG","KSPDCG",cg->initcg,&cg->initcg,NULL);CHKERRQ(ierr);
+  ierr = PetscOptionsBool("-ksp_dcg_correct","Add Qr to descent direction","KSPDCG",cg->correct,&cg->correct,NULL);CHKERRQ(ierr);
   ierr = PetscOptionsBool("-ksp_dcg_rnorm0","set rnorm0 as initcg rnorm","KSPDCG",cg->truenorm,&cg->truenorm,NULL);CHKERRQ(ierr);
   ierr = PetscOptionsInt("-ksp_dcg_redundancy","Number of subgroups for coarse problem solution","KSPDCG",cg->redundancy,&cg->redundancy,NULL);CHKERRQ(ierr);
   ierr = PetscOptionsTail();CHKERRQ(ierr);
@@ -602,6 +605,7 @@ PETSC_EXTERN PetscErrorCode KSPCreate_DCG(KSP ksp)
   cg->type = KSP_CG_HERMITIAN;
 #endif
   cg->initcg     = PETSC_FALSE;
+  cg->correct    = PETSC_FALSE;
   cg->truenorm   = PETSC_TRUE;
   cg->redundancy = -1;
   cg->spacetype  = DCG_SPACE_HAAR;
