@@ -325,7 +325,6 @@ PetscErrorCode KSPDCGGetDeflationSpaceJacketHaar(KSP ksp,Mat *W,PetscInt size)
       jh=PETSC_FALSE;
       Mdefl = Mdefl/2;
     }
-    printf("mdefl %d x ndefl %d\n",Mdefl,Ndefl);
     ierr = KSPDCGDeflationSpaceCreateJacketHaar(comm,PETSC_DECIDE,m,Mdefl,Ndefl,jh,&H[i]);CHKERRQ(ierr);
     ierr = MatGetLocalSize(H[i],&m,NULL);CHKERRQ(ierr);
     Ndefl = Mdefl;
@@ -380,7 +379,6 @@ PetscErrorCode KSPDCGGetDeflationSpaceWave(KSP ksp,Mat *W,PetscInt size,PetscInt
     } else {
       Mdefl = Mdefl/2;
     }
-    printf("mdefl %d x ndefl %d\n",Mdefl,Ndefl);
     ierr = KSPDCGDeflationSpaceCreateWave(comm,PETSC_DECIDE,m,Mdefl,Ndefl,ncoeffs,coeffs,trunc,&H[i]);CHKERRQ(ierr);
     ierr = MatGetLocalSize(H[i],&m,NULL);CHKERRQ(ierr);
     Ndefl = Mdefl;
