@@ -231,20 +231,13 @@ static PetscErrorCode KSPSetUp_DCG(KSP ksp)
       /* TODO add implicit product version */
       ierr = PetscObjectTypeCompareAny((PetscObject)cgP->W,&match,MATSEQAIJ,MATMPIAIJ,"");CHKERRQ(ierr);
       if (!match) {
-        Mat AW,WtAW;
-        ierr = MatMatMult(Amat,cgP->W,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&AW);CHKERRQ(ierr);
-        ierr = MatTransposeMatMult(cgP->W,AW,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&WtAW);CHKERRQ(ierr);
-        ierr = MatConvert(WtAW,MATAIJ,MAT_INITIAL_MATRIX,&cgP->WtAW);CHKERRQ(ierr);
-        ierr = MatDestroy(&AW);CHKERRQ(ierr);
-        ierr = MatDestroy(&WtAW);CHKERRQ(ierr);
-        //Mat W;
-        //ierr = MatConvert(cgP->W,MATAIJ,MAT_INITIAL_MATRIX,&W);CHKERRQ(ierr);
-        //ierr = MatPtAP(Amat,W,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&cgP->WtAW);CHKERRQ(ierr);
-        //ierr = MatDestroy(&W);CHKERRQ(ierr);
+        ierr = MatMatMult(Amat,cgP->W,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&cgP->AW);CHKERRQ(ierr);
+        ierr = MatTransposeMatMult(cgP->W,cgP->AW,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&cgP->WtAW);CHKERRQ(ierr);
       } else {
         ierr = MatPtAP(Amat,cgP->W,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&cgP->WtAW);CHKERRQ(ierr);
+        ierr = MatSetOption(cgP->WtAW,MAT_SPD,PETSC_TRUE);CHKERRQ(ierr);
       }
-        /* Check WtAW is not sigular */
+      /* Check WtAW is not sigular */
       PetscReal *norms;
       PetscInt i;
       ierr = PetscMalloc1(m,&norms);CHKERRQ(ierr);
@@ -257,8 +250,6 @@ static PetscErrorCode KSPSetUp_DCG(KSP ksp)
       }
       ierr = PetscFree(norms);CHKERRQ(ierr);
     }
-    ierr = MatSetOption(cgP->WtAW,MAT_SPD,PETSC_TRUE);CHKERRQ(ierr);
-
     ierr = KSPCreate(PetscObjectComm((PetscObject)ksp),&cgP->WtAWinv);CHKERRQ(ierr);
     ierr = KSPSetOperators(cgP->WtAWinv,cgP->WtAW,cgP->WtAW);CHKERRQ(ierr);
     ierr = KSPSetType(cgP->WtAWinv,KSPPREONLY);CHKERRQ(ierr);

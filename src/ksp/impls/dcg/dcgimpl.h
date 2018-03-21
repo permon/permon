@@ -37,7 +37,7 @@ typedef struct {
   PetscBool correct;         /* add Qr correction to descent direction */
   PetscBool truenorm;          
   PetscInt redundancy;
-  Mat W,WtAW; /* deflation space, coarse problem mats*/
+  Mat W,Wt,AW,WtAW; /* deflation space, coarse problem mats*/
   KSP WtAWinv; /* deflation coarse problem */
   Vec *work;
   KSPDCGSpaceType spacetype;
