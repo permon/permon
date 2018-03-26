@@ -174,9 +174,17 @@ static PetscErrorCode KSPDCGDeflationApply(KSP ksp)
   ierr = KSPGetOperators(ksp,&Amat,NULL);CHKERRQ(ierr);
   
   ierr = PetscLogEventBegin(KSPDCG_APPLY,ksp,0,0,0);CHKERRQ(ierr);
-  ierr = MatMult(Amat,Z,U);CHKERRQ(ierr);                   /*    p <- p - W*(W'*A*W)^{-1}*W'*A*z      */ 
-  if (cgP->correct) ierr = VecAXPY(U,-1.0,R);CHKERRQ(ierr); /*    p <- p - W*(W'*A*W)^{-1}*W'*(A*z -r) */
-  ierr = MatMultTranspose(cgP->W,U,W1);CHKERRQ(ierr);
+  if (!cgP->AW) {
+    ierr = MatMult(Amat,Z,U);CHKERRQ(ierr);                   /*    p <- p - W*(W'*A*W)^{-1}*W'*A*z      */ 
+    if (cgP->correct) ierr = VecAXPY(U,-1.0,R);CHKERRQ(ierr); /*    p <- p - W*(W'*A*W)^{-1}*W'*(A*z -r) */
+    ierr = MatMultTranspose(cgP->W,U,W1);CHKERRQ(ierr);
+  } else {
+    ierr = MatMultTranspose(cgP->AW,Z,W1);CHKERRQ(ierr);      /*    p <- p - W*(W'*A*W)^{-1}*W'*A*z      */ 
+    if (cgP->correct) {                                       /*    p <- p - W*(W'*A*W)^{-1}*W'*(A*z -r) */
+      ierr = MatMultTranspose(cgP->W,R,W2);CHKERRQ(ierr);
+      ierr = VecAXPY(W1,-1.0,W2);CHKERRQ(ierr);
+    }
+  }
   ierr = KSPSolve(cgP->WtAWinv,W1,W2);CHKERRQ(ierr);
   ierr = MatMult(cgP->W,W2,Z);CHKERRQ(ierr);
   ierr = VecAXPY(P,-1.0,Z);CHKERRQ(ierr);
@@ -231,7 +239,7 @@ static PetscErrorCode KSPSetUp_DCG(KSP ksp)
       /* TODO add implicit product version */
       ierr = PetscObjectTypeCompareAny((PetscObject)cgP->W,&match,MATSEQAIJ,MATMPIAIJ,"");CHKERRQ(ierr);
       if (!match) {
-        ierr = MatMatMult(Amat,cgP->W,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&cgP->AW);CHKERRQ(ierr);
+        if (!cgP->AW) ierr = MatMatMult(Amat,cgP->W,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&cgP->AW);CHKERRQ(ierr);
         ierr = MatTransposeMatMult(cgP->W,cgP->AW,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&cgP->WtAW);CHKERRQ(ierr);
       } else {
         ierr = MatPtAP(Amat,cgP->W,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&cgP->WtAW);CHKERRQ(ierr);

@@ -15,6 +15,7 @@ const char *const KSPDCGSpaceTypes[] = {
   "meyer",
   "aggregation",
   "slepc",
+  "slepc-cheap",
   "user",
   "DCGSpaceType",
   "DCG_SPACE_",
@@ -452,15 +453,16 @@ PetscErrorCode KSPDCGGetDeflationSpaceAggregation(KSP ksp,Mat *W)
 
 #undef __FUNCT__
 #define __FUNCT__ "KSPDCGGetDeflationSpaceSLEPc"
-PetscErrorCode KSPDCGGetDeflationSpaceSLEPc(KSP ksp,Mat *W,PetscInt size)
+PetscErrorCode KSPDCGGetDeflationSpaceSLEPc(KSP ksp,Mat *W,PetscInt size,PetscBool cheapCP)
 {
 #if defined(HAVE_SLEPC)
   PetscErrorCode ierr;
+  KSP_DCG *cg = (KSP_DCG*)ksp->data;
   Mat A,defl;
   Vec vec;
   EPS eps;
-  PetscScalar *data;
-  PetscInt i,nconv,m,M;
+  PetscScalar *data,*dataScaled,eigval;
+  PetscInt i,nconv,m,M,n=PETSC_DECIDE;
   PetscBool slepcinit;
   MPI_Comm comm;
 
@@ -485,6 +487,7 @@ PetscErrorCode KSPDCGGetDeflationSpaceSLEPc(KSP ksp,Mat *W,PetscInt size)
   ierr = MatCreateVecs(A,NULL,&vec);CHKERRQ(ierr);
   ierr = MatGetSize(A,&M,NULL);CHKERRQ(ierr);
   ierr = MatGetLocalSize(A,&m,NULL);CHKERRQ(ierr);
+  ierr = PetscSplitOwnership(comm,&n,&nconv);CHKERRQ(ierr);
   ierr = PetscMalloc1(m*nconv,&data);CHKERRQ(ierr);
   /* TODO check that eigenvalue is not 0 -> vec is not in Ker A */
   for (i=0; i<nconv; i++) {
@@ -492,7 +495,18 @@ PetscErrorCode KSPDCGGetDeflationSpaceSLEPc(KSP ksp,Mat *W,PetscInt size)
     ierr = EPSGetEigenvector(eps,i,vec,NULL);CHKERRQ(ierr);
     ierr = VecResetArray(vec);CHKERRQ(ierr);
   }
-  ierr = MatCreateDense(comm,m,PETSC_DECIDE,M,nconv,data,&defl);CHKERRQ(ierr);
+  ierr = MatCreateDense(comm,m,n,M,nconv,data,&defl);CHKERRQ(ierr);
+
+  if (cheapCP) {
+    ierr = PetscMalloc1(m*nconv,&dataScaled);CHKERRQ(ierr);
+    for (i=0; i<nconv; i++) {
+        ierr = VecPlaceArray(vec,&dataScaled[i*m]);CHKERRQ(ierr);
+        ierr = EPSGetEigenpair(eps,i,&eigval,NULL,vec,NULL);CHKERRQ(ierr);
+        ierr = VecScale(vec,eigval);CHKERRQ(ierr);
+        ierr = VecResetArray(vec);CHKERRQ(ierr);
+    }
+    ierr = MatCreateDense(comm,m,n,M,nconv,dataScaled,&cg->AW);CHKERRQ(ierr);
+  }
 
   //ierr = EPSGetBV(eps,&bv);CHKERRQ(ierr);
   //ierr = BVCreateMat(bv,&defl);CHKERRQ(ierr);
@@ -535,7 +549,9 @@ PetscErrorCode KSPDCGComputeDeflationSpace(KSP ksp)
     case DCG_SPACE_AGGREGATION:
       ierr = KSPDCGGetDeflationSpaceAggregation(ksp,&defl);CHKERRQ(ierr);break;
     case DCG_SPACE_SLEPC:
-      ierr = KSPDCGGetDeflationSpaceSLEPc(ksp,&defl,cg->spacesize);CHKERRQ(ierr);break;
+      ierr = KSPDCGGetDeflationSpaceSLEPc(ksp,&defl,cg->spacesize,PETSC_FALSE);CHKERRQ(ierr);break;
+    case DCG_SPACE_SLEPC_CHEAP:
+      ierr = KSPDCGGetDeflationSpaceSLEPc(ksp,&defl,cg->spacesize,PETSC_TRUE);CHKERRQ(ierr);break;
     default: SETERRQ(PetscObjectComm((PetscObject)ksp),PETSC_ERR_ARG_WRONG,"Wrong DCG Space Type specified");
   }
   
