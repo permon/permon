@@ -384,23 +384,10 @@ PetscErrorCode KSPDCGGetDeflationSpaceWave(KSP ksp,Mat *W,PetscInt size,PetscInt
     ierr = MatGetLocalSize(H[i],&m,NULL);CHKERRQ(ierr);
     Ndefl = Mdefl;
   }
-  //ierr = MatCreateProd(comm,size,H,&defl);CHKERRQ(ierr);
-  //ierr = MatCreateComposite(comm,size,H,&defl);CHKERRQ(ierr);
-  //ierr = MatCompositeSetType(defl,MAT_COMPOSITE_MULTIPLICATIVE);CHKERRQ(ierr);
-  /* TODO allow implicit */
-  //ierr = MatCompositeMerge(defl);CHKERRQ(ierr);
-  Mat newmat;
-  defl = H[0];
-  for (i=0; i<size-1; i++) {
-    ierr = MatMatMult(H[i+1],defl,MAT_INITIAL_MATRIX,PETSC_DECIDE,&newmat);CHKERRQ(ierr);
-    ierr = MatDestroy(&defl);CHKERRQ(ierr);
-    defl = newmat ;
-  }
+  ierr = MatCreateProd(comm,size,H,&defl);CHKERRQ(ierr);
+  *W = defl;
 
-  ierr = MatTranspose(defl,MAT_INITIAL_MATRIX,W);CHKERRQ(ierr);
-  
-  ierr = MatDestroy(&defl);CHKERRQ(ierr);
-  for (i=1; i<size; i++) {
+  for (i=0; i<size; i++) {
     ierr = MatDestroy(&H[i]);CHKERRQ(ierr);
   }
   ierr = PetscFree(H);CHKERRQ(ierr);
@@ -526,6 +513,8 @@ PetscErrorCode KSPDCGComputeDeflationSpace(KSP ksp)
 {
   PetscErrorCode ierr;
   Mat defl;
+  PetscInt size=0;
+  PetscBool transp=PETSC_TRUE;
   KSP_DCG *cg = (KSP_DCG*)ksp->data;
 
   /* TODO valid header */
@@ -534,8 +523,12 @@ PetscErrorCode KSPDCGComputeDeflationSpace(KSP ksp)
   switch (cg->spacetype) {
     case DCG_SPACE_HAAR:
       ierr = KSPDCGGetDeflationSpaceHaar(ksp,&defl,cg->spacesize);CHKERRQ(ierr);break;
+      transp = PETSC_FALSE;
+      size = 1;
     case DCG_SPACE_JACKET_HAAR:
       ierr = KSPDCGGetDeflationSpaceJacketHaar(ksp,&defl,cg->spacesize);CHKERRQ(ierr);break;
+      transp = PETSC_FALSE;
+      size = 1;
     case DCG_SPACE_DB4:
       ierr = KSPDCGGetDeflationSpaceWave(ksp,&defl,cg->spacesize,4,db4,!cg->extendsp);CHKERRQ(ierr);break;
     case DCG_SPACE_DB8:
@@ -548,14 +541,21 @@ PetscErrorCode KSPDCGComputeDeflationSpace(KSP ksp)
       ierr = KSPDCGGetDeflationSpaceWave(ksp,&defl,cg->spacesize,62,meyer,!cg->extendsp);CHKERRQ(ierr);break;
     case DCG_SPACE_AGGREGATION:
       ierr = KSPDCGGetDeflationSpaceAggregation(ksp,&defl);CHKERRQ(ierr);break;
+      transp = PETSC_FALSE;
+      size = 1;
     case DCG_SPACE_SLEPC:
       ierr = KSPDCGGetDeflationSpaceSLEPc(ksp,&defl,cg->spacesize,PETSC_FALSE);CHKERRQ(ierr);break;
+      transp = PETSC_FALSE;
+      size = 1;
     case DCG_SPACE_SLEPC_CHEAP:
       ierr = KSPDCGGetDeflationSpaceSLEPc(ksp,&defl,cg->spacesize,PETSC_TRUE);CHKERRQ(ierr);break;
+      transp = PETSC_FALSE;
+      size = 1;
     default: SETERRQ(PetscObjectComm((PetscObject)ksp),PETSC_ERR_ARG_WRONG,"Wrong DCG Space Type specified");
   }
   
-  ierr = KSPDCGSetDeflationSpace(ksp,defl);CHKERRQ(ierr);
+  if (!size) size = cg->spacesize;
+  ierr = KSPDCGSetDeflationSpace(ksp,defl,transp,size);CHKERRQ(ierr);
   PetscFunctionReturn(0);
 }
 

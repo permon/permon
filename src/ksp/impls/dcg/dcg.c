@@ -54,24 +54,54 @@ PetscLogEvent KSPDCG_APPLY;
 
 #undef __FUNCT__
 #define __FUNCT__ "KSPDCGSetDeflationSpace"
-PetscErrorCode KSPDCGSetDeflationSpace(KSP ksp,Mat W)
+PetscErrorCode KSPDCGSetDeflationSpace(KSP ksp,Mat W,PetscBool transp,PetscInt n)
 {
   PetscErrorCode ierr;
 
   PetscFunctionBegin;
-  ierr = PetscTryMethod((ksp),"KSPDCGSetDeflationSpace_C",(KSP,Mat),(ksp,W));CHKERRQ(ierr);
+  ierr = PetscTryMethod((ksp),"KSPDCGSetDeflationSpace_C",(KSP,Mat,PetscBool,PetscInt),(ksp,W,transp,n));CHKERRQ(ierr);
   PetscFunctionReturn(0);
 }
 
 #undef __FUNCT__
 #define __FUNCT__ "KSPDCGSetDeflationSpace_DCG"
-static PetscErrorCode KSPDCGSetDeflationSpace_DCG(KSP ksp,Mat W)
+static PetscErrorCode KSPDCGSetDeflationSpace_DCG(KSP ksp,Mat W,PetscBool transp,PetscInt n)
 {
   KSP_DCG        *cgP = (KSP_DCG*)ksp->data;
   PetscErrorCode ierr;
 
-  cgP->W = W;
+  PetscFunctionBegin;
+  if (transp) {
+    cgP->Wt = W;
+    cgP->W = NULL;
+  } else {
+    cgP->W = W;
+  }
+  cgP->spacesize = n;
   ierr = PetscObjectReference((PetscObject)W);CHKERRQ(ierr);
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "KSPDCGSetMaxNestLvl"
+PetscErrorCode KSPDCGSetMaxNestLvl(KSP ksp,PetscInt max)
+{
+  PetscErrorCode ierr;
+
+  PetscFunctionBegin;
+  ierr = PetscTryMethod((ksp),"KSPDCGSetNestLvl_C",(KSP,PetscInt,PetscInt),(ksp,0,max));CHKERRQ(ierr);
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "KSPDCGSetNestLvl_DCG"
+static PetscErrorCode KSPDCGSetNestLvl_DCG(KSP ksp,PetscInt current,PetscInt max)
+{
+  KSP_DCG        *cgP = (KSP_DCG*)ksp->data;
+
+  PetscFunctionBegin;
+  cgP->nestedlvl = current;
+  cgP->maxnestedlvl = max;
   PetscFunctionReturn(0);
 }
 
@@ -201,19 +231,101 @@ static PetscErrorCode KSPSetUp_DCG(KSP ksp)
 {
   KSP_DCG        *cgP = (KSP_DCG*)ksp->data;
   PetscErrorCode ierr;
-  PetscInt       maxit = ksp->max_it,nwork = 4,commsize,red,m;
+  PetscInt       i,maxit = ksp->max_it,nwork = 4,commsize,red,m,size;
   Mat            Amat;
+  Mat            W,Wt;
+  Mat            nextDefl=NULL,*mats,newmat;
   PC             pc;
   KSP            innerksp;
-  PetscBool      match;
+  PetscBool      match,transp=PETSC_FALSE;
   const char     *prefix;
+  MPI_Comm       comm;
 
   PetscFunctionBegin;
-  if (cgP->W) {
+  ierr = PetscObjectGetComm((PetscObject)ksp,&comm);CHKERRQ(ierr);
+  if (cgP->W || cgP->Wt) {
     cgP->spacetype = DCG_SPACE_USER;
   } else {
     ierr = KSPDCGComputeDeflationSpace(ksp);CHKERRQ(ierr);
   }
+
+  /* nested DCG */
+  if (cgP->W) {
+    ierr = PetscObjectTypeCompare((PetscObject)cgP->W,MATPROD,&match);CHKERRQ(ierr);
+  } else {
+    ierr = MatCreateTranspose(cgP->Wt,&cgP->W);CHKERRQ(ierr);
+    ierr = PetscObjectTypeCompare((PetscObject)cgP->Wt,MATPROD,&match);CHKERRQ(ierr);
+    transp = PETSC_TRUE;
+  }
+
+  if (match) {
+    size = cgP->spacesize;
+    ierr = PetscMalloc1(size,&mats);CHKERRQ(ierr);
+    for (i=0; i <size; i++) {
+      if (transp) {
+        ierr = MatProdGetMat(cgP->Wt,i,&mats[i]);CHKERRQ(ierr);
+      } else {
+        ierr = MatProdGetMat(cgP->W,i,&mats[i]);CHKERRQ(ierr);
+      }
+      ierr = PetscObjectReference((PetscObject)mats[i]);CHKERRQ(ierr);
+    }
+    if (cgP->nestedlvl < cgP->maxnestedlvl) {
+      if (!transp) {
+        W = mats[size-1];
+        ierr = PetscObjectReference((PetscObject)mats[size-1]);CHKERRQ(ierr);
+      } else {
+        Wt = mats[0];
+        ierr = PetscObjectReference((PetscObject)mats[0]);CHKERRQ(ierr);
+        ierr = MatTranspose(Wt,MAT_INITIAL_MATRIX,&W);CHKERRQ(ierr);
+      }
+    }
+    if (cgP->nestedlvl >= cgP->maxnestedlvl) { /* assemble W */
+      if (transp) {
+        ierr = MatTranspose(mats[size-1],MAT_INITIAL_MATRIX,&W);CHKERRQ(ierr); 
+        for (i=size-1; i>0; i--) { 
+          ierr = MatTransposeMatMult(mats[i-1],W,MAT_INITIAL_MATRIX,PETSC_DECIDE,&newmat);CHKERRQ(ierr); 
+          ierr = MatDestroy(&mats[i-1]);CHKERRQ(ierr);
+          ierr = MatDestroy(&W);CHKERRQ(ierr); 
+          W = newmat; 
+        }
+      } else {
+        W = mats[0];
+        for (i=1; i<size; i++) { 
+          ierr = MatMatMult(mats[i],W,MAT_INITIAL_MATRIX,PETSC_DECIDE,&newmat);CHKERRQ(ierr); 
+          ierr = MatDestroy(&mats[i]);CHKERRQ(ierr);
+          ierr = MatDestroy(&W);CHKERRQ(ierr); 
+          W = newmat; 
+        } 
+      }
+    } else {
+      size -= 1;
+      cgP->nestedlvl += 1;
+      i = 0;
+      if (transp) i = 1;
+      if (size > 1) { 
+        ierr = MatCreateProd(comm,size,&mats[i],&nextDefl);CHKERRQ(ierr);
+        for (i=0; i<size+1; i++) ierr = MatDestroy(&mats[i]);CHKERRQ(ierr);
+      } else {
+        nextDefl = mats[i];
+      }
+      ierr = MatDestroy(&cgP->W);CHKERRQ(ierr);
+      ierr = MatDestroy(&cgP->Wt);CHKERRQ(ierr);
+      if (transp) {
+        cgP->Wt = Wt;
+        ierr = MatCreateTranspose(cgP->Wt,&cgP->W);CHKERRQ(ierr);
+      } else {
+        cgP->W = W;
+      }
+    }
+    ierr = PetscFree(mats);CHKERRQ(ierr);
+  } else {
+    if (transp) {
+      Wt = cgP->Wt;
+      ierr = MatTranspose(cgP->Wt,MAT_INITIAL_MATRIX,&W);CHKERRQ(ierr);
+    } else {
+      W = cgP->W;
+    }
+  }  
 
   /* get work vectors needed by CG */
   if (cgP->singlereduction) nwork += 2;
@@ -231,55 +343,62 @@ static PetscErrorCode KSPSetUp_DCG(KSP ksp)
     //ksp->ops->computeextremesingularvalues = KSPComputeExtremeSingularValues_CG;
     //ksp->ops->computeeigenvalues           = KSPComputeEigenvalues_CG;
   }
-  ierr = MatGetSize(cgP->W,NULL,&m);CHKERRQ(ierr);
+  ierr = MatGetSize(W,NULL,&m);CHKERRQ(ierr);
   PetscPrintf(PETSC_COMM_WORLD,"Deflation Space size: %d\n",m);
   if (!cgP->WtAWinv) {
     if (!cgP->WtAW) {
       ierr = KSPGetOperators(ksp,&Amat,NULL);CHKERRQ(ierr);
       /* TODO add implicit product version */
-      ierr = PetscObjectTypeCompareAny((PetscObject)cgP->W,&match,MATSEQAIJ,MATMPIAIJ,"");CHKERRQ(ierr);
+      ierr = PetscObjectTypeCompareAny((PetscObject)W,&match,MATSEQAIJ,MATMPIAIJ,"");CHKERRQ(ierr);
       if (!match) {
-        if (!cgP->AW) ierr = MatMatMult(Amat,cgP->W,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&cgP->AW);CHKERRQ(ierr);
-        ierr = MatTransposeMatMult(cgP->W,cgP->AW,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&cgP->WtAW);CHKERRQ(ierr);
+        if (!cgP->AW) ierr = MatMatMult(Amat,W,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&cgP->AW);CHKERRQ(ierr);
+        ierr = MatTransposeMatMult(W,cgP->AW,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&cgP->WtAW);CHKERRQ(ierr);
       } else {
-        ierr = MatPtAP(Amat,cgP->W,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&cgP->WtAW);CHKERRQ(ierr);
+        ierr = MatPtAP(Amat,W,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&cgP->WtAW);CHKERRQ(ierr);
         ierr = MatSetOption(cgP->WtAW,MAT_SPD,PETSC_TRUE);CHKERRQ(ierr);
       }
+        
       /* Check WtAW is not sigular */
       PetscReal *norms;
-      PetscInt i;
       ierr = PetscMalloc1(m,&norms);CHKERRQ(ierr);
       ierr = MatGetColumnNorms(cgP->WtAW,NORM_INFINITY,norms);CHKERRQ(ierr);
       for (i=0; i<m; i++) {
         if (norms[i] < 10*PETSC_MACHINE_EPSILON) {
           MatView(cgP->W, PETSC_VIEWER_STDOUT_WORLD);
-          SETERRQ1(PetscObjectComm((PetscObject)ksp),PETSC_ERR_SUP,"Column %d of W is in kernel of A.",i);
+          SETERRQ1(comm,PETSC_ERR_SUP,"Column %d of W is in kernel of A.",i);
         }
       }
       ierr = PetscFree(norms);CHKERRQ(ierr);
     }
-    ierr = KSPCreate(PetscObjectComm((PetscObject)ksp),&cgP->WtAWinv);CHKERRQ(ierr);
+    ierr = KSPCreate(comm,&cgP->WtAWinv);CHKERRQ(ierr);
     ierr = KSPSetOperators(cgP->WtAWinv,cgP->WtAW,cgP->WtAW);CHKERRQ(ierr);
-    ierr = KSPSetType(cgP->WtAWinv,KSPPREONLY);CHKERRQ(ierr);
     ierr = KSPGetPC(cgP->WtAWinv,&pc);CHKERRQ(ierr);
-    ierr = PCSetType(pc,PCREDUNDANT);CHKERRQ(ierr);
-    /* Redundancy choice */
+    if (nextDefl) {
+      ierr = KSPSetType(cgP->WtAWinv,KSPDCG);CHKERRQ(ierr);
+      ierr = PCSetType(pc,PCNONE);CHKERRQ(ierr);
+      ierr = KSPDCGSetDeflationSpace(cgP->WtAWinv,nextDefl,transp,size);CHKERRQ(ierr);
+      ierr = KSPDCGSetNestLvl_DCG(cgP->WtAWinv,cgP->nestedlvl,cgP->maxnestedlvl);CHKERRQ(ierr);
+      ierr = MatDestroy(&nextDefl);CHKERRQ(ierr);
+      innerksp = cgP->WtAWinv;
+    } else {
+      ierr = KSPSetType(cgP->WtAWinv,KSPPREONLY);CHKERRQ(ierr);
+      ierr = PCSetType(pc,PCREDUNDANT);CHKERRQ(ierr);
+      /* Redundancy choice */
 
-    red = cgP->redundancy;
-    if (red < 0) {
-      ierr = MPI_Comm_size(PetscObjectComm((PetscObject)ksp),&commsize);CHKERRQ(ierr);
-      red  = ceil((float)commsize/ceil((float)m/commsize));
-      PetscPrintf(PETSC_COMM_WORLD,"Auto choosing redundancy %d\n",red);
+      red = cgP->redundancy;
+      if (red < 0) {
+        ierr = MPI_Comm_size(comm,&commsize);CHKERRQ(ierr);
+        red  = ceil((float)commsize/ceil((float)m/commsize));
+        PetscPrintf(PETSC_COMM_WORLD,"Auto choosing redundancy %d\n",red);
+      }
+      ierr = PCRedundantSetNumber(pc,red);CHKERRQ(ierr);
+      ierr = PCRedundantGetKSP(pc,&innerksp);CHKERRQ(ierr);
+      ierr = KSPGetPC(innerksp,&pc);CHKERRQ(ierr);
+      ierr = KSPSetType(innerksp,KSPPREONLY);CHKERRQ(ierr);
+      ierr = PCSetType(pc,PCCHOLESKY);CHKERRQ(ierr);
+      //TODO remove explicit matSolverPackage
+      ierr = PCFactorSetMatSolverPackage(pc,MATSOLVERMUMPS);CHKERRQ(ierr);
     }
-    ierr = PCRedundantSetNumber(pc,red);CHKERRQ(ierr);
-    ierr = PCRedundantGetKSP(pc,&innerksp);CHKERRQ(ierr);
-
-    ierr = KSPGetPC(innerksp,&pc);CHKERRQ(ierr);
-    ierr = KSPSetType(innerksp,KSPPREONLY);CHKERRQ(ierr);
-    ierr = PCSetType(pc,PCCHOLESKY);CHKERRQ(ierr);
-    //TODO remove explicit matSolverPackage
-    ierr = PCFactorSetMatSolverPackage(pc,MATSOLVERMUMPS);CHKERRQ(ierr);
-
     ierr = KSPGetOptionsPrefix(ksp,&prefix);CHKERRQ(ierr);
     if (prefix) {
       ierr = KSPSetOptionsPrefix(innerksp,prefix);CHKERRQ(ierr);
@@ -538,6 +657,7 @@ PetscErrorCode KSPSetFromOptions_DCG(PetscOptionItems *PetscOptionsObject,KSP ks
   ierr = PetscOptionsBool("-ksp_dcg_correct","Add Qr to descent direction","KSPDCG",cg->correct,&cg->correct,NULL);CHKERRQ(ierr);
   ierr = PetscOptionsBool("-ksp_dcg_rnorm0","set rnorm0 as initcg rnorm","KSPDCG",cg->truenorm,&cg->truenorm,NULL);CHKERRQ(ierr);
   ierr = PetscOptionsInt("-ksp_dcg_redundancy","Number of subgroups for coarse problem solution","KSPDCG",cg->redundancy,&cg->redundancy,NULL);CHKERRQ(ierr);
+  ierr = PetscOptionsInt("-ksp_dcg_max_nested_lvl","Maximum of nested DCGs","KSPDCG",cg->maxnestedlvl,&cg->maxnestedlvl,NULL);CHKERRQ(ierr);
   ierr = PetscOptionsTail();CHKERRQ(ierr);
   PetscFunctionReturn(0);
 }
@@ -603,14 +723,16 @@ PETSC_EXTERN PetscErrorCode KSPCreate_DCG(KSP ksp)
 #else
   cg->type = KSP_CG_HERMITIAN;
 #endif
-  cg->initcg     = PETSC_FALSE;
-  cg->correct    = PETSC_FALSE;
-  cg->truenorm   = PETSC_TRUE;
-  cg->redundancy = -1;
-  cg->spacetype  = DCG_SPACE_HAAR;
-  cg->spacesize  = 1;
-  cg->extendsp  = PETSC_FALSE;
-  ksp->data = (void*)cg;
+  cg->initcg       = PETSC_FALSE;
+  cg->correct      = PETSC_FALSE;
+  cg->truenorm     = PETSC_TRUE;
+  cg->redundancy   = -1;
+  cg->spacetype    = DCG_SPACE_HAAR;
+  cg->spacesize    = 1;
+  cg->extendsp     = PETSC_FALSE;
+  cg->nestedlvl    = 0;
+  cg->maxnestedlvl = 0;
+  ksp->data        = (void*)cg;
 
   ierr = KSPSetSupportedNorm(ksp,KSP_NORM_PRECONDITIONED,PC_LEFT,3);CHKERRQ(ierr);
   ierr = KSPSetSupportedNorm(ksp,KSP_NORM_UNPRECONDITIONED,PC_LEFT,2);CHKERRQ(ierr);
@@ -637,5 +759,6 @@ PETSC_EXTERN PetscErrorCode KSPCreate_DCG(KSP ksp)
   */
   ierr = PetscObjectComposeFunction((PetscObject)ksp,"KSPCGSetType_C",KSPCGSetType_DCG);CHKERRQ(ierr);
   ierr = PetscObjectComposeFunction((PetscObject)ksp,"KSPDCGSetDeflationSpace_C",KSPDCGSetDeflationSpace_DCG);CHKERRQ(ierr);
+  ierr = PetscObjectComposeFunction((PetscObject)ksp,"KSPDCGSetNestLvl_C",KSPDCGSetNestLvl_DCG);CHKERRQ(ierr);
   PetscFunctionReturn(0);
 }

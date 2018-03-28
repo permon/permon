@@ -42,6 +42,7 @@ typedef struct {
   Vec *work;
   KSPDCGSpaceType spacetype;
   PetscInt spacesize;
+  PetscInt nestedlvl,maxnestedlvl;
   PetscBool extendsp;
   } KSP_DCG;
 

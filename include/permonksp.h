@@ -29,6 +29,7 @@ PETSC_EXTERN PetscErrorCode KSPViewBriefInfo(KSP ksp, PetscViewer viewer);
 
 PETSC_EXTERN PetscErrorCode KSPFETISetDirichlet(KSP ksp,IS isDir,QPFetiNumberingType numtype,PetscBool enforce_by_B);
 
-PETSC_EXTERN PetscErrorCode KSPDCGSetDeflationSpace(KSP ksp,Mat W);
+PETSC_EXTERN PetscErrorCode KSPDCGSetDeflationSpace(KSP ksp,Mat W,PetscBool transp,PetscInt n);
+PETSC_EXTERN PetscErrorCode KSPDCGSetMaxNestLevel(KSP ksp,PetscInt max);
 
 #endif
