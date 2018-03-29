@@ -105,6 +105,89 @@ static PetscErrorCode KSPDCGSetNestLvl_DCG(KSP ksp,PetscInt current,PetscInt max
   PetscFunctionReturn(0);
 }
 
+#undef __FUNCT__
+#define __FUNCT__ "KSPDCGConvergedAdaptive_DCG"
+static PetscErrorCode  KSPDCGConvergedAdaptive_DCG(KSP ksp,PetscInt n,PetscReal rnorm,KSPConvergedReason *reason,void *ctx)
+{
+  PetscErrorCode ierr;
+  PetscReal      scale = *((PetscReal*)ctx);
+  KSPNormType    normtype;
+
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(ksp,KSP_CLASSID,1);
+  PetscValidPointer(reason,4);
+  *reason = KSP_CONVERGED_ITERATING;
+
+  ierr = KSPGetNormType(ksp,&normtype);CHKERRQ(ierr);
+  if (normtype == KSP_NORM_NONE) PetscFunctionReturn(0);
+
+  if (!n) {
+    /* if user gives initial guess need to compute norm of b */
+    if (!ksp->guess_zero) {
+      PetscReal snorm = 0.0;
+      if (ksp->normtype == KSP_NORM_UNPRECONDITIONED || ksp->pc_side == PC_RIGHT) {
+        ierr = PetscInfo(ksp,"user has provided nonzero initial guess, computing 2-norm of RHS\n");CHKERRQ(ierr);
+        ierr = VecNorm(ksp->vec_rhs,NORM_2,&snorm);CHKERRQ(ierr);        /*     <- b'*b */
+      } else {
+        Vec z;
+        /* Should avoid allocating the z vector each time but cannot stash it in cctx because if KSPReset() is called the vector size might change */
+        ierr = VecDuplicate(ksp->vec_rhs,&z);CHKERRQ(ierr);
+        ierr = KSP_PCApply(ksp,ksp->vec_rhs,z);CHKERRQ(ierr);
+        if (ksp->normtype == KSP_NORM_PRECONDITIONED) {
+          ierr = PetscInfo(ksp,"user has provided nonzero initial guess, computing 2-norm of preconditioned RHS\n");CHKERRQ(ierr);
+          ierr = VecNorm(z,NORM_2,&snorm);CHKERRQ(ierr);                 /*    dp <- b'*B'*B*b */
+        } else if (ksp->normtype == KSP_NORM_NATURAL) {
+          PetscScalar norm;
+          ierr  = PetscInfo(ksp,"user has provided nonzero initial guess, computing natural norm of RHS\n");CHKERRQ(ierr);
+          ierr  = VecDot(ksp->vec_rhs,z,&norm);CHKERRQ(ierr);
+          snorm = PetscSqrtReal(PetscAbsScalar(norm));                            /*    dp <- b'*B*b */
+        }
+        ierr = VecDestroy(&z);CHKERRQ(ierr);
+      }
+      /* handle special case of zero RHS and nonzero guess */
+      if (!snorm) {
+        ierr  = PetscInfo(ksp,"Special case, user has provided nonzero initial guess and zero RHS\n");CHKERRQ(ierr);
+        snorm = rnorm;
+      }
+      else ksp->rnorm0 = snorm;
+    } else {
+      ksp->rnorm0 = rnorm;
+    }
+    ksp->ttol = PetscMax(ksp->rtol*ksp->rnorm0/scale,ksp->abstol);
+    ksp->ttol = PetscMax(ksp->ttol,PETSC_MACHINE_EPSILON);
+  }
+
+  if (n <= ksp->chknorm) PetscFunctionReturn(0);
+
+  if (PetscIsInfOrNanReal(rnorm)) {
+    PCFailedReason pcreason;
+    PetscInt       sendbuf,pcreason_max;
+    ierr = PCGetSetUpFailedReason(ksp->pc,&pcreason);CHKERRQ(ierr);
+    sendbuf = (PetscInt)pcreason;
+    ierr = MPI_Allreduce(&sendbuf,&pcreason_max,1,MPIU_INT,MPIU_MAX,PetscObjectComm((PetscObject)ksp));CHKERRQ(ierr);
+    if (pcreason_max) {
+      *reason = KSP_DIVERGED_PCSETUP_FAILED;
+      ierr    = VecSetInf(ksp->vec_sol);CHKERRQ(ierr);
+      ierr    = PetscInfo(ksp,"Linear solver pcsetup fails, declaring divergence \n");CHKERRQ(ierr);
+    } else {
+      *reason = KSP_DIVERGED_NANORINF;
+      ierr    = PetscInfo(ksp,"Linear solver has created a not a number (NaN) as the residual norm, declaring divergence \n");CHKERRQ(ierr);
+    }
+  } else if (rnorm <= ksp->ttol) {
+    if (rnorm < ksp->abstol) {
+      ierr    = PetscInfo3(ksp,"Linear solver has converged. Residual norm %14.12e is less than absolute tolerance %14.12e at iteration %D\n",(double)rnorm,(double)ksp->abstol,n);CHKERRQ(ierr);
+      *reason = KSP_CONVERGED_ATOL;
+    } else {
+       ierr = PetscInfo4(ksp,"Linear solver has converged. Residual norm %14.12e is less than relative tolerance %14.12e times initial right hand side norm %14.12e at iteration %D\n",(double)rnorm,(double)ksp->rtol,(double)ksp->rnorm0,n);CHKERRQ(ierr);
+      *reason = KSP_CONVERGED_RTOL;
+    }
+  } else if (rnorm >= ksp->divtol*ksp->rnorm0) {
+    ierr    = PetscInfo3(ksp,"Linear solver is diverging. Initial right hand size norm %14.12e, current residual norm %14.12e at iteration %D\n",(double)ksp->rnorm0,(double)rnorm,n);CHKERRQ(ierr);
+    *reason = KSP_DIVERGED_DTOL;
+  }
+  PetscFunctionReturn(0);
+}
+
 /*
      A macro used in the following KSPSolve_DCG and KSPSolve_DCG_SingleReduction routines
 */
@@ -173,6 +256,10 @@ static PetscErrorCode KSPDCGInitCG(KSP ksp)
   }
 
   ierr = MatMultTranspose(cg->W,R,W1);CHKERRQ(ierr);   /*    x <- x + W*(W'*A*W)^{-1}*W'*r    */ 
+  if (cg->adaptiveconv) {
+    cg->WtAWinv->rtol *= ksp->rtol*ksp->rnorm0;
+    *((PetscReal*)cg->WtAWinv->cnvP) = ksp->rnorm;
+  }
   ierr = KSPSolve(cg->WtAWinv,W1,W2);CHKERRQ(ierr);
   ierr = MatMult(cg->W,W2,R);CHKERRQ(ierr);
   ierr = VecAYPX(X,1.0,R);CHKERRQ(ierr);
@@ -214,6 +301,9 @@ static PetscErrorCode KSPDCGDeflationApply(KSP ksp)
       ierr = MatMultTranspose(cgP->W,R,W2);CHKERRQ(ierr);
       ierr = VecAXPY(W1,-1.0,W2);CHKERRQ(ierr);
     }
+  }
+  if (cgP->adaptiveconv) {
+    *((PetscReal*)cgP->WtAWinv->cnvP) = ksp->rnorm;
   }
   ierr = KSPSolve(cgP->WtAWinv,W1,W2);CHKERRQ(ierr);
   ierr = MatMult(cgP->W,W2,Z);CHKERRQ(ierr);
@@ -378,6 +468,8 @@ static PetscErrorCode KSPSetUp_DCG(KSP ksp)
       ierr = PCSetType(pc,PCNONE);CHKERRQ(ierr);
       ierr = KSPDCGSetDeflationSpace(cgP->WtAWinv,nextDefl,transp,size);CHKERRQ(ierr);
       ierr = KSPDCGSetNestLvl_DCG(cgP->WtAWinv,cgP->nestedlvl,cgP->maxnestedlvl);CHKERRQ(ierr);
+      ((KSP_DCG*)(cgP->WtAWinv->data))->correct = cgP->correct;
+      ((KSP_DCG*)(cgP->WtAWinv->data))->adaptiveconv = cgP->adaptiveconv;
       ierr = MatDestroy(&nextDefl);CHKERRQ(ierr);
       innerksp = cgP->WtAWinv;
     } else {
@@ -408,6 +500,11 @@ static PetscErrorCode KSPSetUp_DCG(KSP ksp)
     }
     /* TODO: check if WtAWinv is KSP and move following from this if */
     ierr = KSPSetFromOptions(cgP->WtAWinv);CHKERRQ(ierr);
+    if (cgP->adaptiveconv) {
+      PetscReal *rnorm;
+      PetscNew(&rnorm);
+      ierr = KSPSetConvergenceTest(cgP->WtAWinv,KSPDCGConvergedAdaptive_DCG,rnorm,NULL);CHKERRQ(ierr);
+    }
     ierr = KSPSetUp(cgP->WtAWinv);CHKERRQ(ierr);
 
     Mat WtAW;
@@ -655,6 +752,7 @@ PetscErrorCode KSPSetFromOptions_DCG(PetscOptionItems *PetscOptionsObject,KSP ks
 //TODO add set function and fix manpages
   ierr = PetscOptionsBool("-ksp_dcg_initcg","Use only initialization step - InitCG","KSPDCG",cg->initcg,&cg->initcg,NULL);CHKERRQ(ierr);
   ierr = PetscOptionsBool("-ksp_dcg_correct","Add Qr to descent direction","KSPDCG",cg->correct,&cg->correct,NULL);CHKERRQ(ierr);
+  ierr = PetscOptionsBool("-ksp_dcg_adaptive","Adaptive stopping criteria","KSPDCG",cg->adaptiveconv,&cg->adaptiveconv,NULL);CHKERRQ(ierr);
   ierr = PetscOptionsBool("-ksp_dcg_rnorm0","set rnorm0 as initcg rnorm","KSPDCG",cg->truenorm,&cg->truenorm,NULL);CHKERRQ(ierr);
   ierr = PetscOptionsInt("-ksp_dcg_redundancy","Number of subgroups for coarse problem solution","KSPDCG",cg->redundancy,&cg->redundancy,NULL);CHKERRQ(ierr);
   ierr = PetscOptionsInt("-ksp_dcg_max_nested_lvl","Maximum of nested DCGs","KSPDCG",cg->maxnestedlvl,&cg->maxnestedlvl,NULL);CHKERRQ(ierr);
@@ -732,6 +830,7 @@ PETSC_EXTERN PetscErrorCode KSPCreate_DCG(KSP ksp)
   cg->extendsp     = PETSC_FALSE;
   cg->nestedlvl    = 0;
   cg->maxnestedlvl = 0;
+  cg->adaptiveconv = PETSC_FALSE;
   ksp->data        = (void*)cg;
 
   ierr = KSPSetSupportedNorm(ksp,KSP_NORM_PRECONDITIONED,PC_LEFT,3);CHKERRQ(ierr);
