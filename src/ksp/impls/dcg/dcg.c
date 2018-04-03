@@ -719,12 +719,16 @@ PetscErrorCode KSPView_DCG(KSP ksp,PetscViewer viewer)
   PetscFunctionBegin;
   ierr = PetscObjectTypeCompare((PetscObject)viewer,PETSCVIEWERASCII,&iascii);CHKERRQ(ierr);
   if (iascii) {
-#if defined(PETSC_USE_COMPLEX)
-    ierr = PetscViewerASCIIPrintf(viewer,"  CG or CGNE: variant %s\n",KSPCGTypes[cg->type]);CHKERRQ(ierr);
-#endif
     if (cg->singlereduction) {
       ierr = PetscViewerASCIIPrintf(viewer,"  CG: using single-reduction variant\n");CHKERRQ(ierr);
     }
+    if (cg->adaptiveconv) {
+      ierr = PetscViewerASCIIPrintf(viewer,"  DCG: using adaptive precision for inner solve with C=%.1e\n",cg->adaptiveconst);CHKERRQ(ierr);
+    }
+    if (cg->correct) {
+      ierr = PetscViewerASCIIPrintf(viewer,"  DCG: using CP correction\n");CHKERRQ(ierr);
+    }
+    ierr = KSPView(cg->WtAWinv,viewer);CHKERRQ(ierr);
   }
   PetscFunctionReturn(0);
 }
