@@ -112,6 +112,7 @@ static PetscErrorCode  KSPDCGConvergedAdaptive_DCG(KSP ksp,PetscInt n,PetscReal 
   PetscErrorCode ierr;
   PetscReal      scale = *((PetscReal*)ctx);
   KSPNormType    normtype;
+  KSP_DCG        *cg = (KSP_DCG*)ksp->data;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(ksp,KSP_CLASSID,1);
@@ -153,7 +154,7 @@ static PetscErrorCode  KSPDCGConvergedAdaptive_DCG(KSP ksp,PetscInt n,PetscReal 
     } else {
       ksp->rnorm0 = rnorm;
     }
-    ksp->ttol = PetscMax(ksp->rtol*ksp->rnorm0/scale,ksp->abstol);
+    ksp->ttol = PetscMax(cg->adaptiveconst*ksp->rtol*ksp->rnorm0/scale,ksp->abstol);
     ksp->ttol = PetscMax(ksp->ttol,PETSC_MACHINE_EPSILON);
   }
 
@@ -257,7 +258,7 @@ static PetscErrorCode KSPDCGInitCG(KSP ksp)
 
   ierr = MatMultTranspose(cg->W,R,W1);CHKERRQ(ierr);   /*    x <- x + W*(W'*A*W)^{-1}*W'*r    */ 
   if (cg->adaptiveconv) {
-    cg->WtAWinv->rtol *= ksp->rtol*ksp->rnorm0;
+    cg->WtAWinv->rtol = ksp->ttol;
     *((PetscReal*)cg->WtAWinv->cnvP) = ksp->rnorm;
   }
   ierr = KSPSolve(cg->WtAWinv,W1,W2);CHKERRQ(ierr);
@@ -389,7 +390,6 @@ static PetscErrorCode KSPSetUp_DCG(KSP ksp)
       }
     } else {
       size -= 1;
-      cgP->nestedlvl += 1;
       i = 0;
       if (transp) i = 1;
       if (size > 1) { 
@@ -467,9 +467,10 @@ static PetscErrorCode KSPSetUp_DCG(KSP ksp)
       ierr = KSPSetType(cgP->WtAWinv,KSPDCG);CHKERRQ(ierr);
       ierr = PCSetType(pc,PCNONE);CHKERRQ(ierr);
       ierr = KSPDCGSetDeflationSpace(cgP->WtAWinv,nextDefl,transp,size);CHKERRQ(ierr);
-      ierr = KSPDCGSetNestLvl_DCG(cgP->WtAWinv,cgP->nestedlvl,cgP->maxnestedlvl);CHKERRQ(ierr);
+      ierr = KSPDCGSetNestLvl_DCG(cgP->WtAWinv,cgP->nestedlvl+1,cgP->maxnestedlvl);CHKERRQ(ierr);
       ((KSP_DCG*)(cgP->WtAWinv->data))->correct = cgP->correct;
       ((KSP_DCG*)(cgP->WtAWinv->data))->adaptiveconv = cgP->adaptiveconv;
+      ((KSP_DCG*)(cgP->WtAWinv->data))->adaptiveconst = cgP->adaptiveconst;
       ierr = MatDestroy(&nextDefl);CHKERRQ(ierr);
       innerksp = cgP->WtAWinv;
     } else {
@@ -753,6 +754,7 @@ PetscErrorCode KSPSetFromOptions_DCG(PetscOptionItems *PetscOptionsObject,KSP ks
   ierr = PetscOptionsBool("-ksp_dcg_initcg","Use only initialization step - InitCG","KSPDCG",cg->initcg,&cg->initcg,NULL);CHKERRQ(ierr);
   ierr = PetscOptionsBool("-ksp_dcg_correct","Add Qr to descent direction","KSPDCG",cg->correct,&cg->correct,NULL);CHKERRQ(ierr);
   ierr = PetscOptionsBool("-ksp_dcg_adaptive","Adaptive stopping criteria","KSPDCG",cg->adaptiveconv,&cg->adaptiveconv,NULL);CHKERRQ(ierr);
+  ierr = PetscOptionsReal("-ksp_dcg_adaptive_const","Adaptive stopping criteria constant","KSPDCG",cg->adaptiveconst,&cg->adaptiveconst,NULL);CHKERRQ(ierr);
   ierr = PetscOptionsBool("-ksp_dcg_rnorm0","set rnorm0 as initcg rnorm","KSPDCG",cg->truenorm,&cg->truenorm,NULL);CHKERRQ(ierr);
   ierr = PetscOptionsInt("-ksp_dcg_redundancy","Number of subgroups for coarse problem solution","KSPDCG",cg->redundancy,&cg->redundancy,NULL);CHKERRQ(ierr);
   ierr = PetscOptionsInt("-ksp_dcg_max_nested_lvl","Maximum of nested DCGs","KSPDCG",cg->maxnestedlvl,&cg->maxnestedlvl,NULL);CHKERRQ(ierr);
@@ -821,17 +823,18 @@ PETSC_EXTERN PetscErrorCode KSPCreate_DCG(KSP ksp)
 #else
   cg->type = KSP_CG_HERMITIAN;
 #endif
-  cg->initcg       = PETSC_FALSE;
-  cg->correct      = PETSC_FALSE;
-  cg->truenorm     = PETSC_TRUE;
-  cg->redundancy   = -1;
-  cg->spacetype    = DCG_SPACE_HAAR;
-  cg->spacesize    = 1;
-  cg->extendsp     = PETSC_FALSE;
-  cg->nestedlvl    = 0;
-  cg->maxnestedlvl = 0;
-  cg->adaptiveconv = PETSC_FALSE;
-  ksp->data        = (void*)cg;
+  cg->initcg        = PETSC_FALSE;
+  cg->correct       = PETSC_FALSE;
+  cg->truenorm      = PETSC_TRUE;
+  cg->redundancy    = -1;
+  cg->spacetype     = DCG_SPACE_HAAR;
+  cg->spacesize     = 1;
+  cg->extendsp      = PETSC_FALSE;
+  cg->nestedlvl     = 0;
+  cg->maxnestedlvl  = 0;
+  cg->adaptiveconv  = PETSC_FALSE;
+  cg->adaptiveconst = 1.0;
+  ksp->data         = (void*)cg;
 
   ierr = KSPSetSupportedNorm(ksp,KSP_NORM_PRECONDITIONED,PC_LEFT,3);CHKERRQ(ierr);
   ierr = KSPSetSupportedNorm(ksp,KSP_NORM_UNPRECONDITIONED,PC_LEFT,2);CHKERRQ(ierr);
