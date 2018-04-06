@@ -715,6 +715,7 @@ PetscErrorCode KSPView_DCG(KSP ksp,PetscViewer viewer)
   KSP_DCG         *cg = (KSP_DCG*)ksp->data;
   PetscErrorCode ierr;
   PetscBool      iascii;
+  PetscInt       nIter;
 
   PetscFunctionBegin;
   ierr = PetscObjectTypeCompare((PetscObject)viewer,PETSCVIEWERASCII,&iascii);CHKERRQ(ierr);
@@ -728,6 +729,12 @@ PetscErrorCode KSPView_DCG(KSP ksp,PetscViewer viewer)
     if (cg->correct) {
       ierr = PetscViewerASCIIPrintf(viewer,"  DCG: using CP correction\n");CHKERRQ(ierr);
     }
+    if (!cg->nestedlvl) {
+      ierr = PetscViewerASCIIPrintf(viewer,"  DCG deflation space type: %s\n",KSPDCGSpaceTypes[cg->spacetype]);CHKERRQ(ierr);
+      ierr = PetscViewerASCIIPrintf(viewer,"  DCG %s\n",cg->extendsp ? "extended" : "truncated");CHKERRQ(ierr);
+    }
+    ierr = KSPGetTotalIterations(ksp,&nIter);CHKERRQ(ierr);
+    ierr = PetscViewerASCIIPrintf(viewer,"  DCG iters: %d\n",nIter);CHKERRQ(ierr);
     ierr = KSPView(cg->WtAWinv,viewer);CHKERRQ(ierr);
   }
   PetscFunctionReturn(0);
