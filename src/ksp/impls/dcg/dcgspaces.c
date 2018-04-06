@@ -8,6 +8,7 @@
 const char *const KSPDCGSpaceTypes[] = {
   "haar",
   "jacket-haar",
+  "db2",
   "db4",
   "db8",
   "db16",
@@ -21,6 +22,8 @@ const char *const KSPDCGSpaceTypes[] = {
   "DCG_SPACE_",
   0
 };
+
+PetscScalar db2[] = {0.7071067811865476,0.7071067811865476};
 
 //dec low high
 PetscScalar db4[] = {-0.12940952255092145,0.22414386804185735,0.836516303737469,0.48296291314469025};
@@ -529,6 +532,8 @@ PetscErrorCode KSPDCGComputeDeflationSpace(KSP ksp)
       ierr = KSPDCGGetDeflationSpaceJacketHaar(ksp,&defl,cg->spacesize);CHKERRQ(ierr);break;
       transp = PETSC_FALSE;
       size = 1;
+    case DCG_SPACE_DB2:
+      ierr = KSPDCGGetDeflationSpaceWave(ksp,&defl,cg->spacesize,2,db2,!cg->extendsp);CHKERRQ(ierr);break;
     case DCG_SPACE_DB4:
       ierr = KSPDCGGetDeflationSpaceWave(ksp,&defl,cg->spacesize,4,db4,!cg->extendsp);CHKERRQ(ierr);break;
     case DCG_SPACE_DB8:
