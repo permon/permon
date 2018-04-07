@@ -473,29 +473,29 @@ PetscErrorCode KSPDCGGetDeflationSpaceSLEPc(KSP ksp,Mat *W,PetscInt size,PetscBo
 
   ierr = EPSSolve(eps);CHKERRQ(ierr);
   ierr = EPSGetConverged(eps,&nconv);CHKERRQ(ierr);
-  if (!nconv) SETERRQ(comm,PETSC_ERR_CONV_FAILED,"SLEPc: Number of converged eigenpairs is 0");
+  if (nconv < size) SETERRQ2(comm,PETSC_ERR_CONV_FAILED,"SLEPc: Number of converged eigenpairs (%d) is less than requested (%d)",nconv,size);
   ierr = MatCreateVecs(A,NULL,&vec);CHKERRQ(ierr);
   ierr = MatGetSize(A,&M,NULL);CHKERRQ(ierr);
   ierr = MatGetLocalSize(A,&m,NULL);CHKERRQ(ierr);
-  ierr = PetscSplitOwnership(comm,&n,&nconv);CHKERRQ(ierr);
-  ierr = PetscMalloc1(m*nconv,&data);CHKERRQ(ierr);
+  ierr = PetscSplitOwnership(comm,&n,&size);CHKERRQ(ierr);
+  ierr = PetscMalloc1(m*size,&data);CHKERRQ(ierr);
   /* TODO check that eigenvalue is not 0 -> vec is not in Ker A */
-  for (i=0; i<nconv; i++) {
+  for (i=0; i<size; i++) {
     ierr = VecPlaceArray(vec,&data[i*m]);CHKERRQ(ierr);
     ierr = EPSGetEigenvector(eps,i,vec,NULL);CHKERRQ(ierr);
     ierr = VecResetArray(vec);CHKERRQ(ierr);
   }
-  ierr = MatCreateDense(comm,m,n,M,nconv,data,&defl);CHKERRQ(ierr);
+  ierr = MatCreateDense(comm,m,n,M,size,data,&defl);CHKERRQ(ierr);
 
   if (cheapCP) {
-    ierr = PetscMalloc1(m*nconv,&dataScaled);CHKERRQ(ierr);
-    for (i=0; i<nconv; i++) {
+    ierr = PetscMalloc1(m*size,&dataScaled);CHKERRQ(ierr);
+    for (i=0; i<size; i++) {
         ierr = VecPlaceArray(vec,&dataScaled[i*m]);CHKERRQ(ierr);
         ierr = EPSGetEigenpair(eps,i,&eigval,NULL,vec,NULL);CHKERRQ(ierr);
         ierr = VecScale(vec,eigval);CHKERRQ(ierr);
         ierr = VecResetArray(vec);CHKERRQ(ierr);
     }
-    ierr = MatCreateDense(comm,m,n,M,nconv,dataScaled,&cg->AW);CHKERRQ(ierr);
+    ierr = MatCreateDense(comm,m,n,M,size,dataScaled,&cg->AW);CHKERRQ(ierr);
   }
 
   //ierr = EPSGetBV(eps,&bv);CHKERRQ(ierr);
@@ -525,13 +525,13 @@ PetscErrorCode KSPDCGComputeDeflationSpace(KSP ksp)
   if (cg->spacesize < 1) SETERRQ1(PetscObjectComm((PetscObject)ksp),PETSC_ERR_ARG_WRONG,"Wrong DCG Space size specified: %d",cg->spacesize);
   switch (cg->spacetype) {
     case DCG_SPACE_HAAR:
+      transp = PETSC_FALSE;
+      size = 1;
       ierr = KSPDCGGetDeflationSpaceHaar(ksp,&defl,cg->spacesize);CHKERRQ(ierr);break;
-      transp = PETSC_FALSE;
-      size = 1;
     case DCG_SPACE_JACKET_HAAR:
-      ierr = KSPDCGGetDeflationSpaceJacketHaar(ksp,&defl,cg->spacesize);CHKERRQ(ierr);break;
       transp = PETSC_FALSE;
       size = 1;
+      ierr = KSPDCGGetDeflationSpaceJacketHaar(ksp,&defl,cg->spacesize);CHKERRQ(ierr);break;
     case DCG_SPACE_DB2:
       ierr = KSPDCGGetDeflationSpaceWave(ksp,&defl,cg->spacesize,2,db2,!cg->extendsp);CHKERRQ(ierr);break;
     case DCG_SPACE_DB4:
@@ -545,17 +545,17 @@ PetscErrorCode KSPDCGComputeDeflationSpace(KSP ksp)
     case DCG_SPACE_MEYER:
       ierr = KSPDCGGetDeflationSpaceWave(ksp,&defl,cg->spacesize,62,meyer,!cg->extendsp);CHKERRQ(ierr);break;
     case DCG_SPACE_AGGREGATION:
+      transp = PETSC_FALSE;
+      size = 1;
       ierr = KSPDCGGetDeflationSpaceAggregation(ksp,&defl);CHKERRQ(ierr);break;
-      transp = PETSC_FALSE;
-      size = 1;
     case DCG_SPACE_SLEPC:
+      transp = PETSC_FALSE;
+      size = 1;
       ierr = KSPDCGGetDeflationSpaceSLEPc(ksp,&defl,cg->spacesize,PETSC_FALSE);CHKERRQ(ierr);break;
-      transp = PETSC_FALSE;
-      size = 1;
     case DCG_SPACE_SLEPC_CHEAP:
-      ierr = KSPDCGGetDeflationSpaceSLEPc(ksp,&defl,cg->spacesize,PETSC_TRUE);CHKERRQ(ierr);break;
       transp = PETSC_FALSE;
       size = 1;
+      ierr = KSPDCGGetDeflationSpaceSLEPc(ksp,&defl,cg->spacesize,PETSC_TRUE);CHKERRQ(ierr);break;
     default: SETERRQ(PetscObjectComm((PetscObject)ksp),PETSC_ERR_ARG_WRONG,"Wrong DCG Space Type specified");
   }
   
