@@ -5,13 +5,13 @@
 # Basic targets to build PERMON library
 permon-all: permon_chk_all
 	@mkdir -p ./${PETSC_ARCH}/lib/permon/conf
-	@if [ "${MAKE_IS_GNUMAKE}" != "" ]; then \
+	+@if [ "${MAKE_IS_GNUMAKE}" != "" ]; then \
 	   ${OMAKE_PRINTDIR} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} PERMON_PKG_DIR=${PERMON_PKG_DIR} permon-all-gnumake-local 2>&1 | tee ${PERMON_LOG}; \
 	 else \
 	   ${OMAKE} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} PERMON_PKG_DIR=${PERMON_PKG_DIR} permon-all-legacy-local 2>&1 | tee ${PERMON_LOG} | ${GREP} -v "has no symbols"; \
 	 fi
 	@egrep -i "( error | error: |no such file or directory)" ${PERMON_LOG} | tee ${PERMON_ERRLOG} > /dev/null
-	@if test -s ${PERMON_ERRLOG}; then \
+	+@if test -s ${PERMON_ERRLOG}; then \
            printf ${PETSC_TEXT_HILIGHT}"*******************************ERROR************************************\n" 2>&1 | tee -a ${PERMON_LOG}; \
            echo "  Error during compile, check ${PERMON_LOG}" 2>&1 | tee -a ${PERMON_LOG}; \
            echo "  Send all contents of ./${PETSC_ARCH}/lib/permon/conf to vaclav.hapla@vsb.cz" 2>&1 | tee -a ${PERMON_LOG};\
@@ -35,12 +35,12 @@ permon-all-gnumake-local: permon_info permon_build_gnumake
 
 permon-all-legacy-local:  permon_info deletelibs permon_build_legacy permon_shared
 
-permon_chk_all: chk_permon_pkg_dir chk_permon_petsc_dir chklib_dir chk_makej
+permon_chk_all: chk_permon_pkg_dir chk_permon_petsc_dir chklib_dir
 
 #
 # Builds the PERMON library using PETSc legacy buildsystem
 #
-permon_build_legacy: chk_makej
+permon_build_legacy:
 	-@echo "Building ${PERMON_PKG_NAME} using PETSc legacy buildsystem"
 	-@echo "========================================="
 	-@${OMAKE} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} ACTION=libfast tree
@@ -51,11 +51,8 @@ permon_build_legacy: chk_makej
 #
 # Builds the PERMON library using PETSc GNU Make parallel buildsystem
 #
-permon_build_gnumake: chk_makej
-	@echo "Building ${PERMON_PKG_NAME} using GNU Make with ${MAKE_NP} build threads"
-	@echo "=========================================="
-	@cd ${PERMON_PKG_DIR} && ${OMAKE_PRINTDIR} -f gmakefile -j ${MAKE_NP} V=${V}
-	@echo "========================================="
+permon_build_gnumake:
+	+@cd ${PERMON_PKG_DIR} && MAKEFLAGS="-j$(MAKE_NP) $(MAKEFLAGS)" ${OMAKE_PRINTDIR} -f gmakefile -j ${MAKE_NP} V=${V}
 
 #
 # builds the PERMON shared library
@@ -69,7 +66,7 @@ ranlib:
 	${RANLIB} ${PERMON_PKG_LIB_DIR}/*.${AR_LIB_SUFFIX}
 
 # Deletes PERMON library
-deletelibs: chk_makej
+deletelibs:
 	-@${RM} -r ${PERMON_PKG_LIB_DIR}/lib*.*
 
 # Cleans up build
@@ -163,6 +160,8 @@ permon_info:
 	-@echo "Using libraries: ${PERMON_LIB}"
 	-@echo "------------------------------------------"
 	-@echo "Using mpiexec: ${MPIEXEC}"
+	-@echo "------------------------------------------"
+	-@echo "Using MAKEFLAGS: -j$(MAKE_NP) $(MAKEFLAGS)"
 	-@echo "=========================================="
 
 # Builds all the documentation
@@ -174,7 +173,7 @@ alldoc1: chk_loc deletemanualpages
 	-@sed -e s%man+../%man+manualpages/% ${LOC}/docs/manualpages/manualpages.cit > ${LOC}/docs/manualpages/htmlmap
 	-@cat ${PETSC_DIR}/src/docs/mpi.www.index >> ${LOC}/docs/manualpages/htmlmap
 	-${OMAKE} ACTION=permon_manualpages tree_basic LOC=${LOC}
-	-${PYTHON} ${PETSC_DIR}/bin/maint/wwwindex.py ${PERMON_PKG_DIR} ${LOC}
+	-${PYTHON} ${PETSC_DIR}/lib/petsc/bin/maint/wwwindex.py ${PERMON_PKG_DIR} ${LOC}
 	-${OMAKE} ACTION=permon_manexamples tree_basic LOC=${LOC}
 
 # Builds .html versions of the source
@@ -244,7 +243,7 @@ permon_html: chk_c2html
               ${RM} $${loc}/$$i.html; \
               echo "<center><a href=\"$${iroot}\">Actual source code: $${iroot}</a></center><br>" > $${loc}/$$i.html; \
               sed -e "s/CHKERRQ(ierr);//g" -e "s/PetscFunctionReturn(0)/return(0)/g"  \
-              -e "s/ierr [ ]*= //g"  $$i | ${C2HTML} -n  | ${PETSC_DIR}/bin/maint/fixinclude $$i $${ROOT} | \
+              -e "s/ierr [ ]*= //g"  $$i | ${C2HTML} -n  | ${PETSC_DIR}/lib/petsc/bin/maint/fixinclude $$i $${ROOT} | \
               egrep -v '(PetscValid|PetscFunctionBegin|PetscCheck|PetscErrorCode ierr;|#if !defined\(__|#define __|#undef __|EXTERN_C )' | \
               ${MAPNAMES} -map /tmp/$$USER.htmlmap -inhtml | sed -e s?ROOT?$${IROOT}?g >> $${loc}/$$i.html ; \
 	    fi; \

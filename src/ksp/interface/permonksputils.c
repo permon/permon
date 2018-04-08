@@ -7,7 +7,7 @@ PetscErrorCode KSPViewBriefInfo(KSP ksp, PetscViewer viewer)
 {
   KSPType                 ksptype;
   PCType                  pctype;
-  const MatSolverPackage  pcpkg;
+  MatSolverType           pcpkg;
   MatType                 mattype;
   MPI_Comm                comm;
   PC                      pc;
@@ -29,7 +29,7 @@ PetscErrorCode KSPViewBriefInfo(KSP ksp, PetscViewer viewer)
   TRY( KSPGetType(ksp, &ksptype) );
   TRY( KSPGetPC(ksp, &pc) );
   TRY( PCGetType(pc, &pctype) );
-  TRY( PCFactorGetMatSolverPackage(pc, &pcpkg) );
+  TRY( PCFactorGetMatSolverType(pc, &pcpkg) );
   TRY( PCGetOperators(pc, &mat, NULL) );
   TRY( MatGetType(mat, &mattype) );
   
@@ -37,7 +37,7 @@ PetscErrorCode KSPViewBriefInfo(KSP ksp, PetscViewer viewer)
   TRY( PetscViewerASCIIPushTab(viewer) );
   TRY( PetscViewerASCIIPrintf(viewer,"KSPType:          %s\n",ksptype) );
   TRY( PetscViewerASCIIPrintf(viewer,"PCType:           %s\n",pctype) );
-  TRY( PetscViewerASCIIPrintf(viewer,"MatSolverPackage: %s\n",pcpkg) );
+  TRY( PetscViewerASCIIPrintf(viewer,"MatSolverType:    %s\n",pcpkg) );
   TRY( PetscViewerASCIIPrintf(viewer,"MatType:          %s\n",mattype) );
   TRY( PetscViewerASCIIPrintf(viewer,"(rtol, dtol, atol, maxit) = (%.1e, %.1e, %.1e, %d)\n",rtol,dtol,atol,maxit) );
   TRY( PetscViewerASCIIPopTab(viewer) );
