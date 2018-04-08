@@ -61,7 +61,7 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
   PC pc;
   PetscInt m,defect;
   PetscBool flg;
-  const char *pkg;
+  MatSolverType type;
   Mat_MUMPS *mumps = NULL;
   PetscReal null_pivot_threshold = -1e-8;
 
@@ -76,8 +76,8 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
     defect = 0;
   } else {
     /* MUMPS matrix type (sym) is set to 2 automatically (see MatGetFactor_aij_mumps). */
-    TRY( PCFactorGetMatSolverPackage(pc,&pkg) );
-    TRY( PetscStrcmp(pkg,MATSOLVERMUMPS,&flg) );
+    TRY( PCFactorGetMatSolverType(pc,&type) );
+    TRY( PetscStrcmp(type,MATSOLVERMUMPS,&flg) ); 
     if (flg) TRY( PetscObjectTypeCompare((PetscObject)pc,PCCHOLESKY,&flg) );
     if (flg) {
       /* If MUMPS Cholesky is used, avoid doubled factorization. */
@@ -378,7 +378,7 @@ static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
   PetscBool factorizable,parallel,flg,own;
   KSPType default_ksptype;
   PCType  default_pctype;
-  const MatSolverPackage default_pkg;
+  MatSolverType default_pkg;
   PetscMPIInt size;
 
   FllopTracedFunctionBegin;
@@ -521,7 +521,7 @@ static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
 
   TRY( KSPSetType(inv->innerksp,default_ksptype) );
   TRY( PCSetType(pc,default_pctype) );
-  TRY( PCFactorSetMatSolverPackage(pc,default_pkg) );
+  TRY( PCFactorSetMatSolverType(pc,default_pkg) );
 
   TRY( KSPSetTolerances(inv->ksp, PETSC_SMALL, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT) );
 
