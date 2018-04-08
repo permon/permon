@@ -488,9 +488,13 @@ static PetscErrorCode KSPSetUp_DCG(KSP ksp)
       ierr = PCRedundantGetKSP(pc,&innerksp);CHKERRQ(ierr);
       ierr = KSPGetPC(innerksp,&pc);CHKERRQ(ierr);
       ierr = KSPSetType(innerksp,KSPPREONLY);CHKERRQ(ierr);
-      ierr = PCSetType(pc,PCCHOLESKY);CHKERRQ(ierr);
+      ierr = PCSetType(pc,PCLU);CHKERRQ(ierr);
       //TODO remove explicit matSolverPackage
-      ierr = PCFactorSetMatSolverPackage(pc,MATSOLVERMUMPS);CHKERRQ(ierr);
+      if (commsize == red) {
+        ierr = PCFactorSetMatSolverType(pc,MATSOLVERSUPERLU);CHKERRQ(ierr);
+      } else {
+        ierr = PCFactorSetMatSolverType(pc,MATSOLVERSUPERLU_DIST);CHKERRQ(ierr);
+      }
     }
     ierr = KSPGetOptionsPrefix(ksp,&prefix);CHKERRQ(ierr);
     if (prefix) {
