@@ -16,6 +16,7 @@
   PetscInt  maxnz;                    /* allocated nonzeros */ \
   PetscInt  *imax;                    /* maximum space allocated for each row */ \
   PetscInt  *ilen;                    /* actual length of each row */ \
+  PetscInt  *ipre;                    /* space preallocated for each row by user */ \
   PetscBool free_imax_ilen;  \
   PetscInt  reallocs;                 /* number of mallocs done during MatSetValues() \
                                         as more values are set than were prealloced */\
@@ -47,7 +48,8 @@ typedef struct {
   PetscErrorCode (*destroy)(Mat);
 } Mat_MatMatTransMult;
 
-typedef struct { /* for MatTransposeMatMult_SeqAIJ_SeqDense() */
+typedef struct { /* used by MatTransposeMatMult() */
+  Mat          At;           /* transpose of the first matrix */
   Mat          mA;           /* maij matrix of A */
   Vec          bt,ct;        /* vectors to hold locally transposed arrays of B and C */
   PetscErrorCode (*destroy)(Mat);
@@ -113,6 +115,7 @@ typedef struct {
   Mat_MatMatMatMult   *matmatmatmult;      /* used by MatMatMatMult() */
   Mat_RARt            *rart;               /* used by MatRARt() */
   Mat_MatMatTransMult *abt;                /* used by MatMatTransposeMult() */
+  Mat_MatTransMatMult *atb;                /* used by MatTransposeMatMult() */
 } Mat_SeqAIJ;
 
 #endif
