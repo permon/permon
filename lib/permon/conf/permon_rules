@@ -174,7 +174,7 @@ alldoc1: chk_loc deletemanualpages
 	-@sed -e s%man+../%man+manualpages/% ${LOC}/docs/manualpages/manualpages.cit > ${LOC}/docs/manualpages/htmlmap
 	-@cat ${PETSC_DIR}/src/docs/mpi.www.index >> ${LOC}/docs/manualpages/htmlmap
 	-${OMAKE} ACTION=permon_manualpages tree_basic LOC=${LOC}
-	-${PYTHON} ${PETSC_DIR}/bin/maint/wwwindex.py ${PERMON_PKG_DIR} ${LOC}
+	-${PYTHON} ${PETSC_DIR}/lib/petsc/bin/maint/wwwindex.py ${PERMON_PKG_DIR} ${LOC}
 	-${OMAKE} ACTION=permon_manexamples tree_basic LOC=${LOC}
 
 # Builds .html versions of the source
@@ -244,7 +244,7 @@ permon_html: chk_c2html
               ${RM} $${loc}/$$i.html; \
               echo "<center><a href=\"$${iroot}\">Actual source code: $${iroot}</a></center><br>" > $${loc}/$$i.html; \
               sed -e "s/CHKERRQ(ierr);//g" -e "s/PetscFunctionReturn(0)/return(0)/g"  \
-              -e "s/ierr [ ]*= //g"  $$i | ${C2HTML} -n  | ${PETSC_DIR}/bin/maint/fixinclude $$i $${ROOT} | \
+              -e "s/ierr [ ]*= //g"  $$i | ${C2HTML} -n  | ${PETSC_DIR}/lib/petsc/bin/maint/fixinclude $$i $${ROOT} | \
               egrep -v '(PetscValid|PetscFunctionBegin|PetscCheck|PetscErrorCode ierr;|#if !defined\(__|#define __|#undef __|EXTERN_C )' | \
               ${MAPNAMES} -map /tmp/$$USER.htmlmap -inhtml | sed -e s?ROOT?$${IROOT}?g >> $${loc}/$$i.html ; \
 	    fi; \
