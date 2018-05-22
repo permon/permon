@@ -439,7 +439,8 @@ static PetscErrorCode KSPSetUp_DCG(KSP ksp)
     if (!cgP->WtAW) {
       ierr = KSPGetOperators(ksp,&Amat,NULL);CHKERRQ(ierr);
       /* TODO add implicit product version */
-      ierr = PetscObjectTypeCompareAny((PetscObject)W,&match,MATSEQAIJ,MATMPIAIJ,"");CHKERRQ(ierr);
+      ierr = PetscObjectTypeCompareAny((PetscObject)Amat,&match,MATSEQAIJ,MATMPIAIJ,"");CHKERRQ(ierr);
+      if (match) ierr = PetscObjectTypeCompareAny((PetscObject)W,&match,MATSEQAIJ,MATMPIAIJ,"");CHKERRQ(ierr);
       if (!match) {
         if (!cgP->AW) ierr = MatMatMult(Amat,W,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&cgP->AW);CHKERRQ(ierr);
         ierr = MatTransposeMatMult(W,cgP->AW,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&cgP->WtAW);CHKERRQ(ierr);
