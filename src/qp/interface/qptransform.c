@@ -1972,7 +1972,7 @@ PetscErrorCode QPTMatISToBlockDiag(QP qp)
 {
   QP child;
   Mat A;
-  IS l2g;
+  IS l2g,i2g;
   const PetscInt *idx_l2g;
   QPTMatISToBlockDiag_Ctx *ctx;
   ISLocalToGlobalMapping mapping;
@@ -2096,8 +2096,11 @@ PetscErrorCode QPTMatISToBlockDiag(QP qp)
   TRY( ISCreateGeneral(PetscObjectComm((PetscObject)qp),n,idx_l2g,PETSC_COPY_VALUES,&l2g) );
   TRY( ISLocalToGlobalMappingRestoreIndices(mapping,&idx_l2g) );
   TRY( QPFetiSetLocalToGlobalMapping(child,l2g) );
-  TRY( QPFetiSetInterfaceToGlobalMapping(child,is_B_global) );
+  TRY( ISOnComm(is_B_global,PETSC_COMM_WORLD,PETSC_COPY_VALUES,&i2g) );
+  TRY( ISSort(i2g) );
+  TRY( QPFetiSetInterfaceToGlobalMapping(child,i2g) );
 
+  TRY( ISDestroy(&i2g) );
   TRY( ISDestroy(&l2g) );
   TRY( VecRestoreLocalVector(child->x,matis->x) );
   TRY( VecRestoreLocalVector(child->b,matis->y) );
