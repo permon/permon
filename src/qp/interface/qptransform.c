@@ -1990,7 +1990,7 @@ PetscErrorCode QPTMatISToBlockDiag(QP qp)
   IS is_B_local,is_I_local,is_B_global, is_I_global; /* local (seq) index sets for interface (B) and interior (I) nodes */
   VecScatter N_to_B;      /* scattering context from all local nodes to local interface nodes */
   VecScatter global_to_B; /* scattering context from global to local interface nodes */
-  Vec b,counter,D,vec1_B;
+  Vec b,D,vec1_B;
   MPI_Comm comm;
   
   PetscFunctionBeginI;
@@ -2060,18 +2060,10 @@ PetscErrorCode QPTMatISToBlockDiag(QP qp)
   TRY( VecScatterCreate(qp->x,is_B_global,vec1_B,NULL,&global_to_B) );
 
   /* Creating scaling "matrix" D */
-  TRY( MatGetDiagonal(matis->A,matis->x) );
-  TRY( VecScatterBegin(N_to_B,matis->x,D,INSERT_VALUES,SCATTER_FORWARD) );
-  TRY( VecScatterEnd(N_to_B,matis->x,D,INSERT_VALUES,SCATTER_FORWARD) );
-  TRY( VecCopy(D,vec1_B) );
-  TRY( VecDuplicate(qp->x,&counter) ); /* temporary auxiliar vector */
-  TRY( VecSet(counter,0.0) );
-  TRY( VecScatterBegin(global_to_B,vec1_B,counter,ADD_VALUES,SCATTER_REVERSE) );
-  TRY( VecScatterEnd(global_to_B,vec1_B,counter,ADD_VALUES,SCATTER_REVERSE) );
-  TRY( VecScatterBegin(global_to_B,counter,vec1_B,INSERT_VALUES,SCATTER_FORWARD) );
-  TRY( VecScatterEnd(global_to_B,counter,vec1_B,INSERT_VALUES,SCATTER_FORWARD) );
+  TRY( VecSet(D,1.0) );
+  TRY( VecScatterBegin(N_to_B,matis->counter,vec1_B,INSERT_VALUES,SCATTER_FORWARD) );
+  TRY( VecScatterEnd(N_to_B,matis->counter,vec1_B,INSERT_VALUES,SCATTER_FORWARD) );
   TRY( VecPointwiseDivide(D,D,vec1_B) );
-  TRY( VecDestroy(&counter) );
 
   /* decompose assembled vecs */
   TRY( MatCreateVecs(A,&child->x,&child->b) );
