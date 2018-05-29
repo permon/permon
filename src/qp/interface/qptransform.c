@@ -1985,8 +1985,8 @@ PetscErrorCode QPTMatISToBlockDiag(QP qp)
   PetscInt *n_shared; /* n_shared[j] is the number of nodes shared with subdomain neigh[j]                        */
   PetscInt **shared;  /* shared[j][i] is the local index of the i-th node shared with subdomain neigh[j]          */
   PetscInt *idx_I_local,*idx_B_local,*idx_I_global,*idx_B_global;
-  PetscInt *array;
   PetscInt i,j;
+  PetscBT  bt;
   IS is_B_local,is_I_local,is_B_global, is_I_global; /* local (seq) index sets for interface (B) and interior (I) nodes */
   VecScatter N_to_B;      /* scattering context from all local nodes to local interface nodes */
   VecScatter global_to_B; /* scattering context from global to local interface nodes */
@@ -2020,17 +2020,17 @@ PetscErrorCode QPTMatISToBlockDiag(QP qp)
   TRY( ISLocalToGlobalMappingGetInfo(mapping,&n_neigh,&neigh,&n_shared,&shared) );
 
   /* Identifying interior and interface nodes, in local numbering */
-  TRY( PetscMalloc1(n,&array) );
-  TRY( PetscMemzero(array,n*sizeof(PetscInt)) );
-  for (i=0;i<n_neigh;i++)
-    for (j=0;j<n_shared[i];j++)
-        array[shared[i][j]] += 1;
-
+  TRY( PetscBTCreate(n,&bt) );
+  for (i=0;i<n_neigh;i++) {
+    for (j=0;j<n_shared[i];j++) {
+        TRY( PetscBTSet(bt,shared[i][j]) );
+    }
+  }
   /* Creating local and global index sets for interior and inteface nodes. */
   TRY( PetscMalloc1(n,&idx_I_local) );
   TRY( PetscMalloc1(n,&idx_B_local) );
   for (i=0, n_B=0, n_I=0; i<n; i++) {
-    if (!array[i]) {
+    if (!PetscBTLookup(bt,i)) {
       idx_I_local[n_I] = i;
       n_I++;
     } else {
@@ -2113,7 +2113,7 @@ PetscErrorCode QPTMatISToBlockDiag(QP qp)
   TRY( VecScatterDestroy(&global_to_B) );
   TRY( PetscFree(idx_B_local) );
   TRY( PetscFree(idx_I_local) );
-  TRY( PetscFree(array) );
+  TRY( PetscBTDestroy(&bt) );
   TRY( VecDestroy(&D) );
   TRY( VecDestroy(&vec1_B) );
   TRY( VecDestroy(&b) );
