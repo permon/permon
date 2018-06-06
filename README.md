@@ -2,17 +2,17 @@ PERMON toolbox
 ================================
 PERMON (Parallel Efficient Robust Modular Object Numerical) is a software toolbox for quadratic programming (QP) based on [PETSc](http://www.mcs.anl.gov/petsc/). It also includes domain decomposition methods (FETI and Total FETI) as a specific QP implementation.
 
-Project homepage: <http://permon.it4i.cz>  
+Project homepage: <http://permon.vsb.cz>  
 
 PERMON contains following modules:
 
-* [PermonQP](http://permon.it4i.cz/permonqp.htm) - contains QP transformations and solvers
-* [PermonFLLOP](http://permon.it4i.cz/permonfllop.htm) - (FETI Light Layer On top of PETSc) implements (Total) FETI
+* [PermonQP](http://permon.vsb.cz/permonqp.htm) - contains QP transformations and solvers
+* [PermonFLLOP](http://permon.vsb.cz/permonfllop.htm) - (FETI Light Layer On top of PETSc) implements (Total) FETI
 
-Support Vector Machines (SVMs) implementation [PermonSVM](http://permon.it4i.cz/permonsvm.htm) based on PermonQP can be found at <https://github.com/It4innovations/permonsvm>.
+Support Vector Machines (SVMs) implementation [PermonSVM](http://permon.vsb.cz/permonsvm.htm) based on PermonQP can be found at <https://github.com/permon/permonsvm>.
 
 
-Please use [GitHub](https://github.com/It4innovations/permon) for issues and pull requests.
+Please use [GitHub](https://github.com/permon/permon) for issues and pull requests.
 
 Quick guide to PERMON installation
 ------------------------------------
@@ -30,9 +30,9 @@ Quick guide to PERMON installation
 
 Documentation and examples
 ----------------------------------
-The documentation of the routines is available at <http://permon.it4i.cz/documentation.htm>. There are several examples in the [examples](https://github.com/It4innovations/permon/tree/master/examples) directory illustrating the basic usage of both modules.
+The documentation of the routines is available at <http://permon.vsb.cz/documentation.htm>. There are several examples in the [examples](https://github.com/permon/permon/tree/master/examples) directory illustrating the basic usage of both modules.
 
 Supported PETSc versions
 ----------------------------------
-PERMON tries to support newest versions of PETSc as soon as possible. The [releases](https://github.com/It4innovations/permon/releases) are tagged with major.minor.sub-minor numbers. The major.minor numbers correspond to the major.minor release numbers of the supported PETSc version.
+PERMON tries to support newest versions of PETSc as soon as possible. The [releases](https://github.com/permon/permon/releases) are tagged with major.minor.sub-minor numbers. The major.minor numbers correspond to the major.minor release numbers of the supported PETSc version.
 
