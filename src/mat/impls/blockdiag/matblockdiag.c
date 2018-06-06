@@ -712,16 +712,29 @@ PetscErrorCode MatCreateBlockDiag(MPI_Comm comm, Mat block, Mat *B_new) {
   TRY( VecDuplicate(data->xloc, &data->xloc1));
 
   {
+    PetscInt *l2grarr,*l2gcarr,i;
     IS l2gris,l2gcis;
     ISLocalToGlobalMapping l2gr,l2gc;
 
-    TRY( ISCreateStride(comm,B->rmap->n,rlo,1,&l2gris) );
+    if (B->rmap->bs > 1) {
+      TRY( PetscMalloc1(B->rmap->n,&l2grarr) );
+      for (i = 0; i < B->rmap->n/B->rmap->bs; i++) l2grarr[i] = rlo/B->rmap->bs + i;
+      TRY( ISCreateBlock(comm,B->rmap->bs,B->rmap->n,l2grarr,PETSC_OWN_POINTER,&l2gris) );
+    } else {
+      TRY( ISCreateStride(comm,B->rmap->n,rlo,1,&l2gris) );
+    }
     TRY( ISLocalToGlobalMappingCreateIS(l2gris,&l2gr) );
     TRY( PetscLayoutSetISLocalToGlobalMapping(B->rmap,l2gr) );
     TRY( ISDestroy(&l2gris) );
     TRY( ISLocalToGlobalMappingDestroy(&l2gr) );
 
-    TRY( ISCreateStride(comm,B->cmap->n,clo,1,&l2gcis) );
+    if (B->cmap->bs > 1) {
+      TRY( PetscMalloc1(B->cmap->n,&l2gcarr) );
+      for (i = 0; i < B->cmap->n/B->cmap->bs; i++) l2gcarr[i] = clo/B->cmap->bs + i;
+      TRY( ISCreateBlock(comm,B->cmap->bs,B->cmap->n,l2gcarr,PETSC_OWN_POINTER,&l2gcis) );
+    } else {
+      TRY( ISCreateStride(comm,B->cmap->n,clo,1,&l2gcis) );
+    }
     TRY( ISLocalToGlobalMappingCreateIS(l2gcis,&l2gc) );
     TRY( PetscLayoutSetISLocalToGlobalMapping(B->cmap,l2gc) );
     TRY( ISDestroy(&l2gcis) );
