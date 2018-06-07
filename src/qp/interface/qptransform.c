@@ -1972,7 +1972,7 @@ PetscErrorCode QPTMatISToBlockDiag(QP qp)
 {
   QP child;
   Mat A;
-  IS l2g;
+  IS l2g,i2g;
   const PetscInt *idx_l2g;
   QPTMatISToBlockDiag_Ctx *ctx;
   ISLocalToGlobalMapping mapping;
@@ -1985,12 +1985,12 @@ PetscErrorCode QPTMatISToBlockDiag(QP qp)
   PetscInt *n_shared; /* n_shared[j] is the number of nodes shared with subdomain neigh[j]                        */
   PetscInt **shared;  /* shared[j][i] is the local index of the i-th node shared with subdomain neigh[j]          */
   PetscInt *idx_I_local,*idx_B_local,*idx_I_global,*idx_B_global;
-  PetscInt *array;
   PetscInt i,j;
+  PetscBT  bt;
   IS is_B_local,is_I_local,is_B_global, is_I_global; /* local (seq) index sets for interface (B) and interior (I) nodes */
   VecScatter N_to_B;      /* scattering context from all local nodes to local interface nodes */
   VecScatter global_to_B; /* scattering context from global to local interface nodes */
-  Vec b,counter,D,vec1_B;
+  Vec b,D,vec1_B;
   MPI_Comm comm;
   
   PetscFunctionBeginI;
@@ -2020,17 +2020,17 @@ PetscErrorCode QPTMatISToBlockDiag(QP qp)
   TRY( ISLocalToGlobalMappingGetInfo(mapping,&n_neigh,&neigh,&n_shared,&shared) );
 
   /* Identifying interior and interface nodes, in local numbering */
-  TRY( PetscMalloc1(n,&array) );
-  TRY( PetscMemzero(array,n*sizeof(PetscInt)) );
-  for (i=0;i<n_neigh;i++)
-    for (j=0;j<n_shared[i];j++)
-        array[shared[i][j]] += 1;
-
+  TRY( PetscBTCreate(n,&bt) );
+  for (i=0;i<n_neigh;i++) {
+    for (j=0;j<n_shared[i];j++) {
+        TRY( PetscBTSet(bt,shared[i][j]) );
+    }
+  }
   /* Creating local and global index sets for interior and inteface nodes. */
   TRY( PetscMalloc1(n,&idx_I_local) );
   TRY( PetscMalloc1(n,&idx_B_local) );
   for (i=0, n_B=0, n_I=0; i<n; i++) {
-    if (!array[i]) {
+    if (!PetscBTLookup(bt,i)) {
       idx_I_local[n_I] = i;
       n_I++;
     } else {
@@ -2060,18 +2060,10 @@ PetscErrorCode QPTMatISToBlockDiag(QP qp)
   TRY( VecScatterCreate(qp->x,is_B_global,vec1_B,NULL,&global_to_B) );
 
   /* Creating scaling "matrix" D */
-  TRY( MatGetDiagonal(matis->A,matis->x) );
-  TRY( VecScatterBegin(N_to_B,matis->x,D,INSERT_VALUES,SCATTER_FORWARD) );
-  TRY( VecScatterEnd(N_to_B,matis->x,D,INSERT_VALUES,SCATTER_FORWARD) );
-  TRY( VecCopy(D,vec1_B) );
-  TRY( VecDuplicate(qp->x,&counter) ); /* temporary auxiliar vector */
-  TRY( VecSet(counter,0.0) );
-  TRY( VecScatterBegin(global_to_B,vec1_B,counter,ADD_VALUES,SCATTER_REVERSE) );
-  TRY( VecScatterEnd(global_to_B,vec1_B,counter,ADD_VALUES,SCATTER_REVERSE) );
-  TRY( VecScatterBegin(global_to_B,counter,vec1_B,INSERT_VALUES,SCATTER_FORWARD) );
-  TRY( VecScatterEnd(global_to_B,counter,vec1_B,INSERT_VALUES,SCATTER_FORWARD) );
+  TRY( VecSet(D,1.0) );
+  TRY( VecScatterBegin(N_to_B,matis->counter,vec1_B,INSERT_VALUES,SCATTER_FORWARD) );
+  TRY( VecScatterEnd(N_to_B,matis->counter,vec1_B,INSERT_VALUES,SCATTER_FORWARD) );
   TRY( VecPointwiseDivide(D,D,vec1_B) );
-  TRY( VecDestroy(&counter) );
 
   /* decompose assembled vecs */
   TRY( MatCreateVecs(A,&child->x,&child->b) );
@@ -2096,8 +2088,11 @@ PetscErrorCode QPTMatISToBlockDiag(QP qp)
   TRY( ISCreateGeneral(PetscObjectComm((PetscObject)qp),n,idx_l2g,PETSC_COPY_VALUES,&l2g) );
   TRY( ISLocalToGlobalMappingRestoreIndices(mapping,&idx_l2g) );
   TRY( QPFetiSetLocalToGlobalMapping(child,l2g) );
-  TRY( QPFetiSetInterfaceToGlobalMapping(child,is_B_global) );
+  TRY( ISOnComm(is_B_global,PETSC_COMM_WORLD,PETSC_COPY_VALUES,&i2g) );
+  TRY( ISSort(i2g) );
+  TRY( QPFetiSetInterfaceToGlobalMapping(child,i2g) );
 
+  TRY( ISDestroy(&i2g) );
   TRY( ISDestroy(&l2g) );
   TRY( VecRestoreLocalVector(child->x,matis->x) );
   TRY( VecRestoreLocalVector(child->b,matis->y) );
@@ -2110,7 +2105,7 @@ PetscErrorCode QPTMatISToBlockDiag(QP qp)
   TRY( VecScatterDestroy(&global_to_B) );
   TRY( PetscFree(idx_B_local) );
   TRY( PetscFree(idx_I_local) );
-  TRY( PetscFree(array) );
+  TRY( PetscBTDestroy(&bt) );
   TRY( VecDestroy(&D) );
   TRY( VecDestroy(&vec1_B) );
   TRY( VecDestroy(&b) );
