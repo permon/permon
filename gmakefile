@@ -57,8 +57,8 @@ all : $(generated) $(libpermonall)
 
 .SECONDEXPANSION:		# to expand $$(@D)/.DIR
 
-$(generated) : $(permonconf) $(permonvariables) lib/permon/conf/gmakegen.py
-	$(PYTHON) lib/permon/conf/gmakegen.py --petsc-arch=$(PETSC_ARCH) --installed-petsc=$(INSTALLED_PETSC)
+$(generated) : $(permonconf) $(permonvariables) config/gmakegen.py
+	$(PYTHON) config/gmakegen.py --petsc-arch=$(PETSC_ARCH) --installed-petsc=$(INSTALLED_PETSC)
 
 -include $(generated)
 
