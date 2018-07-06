@@ -1,6 +1,6 @@
-#include <permon/private/permonkspimpl.h>
 #include <permonqps.h>
 #include <permonqpfeti.h>
+#include <permon/private/permonkspimpl.h>
 
 typedef struct {
   QP qp;

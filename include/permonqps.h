@@ -1,7 +1,7 @@
 #if !defined(__FLLOPQPS_H)
 #define	__FLLOPQPS_H
-#include "permonqp.h"
 #include <petsctao.h>
+#include "permonqp.h"
         
 typedef struct _p_QPS* QPS;
 
@@ -88,8 +88,8 @@ FLLOP_EXTERN PetscErrorCode QPSKSPSetType(QPS qps,KSPType type);
 FLLOP_EXTERN PetscErrorCode QPSKSPGetType(QPS qps,KSPType *type);
 
 /*TAO */
-FLLOP_EXTERN PetscErrorCode QPSTaoSetType(QPS qps,const TaoType type);
-FLLOP_EXTERN PetscErrorCode QPSTaoGetType(QPS qps,const TaoType *type);
+FLLOP_EXTERN PetscErrorCode QPSTaoSetType(QPS qps,TaoType type);
+FLLOP_EXTERN PetscErrorCode QPSTaoGetType(QPS qps,TaoType *type);
 FLLOP_EXTERN PetscErrorCode QPSTaoGetTao(QPS qps,Tao *tao);
 
 /* MPGP */
