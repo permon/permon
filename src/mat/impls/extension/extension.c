@@ -683,7 +683,7 @@ PetscErrorCode MatTransposeMatMult_BlockDiag_Extension_2MPIAIJ(Mat B, Mat TA, Ma
 #undef __FUNCT__
 #define __FUNCT__ "MatTransposeMatMult_BlockDiag_Extension"
 PetscErrorCode MatTransposeMatMult_BlockDiag_Extension(Mat B, Mat TA, MatReuse scall, PetscReal fill, Mat *C) {
-  Mat C_out;
+  Mat C_out=NULL;
   IS myneighbors;
   PetscBool flg = PETSC_FALSE;
   MPI_Comm comm;
