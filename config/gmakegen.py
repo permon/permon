@@ -6,53 +6,11 @@ import os
 from distutils.sysconfig import parse_makefile
 import sys
 import logging
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'config'))
+#sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'config'))
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
 PKGS = 'sys vec mat ksp qp qpc qppf pc qps interface'.split()
-LANGS = dict(c='C', cxx='CXX', cu='CU', F='F')
-
-AUTODIRS = set('ftn-auto ftn-custom f90-custom'.split()) # Automatically recurse into these, if they exist
-SKIPDIRS = set('benchmarks'.split())                     # Skip these during the build
-NOWARNDIRS = set('tests tutorials'.split())              # Do not warn about mismatch in these
-
-# compatibility code for python-2.4 from http://code.activestate.com/recipes/523034-emulate-collectionsdefaultdict/
-try:
-    from collections import defaultdict
-except:
-    class defaultdict(dict):
-        def __init__(self, default_factory=None, *a, **kw):
-            if (default_factory is not None and
-                not hasattr(default_factory, '__call__')):
-                raise TypeError('first argument must be callable')
-            dict.__init__(self, *a, **kw)
-            self.default_factory = default_factory
-        def __getitem__(self, key):
-            try:
-                return dict.__getitem__(self, key)
-            except KeyError:
-                return self.__missing__(key)
-        def __missing__(self, key):
-            if self.default_factory is None:
-                raise KeyError(key)
-            self[key] = value = self.default_factory()
-            return value
-        def __reduce__(self):
-            if self.default_factory is None:
-                args = tuple()
-            else:
-                args = self.default_factory,
-            return type(self), args, None, None, self.items()
-        def copy(self):
-            return self.__copy__()
-        def __copy__(self):
-            return type(self)(self.default_factory, self)
-        def __deepcopy__(self, memo):
-            import copy
-            return type(self)(self.default_factory,
-                              copy.deepcopy(self.items()))
-        def __repr__(self):
-            return 'defaultdict(%s, %s)' % (self.default_factory,
-                                            dict.__repr__(self))
+LANGS = dict(c='C', cxx='CXX')
 
 try:
     all([True, True])
@@ -92,62 +50,6 @@ class debuglogger(object):
     def write(self, string):
         self._log.debug(string)
 
-def pathsplit(path):
-    """Recursively split a path, returns a tuple"""
-    stem, basename = os.path.split(path)
-    if stem == '':
-        return (basename,)
-    if stem == path:            # fixed point, likely '/'
-        return (path,)
-    return pathsplit(stem) + (basename,)
-
-class Mistakes(object):
-    def __init__(self, log, verbose=False):
-        self.mistakes = []
-        self.verbose = verbose
-        self.log = log
-
-    def compareDirLists(self,root, mdirs, dirs):
-        if NOWARNDIRS.intersection(pathsplit(root)):
-            return
-        smdirs = set(mdirs)
-        sdirs  = set(dirs).difference(AUTODIRS)
-        if not smdirs.issubset(sdirs):
-            self.mistakes.append('Makefile contains directory not on filesystem: %s: %r' % (root, sorted(smdirs - sdirs)))
-        if not self.verbose: return
-        if smdirs != sdirs:
-            from sys import stderr
-            stderr.write('Directory mismatch at %s:\n\t%s: %r\n\t%s: %r\n\t%s: %r\n'
-                         % (root,
-                            'in makefile   ',sorted(smdirs),
-                            'on filesystem ',sorted(sdirs),
-                            'symmetric diff',sorted(smdirs.symmetric_difference(sdirs))))
-
-    def compareSourceLists(self, root, msources, files):
-        if NOWARNDIRS.intersection(pathsplit(root)):
-            return
-        smsources = set(msources)
-        ssources  = set(f for f in files if os.path.splitext(f)[1] in ['.c', '.cxx', '.cc', '.cu', '.cpp', '.F'])
-        if not smsources.issubset(ssources):
-            self.mistakes.append('Makefile contains file not on filesystem: %s: %r' % (root, sorted(smsources - ssources)))
-        if not self.verbose: return
-        if smsources != ssources:
-            from sys import stderr
-            stderr.write('Source mismatch at %s:\n\t%s: %r\n\t%s: %r\n\t%s: %r\n'
-                         % (root,
-                            'in makefile   ',sorted(smsources),
-                            'on filesystem ',sorted(ssources),
-                            'symmetric diff',sorted(smsources.symmetric_difference(ssources))))
-
-    def summary(self):
-        for m in self.mistakes:
-            self.log.write(m + '\n')
-        if self.mistakes:
-            raise RuntimeError('SLEPc makefiles contain mistakes or files are missing on filesystem.\n%s\nPossible reasons:\n\t1. Files were deleted locally, try "hg revert filename" or "git checkout filename".\n\t2. Files were deleted from repository, but were not removed from makefile. Send mail to permon-maint@upv.es.\n\t3. Someone forgot to "add" new files to the repository. Send mail to permon-maint@upv.es.' % ('\n'.join(self.mistakes)))
-
-def stripsplit(line):
-  return line[len('#requires'):].replace("'","").split()
-
 class Permon(object):
     def __init__(self, permon_dir=None, petsc_dir=None, petsc_arch=None, installed_petsc=False, verbose=False):
         if permon_dir is None:
@@ -167,8 +69,18 @@ class Permon(object):
         self.petsc_arch = petsc_arch
         self.installed_petsc = installed_petsc
         self.read_conf()
-        logging.basicConfig(filename=self.arch_path('lib','permon','conf', 'gmake.log'), level=logging.DEBUG)
+        try:
+            logging.basicConfig(filename=self.arch_path('lib','permon','conf', 'gmake.log'), level=logging.DEBUG)
+        except IOError:
+            # Disable logging if path is not writeable (e.g., prefix install)
+            logging.basicConfig(filename='/dev/null', level=logging.DEBUG)
         self.log = logging.getLogger('gmakegen')
+
+        # import python packages from $PETSC_DIR/config
+        sys.path.insert(0, os.path.join(self.petsc_dir, 'config'))
+        from cmakegen import Mistakes, stripsplit
+        from cmakegen import defaultdict # collections.defaultdict, with fallback for python-2.4
+
         self.mistakes = Mistakes(debuglogger(self.log), verbose=verbose)
         self.gendeps = []
 
@@ -227,6 +139,8 @@ class Permon(object):
         for lang in LANGS:
             pkgsrcs[lang] = []
         for root, dirs, files in os.walk(os.path.join(self.permon_dir, 'src', pkg)):
+            dirs.sort()
+            files.sort()
             makefile = os.path.join(root,'makefile')
             if not os.path.exists(makefile):
                 dirs[:] = []
@@ -240,7 +154,7 @@ class Permon(object):
             makevars = parse_makefile(makefile)
             mdirs = makevars.get('DIRS','').split() # Directories specified in the makefile
             self.mistakes.compareDirLists(root, mdirs, dirs) # diagnostic output to find unused directories
-            candidates = set(mdirs).union(AUTODIRS).difference(SKIPDIRS)
+            candidates = set(mdirs)
             dirs[:] = list(candidates.intersection(dirs))
             allsource = []
             def mkrel(src):
@@ -255,10 +169,8 @@ class Permon(object):
 
     def gen_gnumake(self, fd):
         def write(stem, srcs):
-            fd.write('%s :=\n' % stem)
             for lang in LANGS:
                 fd.write('%(stem)s.%(lang)s := %(srcs)s\n' % dict(stem=stem, lang=lang, srcs=' '.join(srcs[lang])))
-                fd.write('%(stem)s += $(%(stem)s.%(lang)s)\n' % dict(stem=stem, lang=lang))
         for pkg in PKGS:
             srcs = self.gen_pkg(pkg)
             write('srcs-' + pkg, srcs)
