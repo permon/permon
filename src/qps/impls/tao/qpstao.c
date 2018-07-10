@@ -100,7 +100,7 @@ PetscErrorCode QPSTaoGetTao(QPS qps,Tao *tao)
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSTaoSetType"
-PetscErrorCode QPSTaoSetType(QPS qps,const TaoType type)
+PetscErrorCode QPSTaoSetType(QPS qps,TaoType type)
 {
   PetscBool flg;
   QPS_Tao *qpstao;
@@ -117,7 +117,7 @@ PetscErrorCode QPSTaoSetType(QPS qps,const TaoType type)
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSTaoGetType"
-PetscErrorCode QPSTaoGetType(QPS qps,const TaoType *type)
+PetscErrorCode QPSTaoGetType(QPS qps,TaoType *type)
 {
   PetscBool flg;
   QPS_Tao *qpstao;
@@ -242,7 +242,7 @@ PetscErrorCode QPSView_Tao(QPS qps, PetscViewer v)
 PetscErrorCode QPSViewConvergence_Tao(QPS qps, PetscViewer v)
 {
   PetscBool     iascii;
-  const TaoType taotype;
+  TaoType       taotype;
   QPS_Tao       *qpstao = (QPS_Tao*)qps->data;
 
   PetscFunctionBegin;
