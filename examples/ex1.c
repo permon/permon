@@ -149,3 +149,10 @@ int main(int argc,char **args)
   ierr = PermonFinalize();
   return ierr;
 }
+
+
+/*TEST
+   test:
+      args: -qps_view_convergence
+TEST*/
+

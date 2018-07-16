@@ -1,0 +1,11 @@
+QPS Object: 1 MPI processes
+  type: mpgp
+  last QPSSolve CONVERGED due to CONVERGED_RTOL, KSPReason=2, required 7 iterations
+  all 1 QPSSolves from last QPSReset/QPSResetStatistics have required 7 iterations
+  tolerances: rtol=1.0e-05, abstol=1.0e-50, dtol=1.0e+04, maxits=10000
+  mpgp specific:
+    from the last QPSReset:
+    number of Hessian multiplications 10
+    number of CG steps 5
+    number of expansion steps 2
+    number of proportioning steps 0
