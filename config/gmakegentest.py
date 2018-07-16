@@ -7,16 +7,11 @@ import sys
 import logging, time
 import types
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
-from cmakegen import Mistakes, stripsplit, AUTODIRS, SKIPDIRS
-from cmakegen import defaultdict # collections.defaultdict, with fallback for python-2.4
 from gmakegen import *
+PKGS = ['examples'] # examples/tests are only in examples dir
 
 import inspect
 thisscriptdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-sys.path.insert(0,thisscriptdir) 
-import testparse
-import example_template
-
 
 """
 
@@ -75,16 +70,16 @@ def install_files(source, destdir):
   else:
     shutil.copyfile(source, os.path.join(destdir, os.path.basename(source)))
 
-class generateExamples(Petsc):
+class generateExamples(Permon):
   """
     gmakegen.py has basic structure for finding the files, writing out
       the dependencies, etc.
   """
-  def __init__(self,petsc_dir=None, petsc_arch=None, testdir='tests', verbose=False, single_ex=False, srcdir=None):
-    super(generateExamples, self).__init__(petsc_dir, petsc_arch, verbose)
+  def __init__(self,permon_dir=None, petsc_dir=None, petsc_arch=None, testdir='tests', verbose=False, single_ex=False, srcdir=None):
+    super(generateExamples, self).__init__(permon_dir, petsc_dir, petsc_arch, verbose)
 
     self.single_ex=single_ex
-
+    
     # Set locations to handle movement
     self.inInstallDir=self.getInInstallDir(thisscriptdir)
 
@@ -94,13 +89,13 @@ class generateExamples(Petsc):
       dirlist=thisscriptdir.split(os.path.sep)
       installdir=os.path.sep.join(dirlist[0:len(dirlist)-4])
       self.arch_dir=installdir
-      self.srcdir=os.path.join(os.path.dirname(thisscriptdir),'src')
     else:
       if petsc_arch == '':
         raise RuntimeError('PETSC_ARCH must be set when running from build directory')
       # Case 1 discussed above
       self.arch_dir=os.path.join(self.petsc_dir,self.petsc_arch)
-      self.srcdir=os.path.join(self.petsc_dir,'src')
+    self.srcdir = permon_dir
+    if srcdir: self.srcdir=srcdir
 
     self.testroot_dir=os.path.abspath(testdir)
 
@@ -342,7 +337,7 @@ class generateExamples(Petsc):
 
     # Others
     subst['subargs']=''  # Default.  For variables override
-    subst['srcdir']=os.path.join(os.path.dirname(self.srcdir), 'src', rpath)
+    subst['srcdir']=os.path.join(self.srcdir, rpath)
     subst['label_suffix']=''
     subst['comments']="\n#".join(subst['comments'].split("\n"))
     if subst['comments']: subst['comments']="#"+subst['comments']
@@ -945,16 +940,17 @@ class generateExamples(Petsc):
     fd.close()
     return
 
-def main(petsc_dir=None, petsc_arch=None, verbose=False, single_ex=False, srcdir=None, testdir=None):
+def main(permon_dir=None, petsc_dir=None, petsc_arch=None, verbose=False, single_ex=False, srcdir=None, testdir=None):
     # Allow petsc_arch to have both petsc_dir and petsc_arch for convenience
     if petsc_arch: 
         if len(petsc_arch.split(os.path.sep))>1:
             petsc_dir,petsc_arch=os.path.split(petsc_arch.rstrip(os.path.sep))
     output = os.path.join(testdir, 'testfiles')
 
-    pEx=generateExamples(petsc_dir=petsc_dir, petsc_arch=petsc_arch,
+    pEx=generateExamples(permon_dir=permon_dir, petsc_dir=petsc_dir, petsc_arch=petsc_arch,
                          verbose=verbose, single_ex=single_ex, srcdir=srcdir,
                          testdir=testdir)
+    print(os.path.join(pEx.srcdir))
     dataDict=pEx.walktree(os.path.join(pEx.srcdir))
     pEx.write_gnumake(dataDict, output)
 
@@ -962,6 +958,7 @@ if __name__ == '__main__':
     import optparse
     parser = optparse.OptionParser()
     parser.add_option('--verbose', help='Show mismatches between makefiles and the filesystem', action='store_true', default=False)
+    parser.add_option('--permon-dir', help='Set PERMON_DIR different from environment', default=os.environ.get('PERMON_DIR'))
     parser.add_option('--petsc-dir', help='Set PETSC_DIR different from environment', default=os.environ.get('PETSC_DIR'))
     parser.add_option('--petsc-arch', help='Set PETSC_ARCH different from environment', default=os.environ.get('PETSC_ARCH'))
     parser.add_option('--srcdir', help='Set location of sources different from PETSC_DIR/src', default=None)
@@ -970,13 +967,19 @@ if __name__ == '__main__':
 
     opts, extra_args = parser.parse_args()
     if extra_args:
-        import sys
         sys.stderr.write('Unknown arguments: %s\n' % ' '.join(extra_args))
         exit(1)
     if opts.testdir is None:
       opts.testdir = os.path.join(opts.petsc_arch, 'tests')
 
-    main(petsc_dir=opts.petsc_dir, petsc_arch=opts.petsc_arch,
+    if opts.petsc_dir is None:
+        raise RuntimeError('Could not determine PETSC_DIR, please set in environment')
+    sys.path.insert(0, os.path.join(opts.petsc_dir, 'config'))
+
+    import testparse
+    import example_template
+
+    main(permon_dir=opts.permon_dir, petsc_dir=opts.petsc_dir, petsc_arch=opts.petsc_arch,
          verbose=opts.verbose,
          single_ex=opts.single_executable, srcdir=opts.srcdir,
          testdir=opts.testdir)
