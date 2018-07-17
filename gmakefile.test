@@ -8,16 +8,13 @@ PETSCCONFIGDIR := $(PETSC_DIR)/config
 mkfile_path := $(abspath $(MAKEFILE_LIST))
 TESTSRCDIR := $(dir $(abspath $(firstword $(MAKEFILE_LIST))))
 
-include ./lib/permon/conf/permon_variables
-#include $(PETSC_DIR)/$(PETSC_ARCH)/lib/petsc/conf/petscvariables
-#include $(PETSC_DIR)/lib/petsc/conf/variables
+include $(PERMON_DIR)/lib/permon/conf/permon_variables
 
 TESTDIR ?= ./$(PETSC_ARCH)/tests
 MODDIR := $(PETSC_DIR)/$(PETSC_ARCH)/include
 TESTLOGFILE = $(TESTDIR)/examples_$(PETSC_ARCH).log
 EXAMPLESDIR := $(TESTSRCDIR)
 
-#pkgs := sys vec mat dm ksp snes ts tao
 pkgs := examples
 
 petscconf      := $(PETSC_DIR)/$(PETSC_ARCH)/include/petscconf.h
@@ -91,7 +88,6 @@ else
   cc_name := CC
 endif
 
-
 PETSC_COMPILE.c = $(call quiet,$(cc_name)) -c $(PCC_FLAGS) $(CFLAGS) $(CCPPFLAGS) $(C_DEPFLAGS)
 PETSC_COMPILE.cxx = $(call quiet,CXX) -c $(CXX_FLAGS) $(CFLAGS) $(CCPPFLAGS) $(CXX_DEPFLAGS)
 PETSC_COMPILE.cu = $(call quiet,CUDAC) -c $(CUDAC_FLAGS) --compiler-options="$(PCC_FLAGS) $(CXXFLAGS) $(CCPPFLAGS)"
@@ -153,18 +149,18 @@ define GFORTRAN_DEP_CLEANUP
 endef
 
 # link line constructed differently for gmakefile vs gmakefile.test invocation
-#ifeq ($(libpetscall),)
-#PETSC_TEST_LIB = $(PETSC_LIB)
-#else
-#PETSC_TEST_LIB = $(C_SH_LIB_PATH) $(PETSC_EXTERNAL_LIB_BASIC)
-#endif
+ifeq ($(libpermonall),)
+  PERMON_TEST_LIB = $(PERMON_LIB)
+else
+  PERMON_TEST_LIB = $(PERMON_C_SH_LIB_PATH) $(PERMON_EXTERNAL_LIB_BASIC)
+endif
 
 # Test executables
-$(testexe.c) $(testexe.cu) : $(TESTDIR)/% : $(TESTDIR)/%.o $$^ $(libpetscall)
-	$(call quiet,CLINKER) -o $@ $^ $(PERMON_LIB)
+$(testexe.c) $(testexe.cu) : $(TESTDIR)/% : $(TESTDIR)/%.o $$^ $(libpermonall)
+	$(call quiet,CLINKER) -o $@ $^ $(PERMON_TEST_LIB)
 
-$(testexe.cxx) : $(TESTDIR)/% : $(TESTDIR)/%.o $$^ $(libpetscall)
-	$(call quiet,CXXLINKER) -o $@ $^ $(PERMON_LIB)
+$(testexe.cxx) : $(TESTDIR)/% : $(TESTDIR)/%.o $$^ $(libpermonall)
+	$(call quiet,CXXLINKER) -o $@ $^ $(PERMON_TEST_LIB)
 
 # Testing convenience targets
 .PHONY: test pre-clean
