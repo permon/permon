@@ -152,7 +152,20 @@ int main(int argc,char **args)
 
 
 /*TEST
-   test:
-      args: -qps_view_convergence
+  testset:
+    suffix: 1
+    filter: grep -e CONVERGED -e number -e "r ="
+    args: -n 100 -qps_view_convergence -qp_chain_view_kkt
+    test:
+    test:
+      nsize: 3
+  testset:
+    filter: grep -e CONVERGED -e "function/" -e Objective -e "r ="
+    args: -n 100 -qps_view_convergence -qp_chain_view_kkt -qps_type tao -qps_tao_type blmvm
+    test:
+      suffix: blmvm_1
+    test:
+      suffix: blmvm_3
+      nsize: 3
 TEST*/
 
