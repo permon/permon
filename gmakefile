@@ -2,10 +2,6 @@
 
 include ./lib/permon/conf/permon_variables
 
-# Inherit compiler settings from  $(PETSC_DIR)/gmakefile.test  (included at the bottom)
-PERMON_COMPILE.c    =  $(PETSC_COMPILE.c) $(PERMON_CC_INCLUDES)
-PERMON_COMPILE.cxx  =  $(PETSC_COMPILE.cxx) $(PERMON_CC_INCLUDES)
-
 # unlike PETSc, we get current version from git tags
 PERMON_VERSION_MAJOR    := $(shell git describe --tags | awk -F[.-] '{print substr($$1,2)}')
 PERMON_VERSION_MINOR    := $(shell git describe --tags | awk -F[.-] '{print $$2}')
@@ -172,4 +168,4 @@ $(allobj.d) : ;
 
 # Handle test framework (also defines compilation lines for both lib and test)
 # Also load definitions of quite() PETSC_COMPILE.c PETSC_COMPILE.cxx %/.DIR
-include $(PETSC_DIR)/gmakefile.test        # This must be below the all target
+include $(PERMON_DIR)/gmakefile.test        # This must be below the all target

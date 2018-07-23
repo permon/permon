@@ -38,3 +38,7 @@ GTAGS
 examples/ex1
 examples/feti/ex1
 examples/jbearing2
+*.h.html
+*.c.html
+makefile.html
+index.html

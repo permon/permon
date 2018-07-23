@@ -552,3 +552,37 @@ PetscErrorCode CallPermonAndCompareResults(Tao tao, void *ctx)
   PetscFunctionReturnI(0);
   
 }
+
+
+/*TEST
+  build:
+    requires: !complex !single
+
+  testset:
+    args: -qps_view_convergence
+    test:
+      args: -mx 8 -my 12 
+    test:
+      suffix: 2
+      nsize: 2
+      args: -mx 10 -my 16
+    test:
+      suffix: 3
+      nsize: 3
+      args: -mx 50 -my 50
+    
+  testset:
+    args: -qps_view_convergence -qps_type mpgp
+    test:
+      suffix: 4
+      args: -mx 8 -my 12 
+    test:
+      suffix: 5
+      nsize: 2
+      args: -mx 10 -my 16
+    test:
+      suffix: 6
+      nsize: 3
+      args: -mx 50 -my 50
+TEST*/
+
