@@ -1,0 +1,45 @@
+
+---- Journal Bearing Problem SHB-----
+mx: 8,  my: 12,  ecc: 0.1 
+
+Value of Tao are gatol = 1.000000e-08, grtol =  1.000000e-08, gttol = 0.000000e+00  
+  0 MPGP ||gp||=5.5809211207e-01,	||phi||=0.0000000000e+00,	||beta||=5.5809211207e-01
+  1 MPGP ||gp||=3.1464391336e-01,	||phi||=3.0615634395e-01,	||beta||=7.2588465186e-02
+  2 MPGP ||gp||=2.4361746033e-01,	||phi||=1.1989793746e-01,	||beta||=2.1207062873e-01
+  3 MPGP ||gp||=1.5325082741e-01,	||phi||=1.5325082741e-01,	||beta||=0.0000000000e+00
+  4 MPGP ||gp||=1.5493232542e-01,	||phi||=1.5493232542e-01,	||beta||=0.0000000000e+00
+  5 MPGP ||gp||=1.2781897782e-01,	||phi||=1.2781897782e-01,	||beta||=0.0000000000e+00
+  6 MPGP ||gp||=5.4025811539e-02,	||phi||=5.4025811539e-02,	||beta||=0.0000000000e+00
+  7 MPGP ||gp||=2.4639466555e-02,	||phi||=2.4639466555e-02,	||beta||=0.0000000000e+00
+  8 MPGP ||gp||=1.2660210860e-02,	||phi||=1.2660210860e-02,	||beta||=0.0000000000e+00
+  9 MPGP ||gp||=5.8736192161e-03,	||phi||=5.8736192161e-03,	||beta||=0.0000000000e+00
+ 10 MPGP ||gp||=2.6848239841e-03,	||phi||=2.6848239841e-03,	||beta||=0.0000000000e+00
+ 11 MPGP ||gp||=1.9677968319e-03,	||phi||=1.9677968319e-03,	||beta||=0.0000000000e+00
+ 12 MPGP ||gp||=1.0385688916e-03,	||phi||=1.0385688916e-03,	||beta||=0.0000000000e+00
+ 13 MPGP ||gp||=6.3541674015e-04,	||phi||=6.3541674015e-04,	||beta||=0.0000000000e+00
+ 14 MPGP ||gp||=4.0007653147e-04,	||phi||=4.0007653147e-04,	||beta||=0.0000000000e+00
+ 15 MPGP ||gp||=2.4571447647e-04,	||phi||=2.4571447647e-04,	||beta||=0.0000000000e+00
+ 16 MPGP ||gp||=1.1182825173e-04,	||phi||=1.1182825173e-04,	||beta||=0.0000000000e+00
+ 17 MPGP ||gp||=5.4963874278e-05,	||phi||=5.4963874278e-05,	||beta||=0.0000000000e+00
+ 18 MPGP ||gp||=3.8243596449e-05,	||phi||=3.8243596449e-05,	||beta||=0.0000000000e+00
+ 19 MPGP ||gp||=1.6497341593e-05,	||phi||=1.6497341593e-05,	||beta||=0.0000000000e+00
+ 20 MPGP ||gp||=8.1748912834e-06,	||phi||=8.1748912834e-06,	||beta||=0.0000000000e+00
+ 21 MPGP ||gp||=3.3212967541e-06,	||phi||=3.3212967541e-06,	||beta||=0.0000000000e+00
+ 22 MPGP ||gp||=1.3208278169e-06,	||phi||=1.3208278169e-06,	||beta||=0.0000000000e+00
+ 23 MPGP ||gp||=4.1716887962e-07,	||phi||=4.1716887962e-07,	||beta||=0.0000000000e+00
+ 24 MPGP ||gp||=1.4038958708e-07,	||phi||=1.4038958708e-07,	||beta||=0.0000000000e+00
+ 25 MPGP ||gp||=5.2033160069e-08,	||phi||=5.2033160069e-08,	||beta||=0.0000000000e+00
+ 26 MPGP ||gp||=1.6049206653e-08,	||phi||=1.6049206653e-08,	||beta||=0.0000000000e+00
+ 27 MPGP ||gp||=2.9754648165e-09,	||phi||=2.9754648165e-09,	||beta||=0.0000000000e+00
+QPS Object: 1 MPI processes
+  type: mpgp
+  last QPSSolve CONVERGED due to CONVERGED_ATOL, KSPReason=3, required 27 iterations
+  all 1 QPSSolves from last QPSReset/QPSResetStatistics have required 27 iterations
+  tolerances: rtol=1.0e-08, abstol=1.0e-08, dtol=1.0e+04, maxits=10000
+  mpgp specific:
+    from the last QPSReset:
+    number of Hessian multiplications 28
+    number of CG steps 25
+    number of expansion steps 0
+    number of proportioning steps 2
+norm of difference of results from TAO and QP = 7.879689e-09  
