@@ -51,6 +51,9 @@ struct _p_QP {
   Vec              ub;
   Vec              lambda_ub;
 
+  /* separable convex constraints */
+  QPC              qpc;
+
   /* post-processing action after THIS QP's solve */
   void             *postSolveCtx;
   PetscErrorCode   (*postSolve)(QP,QP);

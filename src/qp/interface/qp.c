@@ -133,6 +133,9 @@ PetscErrorCode QPCreate(MPI_Comm comm, QP *qp_new)
   qp->setupcalled  = PETSC_FALSE;
   qp->setfromoptionscalled = 0;
 
+  /* set the initial constraints */
+  qp->qpc                    = NULL;
+  
   qp->changeListener         = NULL;
   qp->changeListenerCtx      = NULL;
   qp->postSolve              = NULL;
@@ -513,6 +516,7 @@ PetscErrorCode QPView(QP qp,PetscViewer v)
 {
   Vec         b,cE,cI,lb,ub;
   Mat         A,R,BE,BI;
+  QPC         qpc;
   PetscBool   iascii;
   MPI_Comm    comm;
   QP          childDual;
@@ -536,6 +540,7 @@ PetscErrorCode QPView(QP qp,PetscViewer v)
   TRY( QPGetBox(qp, &lb, &ub) );
   TRY( QPGetEq(qp, &BE, &cE) );
   TRY( QPGetIneq(qp, &BI, &cI) );
+  TRY( QPGetQPC(qp, &qpc) );
   TRY( QPChainFind(qp, (PetscErrorCode(*)(QP))QPTDualize, &childDual) );
 
   TRY( PetscViewerASCIIPrintf(v,"  LOADED OBJECTS:\n") );
@@ -549,6 +554,7 @@ PetscErrorCode QPView(QP qp,PetscViewer v)
   TRY( QPView_PrintObjectLoaded(v, cE,  "linear eq. constraint RHS") );
   TRY( QPView_PrintObjectLoaded(v, BI,  "linear ineq. constraint") );
   TRY( QPView_PrintObjectLoaded(v, cI,  "linear ineq. constraint RHS") );
+  TRY( QPView_PrintObjectLoaded(v, qpc, "QPC") );
 
   if (A)   TRY( MatPrintInfo(A) );
   if (b)   TRY( VecPrintInfo(b) );
@@ -605,6 +611,8 @@ PetscErrorCode QPReset(QP qp)
   
   TRY( PCDestroy( &qp->pc) );
 
+  TRY( QPCDestroy(&qp->qpc));
+  
   TRY( QPPFDestroy(&qp->pf) );
   qp->setupcalled = PETSC_FALSE;
   qp->solved = PETSC_FALSE;
@@ -2123,6 +2131,122 @@ PetscErrorCode QPGetBox(QP qp, Vec *lb, Vec *ub)
 }
 
 #undef __FUNCT__
+#define __FUNCT__ "QPSetBoxQPC"
+/*
+   QPSetBoxQPC - Sets the box QP constraints.
+
+   Collective on QP
+
+   Input Parameter:
++  qp - the QP
+.  is - index set of constrained variables, if NULL then all compoments are constrained
+.  lb - lower bound
+-  ub - upper bound
+
+   Level: intermediate
+*/
+PetscErrorCode QPSetBoxQPC(QP qp, IS is, Vec lb, Vec ub)
+{
+  PetscReal extrem;
+  MPI_Comm comm;
+
+  QPC qpc_box; /* new QPC with box constraints */
+  
+  PetscFunctionBegin;
+  // TODO: This is a variant of QPSetBox for QPC, 
+  // it adds ONLY full box constraints (not composite, IS=NULL), 
+  // using this function it is not able to add composite box constraints or partially box-constrained problem,
+  // after removing constraints from code (non-QPC, like lb,ub) from QP, this function should replace QPSetBox
+
+  PetscValidHeaderSpecific(qp, QP_CLASSID, 1);
+  if (lb) {
+    PetscValidHeaderSpecific(lb,VEC_CLASSID,2);
+    PetscCheckSameComm(qp,1,lb,2);
+  }
+  if (ub) {
+    PetscValidHeaderSpecific(ub,VEC_CLASSID,3);
+    PetscCheckSameComm(qp,1,ub,3);
+  }
+
+  //TODO: verify if there is already QPCBox in QP with the same input data
+//  if (lb == qp->lb && ub == qp->ub) PetscFunctionReturn(0);
+
+  /* get MPIComm from qp */
+  TRY( PetscObjectGetComm((PetscObject)qp,&comm) );
+
+  /* verify given lb */
+  if (lb) {
+    TRY( VecMax(lb,PETSC_IGNORE,&extrem) );
+    TRY( PetscInfo1(qp, "max(lb) = %0.2e\n", extrem) );
+    if (extrem <= -PETSC_INFINITY) {
+      TRY( PetscInfo1(qp, "inactive lower bound constraint detected\n", extrem) );
+      lb = NULL;
+    }
+    else {
+      TRY( PetscObjectReference((PetscObject) lb) );
+    }
+  }
+
+  /* verify given ub */
+  if (ub) {
+    TRY( VecMin(ub,PETSC_IGNORE,&extrem) );
+    TRY( PetscInfo1(qp, "min(ub) = %0.2e\n", extrem) );
+    if (extrem >= PETSC_INFINITY) {
+      TRY( PetscInfo1(qp, "inactive upper bound constraint detected\n", extrem) );
+      ub = NULL;
+    }
+    else TRY( PetscObjectReference((PetscObject) ub) );
+  }
+
+  /* destroy QPC from QP whatever it is and prepare to new QPC */
+  TRY( QPCDestroy(&qp->qpc) );
+
+  /* prepare new QPC */
+  TRY( QPCCreateBox(comm,is,lb,ub,&qpc_box)); 
+
+  /* add box constraints to QP, here can be used also qp->qpc = qpc_box */
+  TRY( QPSetQPC(qp, qpc_box) );  
+  
+  if (qp->changeListener) TRY( (*qp->changeListener)(qp) );
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "QPGetBoxQPC"
+/*
+   QPGetBoxQPC - Get the box constraints.
+
+   Not Collective
+
+   Input Parameter:
+.  qp - the QP
+
+   Output Parameter:
++  lb - lower bound
+-  ub - upper bound
+
+   Level: advanced
+*/
+PetscErrorCode QPGetBoxQPC(QP qp, Vec *lb, Vec *ub)
+{
+  QPC qpc;
+    
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(qp,QP_CLASSID,1);
+
+  /* get QPC from QP */
+  TRY( QPGetQPC(qp,&qpc));
+  
+  //TODO: control if it is a box or what
+  //TODO: add IS to returning values
+  
+  /* get the box from qpc */
+  TRY( QPCBoxGet(qpc,lb, ub));
+
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ "QPSetEqMultiplier"
 PetscErrorCode QPSetEqMultiplier(QP qp, Vec lambda_E)
 {
@@ -2541,6 +2665,53 @@ PetscErrorCode QPIsSolved(QP qp,PetscBool *flg)
 {
   PetscFunctionBegin;
   *flg = qp->solved;
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "QPSetQPC"
+/*
+   QPSetQPC - add constraints to QP problem
+
+   Collective on QP
+
+   Parameters:
++  qp - quadratic programming problem
+-  qpc - constraints 
+
+   Level: intermediate
+*/
+PetscErrorCode QPSetQPC(QP qp, QPC qpc)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(qp,QP_CLASSID,1);
+  if (qpc) PetscValidHeaderSpecific(qpc,QPC_CLASSID,2);
+  qp->qpc = qpc;
+  TRY( PetscObjectReference((PetscObject)qpc) );
+  PetscFunctionReturn(0);
+}
+
+
+#undef __FUNCT__
+#define __FUNCT__ "QPGetQPC"
+/*
+   QPGetQPC - return constraints from QP
+
+   Not Collective
+   
+   Parameters:
+   + qp - quadratic programming problem
+   - qpc - pointer to constraints 
+   
+   Level: developer
+*/
+PetscErrorCode QPGetQPC(QP qp, QPC *qpc)
+{
+  PetscFunctionBegin;
+
+  PetscValidHeaderSpecific(qp,QP_CLASSID,1);
+  PetscValidPointer(qpc,2);
+  *qpc = qp->qpc;
   PetscFunctionReturn(0);
 }
 

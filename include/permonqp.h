@@ -1,6 +1,6 @@
-#if !defined(__FLLOPQP_H)
-#define	__FLLOPQP_H
-#include "permonqppf.h"
+#if !defined(__PERMONQP_H)
+#define	__PERMONQP_H
+#include "permonqpc.h"
 
 typedef struct _p_QP* QP;
 
@@ -85,6 +85,11 @@ FLLOP_EXTERN PetscErrorCode QPGetChangeListener(QP qp,PetscErrorCode (**f)(QP));
 FLLOP_EXTERN PetscErrorCode QPGetChangeListenerContext(QP qp,void *ctx);
 FLLOP_EXTERN PetscErrorCode QPIsSolved(QP qp,PetscBool *flg);
 FLLOP_EXTERN PetscErrorCode QPGetOptionsPrefix(QP qp,const char *prefix[]);
+
+/* QPC stuff */
+FLLOP_EXTERN PetscErrorCode QPSetQPC(QP qp,QPC qpc);
+FLLOP_EXTERN PetscErrorCode QPGetQPC(QP qp, QPC *qpc);
+FLLOP_EXTERN PetscErrorCode QPSetBoxQPC(QP qp,IS is, Vec lb,Vec ub);
 
 /* QP transforms */
 FLLOP_EXTERN PetscErrorCode QPTEnforceEqByProjector(QP qp);
