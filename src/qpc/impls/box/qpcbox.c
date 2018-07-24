@@ -159,8 +159,8 @@ static PetscErrorCode QPCBoxGet_Box(QPC qpc,Vec *lb,Vec *ub)
   QPC_Box         *ctx = (QPC_Box*)qpc->data;
 
   PetscFunctionBegin;
-  *lb = ctx->lb;
-  *ub = ctx->ub;
+  if (lb) *lb = ctx->lb;
+  if (ub) *ub = ctx->ub;
   PetscFunctionReturn(0);
 }
 
@@ -378,8 +378,8 @@ PetscErrorCode QPCBoxGet(QPC qpc,Vec *lb, Vec *ub)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
-  PetscValidPointer(lb,2);
-  PetscValidPointer(ub,3);
+  if (lb) PetscValidPointer(lb,2);
+  if (ub) PetscValidPointer(ub,3);
 
   TRY( PetscUseMethod(qpc,"QPCBoxGet_Box_C",(QPC,Vec*,Vec*),(qpc,lb,ub)) );
   PetscFunctionReturn(0);

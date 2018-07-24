@@ -203,14 +203,15 @@ PetscErrorCode QPSDestroy_KSP(QPS qps)
 PetscErrorCode QPSIsQPCompatible_KSP(QPS qps,QP qp,PetscBool *flg)
 {
   Mat Beq,Bineq;
-  Vec ceq,cineq,lb,ub;
+  Vec ceq,cineq;
+  QPC qpc;
   
   PetscFunctionBegin;
   *flg = PETSC_TRUE;
   TRY( QPGetEq(qp,&Beq,&ceq) );
   TRY( QPGetIneq(qp,&Bineq,&cineq) );
-  TRY( QPGetBox(qp,&lb,&ub) );
-  if (Beq || ceq || Bineq || cineq || lb || ub)
+  TRY( QPGetQPC(qp,&qpc) );
+  if (Beq || ceq || Bineq || cineq || qpc)
   {
     *flg = PETSC_FALSE;
   }

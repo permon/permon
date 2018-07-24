@@ -12,7 +12,7 @@ Parameters:
 */
 PetscErrorCode QPSIsQPCompatible_PCPG(QPS qps,QP qp,PetscBool *flg){
     PetscFunctionBegin;
-    if (qp->lb || qp->ub || qp->BI || !qp->BE) {
+    if (qp->qpc || qp->BI || !qp->BE) {
       *flg = PETSC_FALSE;
     } else {
       *flg = PETSC_TRUE;

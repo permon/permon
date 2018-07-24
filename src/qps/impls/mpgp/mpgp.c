@@ -423,9 +423,8 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
   /* set the number of working vectors */
   TRY( QPSSetWorkVecs(qps,7) );
 
-  lb                = qps->solQP->lb;
-  ub                = qps->solQP->ub;
-  y                 = qps->work[5];     /* here is used temporarily Ap vector */
+  TRY( QPGetBox(qps->solQP,NULL,&lb,&ub) );
+  y = qps->work[5];     /* here is used temporarily Ap vector */
   
   if (mpgp->bchop_tol) {
     if (lb) TRY( VecChop(lb,mpgp->bchop_tol) );
@@ -462,7 +461,7 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
     TRY( VecDuplicate(ub,&qps->solQP->lambda_ub) );
     TRY( VecSet(ub,PETSC_INFINITY) );
     TRY( VecSet(qps->solQP->lambda_ub,0.0) );
-    qps->solQP->ub = ub;
+    TRY( QPSetBox(qps->solQP,NULL,lb,ub) );
   }
   PetscFunctionReturn(0);
 }
@@ -520,19 +519,9 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
 
   TRY( QPSGetSolvedQP(qps,&qp) );
   TRY( QPGetSolutionVector(qp, &x) );             /* get the solution vector */
-  TRY( QPGetOperator(qp, &A ) );                  /* get hessian matrix */
-  TRY( QPGetRhs(qp, &b  ) );                      /* get right-hand side vector */
-  TRY( QPGetBox(qp, &lb, &ub ) );                 /* get lower and upper bounds */
-
-  //TODO make MPGP compatible with ub = NULL
-  if (!ub) {
-    /* create ub=inf(size(lb)) */
-    TRY( VecDuplicate(lb,&ub) );
-    TRY( VecDuplicate(ub,&qp->lambda_ub) );
-    TRY( VecSet(ub,PETSC_INFINITY) );
-    TRY( VecSet(qp->lambda_ub,0.0) );
-    qp->ub = ub;
-  }
+  TRY( QPGetOperator(qp, &A) );                   /* get hessian matrix */
+  TRY( QPGetRhs(qp, &b) );                        /* get right-hand side vector */
+  TRY( QPGetBox(qp, NULL, &lb, &ub) );            /* get lower and upper bounds */
 
   TRY( MPGPProj(x, lb, ub) );                     /* project x initial guess to feasible set */
 
@@ -695,31 +684,22 @@ PetscErrorCode QPSDestroy_MPGP(QPS qps)
 
 #undef __FUNCT__  
 #define __FUNCT__ "QPSIsQPCompatible_MPGP"
-/*
-QPSIsQPCompatible_MPGP - verify if the algorithm is able to solve given QP problem
-
-Parameters:
-+ qps - QP solver
-. qp - quadratic programming problem
-- flg - the pointer to result
-*/
 PetscErrorCode QPSIsQPCompatible_MPGP(QPS qps,QP qp,PetscBool *flg)
 {
-  Vec lb,ub;
   Mat Beq,Bineq;
+  Vec ceq,cineq;
+  QPC qpc;
   
   PetscFunctionBegin;
-  *flg = PETSC_TRUE;
-  TRY( QPGetBox(qp,&lb,&ub) );
-  TRY( QPGetEq(qp,&Beq,NULL) );
-  TRY( QPGetIneq(qp,&Bineq,NULL) );
-  if (!(lb || (lb && ub))) {
+  TRY( QPGetEq(qp,&Beq,&ceq) );
+  TRY( QPGetIneq(qp,&Bineq,&cineq) );
+  TRY( QPGetQPC(qp,&qpc) );
+  if (Beq || ceq || Bineq || cineq) {
     *flg = PETSC_FALSE;
+  } else {
+    TRY( PetscObjectTypeCompare((PetscObject)qpc,QPCBOX,flg) );
   }
-  if (Beq || Bineq) {
-    *flg = PETSC_FALSE;
-  }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(0);   
 }
 
 #undef __FUNCT__

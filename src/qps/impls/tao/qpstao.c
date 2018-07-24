@@ -139,7 +139,8 @@ PetscErrorCode QPSSetUp_Tao(QPS qps)
   QPS_Tao          *qpstao = (QPS_Tao*)qps->data;
   Tao              tao;
   QP               qp;
-  Vec              b,x,lb,ub;
+  Vec              b,x,lb,ub,lbnew,ubnew;
+  IS               is;
   KSP              ksp;
   PC               pc;
   
@@ -147,7 +148,7 @@ PetscErrorCode QPSSetUp_Tao(QPS qps)
   TRY( QPSGetSolvedQP(qps,&qp) );
   TRY( QPGetRhs(qp,&b) );
   TRY( QPGetSolutionVector(qp,&x) );
-  TRY( QPGetBox(qp,&lb,&ub) );
+  TRY( QPGetBox(qp,&is,&lb,&ub) );
   
   TRY( QPSTaoGetTao(qps,&tao) );
   TRY( TaoSetInitialVector(tao,x) );
@@ -157,21 +158,30 @@ PetscErrorCode QPSSetUp_Tao(QPS qps)
   TRY( TaoSetHessianRoutine(tao,qp->A,qp->A,FormHessianQPS,qps) );
 
   /* Set Variable bounds */
-  if (!lb) {
-    TRY( VecDuplicate(x,&lb) );
-    TRY( VecSet(lb,PETSC_NINFINITY) );
-  } else {
-    TRY( PetscObjectReference((PetscObject)lb) );
+  TRY( VecDuplicate(x,&lbnew) );
+  TRY( VecDuplicate(x,&ubnew) );
+  TRY( VecSet(lbnew,PETSC_NINFINITY) );
+  TRY( VecSet(ubnew,PETSC_INFINITY) );
+
+  if (lb) {
+    if (is) {
+      TRY( VecISCopy(lbnew,is,SCATTER_FORWARD,lb) );
+    } else {
+      TRY( VecCopy(lb,lbnew) );
+    }
   }
-  if (!ub) {
-    TRY( VecDuplicate(x,&ub) );
-    TRY( VecSet(ub,PETSC_INFINITY) );
-  } else {
-    TRY( PetscObjectReference((PetscObject)ub) );
+
+  if (ub) {
+    if (is) {
+      TRY( VecISCopy(ubnew,is,SCATTER_FORWARD,ub) );
+    } else {
+      TRY( VecCopy(ub,ubnew) );
+    }
   }
-  TRY( TaoSetVariableBounds(tao,lb,ub) );
-  TRY( VecDestroy(&lb) );
-  TRY( VecDestroy(&ub) );
+
+  TRY( TaoSetVariableBounds(tao,lbnew,ubnew) );
+  TRY( VecDestroy(&lbnew) );
+  TRY( VecDestroy(&ubnew) );
 
   /* set specific stopping criterion for TAO inside QPSTAO */
   TRY( TaoSetConvergenceTest(tao,QPSTaoConverged_Tao,qps) );
@@ -287,15 +297,17 @@ PetscErrorCode QPSDestroy_Tao(QPS qps)
 PetscErrorCode QPSIsQPCompatible_Tao(QPS qps,QP qp,PetscBool *flg)
 {
   Mat Beq,Bineq;
-  Vec ceq,cineq,lb,ub;
+  Vec ceq,cineq;
+  QPC qpc;
   
   PetscFunctionBegin;
-  *flg = PETSC_TRUE;
   TRY( QPGetEq(qp,&Beq,&ceq) );
   TRY( QPGetIneq(qp,&Bineq,&cineq) );
-  TRY( QPGetBox(qp,&lb,&ub) );
+  TRY( QPGetQPC(qp,&qpc) );
   if (Beq || ceq || Bineq || cineq) {
     *flg = PETSC_FALSE;
+  } else {
+    TRY( PetscObjectTypeCompare((PetscObject)qpc,QPCBOX,flg) );
   }
   PetscFunctionReturn(0);   
 }

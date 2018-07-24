@@ -250,7 +250,7 @@ PetscErrorCode QPTEnforceEqByProjector(QP qp)
   TRY( PetscOptionsGetBool(NULL,NULL,"-qpt_project_pc_symmetric",&pc_symmetric,NULL) );
   TRY( PetscOptionsGetBool(NULL,NULL,"-qpt_project_inherit_box_multipliers",&inherit_box_multipliers,NULL) );
 
-  eqonly = !(qp->BI || qp->lb || qp->ub);
+  eqonly = !(qp->BI || qp->qpc);
   if (eqonly) {
     TRY( PetscInfo(qp, "only lin. eq. con. were prescribed ==> they are now eliminated\n") );
     TRY( QPSetEq(  child, NULL, NULL) );
@@ -259,7 +259,7 @@ PetscErrorCode QPTEnforceEqByProjector(QP qp)
     TRY( QPSetQPPF(child, qp->pf) );
     TRY( QPSetEq(  child, qp->BE, qp->cE) );
   }
-  TRY( QPSetBox( child, qp->lb, qp->ub) );
+  TRY( QPSetQPC( child, qp->qpc) );
   TRY( QPSetIneq(child, qp->BI, qp->cI) );
   TRY( QPSetRhs( child, qp->b) );
 
@@ -381,7 +381,7 @@ PetscErrorCode QPTEnforceEqByPenalty(QP qp, PetscReal rho_user, PetscBool rho_di
   TRY( QPAppendOptionsPrefix(child,"pnlt_") );
 
   TRY( QPSetEq(  child, NULL, NULL) );
-  TRY( QPSetBox(child, qp->lb, qp->ub) );
+  TRY( QPSetQPC(child, qp->qpc) );
   TRY( QPSetIneq(child, qp->BI, qp->cI) );
   TRY( QPSetRhs(child, qp->b) );
   TRY( QPSetInitialVector(child, qp->x) );
@@ -439,18 +439,14 @@ PetscErrorCode QPTHomogenizeEq(QP qp)
 {
   MPI_Comm          comm;
   QP                child;
-  Vec               b_bar, cineq, lb, ub, xtilde;
-  Vec               lb_f, lb_new_f, xtilde_f;
-  IS                isf;
+  Vec               b_bar, cineq, lb, ub, lbnew, ubnew, xtilde, xtilde_sub;
+  IS                is;
 
   FllopTracedFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  lb = NULL;
-  ub = NULL;
-  isf = NULL;
-  lb_f = NULL;
-  lb_new_f = NULL;
-  xtilde_f = NULL;
+  lb = NULL; lbnew=NULL;
+  ub = NULL; ubnew=NULL;
+  is = NULL;
 
   TRY( QPChainGetLast(qp,&qp) );
   if (!qp->cE) {
@@ -498,73 +494,30 @@ PetscErrorCode QPTHomogenizeEq(QP qp)
   TRY( QPSetIneq(child, qp->BI, cineq) );
   TRY( VecDestroy(&cineq) );
 
-  if (qp->lb) {
-    TRY( PetscObjectQuery((PetscObject)qp->lb,"is_finite",(PetscObject*)&isf) );
-    if (isf) TRY( PetscInfo(qp,"is_finite composed to lb found\n") );
+  TRY( QPGetBox(qp, &is, &lb, &ub) );
+  if (is) {
+    TRY( VecGetSubVector(xtilde, is, &xtilde_sub) );
+  } else {
+    xtilde_sub = xtilde;
   }
 
-  if (qp->lb) {
-    TRY( VecDuplicate(qp->lb, &lb) );
-    if (isf) {
-      TRY( VecSet(lb,PETSC_NINFINITY) );
-      TRY( VecGetSubVector(qp->lb,isf,&lb_f) );
-      TRY( VecGetSubVector(xtilde,isf,&xtilde_f) );
-      TRY( VecGetSubVector(lb,isf,&lb_new_f) );
-      TRY( VecWAXPY(lb_new_f, -1.0, xtilde_f, lb_f) );                          /* lb = lb - xtilde */
-      TRY( VecRestoreSubVector(qp->lb,isf,&lb_f) );
-      TRY( VecRestoreSubVector(xtilde,isf,&xtilde_f) );
-      TRY( VecRestoreSubVector(lb,isf,&lb_new_f) );
-    } else {
-      TRY( VecWAXPY(lb, -1.0, xtilde, qp->lb) );                                /* lb = lb - xtilde */
-    }
+  if (lb) {
+    TRY( VecDuplicate(lb, &lbnew) );
+    TRY( VecWAXPY(lbnew, -1.0, xtilde_sub, lb) );                                /* lb = lb - xtilde */
   }
 
-  if (FllopDebugEnabled && isf) {
-    PetscReal norm1,norm2,norm3;
-    Vec xtilde_i;
-    IS isif;
-
-    TRY( ISComplementVec(isf,xtilde,&isif) );
-    TRY( VecGetSubVector(xtilde,isif,&xtilde_i) );
-    TRY( VecNorm(xtilde_i, NORM_2, &norm1) );
-    TRY( VecRestoreSubVector(xtilde,isif,&xtilde_i) );
-    TRY( FllopDebug1("\n"
-        "    ||xtilde(~is_finite)|| = %.12e\n",norm1) );
-    
-    TRY( VecGetSubVector(qp->lb,isf,&lb_f) );
-    TRY( VecGetSubVector(xtilde,isf,&xtilde_f) );
-    TRY( VecGetSubVector(lb,isf,&lb_new_f) );
-    TRY( VecNorm(lb_f, NORM_2, &norm1) );
-    TRY( VecNorm(xtilde_f, NORM_2, &norm2) );
-    TRY( VecNorm(lb_new_f, NORM_2, &norm3) );
-    TRY( VecRestoreSubVector(qp->lb,isf,&lb_f) );
-    TRY( VecRestoreSubVector(xtilde,isf,&xtilde_f) );
-    TRY( VecRestoreSubVector(lb,isf,&lb_new_f) );
-
-    TRY( FllopDebug3("\n"
-        "        ||lb(is_finite)|| = %.12e\n"
-        "    ||xtilde(is_finite)|| = %.12e\n"
-        "    ||lb_new(is_finite)|| = %.12e    lb_new = lb - xtilde\n",norm1,norm2,norm3) );
+  if (ub) {
+    TRY( VecDuplicate(ub, &ubnew) );
+    TRY( VecWAXPY(ubnew, -1.0, xtilde_sub, ub) );                                /* ub = ub - xtilde */
   }
 
-  if (qp->ub) {
-    TRY( VecDuplicate(qp->ub, &ub) );
-    if (isf) {
-      TRY( VecSet(ub,PETSC_INFINITY) );
-      TRY( VecGetSubVector(qp->ub,isf,&lb_f) );
-      TRY( VecGetSubVector(xtilde,isf,&xtilde_f) );
-      TRY( VecGetSubVector(ub,isf,&lb_new_f) );
-      TRY( VecWAXPY(lb_new_f, -1.0, xtilde_f, lb_f) );                          /* ub = ub - xtilde */
-      TRY( VecRestoreSubVector(qp->ub,isf,&lb_f) );
-      TRY( VecRestoreSubVector(xtilde,isf,&xtilde_f) );
-      TRY( VecRestoreSubVector(ub,isf,&lb_new_f) );
-    } else {
-      TRY( VecWAXPY(ub, -1.0, xtilde, qp->ub) );                                /* ub = ub - xtilde */
-    }
+  if (is) {
+    TRY( VecRestoreSubVector(xtilde, is, &xtilde_sub) );
   }
-  TRY( QPSetBox(child, lb, ub) );
-  TRY( VecDestroy(&lb) );
-  TRY( VecDestroy(&ub) );
+
+  TRY( QPSetBox(child, is, lbnew, ubnew) );
+  TRY( VecDestroy(&lbnew) );
+  TRY( VecDestroy(&ubnew) );
 
   TRY( VecDestroy(&child->x) );
 
@@ -760,7 +713,7 @@ static PetscErrorCode QPTDualizeView_Private(QP qp, QP child)
   d = child->b;
   e = child->cE;
   f = qp->b;
-  lb = child->lb;
+  TRY( QPGetBox(child,NULL,&lb,NULL) );
   lambda = child->x;
   u = qp->x;
 
@@ -1186,7 +1139,7 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
   TRY( QPSetRhs(child, d) );
   TRY( QPSetEq(child, G, e) );
   TRY( QPSetIneq(child, NULL, NULL) );
-  TRY( QPSetBox(child, lb, NULL) );
+  TRY( QPSetBox(child, NULL, lb, NULL) );
   TRY( QPSetInitialVector(child,lambda) );
   
   /* create special preconditioner for dual formulation */
@@ -1622,6 +1575,7 @@ static PetscErrorCode QPTPostSolve_QPTScaleObjectiveByScalar(QP child,QP parent)
   QPTScaleObjectiveByScalar_Ctx *psctx = (QPTScaleObjectiveByScalar_Ctx*)child->postSolveCtx;
   PetscReal scale_A = psctx->scale_A;
   PetscReal scale_b = psctx->scale_b;
+  Vec lb,ub;
 
   PetscFunctionBegin;
   TRY( VecCopy(child->x,parent->x) );
@@ -1635,11 +1589,12 @@ static PetscErrorCode QPTPostSolve_QPTScaleObjectiveByScalar(QP child,QP parent)
     TRY( VecCopy(child->lambda_E,parent->lambda_E) );
     TRY( VecScale(parent->lambda_E,1.0/scale_b) );
   }
-  if (parent->lb) {
+  TRY( QPGetBox(parent,NULL,&lb,&ub) );
+  if (lb) {
     TRY( VecCopy(child->lambda_lb,parent->lambda_lb) );
     TRY( VecScale(parent->lambda_lb,1.0/scale_b) );
   }
-  if (parent->ub) {
+  if (ub) {
     TRY( VecCopy(child->lambda_ub,parent->lambda_ub) );
     TRY( VecScale(parent->lambda_ub,1.0/scale_b) );
   }
@@ -1668,6 +1623,7 @@ PetscErrorCode QPTScaleObjectiveByScalar(QP qp,PetscScalar scale_A,PetscScalar s
   QPTScaleObjectiveByScalar_Ctx *ctx;
   Mat Anew;
   Vec bnew;
+  Vec lb,ub;
   Vec lbnew,ubnew;
   PetscReal norm_A,norm_b;
 
@@ -1703,19 +1659,20 @@ PetscErrorCode QPTScaleObjectiveByScalar(QP qp,PetscScalar scale_A,PetscScalar s
   TRY( QPSetRhs(child,bnew) );
   TRY( VecDestroy(&bnew) );
 
+  TRY( QPGetBox(qp,NULL,&lb,&ub) );
   lbnew=NULL;
-  if (qp->lb) {
-    TRY( VecDuplicate(qp->lb,&lbnew) );
-    TRY( VecCopy(qp->lb,lbnew) );
+  if (lb) {
+    TRY( VecDuplicate(lb,&lbnew) );
+    TRY( VecCopy(lb,lbnew) );
     TRY( VecScaleSkipInf(lbnew,scale_b/scale_A) );
   }
   ubnew=NULL;
-  if (qp->ub) {
-    TRY( VecDuplicate(qp->ub,&ubnew) );
-    TRY( VecCopy(qp->ub,ubnew) );
+  if (ub) {
+    TRY( VecDuplicate(ub,&ubnew) );
+    TRY( VecCopy(ub,ubnew) );
     TRY( VecScaleSkipInf(ubnew,scale_b/scale_A) );
   }
-  TRY( QPSetBox(child,lbnew,ubnew) );
+  TRY( QPSetBox(child,NULL,lbnew,ubnew) );
   TRY( VecDestroy(&lbnew) );
   TRY( VecDestroy(&ubnew) );
 

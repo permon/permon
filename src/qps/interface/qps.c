@@ -427,7 +427,8 @@ PetscErrorCode QPSSetDefaultType(QPS qps)
 {
   QP qp;
   Mat Beq,Bineq;
-  Vec ceq,cineq,lb,ub;
+  Vec ceq,cineq;
+  QPC qpc;
   
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
@@ -437,12 +438,7 @@ PetscErrorCode QPSSetDefaultType(QPS qps)
 
   TRY( QPGetEq(qp,&Beq,&ceq) );
   TRY( QPGetIneq(qp,&Bineq,&cineq) );
-  TRY( QPGetBox(qp,&lb,&ub) );
-
-  /* without constraints */
-  if(!Bineq && !Beq && !lb && !ub) {
-    TRY( QPSSetType(qps,QPSKSP) );  
-  }
+  TRY( QPGetQPC(qp,&qpc) );
 
   /* general linear inequality constraints Bx <= c */  
   if (Bineq) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"There is currently no QPS type implemented that can solve QP s.t. linear inequality constraints without any preprocessing. Try to use QPDualize");
@@ -450,11 +446,12 @@ PetscErrorCode QPSSetDefaultType(QPS qps)
   /* problem with linear equality constraints Bx = c */
   if (Beq) {
     TRY( QPSSetType(qps,QPSSMALXE) );
-  } else {
+  } else if (qpc) {
     /* problem without equality constraints but with box constraints */
-    if (lb || ub) {
       TRY( QPSSetType(qps,QPSMPGP) );
-    }
+  } else {
+    /* without constraints */
+    TRY( QPSSetType(qps,QPSKSP) );  
   }
   
   qps->user_type = PETSC_FALSE;

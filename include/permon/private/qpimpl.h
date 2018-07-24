@@ -46,9 +46,7 @@ struct _p_QP {
   Vec              lambda_I;
 
   /* box constraints */
-  Vec              lb;
   Vec              lambda_lb;
-  Vec              ub;
   Vec              lambda_ub;
 
   /* separable convex constraints */

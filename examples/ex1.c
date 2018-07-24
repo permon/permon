@@ -110,7 +110,7 @@ int main(int argc,char **args)
   ierr = QPSetInitialVector(qp,x);CHKERRQ(ierr);
   /* Set box constraints.
   * c <= x <= PETSC_INFINITY */
-  ierr = QPSetBox(qp,c,NULL);CHKERRQ(ierr);
+  ierr = QPSetBox(qp,NULL,c,NULL);CHKERRQ(ierr);
   /* Set runtime options, e.g
   *   -qp_chain_view_kkt */
   ierr = QPSetFromOptions(qp);CHKERRQ(ierr);
