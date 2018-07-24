@@ -371,33 +371,6 @@ static PetscErrorCode MPGPFeas(Vec x, Vec lb, Vec ub, Vec p, PetscScalar *alpha)
   PetscFunctionReturn(0);
 }
 
-//TODO move to Constraints
-#undef __FUNCT__
-#define __FUNCT__ "QPGetScaledProjectedGradient"
-PetscErrorCode QPGetScaledProjectedGradient(QP qp, PetscReal alpha, Vec galpha)
-{
-  Vec               x,b,lb,ub;
-  Mat               A;
-
-  PetscFunctionBegin;
-  PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  PetscValidLogicalCollectiveReal(qp,alpha,2);
-  PetscValidHeaderSpecific(galpha,VEC_CLASSID,3);
-  
-  A                 = qp->A;
-  x                 = qp->x;
-  b                 = qp->b;
-  lb                = qp->lb;
-  ub                = qp->ub;
-  TRY( MatMult(A, x, galpha) );          /* g=A*x         */
-  TRY( VecAXPY(galpha, -1.0, b) );       /* g=g-b         */
-  TRY( VecAYPX(galpha,-alpha,x) );       /* galpha = x - alpha*g */
-  TRY( MPGPProj(galpha,lb,ub) );         /* galpha = P(galpha) */
-  TRY( VecAYPX(galpha,-1.0,x) );         /* galpha = x - galpha */
-  TRY( VecScale(galpha,1.0/alpha) );     /* galpha = 1/alpha * galpha */
-  PetscFunctionReturn(0);
-}
-
 #undef __FUNCT__  
 #define __FUNCT__ "QPSSetup_MPGP"
 /*
@@ -640,15 +613,6 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
     }
     qps->iteration++;
   };
-
-  if (FllopDebugEnabled) {
-    PetscReal norm;
-
-    TRY( QPGetScaledProjectedGradient(qp,alpha,galpha) );
-    TRY( VecAXPY(galpha,-1.0,gP) );
-    TRY( VecNorm(galpha,NORM_2,&norm) );
-    TRY( FllopDebug1("||g_alpha - g_P|| = %.8e\n",norm) );
-  }
 
   mpgp->ncg     += ncg;
   mpgp->nexp    += nexp;
