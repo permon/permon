@@ -165,6 +165,18 @@ static PetscErrorCode QPCBoxGet_Box(QPC qpc,Vec *lb,Vec *ub)
 }
 
 #undef __FUNCT__
+#define __FUNCT__ "QPCBoxGetMultipliers_Box"
+static PetscErrorCode QPCBoxGetMultipliers_Box(QPC qpc,Vec *llb,Vec *lub)
+{
+  QPC_Box         *ctx = (QPC_Box*)qpc->data;
+
+  PetscFunctionBegin;
+  if (llb) *llb = ctx->llb;
+  if (lub) *lub = ctx->lub;
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ "QPCIsLinear_Box"
 PetscErrorCode QPCIsLinear_Box(QPC qpc,PetscBool *linear)
 {
@@ -349,6 +361,7 @@ FLLOP_EXTERN PetscErrorCode QPCCreate_Box(QPC qpc)
   /* set type-specific functions */
   TRY( PetscObjectComposeFunction((PetscObject)qpc,"QPCBoxSet_Box_C",QPCBoxSet_Box) );
   TRY( PetscObjectComposeFunction((PetscObject)qpc,"QPCBoxGet_Box_C",QPCBoxGet_Box) );
+  TRY( PetscObjectComposeFunction((PetscObject)qpc,"QPCBoxGetMultipliers_Box_C",QPCBoxGetMultipliers_Box) );
 
   /* initialize type-specific inner data */
   ctx->lb                         = NULL;
@@ -382,6 +395,19 @@ PetscErrorCode QPCBoxGet(QPC qpc,Vec *lb, Vec *ub)
   if (ub) PetscValidPointer(ub,3);
 
   TRY( PetscUseMethod(qpc,"QPCBoxGet_Box_C",(QPC,Vec*,Vec*),(qpc,lb,ub)) );
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "QPCBoxGetMultipliers"
+PetscErrorCode QPCBoxGetMultipliers(QPC qpc,Vec *llb,Vec *lub)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
+  if (llb) PetscValidPointer(llb,2);
+  if (lub) PetscValidPointer(lub,3);
+
+  TRY( PetscUseMethod(qpc,"QPCBoxGetMultipliers_Box_C",(QPC,Vec*,Vec*),(qpc,llb,lub)) );
   PetscFunctionReturn(0);
 }
 

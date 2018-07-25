@@ -51,6 +51,7 @@ FLLOP_EXTERN PetscErrorCode QPCOuterNormal(QPC,PetscScalar *n_a,PetscScalar *xco
 FLLOP_EXTERN PetscErrorCode QPCCreateBox(MPI_Comm comm,IS is,Vec lb,Vec ub,QPC *qpc);
 FLLOP_EXTERN PetscErrorCode QPCBoxSet(QPC qpc,Vec lb,Vec ub);
 FLLOP_EXTERN PetscErrorCode QPCBoxGet(QPC qpc,Vec *lb,Vec *ub);
+FLLOP_EXTERN PetscErrorCode QPCBoxGetMultipliers(QPC qpc,Vec *llb,Vec *lub);
 
 #endif
 
