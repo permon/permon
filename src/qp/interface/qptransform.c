@@ -259,13 +259,17 @@ PetscErrorCode QPTEnforceEqByProjector(QP qp)
     TRY( QPSetQPPF(child, qp->pf) );
     TRY( QPSetEq(  child, qp->BE, qp->cE) );
   }
-  TRY( QPSetQPC( child, qp->qpc) );
   TRY( QPSetIneq(child, qp->BI, qp->cI) );
   TRY( QPSetRhs( child, qp->b) );
 
   if (inherit_box_multipliers) {
-    TRY( QPSetLowerBoundMultiplier(child,qp->lambda_lb) );
-    TRY( QPSetUpperBoundMultiplier(child,qp->lambda_ub) );
+    TRY( QPSetQPC(child, qp->qpc) );
+  } else {
+    /* TODO: generalize for other QPC */
+    Vec lb,ub;
+    IS is;
+    TRY( QPGetBox(qp,&is,&lb,&ub) );
+    TRY( QPSetBox(child,is,lb,ub) );
   }
 
   TRY( QPPFCreateP(qp->pf,&P) );
@@ -401,8 +405,6 @@ PetscErrorCode QPTEnforceEqByPenalty(QP qp, PetscReal rho_user, PetscBool rho_di
   }
   
   TRY( QPSetIneqMultiplier(       child,qp->lambda_I) );
-  TRY( QPSetLowerBoundMultiplier( child,qp->lambda_lb) );
-  TRY( QPSetUpperBoundMultiplier( child,qp->lambda_ub) );
   TRY( QPSetWorkVector(child,qp->xwork) );
 
   TRY( PetscLogEventEnd(QPT_EnforceEqByPenalty,qp,0,0,0) );
@@ -1576,6 +1578,9 @@ static PetscErrorCode QPTPostSolve_QPTScaleObjectiveByScalar(QP child,QP parent)
   PetscReal scale_A = psctx->scale_A;
   PetscReal scale_b = psctx->scale_b;
   Vec lb,ub;
+  Vec llb,lub;
+  Vec llbnew,lubnew;
+  QPC qpc,qpcc;
 
   PetscFunctionBegin;
   TRY( VecCopy(child->x,parent->x) );
@@ -1590,13 +1595,17 @@ static PetscErrorCode QPTPostSolve_QPTScaleObjectiveByScalar(QP child,QP parent)
     TRY( VecScale(parent->lambda_E,1.0/scale_b) );
   }
   TRY( QPGetBox(parent,NULL,&lb,&ub) );
+  TRY( QPGetQPC(parent, &qpc) );
+  TRY( QPGetQPC(child, &qpcc) );
+  TRY( QPCBoxGetMultipliers(qpcc,&llb,&lub) );
+  TRY( QPCBoxGetMultipliers(qpc,&llbnew,&lubnew) );
   if (lb) {
-    TRY( VecCopy(child->lambda_lb,parent->lambda_lb) );
-    TRY( VecScale(parent->lambda_lb,1.0/scale_b) );
+    TRY( VecCopy(llb,llbnew) );
+    TRY( VecScale(llbnew,1.0/scale_b) );
   }
   if (ub) {
-    TRY( VecCopy(child->lambda_ub,parent->lambda_ub) );
-    TRY( VecScale(parent->lambda_ub,1.0/scale_b) );
+    TRY( VecCopy(lub,lubnew) );
+    TRY( VecScale(lubnew,1.0/scale_b) );
   }
   if (parent->BI) {
     TRY( VecCopy(child->lambda_I,parent->lambda_I) );
@@ -1679,8 +1688,6 @@ PetscErrorCode QPTScaleObjectiveByScalar(QP qp,PetscScalar scale_A,PetscScalar s
   TRY( QPSetInitialVector(child,NULL) );
   TRY( QPSetEqMultiplier(child,NULL) );
   TRY( QPSetIneqMultiplier(child,NULL) );
-  TRY( QPSetLowerBoundMultiplier(child,NULL) );
-  TRY( QPSetUpperBoundMultiplier(child,NULL) );
 
   if (FllopDebugEnabled) {
     TRY( MatGetMaxEigenvalue(child->A, NULL, &norm_A, 1e-5, 50) );

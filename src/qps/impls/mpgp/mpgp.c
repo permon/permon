@@ -428,13 +428,18 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
       FLLOP_SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_INCOMP,"lower bounds must be less than upper bounds");
     }
   } else {
+    QPC qpc;
+    Vec lub;
+
     //TODO make MPGP compatible with ub = NULL
     /* create ub=inf(size(lb)) */
     TRY( VecDuplicate(lb,&ub) );
-    TRY( VecDuplicate(ub,&qps->solQP->lambda_ub) );
     TRY( VecSet(ub,PETSC_INFINITY) );
-    TRY( VecSet(qps->solQP->lambda_ub,0.0) );
     TRY( QPSetBox(qps->solQP,NULL,lb,ub) );
+
+    TRY( QPGetQPC(qps->solQP,&qpc) );
+    TRY( QPCBoxGetMultipliers(qpc,NULL,&lub) );
+    TRY( VecSet(lub,0.0) );
   }
   PetscFunctionReturn(0);
 }

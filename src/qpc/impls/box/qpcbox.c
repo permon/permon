@@ -145,8 +145,18 @@ static PetscErrorCode QPCBoxSet_Box(QPC qpc,Vec lb, Vec ub)
   PetscFunctionBegin;
   TRY( VecDestroy(&ctx->lb) );
   TRY( VecDestroy(&ctx->ub) );
+  TRY( VecDestroy(&ctx->llb) );
+  TRY( VecDestroy(&ctx->lub) );
   ctx->lb = lb;
   ctx->ub = ub;
+  if (lb) {
+    TRY( VecDuplicate(lb,&ctx->llb) );
+    TRY( VecInvalidate(ctx->llb) );
+  }
+  if (ub) {
+    TRY( VecDuplicate(ub,&ctx->lub) );
+    TRY( VecInvalidate(ctx->lub) );
+  }
   TRY( PetscObjectReference((PetscObject)lb) );
   TRY( PetscObjectReference((PetscObject)ub) );
   PetscFunctionReturn(0);
@@ -366,7 +376,8 @@ FLLOP_EXTERN PetscErrorCode QPCCreate_Box(QPC qpc)
   /* initialize type-specific inner data */
   ctx->lb                         = NULL;
   ctx->ub                         = NULL;
-
+  ctx->llb                        = NULL;
+  ctx->lub                        = NULL;
   PetscFunctionReturn(0);
 }
 

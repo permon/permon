@@ -119,8 +119,6 @@ PetscErrorCode QPCreate(MPI_Comm comm, QP *qp_new)
   qp->B            = NULL;
   qp->c            = NULL;
   qp->lambda       = NULL;
-  qp->lambda_lb    = NULL;
-  qp->lambda_ub    = NULL;
   qp->x            = NULL;
   qp->xwork        = NULL;
   qp->pc           = NULL;
@@ -190,13 +188,11 @@ PetscErrorCode QPDuplicate(QP qp1,QPDuplicateOption opt,QP *qp2)
   TRY( QPSetIneq(qp2_,qp1->BI,qp1->cI) );
   TRY( QPSetIneqMultiplier(qp2_,qp1->lambda_I) );
   TRY( QPSetInitialVector(qp2_,qp1->x) );
-  TRY( QPSetLowerBoundMultiplier(qp2_,qp1->lambda_lb) );
   TRY( QPSetOperator(qp2_,qp1->A) );
   TRY( QPSetOperatorNullSpace(qp2_,qp1->R) );
   if (qp1->pc) TRY( QPSetPC(qp2_,qp1->pc) );
   TRY( QPSetQPPF(qp2_,qp1->pf) );
   TRY( QPSetRhs(qp2_,qp1->b) );
-  TRY( QPSetUpperBoundMultiplier(qp2_,qp1->lambda_ub) );
   TRY( QPSetWorkVector(qp2_,qp1->xwork) );
 
   if (qp1->lambda)    TRY( PetscObjectReference((PetscObject)(qp2_->lambda = qp1->lambda)) );
@@ -252,7 +248,9 @@ PetscErrorCode QPViewKKT(QP qp,PetscViewer v)
 {
   PetscReal   normb=0.0,norm=0.0,dot=0.0;
   Vec         x,b,cE,cI,lb,ub,r,o,t;
+  Vec         llb,lub;
   Mat         A,BE,BI;
+  QPC         qpc;
   PetscBool   flg=PETSC_FALSE,compare_lambda_E=PETSC_FALSE,avail=PETSC_TRUE;
   MPI_Comm    comm;
   char        *kkt_name;
@@ -283,6 +281,9 @@ PetscErrorCode QPViewKKT(QP qp,PetscViewer v)
   TRY( QPGetBox(qp, NULL, &lb, &ub) );
   TRY( QPGetSolutionVector(qp, &x) );
   TRY( VecNorm(b,NORM_2,&normb) );
+
+  TRY( QPGetQPC(qp, &qpc) );
+  if (qpc) TRY( QPCBoxGetMultipliers(qpc,&llb,&lub) );
 
   QPView_Vec(v,x,"x");
   QPView_Vec(v,b,"b");
@@ -426,7 +427,7 @@ PetscErrorCode QPViewKKT(QP qp,PetscViewer v)
 
     /* lambda >= o  =>  examine min(lambda,o) */
     TRY( VecSet(o,0.0) );                                   /* o = zeros(size(r)) */
-    TRY( VecPointwiseMin(r,qp->lambda_lb,o) );
+    TRY( VecPointwiseMin(r,llb,o) );
     TRY( VecNorm(r,NORM_2,&norm) );                         /* norm = ||min(lambda,o)|| */
     TRY( PetscViewerASCIIPrintf(v,"r = ||min(lambda_lb,0)|| = %.2e    r/||b|| = %.2e\n",norm,norm/normb) );
 
@@ -444,7 +445,7 @@ PetscErrorCode QPViewKKT(QP qp,PetscViewer v)
       TRY( VecRestoreArray(r,&rarr) );
       TRY( VecRestoreArrayRead(lb,&larr) );
     }
-    TRY( VecDot(qp->lambda_lb,r,&dot) );
+    TRY( VecDot(llb,r,&dot) );
     dot = PetscAbs(dot);
     TRY( PetscViewerASCIIPrintf(v,"r = |lambda_lb'*(lb-x)|  = %.2e    r/||b|| = %.2e\n",dot,dot/normb) );
 
@@ -467,7 +468,7 @@ PetscErrorCode QPViewKKT(QP qp,PetscViewer v)
 
     /* lambda >= o  =>  examine min(lambda,o) */
     TRY( VecSet(o,0.0) );                                   /* o = zeros(size(r)) */
-    TRY( VecPointwiseMin(r,qp->lambda_ub,o) );
+    TRY( VecPointwiseMin(r,lub,o) );
     TRY( VecNorm(r,NORM_2,&norm) );                         /* norm = ||min(lambda,o)|| */
     TRY( PetscViewerASCIIPrintf(v,"r = ||min(lambda_ub,0)|| = %.2e    r/||b|| = %.2e\n",norm,norm/normb) );
 
@@ -485,7 +486,7 @@ PetscErrorCode QPViewKKT(QP qp,PetscViewer v)
       TRY( VecRestoreArray(r,&rarr) );
       TRY( VecRestoreArrayRead(ub,&uarr) );
     }
-    TRY( VecDot(qp->lambda_ub,r,&dot) );
+    TRY( VecDot(lub,r,&dot) );
     dot = PetscAbs(dot);
     TRY( PetscViewerASCIIPrintf(v,"r = |lambda_ub'*(x-ub)|  = %.2e    r/||b|| = %.2e\n",dot,dot/normb) );
 
@@ -602,8 +603,6 @@ PetscErrorCode QPReset(QP qp)
   TRY( VecDestroy(&qp->lambda_I) );
   TRY( VecDestroy(&qp->c) );
   TRY( VecDestroy(&qp->lambda) );
-  TRY( VecDestroy(&qp->lambda_lb) );
-  TRY( VecDestroy(&qp->lambda_ub) );
   
   TRY( PCDestroy( &qp->pc) );
 
@@ -625,7 +624,6 @@ PetscErrorCode QPSetUpInnerObjects(QP qp)
   IS rows[2];
   Vec cs[2],c[2];
   Vec lambdas[2];
-  Vec lb,ub;
 
   FllopTracedFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
@@ -643,24 +641,6 @@ PetscErrorCode QPSetUpInnerObjects(QP qp)
   TRY( QPInitializeInitialVector_Private(qp) );
 
   if (!qp->xwork) TRY( VecDuplicate(qp->x,&qp->xwork) );
-
-  TRY( QPGetBox(qp,NULL,&lb,&ub) );
-
-  if (lb && !qp->lambda_lb) {
-    TRY( VecDuplicate(qp->b,&qp->lambda_lb) );
-    TRY( VecInvalidate(qp->lambda_lb) );
-  }
-  if (!lb) {
-    TRY( VecDestroy(&qp->lambda_lb) );
-  }
-
-  if (ub && !qp->lambda_ub) {
-    TRY( VecDuplicate(qp->b,&qp->lambda_ub) );
-    TRY( VecInvalidate(qp->lambda_ub) );
-  }
-  if (!ub) {
-    TRY( VecDestroy(&qp->lambda_ub) );
-  }
 
   if (qp->BE && !qp->lambda_E) {
     TRY( MatCreateVecs(qp->BE,NULL,&qp->lambda_E) );
@@ -866,14 +846,18 @@ PetscErrorCode QPComputeLagrangianGradient(QP qp, Vec x, Vec r, char *kkt_name_[
 
   /* TODO: replace with QPC function */
   {
-  Vec lb,ub;
+    Vec lb,ub;
+    Vec llb,lub;
+    QPC qpc;
 
     TRY( QPGetBox(qp,NULL,&lb,&ub) );
+    TRY( QPGetQPC(qp,&qpc) );
+    if (qpc) TRY( QPCBoxGetMultipliers(qpc,&llb,&lub) );
     if (lb) {
-      TRY( VecAXPY(r,-1.0,qp->lambda_lb) );
+      TRY( VecAXPY(r,-1.0,llb) );
     }
     if (ub) {
-      TRY( VecAXPY(r,1.0,qp->lambda_ub) );
+      TRY( VecAXPY(r,1.0,lub) );
     }
   }
 
@@ -999,23 +983,25 @@ PetscErrorCode QPComputeMissingEqMultiplier(QP qp)
 PetscErrorCode QPComputeMissingBoxMultipliers(QP qp)
 {
   Vec lb,ub;
-  Vec lambda_lb = qp->lambda_lb;
-  Vec lambda_ub = qp->lambda_ub;
+  Vec llb,lub;
   Vec r = qp->xwork;
   PetscBool flg=PETSC_TRUE,flg2=PETSC_TRUE;
   QP qp_E;
+  QPC qpc;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
   TRY( QPSetUp(qp) );
 
   TRY( QPGetBox(qp,NULL,&lb,&ub) );
+  TRY( QPGetQPC(qp,&qpc) );
+  if (qpc) TRY( QPCBoxGetMultipliers(qpc,&llb,&lub) );
 
   if (lb) {
-    TRY( VecIsValid(lambda_lb,&flg) );
+    TRY( VecIsValid(llb,&flg) );
   }
   if (ub) {
-    TRY( VecIsValid(lambda_ub,&flg2) );
+    TRY( VecIsValid(lub,&flg2) );
   }
   if (!lb && !ub) PetscFunctionReturn(0);
   if (flg && flg2) PetscFunctionReturn(0);
@@ -1029,23 +1015,22 @@ PetscErrorCode QPComputeMissingBoxMultipliers(QP qp)
   TRY( QPDestroy(&qp_E) );
 
   if (lb) {
-    TRY( VecCopy(r,lambda_lb) );
+    TRY( VecCopy(r,llb) );
   }
   if (ub) {
-    TRY( VecCopy(r,lambda_ub) );
-    TRY( VecScale(lambda_ub,-1.0) );
+    TRY( VecCopy(r,lub) );
+    TRY( VecScale(lub,-1.0) );
   }
   if (lb && ub) {
     TRY( VecZeroEntries(r) );
-    TRY( VecPointwiseMax(lambda_lb,lambda_lb,r) );
-    TRY( VecPointwiseMax(lambda_ub,lambda_ub,r) );
+    TRY( VecPointwiseMax(llb,llb,r) );
+    TRY( VecPointwiseMax(lub,lub,r) );
   }
 
   {
-    const char *name_qp,*name_lambda;
+    const char *name_qp;
     TRY( PetscObjectGetName((PetscObject)qp,&name_qp) );
-    TRY( PetscObjectGetName((PetscObject)qp->lambda_lb,&name_lambda) );
-    TRY( PetscInfo4(qp,"missing lower bound con. multiplier %s computed for QP Object %s (#%d in chain, derived by %s)\n",name_lambda,name_qp,qp->id,qp->transform_name) );
+    TRY( PetscInfo3(qp,"missing lower bound con. multiplier computed for QP Object %s (#%d in chain, derived by %s)\n",name_qp,qp->id,qp->transform_name) );
   }
   PetscFunctionReturn(0);
 }
@@ -1077,12 +1062,6 @@ PetscErrorCode QPRemoveInactiveBounds(QP qp)
     }
   }
   TRY( QPSetBox(qp,NULL,lb,ub) );
-  if (!ub && qp->lambda_ub) {
-    TRY( VecDestroy(&qp->lambda_ub) );
-  }
-  if (!lb && qp->lambda_lb) {
-    TRY( VecDestroy(&qp->lambda_lb) );
-  }
   PetscFunctionReturn(0);
 }
 
@@ -2158,40 +2137,6 @@ PetscErrorCode QPSetIneqMultiplier(QP qp, Vec lambda_I)
   TRY( VecDestroy(&qp->Bt_lambda) );
   qp->lambda_I = lambda_I;
   if (qp->changeListener) TRY( (*qp->changeListener)(qp) );
-  PetscFunctionReturn(0);
-}
-
-#undef __FUNCT__
-#define __FUNCT__ "QPSetLowerBoundMultiplier"
-PetscErrorCode QPSetLowerBoundMultiplier(QP qp, Vec lambda_lb)
-{
-  PetscFunctionBegin;
-  PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  if (lambda_lb == qp->lambda_lb) PetscFunctionReturn(0);
-  if (lambda_lb) {
-    PetscValidHeaderSpecific(lambda_lb,VEC_CLASSID,2);
-    PetscCheckSameComm(qp,1,lambda_lb,2);
-    TRY( PetscObjectReference((PetscObject)lambda_lb) );
-  }
-  TRY( VecDestroy(&qp->lambda_lb) );
-  qp->lambda_lb = lambda_lb;
-  PetscFunctionReturn(0);
-}
-
-#undef __FUNCT__
-#define __FUNCT__ "QPSetUpperBoundMultiplier"
-PetscErrorCode QPSetUpperBoundMultiplier(QP qp, Vec lambda_ub)
-{
-  PetscFunctionBegin;
-  PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  if (lambda_ub == qp->lambda_ub) PetscFunctionReturn(0);
-  if (lambda_ub) {
-    PetscValidHeaderSpecific(lambda_ub,VEC_CLASSID,2);
-    PetscCheckSameComm(qp,1,lambda_ub,2);
-    TRY( PetscObjectReference((PetscObject)lambda_ub) );
-  }
-  TRY( VecDestroy(&qp->lambda_ub) );
-  qp->lambda_ub = lambda_ub;
   PetscFunctionReturn(0);
 }
 
