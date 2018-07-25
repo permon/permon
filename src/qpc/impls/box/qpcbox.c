@@ -315,19 +315,17 @@ PetscErrorCode QPCView_Box(QPC qpc, PetscViewer viewer)
   QPC_Box         *ctx = (QPC_Box*)qpc->data;
     
   PetscFunctionBegin;
-
   /* print lb */
   TRY( PetscViewerASCIIPrintf(viewer, "lb:\n") );    
-  PetscViewerASCIIPushTab(viewer); 
+  TRY( PetscViewerASCIIPushTab(viewer) );
   TRY( VecView(ctx->lb,viewer) );    
-  PetscViewerASCIIPopTab(viewer); 
+  TRY( PetscViewerASCIIPopTab(viewer) );
 
   /* print ub */
   TRY( PetscViewerASCIIPrintf(viewer, "ub:\n") );    
-  PetscViewerASCIIPushTab(viewer); 
+  TRY( PetscViewerASCIIPushTab(viewer) );
   TRY( VecView(ctx->ub,viewer) );    
-  PetscViewerASCIIPopTab(viewer); 
-  
+  TRY( PetscViewerASCIIPopTab(viewer) );
   PetscFunctionReturn(0);
 }
 
