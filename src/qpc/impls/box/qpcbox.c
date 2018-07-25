@@ -330,6 +330,101 @@ PetscErrorCode QPCView_Box(QPC qpc, PetscViewer viewer)
 }
 
 #undef __FUNCT__
+#define __FUNCT__ "QPCViewKKT_Box"
+PetscErrorCode QPCViewKKT_Box(QPC qpc, Vec x, PetscReal normb, PetscViewer v)
+{
+  QPC_Box         *ctx = (QPC_Box*)qpc->data;
+  Vec             lb,ub,llb,lub,r,o;
+  PetscScalar     norm,dot;
+
+  PetscFunctionBegin;
+  lb = ctx->lb;
+  ub = ctx->ub;
+  llb = ctx->llb;
+  lub = ctx->lub;
+  if (lb) {
+    TRY( VecDuplicate(x,&o) );
+    TRY( VecDuplicate(x,&r) );
+
+    /* rI = norm(min(x-lb,0)) */
+    TRY( VecSet(o,0.0) );                                   /* o = zeros(size(r)) */
+    TRY( VecWAXPY(r, -1.0, lb, x) );                        /* r = x - lb       */
+    TRY( VecPointwiseMin(r,r,o) );                          /* r = min(r,o)     */
+    TRY( VecNorm(r,NORM_2,&norm) );                         /* norm = norm(r)     */
+    TRY( PetscViewerASCIIPrintf(v,"r = ||min(x-lb,0)||      = %.2e    r/||b|| = %.2e\n",norm,norm/normb) );
+
+    /* lambda >= o  =>  examine min(lambda,o) */
+    TRY( VecSet(o,0.0) );                                   /* o = zeros(size(r)) */
+    TRY( VecPointwiseMin(r,llb,o) );
+    TRY( VecNorm(r,NORM_2,&norm) );                         /* norm = ||min(lambda,o)|| */
+    TRY( PetscViewerASCIIPrintf(v,"r = ||min(lambda_lb,0)|| = %.2e    r/||b|| = %.2e\n",norm,norm/normb) );
+
+    /* lambda'*(lb-x) = 0 */
+    TRY( VecCopy(lb,r) );
+    TRY( VecAXPY(r,-1.0,x) );
+    {
+      PetscInt i,n;
+      PetscScalar *rarr;
+      const PetscScalar *larr;
+      TRY( VecGetLocalSize(r,&n) );
+      TRY( VecGetArray(r,&rarr) );
+      TRY( VecGetArrayRead(lb,&larr) );
+      for (i=0; i<n; i++) if (larr[i]<=PETSC_NINFINITY) rarr[i]=-1.0;
+      TRY( VecRestoreArray(r,&rarr) );
+      TRY( VecRestoreArrayRead(lb,&larr) );
+    }
+    TRY( VecDot(llb,r,&dot) );
+    dot = PetscAbs(dot);
+    TRY( PetscViewerASCIIPrintf(v,"r = |lambda_lb'*(lb-x)|  = %.2e    r/||b|| = %.2e\n",dot,dot/normb) );
+
+    TRY( VecDestroy(&o) );
+    TRY( VecDestroy(&r) );
+  }
+
+  if (ub) {
+    TRY( VecDuplicate(x,&o) );
+    TRY( VecDuplicate(x,&r) );
+
+    /* rI = norm(max(x-ub,0)) */
+    TRY( VecDuplicate(x,&r) );
+    TRY( VecDuplicate(x,&o) );
+    TRY( VecSet(o,0.0) );                                   /* o = zeros(size(r)) */
+    TRY( VecWAXPY(r, -1.0, ub, x) );                        /* r = x - ub       */
+    TRY( VecPointwiseMax(r,r,o) );                          /* r = max(r,o)     */
+    TRY( VecNorm(r,NORM_2,&norm) );                         /* norm = norm(r)     */
+    TRY( PetscViewerASCIIPrintf(v,"r = ||max(x-ub,0)||      = %.2e    r/||b|| = %.2e\n",norm,norm/normb) );
+
+    /* lambda >= o  =>  examine min(lambda,o) */
+    TRY( VecSet(o,0.0) );                                   /* o = zeros(size(r)) */
+    TRY( VecPointwiseMin(r,lub,o) );
+    TRY( VecNorm(r,NORM_2,&norm) );                         /* norm = ||min(lambda,o)|| */
+    TRY( PetscViewerASCIIPrintf(v,"r = ||min(lambda_ub,0)|| = %.2e    r/||b|| = %.2e\n",norm,norm/normb) );
+
+    /* lambda'*(x-ub) = 0 */
+    TRY( VecCopy(ub,r) );
+    TRY( VecAYPX(r,-1.0,x) );
+    {
+      PetscInt i,n;
+      PetscScalar *rarr;
+      const PetscScalar *uarr;
+      TRY( VecGetLocalSize(r,&n) );
+      TRY( VecGetArray(r,&rarr) );
+      TRY( VecGetArrayRead(ub,&uarr) );
+      for (i=0; i<n; i++) if (uarr[i]>=PETSC_INFINITY) rarr[i]=1.0;
+      TRY( VecRestoreArray(r,&rarr) );
+      TRY( VecRestoreArrayRead(ub,&uarr) );
+    }
+    TRY( VecDot(lub,r,&dot) );
+    dot = PetscAbs(dot);
+    TRY( PetscViewerASCIIPrintf(v,"r = |lambda_ub'*(x-ub)|  = %.2e    r/||b|| = %.2e\n",dot,dot/normb) );
+
+    TRY( VecDestroy(&o) );
+    TRY( VecDestroy(&r) );
+  }
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ "QPCDestroy_Box"
 PetscErrorCode QPCDestroy_Box(QPC qpc)
 {
@@ -353,10 +448,9 @@ FLLOP_EXTERN PetscErrorCode QPCCreate_Box(QPC qpc)
   
   /* set general QPC functions already implemented for this QPC type */
   qpc->ops->destroy                     = QPCDestroy_Box;
-  //qpc->ops->reset               = QPCReset_Box;
-  //qpc->ops->setfromoptions      = QPCSetFromOptions_Box;
-  qpc->ops->setup               = QPCSetUp_Box;
+  qpc->ops->setup                       = QPCSetUp_Box;
   qpc->ops->view                        = QPCView_Box;
+  qpc->ops->viewkkt                     = QPCViewKKT_Box;
   qpc->ops->getblocksize                = QPCGetBlockSize_Box;
   qpc->ops->getconstraintfunction       = QPCGetConstraintFunction_Box;
   qpc->ops->getnumberofconstraints      = QPCGetNumberOfConstraints_Box;

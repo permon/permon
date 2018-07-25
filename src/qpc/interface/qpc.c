@@ -141,6 +141,25 @@ PetscErrorCode QPCView(QPC qpc,PetscViewer v)
 }
 
 #undef __FUNCT__
+#define __FUNCT__ "QPCViewKKT"
+PetscErrorCode QPCViewKKT(QPC qpc, Vec x, PetscReal normb, PetscViewer v)
+{
+  Vec x_sub;
+
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
+  PetscValidHeaderSpecific(x,VEC_CLASSID,2);
+  PetscValidLogicalCollectiveReal(qpc,normb,3);
+  PetscValidHeaderSpecific(v,PETSC_VIEWER_CLASSID,4);
+
+  TRY( QPCGetSubvector( qpc, x, &x_sub) );
+  if (!qpc->ops->viewkkt) SETERRQ1(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
+  TRY( (*qpc->ops->viewkkt)(qpc, x_sub, normb, v) );
+  TRY( QPCRestoreSubvector( qpc, x, &x_sub) );
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ "QPCDestroy"
 /*@
 QPCDestroy - destroy qpc instance

@@ -247,10 +247,8 @@ PetscErrorCode QPCompareEqMultiplierWithLeastSquare(QP qp,PetscReal *norm)
 PetscErrorCode QPViewKKT(QP qp,PetscViewer v)
 {
   PetscReal   normb=0.0,norm=0.0,dot=0.0;
-  Vec         x,b,cE,cI,lb,ub,r,o,t;
-  Vec         llb,lub;
+  Vec         x,b,cE,cI,r,o,t;
   Mat         A,BE,BI;
-  QPC         qpc;
   PetscBool   flg=PETSC_FALSE,compare_lambda_E=PETSC_FALSE,avail=PETSC_TRUE;
   MPI_Comm    comm;
   char        *kkt_name;
@@ -278,12 +276,8 @@ PetscErrorCode QPViewKKT(QP qp,PetscViewer v)
   TRY( QPGetRhs(qp, &b) );
   TRY( QPGetEq(qp, &BE, &cE) );
   TRY( QPGetIneq(qp, &BI, &cI) );
-  TRY( QPGetBox(qp, NULL, &lb, &ub) );
   TRY( QPGetSolutionVector(qp, &x) );
   TRY( VecNorm(b,NORM_2,&normb) );
-
-  TRY( QPGetQPC(qp, &qpc) );
-  if (qpc) TRY( QPCBoxGetMultipliers(qpc,&llb,&lub) );
 
   QPView_Vec(v,x,"x");
   QPView_Vec(v,b,"b");
@@ -291,47 +285,6 @@ PetscErrorCode QPViewKKT(QP qp,PetscViewer v)
   if (BE && !cE) TRY( PetscViewerASCIIPrintf(v, "||cE|| = 0.00e-00    max(cE) = 0.00e-00 = cE(0)    min(cE) = 0.00e-00 = cE(0)\n") );
   if (cI) QPView_Vec(v,cI,"cI");
   if (BI && !cI) TRY( PetscViewerASCIIPrintf(v, "||cI|| = 0.00e-00    max(cI) = 0.00e-00 = cI(0)    min(cI) = 0.00e-00 = cI(0)\n") );
-  if (lb) {
-    IS isf;
-    Vec lbf;
-    QPView_Vec(v,lb,"lb");
-    TRY( PetscObjectQuery((PetscObject)lb,"is_finite",(PetscObject*)&isf) );
-    if (isf) {
-      TRY( PetscInfo(qp,"is_finite composed to lb found\n") );
-      TRY( VecGetSubVector(lb,isf,&lbf) );
-      QPView_Vec(v,lbf,"lf");
-      TRY( VecRestoreSubVector(lb,isf,&lbf) );
-    } else {
-      PetscInt i,m;
-      PetscScalar *a;
-      TRY( VecGetLocalSize(lb,&m) );
-      TRY( VecDuplicate(lb,&lbf) );
-      TRY( VecCopy(lb,lbf) );
-      TRY( VecGetArray(lbf,&a) );
-      for (i=0; i<m; i++) {
-        if (a[i] <= PETSC_NINFINITY) a[i]=0.0;
-      }
-      TRY( VecRestoreArray(lbf,&a) );
-      QPView_Vec(v,lbf,"lf");
-      TRY( VecDestroy(&lbf) );
-    }
-  }
-  if (ub) {
-    Vec ubf;
-    PetscInt i,m;
-    PetscScalar *a;
-    TRY( VecGetLocalSize(ub,&m) );
-    TRY( VecDuplicate(ub,&ubf) );
-    TRY( VecCopy(ub,ubf) );
-    TRY( VecGetArray(ubf,&a) );
-    for (i=0; i<m; i++) {
-      if (a[i] >= PETSC_INFINITY) a[i]=0.0;
-    }
-    TRY( VecRestoreArray(ubf,&a) );
-    QPView_Vec(v,ub,"ub");
-    QPView_Vec(v,ubf,"uf");
-    TRY( VecDestroy(&ubf) );
-  }
   
   TRY( VecDuplicate(b, &r) );
   TRY( QPComputeLagrangianGradient(qp,x,r,&kkt_name) );
@@ -414,85 +367,7 @@ PetscErrorCode QPViewKKT(QP qp,PetscViewer v)
     TRY( VecDestroy(&t) );
   }
 
-  if (lb) {
-    TRY( VecDuplicate(x,&o) );
-    TRY( VecDuplicate(x,&r) );
-
-    /* rI = norm(min(x-lb,0)) */
-    TRY( VecSet(o,0.0) );                                   /* o = zeros(size(r)) */
-    TRY( VecWAXPY(r, -1.0, lb, x) );                        /* r = x - lb       */
-    TRY( VecPointwiseMin(r,r,o) );                          /* r = min(r,o)     */
-    TRY( VecNorm(r,NORM_2,&norm) );                         /* norm = norm(r)     */
-    TRY( PetscViewerASCIIPrintf(v,"r = ||min(x-lb,0)||      = %.2e    r/||b|| = %.2e\n",norm,norm/normb) );
-
-    /* lambda >= o  =>  examine min(lambda,o) */
-    TRY( VecSet(o,0.0) );                                   /* o = zeros(size(r)) */
-    TRY( VecPointwiseMin(r,llb,o) );
-    TRY( VecNorm(r,NORM_2,&norm) );                         /* norm = ||min(lambda,o)|| */
-    TRY( PetscViewerASCIIPrintf(v,"r = ||min(lambda_lb,0)|| = %.2e    r/||b|| = %.2e\n",norm,norm/normb) );
-
-    /* lambda'*(lb-x) = 0 */
-    TRY( VecCopy(lb,r) );
-    TRY( VecAXPY(r,-1.0,x) );
-    {
-      PetscInt i,n;
-      PetscScalar *rarr;
-      const PetscScalar *larr;
-      TRY( VecGetLocalSize(r,&n) );
-      TRY( VecGetArray(r,&rarr) );
-      TRY( VecGetArrayRead(lb,&larr) );
-      for (i=0; i<n; i++) if (larr[i]<=PETSC_NINFINITY) rarr[i]=-1.0;
-      TRY( VecRestoreArray(r,&rarr) );
-      TRY( VecRestoreArrayRead(lb,&larr) );
-    }
-    TRY( VecDot(llb,r,&dot) );
-    dot = PetscAbs(dot);
-    TRY( PetscViewerASCIIPrintf(v,"r = |lambda_lb'*(lb-x)|  = %.2e    r/||b|| = %.2e\n",dot,dot/normb) );
-
-    TRY( VecDestroy(&o) );
-    TRY( VecDestroy(&r) );
-  }
-
-  if (ub) {
-    TRY( VecDuplicate(x,&o) );
-    TRY( VecDuplicate(x,&r) );
-
-    /* rI = norm(max(x-ub,0)) */
-    TRY( VecDuplicate(x,&r) );
-    TRY( VecDuplicate(x,&o) );
-    TRY( VecSet(o,0.0) );                                   /* o = zeros(size(r)) */
-    TRY( VecWAXPY(r, -1.0, ub, x) );                        /* r = x - ub       */
-    TRY( VecPointwiseMax(r,r,o) );                          /* r = max(r,o)     */
-    TRY( VecNorm(r,NORM_2,&norm) );                         /* norm = norm(r)     */
-    TRY( PetscViewerASCIIPrintf(v,"r = ||max(x-ub,0)||      = %.2e    r/||b|| = %.2e\n",norm,norm/normb) );
-
-    /* lambda >= o  =>  examine min(lambda,o) */
-    TRY( VecSet(o,0.0) );                                   /* o = zeros(size(r)) */
-    TRY( VecPointwiseMin(r,lub,o) );
-    TRY( VecNorm(r,NORM_2,&norm) );                         /* norm = ||min(lambda,o)|| */
-    TRY( PetscViewerASCIIPrintf(v,"r = ||min(lambda_ub,0)|| = %.2e    r/||b|| = %.2e\n",norm,norm/normb) );
-
-    /* lambda'*(x-ub) = 0 */
-    TRY( VecCopy(ub,r) );
-    TRY( VecAYPX(r,-1.0,x) );
-    {
-      PetscInt i,n;
-      PetscScalar *rarr;
-      const PetscScalar *uarr;
-      TRY( VecGetLocalSize(r,&n) );
-      TRY( VecGetArray(r,&rarr) );
-      TRY( VecGetArrayRead(ub,&uarr) );
-      for (i=0; i<n; i++) if (uarr[i]>=PETSC_INFINITY) rarr[i]=1.0;
-      TRY( VecRestoreArray(r,&rarr) );
-      TRY( VecRestoreArrayRead(ub,&uarr) );
-    }
-    TRY( VecDot(lub,r,&dot) );
-    dot = PetscAbs(dot);
-    TRY( PetscViewerASCIIPrintf(v,"r = |lambda_ub'*(x-ub)|  = %.2e    r/||b|| = %.2e\n",dot,dot/normb) );
-
-    TRY( VecDestroy(&o) );
-    TRY( VecDestroy(&r) );
-  }
+  if (qp->qpc) TRY( QPCViewKKT(qp->qpc,x,normb,v) );
   PetscFunctionReturn(0);
 }
 

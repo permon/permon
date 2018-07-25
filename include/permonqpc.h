@@ -20,6 +20,7 @@ FLLOP_EXTERN PetscErrorCode QPCRegister(const char[],PetscErrorCode (*)(QPC));
 
 FLLOP_EXTERN PetscErrorCode QPCCreate(MPI_Comm comm,QPC *qpc);
 FLLOP_EXTERN PetscErrorCode QPCView(QPC qpc,PetscViewer v);
+FLLOP_EXTERN PetscErrorCode QPCViewKKT(QPC qpc, Vec x, PetscReal normb, PetscViewer v);
 FLLOP_EXTERN PetscErrorCode QPCDestroy(QPC *qpc);
 FLLOP_EXTERN PetscErrorCode QPCSetFromOptions(QPC qpc);
 FLLOP_EXTERN PetscErrorCode QPCSetUp(QPC qpc);
