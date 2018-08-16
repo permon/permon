@@ -78,15 +78,15 @@ int main(int argc,char **args)
   /* Set Dirichlet BC */
   idx[0] = 0; idx[1]=ndofs-1;
   if (!rank) { 
-    ierr = ISCreateGeneral(PETSC_COMM_WORLD,1,&idx,PETSC_COPY_VALUES,&dirichletIS);CHKERRQ(ierr);
+    ierr = ISCreateGeneral(PETSC_COMM_WORLD,1,idx,PETSC_COPY_VALUES,&dirichletIS);CHKERRQ(ierr);
     if (ns==1) {
       idx[1]=ndofs_l-1;
-      ierr = ISCreateGeneral(PETSC_COMM_WORLD,2,&idx,PETSC_COPY_VALUES,&dirichletIS);CHKERRQ(ierr);
+      ierr = ISCreateGeneral(PETSC_COMM_WORLD,2,idx,PETSC_COPY_VALUES,&dirichletIS);CHKERRQ(ierr);
     }
   } else if (rank == ns-1) {
     ierr = ISCreateGeneral(PETSC_COMM_WORLD,1,&idx[1],PETSC_COPY_VALUES,&dirichletIS);CHKERRQ(ierr);
   } else {
-    ierr = ISCreateGeneral(PETSC_COMM_WORLD,0,&idx,PETSC_COPY_VALUES,&dirichletIS);CHKERRQ(ierr);
+    ierr = ISCreateGeneral(PETSC_COMM_WORLD,0,idx,PETSC_COPY_VALUES,&dirichletIS);CHKERRQ(ierr);
   }
   ierr = PetscOptionsGetBool(NULL,NULL,"-dir_in_hess",&dirInHess,NULL);CHKERRQ(ierr); 
   ierr = KSPFETISetDirichlet(ksp,dirichletIS,FETI_GLOBAL_UNDECOMPOSED,!dirInHess);CHKERRQ(ierr);
