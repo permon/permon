@@ -711,7 +711,7 @@ PetscErrorCode MatCreateBlockDiag(MPI_Comm comm, Mat block, Mat *B_new) {
   TRY( VecDuplicate(data->yloc, &data->yloc1));
   TRY( VecDuplicate(data->xloc, &data->xloc1));
 
-  /* NOTE: Uncomment if MatSetValuesLocal is needed
+  /* TODO: test bs > 1 */
   {
     PetscInt *l2grarr,*l2gcarr,i;
     IS l2gris,l2gcis;
@@ -741,7 +741,6 @@ PetscErrorCode MatCreateBlockDiag(MPI_Comm comm, Mat block, Mat *B_new) {
     TRY( ISDestroy(&l2gcis) );
     TRY( ISLocalToGlobalMappingDestroy(&l2gc) );
   }
-  */
 
   TRY( MatInheritSymmetry(block,B) );
   *B_new = B;
