@@ -113,3 +113,15 @@ int main(int argc,char **args)
   return ierr;
 }
 
+/*TEST
+  testset:
+    nsize: 4
+    filter: grep -e CONVERGED -e "r ="
+    args: -ne 7 -qp_chain_view_kkt -qpt_matis_to_diag_norm
+    test:
+      suffix: 1
+    test:
+      suffix: 2
+      args: -dir_in_hess
+TEST*/
+
