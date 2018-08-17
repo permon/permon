@@ -549,35 +549,35 @@ QPCGrads - compute free and chopped gradient
 
 Parameters:
 + qpc - QPC instance
-. g - gradient
-. phi - free gradient
-- beta - chopped gradient
+. g  - gradient
+. gf - free gradient
+- gc - chopped gradient
 @*/
-PetscErrorCode QPCGrads(QPC qpc, Vec x, Vec g, Vec phi, Vec beta)
+PetscErrorCode QPCGrads(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
 {
-  Vec g_sub, phi_sub, beta_sub, x_sub;
+  Vec g_sub, gf_sub, gc_sub, x_sub;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
   PetscValidHeaderSpecific(x,VEC_CLASSID,2);
   PetscValidHeaderSpecific(g,VEC_CLASSID,3);
-  PetscValidHeaderSpecific(phi,VEC_CLASSID,4);
-  PetscValidHeaderSpecific(beta,VEC_CLASSID,5);
+  PetscValidHeaderSpecific(gf,VEC_CLASSID,4);
+  PetscValidHeaderSpecific(gc,VEC_CLASSID,5);
 
   /* scatter the gradients */
   TRY(QPCGetSubvector( qpc, x, &x_sub));
   TRY(QPCGetSubvector( qpc, g, &g_sub));
-  TRY(QPCGetSubvector( qpc, phi, &phi_sub));
-  TRY(QPCGetSubvector( qpc, beta, &beta_sub));
+  TRY(QPCGetSubvector( qpc, gf, &gf_sub));
+  TRY(QPCGetSubvector( qpc, gc, &gc_sub));
 
   if (!qpc->ops->grads) SETERRQ1(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
-  TRY((*qpc->ops->grads)(qpc, x_sub, g_sub, phi_sub, beta_sub));
+  TRY((*qpc->ops->grads)(qpc, x_sub, g_sub, gf_sub, gc_sub));
 
   /* restore the gradients */
   TRY(QPCRestoreSubvector( qpc, x, &x_sub));
   TRY(QPCRestoreSubvector( qpc, g, &g_sub));
-  TRY(QPCRestoreSubvector( qpc, phi, &phi_sub));
-  TRY(QPCRestoreSubvector( qpc, beta, &beta_sub));
+  TRY(QPCRestoreSubvector( qpc, gf, &gf_sub));
+  TRY(QPCRestoreSubvector( qpc, gc, &gc_sub));
   PetscFunctionReturn(0);
 }
 

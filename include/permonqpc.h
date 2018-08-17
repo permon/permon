@@ -44,7 +44,7 @@ FLLOP_EXTERN PetscErrorCode QPCIsSubsymmetric(QPC,PetscBool *subsym);
 FLLOP_EXTERN PetscErrorCode QPCGetNumberOfConstraints(QPC,PetscInt *num);
 
 FLLOP_EXTERN PetscErrorCode QPCProject(QPC,Vec x,Vec Px);
-FLLOP_EXTERN PetscErrorCode QPCGrads(QPC,Vec x,Vec g,Vec phi,Vec beta);
+FLLOP_EXTERN PetscErrorCode QPCGrads(QPC,Vec x,Vec g,Vec gf,Vec gc);
 FLLOP_EXTERN PetscErrorCode QPCFeas(QPC,Vec x,Vec d,PetscScalar *alpha);
 FLLOP_EXTERN PetscErrorCode QPCOuterNormal(QPC,PetscScalar *n_a,PetscScalar *xconstr_a,PetscInt local_idx);
 

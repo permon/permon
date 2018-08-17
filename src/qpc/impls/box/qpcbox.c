@@ -20,12 +20,12 @@ PetscErrorCode QPCSetUp_Box(QPC qpc)
 
 #undef __FUNCT__
 #define __FUNCT__ "QPCGrads_Box"
-static PetscErrorCode QPCGrads_Box(QPC qpc, Vec x, Vec g, Vec phi, Vec beta)
+static PetscErrorCode QPCGrads_Box(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
 {
   Vec                   lb,ub;  
   QPC_Box               *ctx = (QPC_Box*)qpc->data;
   
-  PetscScalar           *x_a, *lb_a, *ub_a, *g_a, *phi_a, *beta_a;
+  PetscScalar           *x_a, *lb_a, *ub_a, *g_a, *gf_a, *gc_a;
   PetscInt              n_local, i;
   
   PetscFunctionBegin;
@@ -39,28 +39,28 @@ static PetscErrorCode QPCGrads_Box(QPC qpc, Vec x, Vec g, Vec phi, Vec beta)
   TRY( VecGetArray(lb, &lb_a) );
   TRY( VecGetArray(ub, &ub_a) );
   TRY( VecGetArray(g, &g_a) );
-  TRY( VecGetArray(phi, &phi_a) );
-  TRY( VecGetArray(beta, &beta_a) );
+  TRY( VecGetArray(gf, &gf_a) );
+  TRY( VecGetArray(gc, &gc_a) );
 
   /* go through the local array and fill the gradients */
   for (i = 0; i < n_local; i++){
       if(x_a[i] > lb_a[i] && x_a[i] < ub_a[i]){
           /* index of this component is in FREE SET */
-          phi_a[i] = g_a[i];
-          beta_a[i] = 0.0;
+          gf_a[i] = g_a[i];
+          gc_a[i] = 0.0;
       } else {
           /* index of this component is in ACTIVE SET */
-          phi_a[i] = 0.0;
+          gf_a[i] = 0.0;
 
           /* which one is active? (lower/upper) */
           if(x_a[i] <= lb_a[i]){
                /* active lower bound */
-               beta_a[i]= PetscMin(g_a[i],0.0);
+               gc_a[i]= PetscMin(g_a[i],0.0);
           }  
 
           if(x_a[i] >= ub_a[i]){
                /* active upper bound */
-               beta_a[i]=PetscMax(g_a[i],0.0);
+               gc_a[i]=PetscMax(g_a[i],0.0);
           }  
       }
       
@@ -71,8 +71,8 @@ static PetscErrorCode QPCGrads_Box(QPC qpc, Vec x, Vec g, Vec phi, Vec beta)
   TRY( VecRestoreArray(lb, &lb_a) );
   TRY( VecRestoreArray(ub, &ub_a) );
   TRY( VecRestoreArray(g, &g_a) );
-  TRY( VecRestoreArray(phi, &phi_a) );
-  TRY( VecRestoreArray(beta, &beta_a) );
+  TRY( VecRestoreArray(gf, &gf_a) );
+  TRY( VecRestoreArray(gc, &gc_a) );
   
   
   PetscFunctionReturn(0);
