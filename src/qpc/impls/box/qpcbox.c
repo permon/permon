@@ -483,6 +483,19 @@ PetscErrorCode QPCBoxSet(QPC qpc,Vec lb, Vec ub)
   if (lb) PetscValidHeaderSpecific(lb,VEC_CLASSID,2);
   if (ub) PetscValidHeaderSpecific(ub,VEC_CLASSID,3);
   if (!lb && !ub) SETERRQ(PetscObjectComm((PetscObject)qpc),PETSC_ERR_ARG_NULL,"lb and ub cannot be both NULL");
+#if defined(PETSC_USE_DEBUG)
+  if (lb && ub) {
+    Vec diff;
+    PetscReal min;
+
+    TRY( VecDuplicate(lb,&diff) );
+    TRY( VecWAXPY(diff,-1.0,lb,ub) );
+    TRY( VecMin(diff,NULL,&min) );
+    /* TODO verify that algorithms work with min = 0 */
+    if (min < 0.0) SETERRQ(PetscObjectComm((PetscObject)qpc),PETSC_ERR_ARG_INCOMP,"lb components must be smaller than ub components");
+    TRY( VecDestroy(&diff) );
+  }
+#endif
   
   TRY( PetscUseMethod(qpc,"QPCBoxSet_Box_C",(QPC,Vec,Vec),(qpc,lb,ub)) );
   PetscFunctionReturn(0);
