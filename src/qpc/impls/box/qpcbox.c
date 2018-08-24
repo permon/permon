@@ -6,15 +6,15 @@ PetscErrorCode QPCSetUp_Box(QPC qpc)
 {
   QPC_Box         *ctx = (QPC_Box*)qpc->data;
   Vec                   lb;
-  
+
   PetscFunctionBegin;
 
-  /* prepare lambdawork vector based on the layout of lb */  
+  /* prepare lambdawork vector based on the layout of lb */
   lb = ctx->lb;
   TRY(VecDuplicate(lb,&(qpc->lambdawork)));
-  
+
   // TODO: verify layout of ub somewhere in setup or in create function
-  
+
   PetscFunctionReturn(0);
 }
 
@@ -22,59 +22,46 @@ PetscErrorCode QPCSetUp_Box(QPC qpc)
 #define __FUNCT__ "QPCGrads_Box"
 static PetscErrorCode QPCGrads_Box(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
 {
-  Vec                   lb,ub;  
+  Vec                   lb,ub;
   QPC_Box               *ctx = (QPC_Box*)qpc->data;
-  
+
   PetscScalar           *x_a, *lb_a, *ub_a, *g_a, *gf_a, *gc_a;
   PetscInt              n_local, i;
-  
+
   PetscFunctionBegin;
   lb = ctx->lb;
   ub = ctx->ub;
-  
-  /* get local arrays */
   TRY( VecGetLocalSize(x,&n_local) );
-
   TRY( VecGetArray(x, &x_a) );
-  TRY( VecGetArray(lb, &lb_a) );
-  TRY( VecGetArray(ub, &ub_a) );
+  if (lb) TRY( VecGetArray(lb, &lb_a) );
+  if (ub) TRY( VecGetArray(ub, &ub_a) );
   TRY( VecGetArray(g, &g_a) );
   TRY( VecGetArray(gf, &gf_a) );
   TRY( VecGetArray(gc, &gc_a) );
 
-  /* go through the local array and fill the gradients */
+  /* TODO create free/active IS? */
   for (i = 0; i < n_local; i++){
-      if(x_a[i] > lb_a[i] && x_a[i] < ub_a[i]){
-          /* index of this component is in FREE SET */
-          gf_a[i] = g_a[i];
-          gc_a[i] = 0.0;
-      } else {
-          /* index of this component is in ACTIVE SET */
-          gf_a[i] = 0.0;
-
-          /* which one is active? (lower/upper) */
-          if(x_a[i] <= lb_a[i]){
-               /* active lower bound */
-               gc_a[i]= PetscMin(g_a[i],0.0);
-          }  
-
-          if(x_a[i] >= ub_a[i]){
-               /* active upper bound */
-               gc_a[i]=PetscMax(g_a[i],0.0);
-          }  
-      }
-      
+    if (lb && x_a[i] <= lb_a[i]) {
+      /* active lower bound */
+      gf_a[i] = 0.0;
+      gc_a[i]= PetscMin(g_a[i],0.0);
+    } else if (ub && x_a[i] >= ub_a[i]) {
+      /* active upper bound */
+      gf_a[i] = 0.0;
+      gc_a[i]= PetscMax(g_a[i],0.0);
+    } else {
+      /* index of this component is in FREE SET */
+      gf_a[i] = g_a[i];
+      gc_a[i] = 0.0;
+    }
   }
-  
-  /* restore local arrays */
+
   TRY( VecRestoreArray(x, &x_a) );
-  TRY( VecRestoreArray(lb, &lb_a) );
-  TRY( VecRestoreArray(ub, &ub_a) );
+  if (lb) TRY( VecRestoreArray(lb, &lb_a) );
+  if (ub) TRY( VecRestoreArray(ub, &ub_a) );
   TRY( VecRestoreArray(g, &g_a) );
   TRY( VecRestoreArray(gf, &gf_a) );
   TRY( VecRestoreArray(gc, &gc_a) );
-  
-  
   PetscFunctionReturn(0);
 }
 
@@ -82,57 +69,49 @@ static PetscErrorCode QPCGrads_Box(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
 #define __FUNCT__ "QPCFeas_Box"
 static PetscErrorCode QPCFeas_Box(QPC qpc,Vec x, Vec d, PetscScalar *alpha)
 {
-  Vec                   lb,ub;  
+  Vec                   lb,ub;
   QPC_Box               *ctx = (QPC_Box*)qpc->data;
   PetscScalar           alpha_temp, alpha_i;
-  
+
   PetscScalar           *x_a, *d_a, *lb_a, *ub_a;
   PetscInt              n_local, i;
-  
+
   PetscFunctionBegin;
   lb = ctx->lb;
   ub = ctx->ub;
 
   alpha_temp = PETSC_INFINITY;
-  
-  /* get local arrays */
+
   TRY( VecGetLocalSize(x,&n_local) );
-  
   TRY( VecGetArray(x,&x_a) );
   TRY( VecGetArray(d,&d_a) );
-  TRY( VecGetArray(lb,&lb_a) );
-  TRY( VecGetArray(ub,&ub_a) );
+  if (lb) TRY( VecGetArray(lb,&lb_a) );
+  if (ub) TRY( VecGetArray(ub,&ub_a) );
 
   for(i=0;i < n_local;i++){
-      /* intersection of two lines */
-
-      if(d_a[i] > 0 && lb_a[i] > PETSC_NINFINITY){ /* only for non-zero direction = free gradient */
-        alpha_i = (x_a[i]-lb_a[i])/d_a[i];
-        
-        if (alpha_i < alpha_temp){
-            alpha_temp = alpha_i;
-        }            
+    if(d_a[i] > 0 && lb && lb_a[i] > PETSC_NINFINITY) {
+      alpha_i = x_a[i]-lb_a[i];
+      alpha_i = alpha_i/d_a[i];
+      if (alpha_i < alpha_temp){
+          alpha_temp = alpha_i;
       }
+    }
 
-      if(d_a[i] < 0 && ub_a[i] < PETSC_INFINITY){ /* only for non-zero direction = free gradient */
-        alpha_i = (x_a[i]-ub_a[i])/d_a[i];
-        
-        if (alpha_i < alpha_temp){
-            alpha_temp = alpha_i;
-        }            
+    if(d_a[i] < 0 && ub && ub_a[i] < PETSC_INFINITY) {
+      alpha_i = (x_a[i]-ub_a[i]);
+      alpha_i = alpha_i/d_a[i];
+
+      if (alpha_i < alpha_temp){
+          alpha_temp = alpha_i;
       }
-
+    }
   }
-  
-  /* restore arrays */
+  *alpha = alpha_temp;
+
   TRY( VecRestoreArray(x,&x_a) );
   TRY( VecRestoreArray(d,&d_a) );
-  TRY( VecRestoreArray(lb,&lb_a) );
-  TRY( VecRestoreArray(ub,&ub_a) );
-
-  /* the smallest feasible stepsize */
-  *alpha = alpha_temp;
-  
+  if (lb) TRY( VecRestoreArray(lb,&lb_a) );
+  if (ub) TRY( VecRestoreArray(ub,&ub_a) );
   PetscFunctionReturn(0);
 }
 
@@ -219,7 +198,7 @@ PetscErrorCode QPCGetNumberOfConstraints_Box(QPC qpc, PetscInt *num)
 {
   QPC_Box         *ctx = (QPC_Box*)qpc->data;
   PetscInt          size,bs;
-  
+
   PetscFunctionBegin;
 
   if(qpc->is){
@@ -241,34 +220,39 @@ PetscErrorCode QPCGetNumberOfConstraints_Box(QPC qpc, PetscInt *num)
 PetscErrorCode QPCGetConstraintFunction_Box(QPC qpc, Vec x_sub, Vec *hx_out)
 {
   QPC_Box               *ctx = (QPC_Box*)qpc->data;
+  Vec                   lb,ub;
   PetscScalar           *lb_a, *ub_a, *x_a, *hx_a; /* local arrays */
   PetscInt              m; /* local size */
   PetscInt              i; /* iterator */
-  
-  PetscFunctionBegin;
 
-  /* x is a local scattered vector, hx is a vector prepared for function values */
-  /* hx_i = abs(x - (lb+ub)/2) - (ub-lb)/2, i = 0,...,m_loc-1 */
-  /* (the distance between x and the center of interval is less or equal then the half of the interval) */
-  
-  /* get local arrays */
+  PetscFunctionBegin;
+  lb = ctx->lb;
+  ub = ctx->ub;
   TRY( VecGetLocalSize(qpc->lambdawork,&m) );
   TRY( VecGetArray(x_sub,&x_a) );
   TRY( VecGetArray(qpc->lambdawork,&hx_a) );
-  TRY( VecGetArray(ctx->lb,&lb_a));
-  TRY( VecGetArray(ctx->ub,&ub_a));
-  
+  if (lb) TRY( VecGetArray(lb,&lb_a));
+  if (ub) TRY( VecGetArray(ub,&ub_a));
+
   for(i = 0; i< m; i++){
       // TODO: verify the access to arrays, with correct layout, it should be fine..
-      hx_a[i] = PetscAbsScalar(x_a[i] - (ub_a[i] + lb_a[i])/2) - (ub_a[i] - lb_a[i])/2;
+      if (lb) {
+        if (ub) {
+          hx_a[i] = PetscAbsScalar(x_a[i] - (ub_a[i] + lb_a[i])/2) - (ub_a[i] - lb_a[i])/2;
+        } else {
+          hx_a[i] = lb_a[i] - x_a[i];
+        }
+      } else {
+        hx_a[i] = x_a[i] - ub_a[i];
+      }
   }
 
   /* restore local arrays */
   TRY( VecRestoreArray(x_sub, &x_a) );
   TRY( VecRestoreArray(qpc->lambdawork,&hx_a) );
-  TRY( VecRestoreArray(ctx->lb,&lb_a) );
-  TRY( VecRestoreArray(ctx->ub,&ub_a) );
-  
+  if (lb) TRY( VecRestoreArray(lb,&lb_a) );
+  if (ub) TRY( VecRestoreArray(ub,&ub_a) );
+
   *hx_out = qpc->lambdawork;
   PetscFunctionReturn(0);
 }
@@ -278,33 +262,17 @@ PetscErrorCode QPCGetConstraintFunction_Box(QPC qpc, Vec x_sub, Vec *hx_out)
 PetscErrorCode QPCProject_Box(QPC qpc, Vec x, Vec Px)
 {
   QPC_Box         *ctx = (QPC_Box*)qpc->data;
-  PetscScalar           *lb_a, *ub_a, *x_a, *Px_a; /* local arrays */
-  PetscInt              n; /* local size of x */
-  PetscInt              i; /* iterator */
-  
+  Vec             lb,ub;
+
   PetscFunctionBegin;
-  /* the projection to the box */
-  /* Px = max(lb, min(ub,x)) */
-  
-  /* get local arrays */
-  TRY( VecGetLocalSize(x,&n) );
-  TRY( VecGetArray(x,&x_a) );
-  TRY( VecGetArray(Px,&Px_a) );
-  TRY( VecGetArray(ctx->lb,&lb_a));
-  TRY( VecGetArray(ctx->ub,&ub_a));
-  
-  for(i = 0; i< n; i++){
-      // TODO: verify the access to arrays, with correct layout, it should be fine..
-
-      Px_a[i] = PetscMax(lb_a[i],PetscMin(ub_a[i], x_a[i]));
+  lb = ctx->lb;
+  ub = ctx->ub;
+  if (lb) {
+    TRY( VecPointwiseMax(Px,x,lb) );
+    if (ub) TRY( VecPointwiseMin(Px,Px,ub) );
+  } else {
+    TRY( VecPointwiseMin(Px,x,ub) );
   }
-
-  /* restore local arrays */
-  TRY( VecRestoreArray(x, &x_a) );
-  TRY( VecRestoreArray(Px,&Px_a) );
-  TRY( VecRestoreArray(ctx->lb,&lb_a) );
-  TRY( VecRestoreArray(ctx->ub,&ub_a) );
-
   PetscFunctionReturn(0);
 }
 
@@ -313,19 +281,22 @@ PetscErrorCode QPCProject_Box(QPC qpc, Vec x, Vec Px)
 PetscErrorCode QPCView_Box(QPC qpc, PetscViewer viewer)
 {
   QPC_Box         *ctx = (QPC_Box*)qpc->data;
-    
+
   PetscFunctionBegin;
   /* print lb */
-  TRY( PetscViewerASCIIPrintf(viewer, "lb:\n") );    
-  TRY( PetscViewerASCIIPushTab(viewer) );
-  TRY( VecView(ctx->lb,viewer) );    
-  TRY( PetscViewerASCIIPopTab(viewer) );
-
+  if (ctx->lb) {
+    TRY( PetscViewerASCIIPrintf(viewer, "lb:\n") );
+    TRY( PetscViewerASCIIPushTab(viewer) );
+    TRY( VecView(ctx->lb,viewer) );
+    TRY( PetscViewerASCIIPopTab(viewer) );
+  }
   /* print ub */
-  TRY( PetscViewerASCIIPrintf(viewer, "ub:\n") );    
-  TRY( PetscViewerASCIIPushTab(viewer) );
-  TRY( VecView(ctx->ub,viewer) );    
-  TRY( PetscViewerASCIIPopTab(viewer) );
+  if (ctx->ub) {
+    TRY( PetscViewerASCIIPrintf(viewer, "ub:\n") );
+    TRY( PetscViewerASCIIPushTab(viewer) );
+    TRY( VecView(ctx->ub,viewer) );
+    TRY( PetscViewerASCIIPopTab(viewer) );
+  }
   PetscFunctionReturn(0);
 }
 
@@ -429,10 +400,16 @@ PetscErrorCode QPCViewKKT_Box(QPC qpc, Vec x, PetscReal normb, PetscViewer v)
 PetscErrorCode QPCDestroy_Box(QPC qpc)
 {
   QPC_Box      *ctx = (QPC_Box*)qpc->data;
-  
+
   PetscFunctionBegin;
-  TRY( VecDestroy(&ctx->lb) );
-  TRY( VecDestroy(&ctx->ub) );
+  if (ctx->lb) {
+    TRY( VecDestroy(&ctx->lb) );
+    TRY( VecDestroy(&ctx->llb) );
+  }
+  if (ctx->ub) {
+    TRY( VecDestroy(&ctx->ub) );
+    TRY( VecDestroy(&ctx->lub) );
+  }
   PetscFunctionReturn(0);
 }
 
@@ -445,7 +422,7 @@ FLLOP_EXTERN PetscErrorCode QPCCreate_Box(QPC qpc)
   PetscFunctionBegin;
   TRY( PetscNewLog(qpc,&ctx) );
   qpc->data = (void*)ctx;
-  
+
   /* set general QPC functions already implemented for this QPC type */
   qpc->ops->destroy                     = QPCDestroy_Box;
   qpc->ops->setup                       = QPCSetUp_Box;
@@ -459,7 +436,7 @@ FLLOP_EXTERN PetscErrorCode QPCCreate_Box(QPC qpc)
   qpc->ops->issubsymmetric              = QPCIsSubsymmetric_Box;
   qpc->ops->feas                        = QPCFeas_Box;
   qpc->ops->grads                       = QPCGrads_Box;
-  
+
   /* set type-specific functions */
   TRY( PetscObjectComposeFunction((PetscObject)qpc,"QPCBoxSet_Box_C",QPCBoxSet_Box) );
   TRY( PetscObjectComposeFunction((PetscObject)qpc,"QPCBoxGet_Box_C",QPCBoxGet_Box) );
@@ -496,7 +473,7 @@ PetscErrorCode QPCBoxSet(QPC qpc,Vec lb, Vec ub)
     TRY( VecDestroy(&diff) );
   }
 #endif
-  
+
   TRY( PetscUseMethod(qpc,"QPCBoxSet_Box_C",(QPC,Vec,Vec),(qpc,lb,ub)) );
   PetscFunctionReturn(0);
 }
@@ -533,17 +510,17 @@ PetscErrorCode QPCBoxGetMultipliers(QPC qpc,Vec *llb,Vec *lub)
 QPCCreateBox - create QPC Box instance; set the type of QPC to Box, set vector of variables, set index set of constrained components, set the value of lower and upper bounds
 
 Parameters:
-+ comm - MPI comm 
++ comm - MPI comm
 . x - vector of variables
 . is - index set of constrained variables, if NULL then all compoments are constrained
 . lb - the vector with lower bounds values
 . ub - the vector with upper bounds values
-- qpc_out - pointer to QPC  
+- qpc_out - pointer to QPC
 @*/
 PetscErrorCode QPCCreateBox(MPI_Comm comm,IS is,Vec lb,Vec ub,QPC *qpc_out)
 {
   QPC qpc;
-  
+
   PetscFunctionBegin;
 
   /* verify input data */
@@ -551,7 +528,7 @@ PetscErrorCode QPCCreateBox(MPI_Comm comm,IS is,Vec lb,Vec ub,QPC *qpc_out)
   if (lb) PetscValidHeaderSpecific(lb,VEC_CLASSID,3);
   if (ub) PetscValidHeaderSpecific(ub,VEC_CLASSID,4);
   PetscValidPointer(qpc_out,5);
-  
+
   TRY( QPCCreate(comm,&qpc) );
   TRY( QPCSetIS(qpc,is) );
   TRY( QPCSetType(qpc,QPCBOX) );
