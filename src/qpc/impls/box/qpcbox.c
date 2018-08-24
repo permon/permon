@@ -66,6 +66,44 @@ static PetscErrorCode QPCGrads_Box(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
 }
 
 #undef __FUNCT__
+#define __FUNCT__ "QPCGradReduced_Box"
+static PetscErrorCode QPCGradReduced_Box(QPC qpc, Vec x, Vec gf, PetscReal alpha, Vec gr)
+{
+  Vec                   lb,ub;
+  QPC_Box               *ctx = (QPC_Box*)qpc->data;
+
+  PetscScalar           *x_a, *lb_a, *ub_a, *gf_a, *gr_a;
+  PetscInt              n_local, i;
+
+  PetscFunctionBegin;
+  lb = ctx->lb;
+  ub = ctx->ub;
+  TRY( VecGetLocalSize(x,&n_local) );
+  TRY( VecGetArray(x, &x_a) );
+  if (lb) TRY( VecGetArray(lb, &lb_a) );
+  if (ub) TRY( VecGetArray(ub, &ub_a) );
+  TRY( VecGetArray(gf, &gf_a) );
+  TRY( VecGetArray(gr, &gr_a) );
+
+  for (i = 0; i < n_local; i++){
+    if (lb && gf_a[i] > 0.0) {
+      gr_a[i] = PetscMin(gf_a[i],(x_a[i]-lb_a[i])/alpha);
+    } else if (ub && gf_a[i] < 0.0) {
+      gr_a[i] = PetscMax(gf_a[i],(x_a[i]-ub_a[i])/alpha);
+    } else {
+      gr_a[i] = gf_a[i];
+    }
+  }
+
+  TRY( VecRestoreArray(x, &x_a) );
+  if (lb) TRY( VecRestoreArray(lb, &lb_a) );
+  if (ub) TRY( VecRestoreArray(ub, &ub_a) );
+  TRY( VecRestoreArray(gf, &gf_a) );
+  TRY( VecRestoreArray(gr, &gr_a) );
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ "QPCFeas_Box"
 static PetscErrorCode QPCFeas_Box(QPC qpc,Vec x, Vec d, PetscScalar *alpha)
 {
@@ -436,6 +474,7 @@ FLLOP_EXTERN PetscErrorCode QPCCreate_Box(QPC qpc)
   qpc->ops->issubsymmetric              = QPCIsSubsymmetric_Box;
   qpc->ops->feas                        = QPCFeas_Box;
   qpc->ops->grads                       = QPCGrads_Box;
+  qpc->ops->gradreduced                 = QPCGradReduced_Box;
 
   /* set type-specific functions */
   TRY( PetscObjectComposeFunction((PetscObject)qpc,"QPCBoxSet_Box_C",QPCBoxSet_Box) );

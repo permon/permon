@@ -21,6 +21,7 @@ struct _QPCOps {
   PetscErrorCode (*project)(QPC,Vec,Vec);
   PetscErrorCode (*feas)(QPC,Vec,Vec,PetscScalar*);
   PetscErrorCode (*grads)(QPC,Vec,Vec,Vec,Vec);
+  PetscErrorCode (*gradreduced)(QPC,Vec,Vec,PetscReal,Vec);
 };
 
 struct _p_QPC {
