@@ -50,7 +50,6 @@ FLLOP_EXTERN PetscErrorCode QPComputeObjective(QP qp, Vec x, PetscReal *f);
 FLLOP_EXTERN PetscErrorCode QPComputeObjectiveGradient(QP qp, Vec x, Vec g);
 FLLOP_EXTERN PetscErrorCode QPComputeObjectiveFromGradient(QP qp, Vec x, Vec g, PetscReal *f);
 FLLOP_EXTERN PetscErrorCode QPComputeObjectiveAndGradient(QP qp, Vec x, Vec g, PetscReal *f);
-FLLOP_EXTERN PetscErrorCode QPRemoveInactiveBounds(QP qp);
 
 FLLOP_EXTERN PetscErrorCode QPSetInitialVector(QP qp,Vec x);
 FLLOP_EXTERN PetscErrorCode QPSetOperator(QP qp,Mat A);

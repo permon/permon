@@ -910,36 +910,6 @@ PetscErrorCode QPComputeMissingBoxMultipliers(QP qp)
   PetscFunctionReturn(0);
 }
 
-//TODO remove once MPGP fully supports ub=NULL
-#undef __FUNCT__
-#define __FUNCT__ "QPRemoveInactiveBounds"
-PetscErrorCode QPRemoveInactiveBounds(QP qp)
-{
-  Vec       lb,ub;
-  PetscReal extrem;
-
-  PetscFunctionBegin;
-  TRY( QPGetBox(qp,NULL,&lb,&ub) );
-  if (ub) {
-    TRY( VecMin(ub,NULL,&extrem) );
-    TRY( PetscInfo1(qp, "min(ub) = %0.2e\n", extrem) );
-    if (extrem >= PETSC_INFINITY) {
-      TRY( PetscInfo1(qp, "inactive upper bound constraint detected\n", extrem) );
-      ub = NULL;
-    }
-  }
-  if (lb) {
-    TRY( VecMax(lb,NULL,&extrem) );
-    TRY( PetscInfo1(qp, "max(lb) = %0.2e\n", extrem) );
-    if (extrem <= PETSC_NINFINITY) {
-      TRY( PetscInfo1(qp, "inactive lower bound constraint detected\n", extrem) );
-      lb = NULL;
-    }
-  }
-  TRY( QPSetBox(qp,NULL,lb,ub) );
-  PetscFunctionReturn(0);
-}
-
 #undef __FUNCT__
 #define __FUNCT__ "QPComputeObjective"
 /*@
