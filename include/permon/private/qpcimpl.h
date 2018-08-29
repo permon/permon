@@ -28,6 +28,7 @@ struct _p_QPC {
   PETSCHEADER(struct _QPCOps);
   Vec lambdawork; /* working vector with same layout as blocks of IS  */
   IS is; /* index set with indexes corresponding to each constraint */
+  PetscReal astol; /* active set tolerance - used e.g. in grad splitting */
   void *data; /* holder for misc stuff associated with a particular constraints type */
   PetscBool setupcalled; /* current state */
 };

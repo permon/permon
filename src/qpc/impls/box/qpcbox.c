@@ -41,11 +41,12 @@ static PetscErrorCode QPCGrads_Box(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
 
   /* TODO create free/active IS? */
   for (i = 0; i < n_local; i++){
-    if (lb && x_a[i] <= lb_a[i]) {
+    if (lb && PetscAbsScalar(x_a[i] - lb_a[i]) <= qpc->astol) {
       /* active lower bound */
       gf_a[i] = 0.0;
       gc_a[i]= PetscMin(g_a[i],0.0);
-    } else if (ub && x_a[i] >= ub_a[i]) {
+    //} else if (ub && x_a[i] >= ub_a[i]) {
+    } else if (ub && PetscAbsScalar(x_a[i] -  ub_a[i]) <= qpc->astol) {
       /* active upper bound */
       gf_a[i] = 0.0;
       gc_a[i]= PetscMax(g_a[i],0.0);

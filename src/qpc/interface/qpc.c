@@ -25,6 +25,8 @@ PetscErrorCode QPCCreate(MPI_Comm comm,QPC *qpc_new)
 
   qpc->lambdawork   = NULL;
   qpc->is           = NULL;
+  /* TODO QPCSetFromOptions */
+  qpc->astol        = 10*PETSC_MACHINE_EPSILON;
   qpc->setupcalled  = PETSC_FALSE; /* the setup was not called yet */
 
   *qpc_new = qpc;
