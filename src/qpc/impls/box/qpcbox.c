@@ -53,7 +53,6 @@ static PetscErrorCode QPCGrads_Box(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
     } else {
       /* index of this component is in FREE SET */
       gf_a[i] = g_a[i];
-      gc_a[i] = 0.0;
     }
   }
 
@@ -91,8 +90,6 @@ static PetscErrorCode QPCGradReduced_Box(QPC qpc, Vec x, Vec gf, PetscReal alpha
       gr_a[i] = PetscMin(gf_a[i],(x_a[i]-lb_a[i])/alpha);
     } else if (ub && gf_a[i] < 0.0) {
       gr_a[i] = PetscMax(gf_a[i],(x_a[i]-ub_a[i])/alpha);
-    } else {
-      gr_a[i] = gf_a[i];
     }
   }
 

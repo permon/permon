@@ -566,6 +566,10 @@ PetscErrorCode QPCGrads(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
   PetscValidHeaderSpecific(gf,VEC_CLASSID,4);
   PetscValidHeaderSpecific(gc,VEC_CLASSID,5);
 
+  /* initial values */
+  TRY( VecCopy(g,gf) );
+  TRY( VecSet(gc,0.0) );
+
   /* scatter the gradients */
   TRY(QPCGetSubvector( qpc, x, &x_sub));
   TRY(QPCGetSubvector( qpc, g, &g_sub));
@@ -611,6 +615,9 @@ PetscErrorCode QPCGradReduced(QPC qpc, Vec x, Vec gf, PetscReal alpha, Vec gr)
   PetscValidHeaderSpecific(gf,VEC_CLASSID,3);
   PetscValidLogicalCollectiveScalar(x,alpha,4);
   PetscValidHeaderSpecific(gr,VEC_CLASSID,5);
+
+  /* initial values */
+  TRY( VecCopy(gf,gr) );
 
   /* scatter the gradients */
   TRY(QPCGetSubvector( qpc, x, &x_sub));
