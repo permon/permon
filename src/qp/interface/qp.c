@@ -723,16 +723,24 @@ PetscErrorCode QPComputeLagrangianGradient(QP qp, Vec x, Vec r, char *kkt_name_[
   {
     Vec lb,ub;
     Vec llb,lub;
+    IS  is;
     QPC qpc;
 
-    TRY( QPGetBox(qp,NULL,&lb,&ub) );
+    TRY( QPGetBox(qp,&is,&lb,&ub) );
     TRY( QPGetQPC(qp,&qpc) );
     if (qpc) TRY( QPCBoxGetMultipliers(qpc,&llb,&lub) );
     if (lb) {
-      TRY( VecAXPY(r,-1.0,llb) );
-    }
-    if (ub) {
-      TRY( VecAXPY(r,1.0,lub) );
+      if (is) {
+        TRY( VecISAXPY(r,is,-1.0,llb) );
+      } else {
+        TRY( VecAXPY(r,-1.0,llb) );
+      }
+    } if (ub) {
+      if (is) {
+        TRY( VecISAXPY(r,is,1.0,lub) );
+      } else {
+        TRY( VecAXPY(r,1.0,lub) );
+      }
     }
   }
 
@@ -859,6 +867,7 @@ PetscErrorCode QPComputeMissingBoxMultipliers(QP qp)
 {
   Vec lb,ub;
   Vec llb,lub;
+  IS  is;
   Vec r = qp->xwork;
   PetscBool flg=PETSC_TRUE,flg2=PETSC_TRUE;
   QP qp_E;
@@ -868,7 +877,7 @@ PetscErrorCode QPComputeMissingBoxMultipliers(QP qp)
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
   TRY( QPSetUp(qp) );
 
-  TRY( QPGetBox(qp,NULL,&lb,&ub) );
+  TRY( QPGetBox(qp,&is,&lb,&ub) );
   TRY( QPGetQPC(qp,&qpc) );
   if (qpc) TRY( QPCBoxGetMultipliers(qpc,&llb,&lub) );
 
@@ -890,16 +899,27 @@ PetscErrorCode QPComputeMissingBoxMultipliers(QP qp)
   TRY( QPDestroy(&qp_E) );
 
   if (lb) {
-    TRY( VecCopy(r,llb) );
+    if (is) {
+      TRY( VecISCopy(r,is,SCATTER_REVERSE,llb) );
+    } else {
+      TRY( VecCopy(r,llb) );
+    }
   }
   if (ub) {
-    TRY( VecCopy(r,lub) );
+    if (is) {
+      TRY( VecISCopy(r,is,SCATTER_REVERSE,lub) );
+    } else {
+      TRY( VecCopy(r,lub) );
+    }
     TRY( VecScale(lub,-1.0) );
   }
   if (lb && ub) {
-    TRY( VecZeroEntries(r) );
-    TRY( VecPointwiseMax(llb,llb,r) );
-    TRY( VecPointwiseMax(lub,lub,r) );
+    Vec lambdawork;
+    TRY( VecDuplicate(llb,&lambdawork) );
+    TRY( VecZeroEntries(lambdawork) );
+    TRY( VecPointwiseMax(llb,llb,lambdawork) );
+    TRY( VecPointwiseMax(lub,lub,lambdawork) );
+    TRY( VecDestroy(&lambdawork) );
   }
 
   {
