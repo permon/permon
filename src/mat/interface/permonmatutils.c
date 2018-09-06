@@ -726,9 +726,9 @@ PetscErrorCode MatInheritSymmetry(Mat A, Mat B)
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "MatGetRowNormalization2"
+#define __FUNCT__ "MatGetRowNormalization"
 /* not working because N->cmap->rend is 0 in MatGetDiagonal_Normal */
-PetscErrorCode MatGetRowNormalization2(Mat A, Vec *d_new)
+PetscErrorCode MatGetRowNormalization(Mat A, Vec *d_new)
 {
   Mat At,AAt;
   Vec d;
@@ -747,7 +747,7 @@ PetscErrorCode MatGetRowNormalization2(Mat A, Vec *d_new)
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "MatGetRowNormalization"
+#define __FUNCT__ "MatGetRowNormalization2"
 /*@
    MatGetRowNormalization - Get a vector d.
 
@@ -764,7 +764,7 @@ PetscErrorCode MatGetRowNormalization2(Mat A, Vec *d_new)
 
 .seealso: MatDiagonalScale()
 @*/
-PetscErrorCode MatGetRowNormalization(Mat A, Vec *d_new)
+PetscErrorCode MatGetRowNormalization2(Mat A, Vec *d_new)
 {
   Vec d;
   PetscInt i, ilo, ihi;
@@ -780,6 +780,7 @@ PetscErrorCode MatGetRowNormalization(Mat A, Vec *d_new)
   PetscCall(MatGetOwnershipRange(A, &ilo, &ihi));
 
   /* create vector rv of length equal to the maximum number of nonzeros per row */
+  printf("%d %d\n",ilo,ihi);
   for (i=ilo; i<ihi; i++) {
     PetscCall(MatGetRow(    A, i, &ncols, NULL, NULL));
     if (ncols > maxncols) maxncols = ncols;
