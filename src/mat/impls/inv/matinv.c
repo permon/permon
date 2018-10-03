@@ -20,8 +20,10 @@ static PetscErrorCode MatInvKSPSetOptionsPrefix_Inv(Mat imat)
 
   PetscFunctionBegin;
   TRY( MatGetOptionsPrefix(imat,&prefix) );
-  TRY( KSPSetOptionsPrefix(inv->innerksp,prefix) );
-  TRY( KSPAppendOptionsPrefix(inv->innerksp,"mat_inv_") );
+  if (inv->innerksp) {
+    TRY( KSPSetOptionsPrefix(inv->innerksp,prefix) );
+    TRY( KSPAppendOptionsPrefix(inv->innerksp,"mat_inv_") );
+  }
   PetscFunctionReturn(0);
 }
 
@@ -197,7 +199,7 @@ static PetscErrorCode MatInvGetRegularizedMat_Inv(Mat imat, Mat *A)
   PetscFunctionBegin;
   if (!inv->setupcalled) FLLOP_SETERRQ(PetscObjectComm((PetscObject)imat),PETSC_ERR_ARG_WRONGSTATE,"This function can be called only after MatInvSetUp");
   TRY( MatInvGetKSP(imat,&ksp) );
-  TRY( KSPGetOperators(ksp, A, NULL) );
+  if (ksp) TRY( KSPGetOperators(ksp, A, NULL) );
   PetscFunctionReturn(0);
 }
 
@@ -220,7 +222,7 @@ static PetscErrorCode MatInvGetPC_Inv(Mat imat, PC *pc)
 
   PetscFunctionBegin;
   TRY( MatInvGetKSP(imat, &ksp) );
-  TRY( KSPGetPC(ksp, pc) );
+  if (ksp) TRY( KSPGetPC(ksp, pc) );
   PetscFunctionReturn(0);
 }
 
@@ -496,6 +498,9 @@ static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
     TRY( PCBJacobiGetSubKSP(pc, PETSC_IGNORE, PETSC_IGNORE, &kspp) );
     inv->innerksp = *kspp;
   } else if (inv->redundancy) {
+    PetscBool telescope = PETSC_FALSE;
+    /* TODO fix optios */
+    TRY( PetscOptionsGetBool(NULL,NULL,"-telescope",&telescope,NULL) );
     const char *prefix;
     char stri[1024];
     TRY( KSPSetType(inv->ksp, KSPPREONLY) );
@@ -510,24 +515,33 @@ static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
     TRY( PetscOptionsInsertString(NULL,stri) );
     TRY( PCSetFromOptions(pc) );
     //bug end
-    TRY( PCSetType(pc, PCREDUNDANT) );
-    TRY( PCRedundantSetNumber(pc, inv->redundancy) );
-    TRY( PCSetUp(pc) );//not necessary after fix, see above
-    TRY( PCRedundantGetKSP(pc, &inv->innerksp) );
+    if (telescope) {
+      TRY( PCSetType(pc, PCTELESCOPE) );
+      TRY( PCTelescopeSetReductionFactor(pc, inv->redundancy) );
+      TRY( PCSetUp(pc) );//not necessary after fix, see above
+      TRY( PCTelescopeGetKSP(pc, &inv->innerksp) );
+      PCView(pc,PETSC_VIEWER_STDOUT_WORLD);
+      //if (inv->innerksp) KSPView(inv->innerksp,PETSC_VIEWER_STDOUT_WORLD);
+    } else {
+      TRY( PCSetType(pc, PCREDUNDANT) );
+      TRY( PCRedundantSetNumber(pc, inv->redundancy) );
+      TRY( PCSetUp(pc) );//not necessary after fix, see above
+      TRY( PCRedundantGetKSP(pc, &inv->innerksp) );
+    }
   } else {
     inv->innerksp = inv->ksp;
   }
-  TRY( KSPGetPC(inv->innerksp,&pc) );
+  if (inv->innerksp) TRY( KSPGetPC(inv->innerksp,&pc) );
 
-  TRY( KSPSetType(inv->innerksp,default_ksptype) );
-  TRY( PCSetType(pc,default_pctype) );
-  TRY( PCFactorSetMatSolverType(pc,default_pkg) );
+  if (inv->innerksp) TRY( KSPSetType(inv->innerksp,default_ksptype) );
+  if (inv->innerksp) TRY( PCSetType(pc,default_pctype) );
+  if (inv->innerksp) TRY( PCFactorSetMatSolverType(pc,default_pkg) );
 
   TRY( KSPSetTolerances(inv->ksp, PETSC_SMALL, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT) );
 
   TRY( MatInvKSPSetOptionsPrefix_Inv(imat) );
   if (inv->setfromoptionscalled) {
-    TRY( KSPSetFromOptions(inv->innerksp) );
+    if (inv->innerksp) TRY( KSPSetFromOptions(inv->innerksp) );
   }
 
   TRY( MatDestroy(&Areg) );
@@ -708,18 +722,17 @@ PetscErrorCode MatGetInfo_Inv(Mat imat, MatInfoType type, MatInfo *info)
   info->nz_allocated          = -1.0;
   info->nz_unneeded           = -1.0;
   info->nz_used               = -1.0;
-
   TRY( MatInvGetRegularizedMat(imat, &mat) );  
   TRY( MatInvGetPC(imat, &pc) );
   
-  if (pc && mat->factortype && pc->ops->getfactoredmatrix) {
+  if (pc && mat && mat->factortype && pc->ops->getfactoredmatrix) {
     TRY( PCFactorGetMatrix(pc, &mat) );
     if (mat && mat->ops->getinfo) {
       TRY( MatGetInfo(mat, type, info) );
     }
   }
 
-  if (info->nz_used == -1) {
+  if (mat && info->nz_used == -1) {
     if (mat->ops->getinfo) TRY( MatGetInfo(mat, type, info) );
   }
   PetscFunctionReturn(0);
@@ -797,25 +810,27 @@ PetscErrorCode MatView_Inv(Mat imat, PetscViewer viewer)
       PetscViewer sv;
       //
       TRY( PetscViewerASCIIPushTab(viewer) );
-      if (inv->redundancy) { /* inv->ksp is PCREDUNDANT */
-        PC pc;
-        PC_Redundant *red;
-        //
-        TRY( KSPGetPC(inv->ksp, &pc) );
-        red = (PC_Redundant*)pc->data;
-        TRY( PetscViewerASCIIPrintf(viewer,"Redundant preconditioner: First (color=0) of %D nested KSPs follows\n",red->nsubcomm) );
-        show = !red->psubcomm->color;
-      } else {                /* inv->ksp is PCBJACOBI */
-        TRY( PetscViewerASCIIPrintf(viewer,"Block Jacobi preconditioner: First (rank=0) of %D nested diagonal block KSPs follows\n",size) );
-        show = !rank;
-      }
+      //if (inv->redundancy) { /* inv->ksp is PCREDUNDANT */
+      //  PC pc;
+      //  PC_Redundant *red;
+      //  //
+      //  TRY( KSPGetPC(inv->ksp, &pc) );
+      //  red = (PC_Redundant*)pc->data;
+      //  TRY( PetscViewerASCIIPrintf(viewer,"Redundant preconditioner: First (color=0) of %D nested KSPs follows\n",red->nsubcomm) );
+      //  show = !red->psubcomm->color;
+      //} else {                /* inv->ksp is PCBJACOBI */
+      //  TRY( PetscViewerASCIIPrintf(viewer,"Block Jacobi preconditioner: First (rank=0) of %D nested diagonal block KSPs follows\n",size) );
+      //  show = !rank;
+      //}
       TRY( PetscViewerASCIIPushTab(viewer) );
-      TRY( PetscObjectGetComm((PetscObject)inv->innerksp, &subcomm) );
-      TRY( PetscViewerGetSubViewer(viewer, subcomm, &sv) );
-      if (show) {
-        TRY( KSPViewBriefInfo(inv->innerksp, sv) );
+      if (inv->innerksp) {
+        TRY( PetscObjectGetComm((PetscObject)inv->innerksp, &subcomm) );
+        TRY( PetscViewerGetSubViewer(viewer, subcomm, &sv) );
+        if (show) {
+          TRY( KSPViewBriefInfo(inv->innerksp, sv) );
+        }
+        TRY( PetscViewerRestoreSubViewer(viewer, subcomm, &sv) );
       }
-      TRY( PetscViewerRestoreSubViewer(viewer, subcomm, &sv) );
       TRY( PetscViewerASCIIPopTab(viewer) );
       TRY( PetscViewerASCIIPopTab(viewer) );
     }
@@ -838,7 +853,7 @@ PetscErrorCode MatSetOption_Inv(Mat imat, MatOption op, PetscBool flg)
   
   PetscFunctionBegin;
   TRY( MatInvGetRegularizedMat(imat, &A) );
-  TRY( MatSetOption(A, op, flg) );
+  if (A) TRY( MatSetOption(A, op, flg) );
   PetscFunctionReturn(0);
 }
 

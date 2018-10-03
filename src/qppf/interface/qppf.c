@@ -646,9 +646,11 @@ PetscErrorCode QPPFApplyCP(QPPF cp, Vec x, Vec y)
 
     if (!cp->explicitInv) {
       TRY( MatInvGetKSP(cp->GGtinv, &GGtinv_ksp) );
-      TRY( KSPGetIterationNumber(GGtinv_ksp, &iter) );
-      cp->it_GGtinvv += iter;
-      TRY( KSPGetConvergedReason(GGtinv_ksp, &cp->conv_GGtinvv) );
+      if (GGtinv_ksp) {
+        TRY( KSPGetIterationNumber(GGtinv_ksp, &iter) );
+        cp->it_GGtinvv += iter;
+        TRY( KSPGetConvergedReason(GGtinv_ksp, &cp->conv_GGtinvv) );
+      }
     }
   } else {
     TRY( VecCopy(x, y) );
@@ -841,8 +843,12 @@ PetscErrorCode QPPFView(QPPF cp, PetscViewer viewer)
     TRY( PetscViewerGetSubViewer(viewer, comm, &scv) );
     TRY( KSPViewBriefInfo(ksp, scv) );
     TRY( PetscViewerRestoreSubViewer(viewer, comm, &scv) );
-  } else {
-    if (cp->GGtinv) TRY( MatView(cp->GGtinv, viewer) );
+  } else if (cp->GGtinv) {
+    PetscViewer scv;
+    TRY( PetscObjectGetComm((PetscObject)cp->GGtinv, &comm) );
+    TRY( PetscViewerGetSubViewer(viewer, comm, &scv) );
+    TRY( MatView(cp->GGtinv, scv) );
+    TRY( PetscViewerRestoreSubViewer(viewer, comm, &scv) );
   }
   if (cp->G)    TRY( MatPrintInfo(cp->G) );
   if (cp->Gt)   TRY( MatPrintInfo(cp->Gt) );
