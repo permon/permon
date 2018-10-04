@@ -5,8 +5,8 @@ mx: 50,  my: 50,  ecc: 0.1
 Value of Tao are gatol = 1.000000e-08, grtol =  1.000000e-08, gttol = 0.000000e+00  
 QPS Object: 3 MPI processes
   type: tao
-  last QPSSolve CONVERGED due to CONVERGED_ATOL, KSPReason=3, required 207 iterations
-  all 1 QPSSolves from last QPSReset/QPSResetStatistics have required 207 iterations
+  last QPSSolve CONVERGED due to CONVERGED_ATOL, KSPReason=3, required 2361 iterations
+  all 1 QPSSolves from last QPSReset/QPSResetStatistics have required 2361 iterations
   tolerances: rtol=1.0e-08, abstol=1.0e-08, dtol=1.0e+04, maxits=10000
   tao specific:
     TaoType: blmvm
@@ -15,7 +15,7 @@ QPS Object: 3 MPI processes
     Information about last TAOSolve:
       Tao Object: (qps_) 3 MPI processes
         type: blmvm
-        Gradient steps: 0
+        Gradient steps: 678
         Mat Object: (tao_blmvm_) 3 MPI processes
           type: lmvmbfgs
           rows=2500, cols=2500
@@ -24,24 +24,35 @@ QPS Object: 3 MPI processes
             Scale params: alpha=1., beta=0.5, rho=1.
             Convex factors: phi=0., theta=0.125
             Max. storage: 5
-            Used storage: 5
-            Number of updates: 206
-            Number of rejects: 0
-            Number of resets: 1
+            Used storage: 0
+            Number of updates: 2352
+            Number of rejects: 8
+            Number of resets: 688
+            Mat Object: (J0_) 3 MPI processes
+              type: lmvmdiagbrdn
+              rows=2500, cols=2500
+                Scale history: 1
+                Scale params: alpha=1., beta=0.5, rho=1.
+                Convex factor: theta=0.125
+                Max. storage: 1
+                Used storage: 0
+                Number of updates: 2352
+                Number of rejects: 0
+                Number of resets: 696
         TaoLineSearch Object: (qps_) 3 MPI processes
           type: more-thuente
           maximum function evaluations=30
           tolerances: ftol=0.0001, rtol=1e-10, gtol=0.9
           total number of function evaluations=0
           total number of gradient evaluations=0
-          total number of function/gradient evaluations=1
+          total number of function/gradient evaluations=2
           using variable bounds
           Termination reason: 1
         Active Set subset type: subvec
         convergence tolerances: gatol=1e-08,         steptol=0.,         gttol=0.
-        Residual in Function/Gradient:=9.64348e-09
+        Residual in Function/Gradient:=9.99023e-09
         Objective value=-0.180488
-        total number of iterations=207,                                (max: 2000)
-        total number of function/gradient evaluations=234,            (max: 4000)
+        total number of iterations=2361,                                (max: 2000)
+        total number of function/gradient evaluations=5109,            (max: 4000)
         Solution converged:          User Terminated
-norm of difference of results from TAO and QP = 5.940669e-08  
+norm of difference of results from TAO and QP = 7.624551e-07  
