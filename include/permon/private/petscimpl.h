@@ -3,7 +3,7 @@
 
 #include "petscpc.h"
 
-#if PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR==9
+#if PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR>=9
 #include "permon/private/petsc/mat/aij.h"
 #include "permon/private/petsc/mat/dense.h"
 #include "permon/private/petsc/mat/mpiaij.h"
