@@ -199,7 +199,11 @@ static PetscErrorCode MatInvGetRegularizedMat_Inv(Mat imat, Mat *A)
   PetscFunctionBegin;
   if (!inv->setupcalled) FLLOP_SETERRQ(PetscObjectComm((PetscObject)imat),PETSC_ERR_ARG_WRONGSTATE,"This function can be called only after MatInvSetUp");
   TRY( MatInvGetKSP(imat,&ksp) );
-  if (ksp) TRY( KSPGetOperators(ksp, A, NULL) );
+  if (ksp) {
+    TRY( KSPGetOperators(ksp, A, NULL) );
+  } else {
+    *A = NULL;
+  }
   PetscFunctionReturn(0);
 }
 
@@ -222,7 +226,11 @@ static PetscErrorCode MatInvGetPC_Inv(Mat imat, PC *pc)
 
   PetscFunctionBegin;
   TRY( MatInvGetKSP(imat, &ksp) );
-  if (ksp) TRY( KSPGetPC(ksp, pc) );
+  if (ksp) {
+    TRY( KSPGetPC(ksp, pc) );
+  } else {
+    *pc = NULL;
+  }
   PetscFunctionReturn(0);
 }
 
