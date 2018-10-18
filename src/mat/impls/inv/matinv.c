@@ -820,18 +820,24 @@ PetscErrorCode MatView_Inv(Mat imat, PetscViewer viewer)
       PetscViewer sv;
       //
       TRY( PetscViewerASCIIPushTab(viewer) );
-      //if (inv->redundancy) { /* inv->ksp is PCREDUNDANT */
-      //  PC pc;
-      //  PC_Redundant *red;
-      //  //
-      //  TRY( KSPGetPC(inv->ksp, &pc) );
-      //  red = (PC_Redundant*)pc->data;
-      //  TRY( PetscViewerASCIIPrintf(viewer,"Redundant preconditioner: First (color=0) of %D nested KSPs follows\n",red->nsubcomm) );
-      //  show = !red->psubcomm->color;
-      //} else {                /* inv->ksp is PCBJACOBI */
-      //  TRY( PetscViewerASCIIPrintf(viewer,"Block Jacobi preconditioner: First (rank=0) of %D nested diagonal block KSPs follows\n",size) );
-      //  show = !rank;
-      //}
+      if (inv->redundancy) { /* inv->ksp is PCREDUNDANT */
+        PetscBool telescope = PETSC_FALSE;
+        /* TODO fix optios */
+        TRY( PetscOptionsGetBool(NULL,NULL,"-telescope",&telescope,NULL) );
+        PC pc;
+        TRY( KSPGetPC(inv->ksp, &pc) );
+        TRY( PetscViewerASCIIPrintf(viewer,"Redundant/Telescope preconditioner: First KSP follows\n") );
+        if (telescope) {
+          show = 1;
+        } else {
+          PC_Redundant *red;
+          red = (PC_Redundant*)pc->data;
+          show = !red->psubcomm->color;
+        }
+      } else {                /* inv->ksp is PCBJACOBI */
+        TRY( PetscViewerASCIIPrintf(viewer,"Block Jacobi preconditioner: First (rank=0) of %D nested diagonal block KSPs follows\n",size) );
+        show = !rank;
+      }
       TRY( PetscViewerASCIIPushTab(viewer) );
       if (inv->innerksp) {
         TRY( PetscObjectGetComm((PetscObject)inv->innerksp, &subcomm) );
@@ -851,7 +857,6 @@ PetscErrorCode MatView_Inv(Mat imat, PetscViewer viewer)
   if (format == PETSC_VIEWER_DEFAULT) {
     TRY( PetscViewerASCIIPopTab(viewer) );
   }
-  TRY( MPI_Barrier(comm) );
   PetscFunctionReturn(0);
 }
 
