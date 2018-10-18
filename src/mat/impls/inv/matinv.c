@@ -518,22 +518,24 @@ static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
     TRY( PCAppendOptionsPrefix(pc,"mat_inv_") );
     TRY( PetscSNPrintf(stri, sizeof(stri), "-%smat_inv_redundant_pc_type none",prefix) );
     TRY( PetscOptionsInsertString(NULL,stri) );
-    //petsc bug start https://bitbucket.org/petsc/petsc/branch/hzhang/fix-pcredundant#diff
-    TRY( PetscSNPrintf(stri, sizeof(stri), "-psubcomm_type %s", PetscSubcommTypes[inv->psubcommType]) );
+    TRY( PetscSNPrintf(stri, sizeof(stri), "-%smat_inv_telescope_pc_type none",prefix) );
     TRY( PetscOptionsInsertString(NULL,stri) );
-    TRY( PCSetFromOptions(pc) );
-    //bug end
     if (telescope) {
+      TRY( PCSetFromOptions(pc) );
       TRY( PCSetType(pc, PCTELESCOPE) );
       TRY( PCTelescopeSetReductionFactor(pc, inv->redundancy) );
-      TRY( PCSetUp(pc) );//not necessary after fix, see above
+      TRY( PCTelescopeSetSubcommType(pc,inv->psubcommType) );
+      TRY( PCSetUp(pc) );
       TRY( PCTelescopeGetKSP(pc, &inv->innerksp) );
-      PCView(pc,PETSC_VIEWER_STDOUT_WORLD);
-      //if (inv->innerksp) KSPView(inv->innerksp,PETSC_VIEWER_STDOUT_WORLD);
     } else {
+      //petsc bug start https://bitbucket.org/petsc/petsc/branch/hzhang/fix-pcredundant#diff
+      TRY( PetscSNPrintf(stri, sizeof(stri), "-%smat_inv_redundant_psubcomm_type %s",prefix,PetscSubcommTypes[inv->psubcommType]) );
+      TRY( PetscOptionsInsertString(NULL,stri) );
+      TRY( PCSetFromOptions(pc) );
+      //bug end
       TRY( PCSetType(pc, PCREDUNDANT) );
       TRY( PCRedundantSetNumber(pc, inv->redundancy) );
-      TRY( PCSetUp(pc) );//not necessary after fix, see above
+      TRY( PCSetUp(pc) );
       TRY( PCRedundantGetKSP(pc, &inv->innerksp) );
     }
   } else {
