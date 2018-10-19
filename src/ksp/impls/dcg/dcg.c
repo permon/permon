@@ -448,7 +448,7 @@ static PetscErrorCode KSPSetUp_DCG(KSP ksp)
         ierr = MatPtAP(Amat,W,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&cgP->WtAW);CHKERRQ(ierr);
         ierr = MatSetOption(cgP->WtAW,MAT_SPD,PETSC_TRUE);CHKERRQ(ierr);
       }
-        
+#if defined(PETSC_USE_DEBUG)
       /* Check WtAW is not sigular */
       PetscReal *norms;
       ierr = PetscMalloc1(m,&norms);CHKERRQ(ierr);
@@ -460,6 +460,7 @@ static PetscErrorCode KSPSetUp_DCG(KSP ksp)
         }
       }
       ierr = PetscFree(norms);CHKERRQ(ierr);
+#endif
     }
     ierr = KSPCreate(comm,&cgP->WtAWinv);CHKERRQ(ierr);
     ierr = KSPSetOperators(cgP->WtAWinv,cgP->WtAW,cgP->WtAW);CHKERRQ(ierr);
