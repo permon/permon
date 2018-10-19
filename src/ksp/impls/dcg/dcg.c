@@ -484,6 +484,8 @@ static PetscErrorCode KSPSetUp_DCG(KSP ksp)
       if (red < 0) {
         ierr = MPI_Comm_size(comm,&commsize);CHKERRQ(ierr);
         red  = ceil((float)commsize/ceil((float)m/commsize));
+        ierr = PetscObjectTypeCompareAny((PetscObject)(cgP->WtAW),&match,MATSEQDENSE,MATMPIDENSE,MATDENSE,"");CHKERRQ(ierr);
+        if (match) red = commsize;
         PetscPrintf(PETSC_COMM_WORLD,"Auto choosing redundancy %d\n",red);
       }
       ierr = PCRedundantSetNumber(pc,red);CHKERRQ(ierr);
