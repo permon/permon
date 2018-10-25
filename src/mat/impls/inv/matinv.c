@@ -635,6 +635,7 @@ static PetscErrorCode MatInvExplicitlyTranspose_Private(PetscInt ilo, PetscInt i
   PetscFunctionReturnI(0);
 }
 
+/* TODO: check that PC is not TELESCOPE */
 #undef __FUNCT__  
 #define __FUNCT__ "MatInvExplicitly_Inv"
 static PetscErrorCode MatInvExplicitly_Inv(Mat imat, PetscBool transpose, MatReuse scall, Mat *imat_explicit)
@@ -645,7 +646,7 @@ static PetscErrorCode MatInvExplicitly_Inv(Mat imat, PetscBool transpose, MatReu
   PetscMPIInt rank, subrank, scColor=0;
   KSP ksp;
   PetscInt iloihi[2];
-  PetscInt redundancy;
+  PetscInt redundancy,locsize,leftover;
   Mat B;
 
   PetscFunctionBeginI;
@@ -669,20 +670,24 @@ static PetscErrorCode MatInvExplicitly_Inv(Mat imat, PetscBool transpose, MatReu
   }
 
   if (transpose) {
+      TRY( MatInvGetPsubcommColor_Inv(imat, &scColor) );
     if (redundancy){
+      locsize = floor(M/redundancy);
+      leftover = M - redundancy*locsize;
       TRY( MPI_Comm_rank(comm, &rank) );
       TRY( PetscObjectGetComm((PetscObject)ksp, &comm) );
       TRY( MPI_Comm_rank(comm, &subrank) );
-      TRY( MatInvGetPsubcommColor_Inv(imat, &scColor) );
       if (!subrank){
-        iloihi[0] = scColor*floor(M/redundancy);
-        if (rank == redundancy-1){
-          iloihi[1] = M;
-        }else{
-          iloihi[1] = iloihi[0] + floor(M/redundancy);
+        iloihi[0] = scColor*locsize;
+        if (scColor < leftover) {
+          iloihi[0] += scColor;
+        } else {
+          iloihi[0] += leftover;
         }
+        iloihi[1] = iloihi[0] + locsize;
+        if (scColor < leftover) iloihi[1] += 1;
       }
-      TRY( MPI_Bcast((PetscMPIInt*) &iloihi,2,MPIU_INT,0,comm) );
+      TRY( MPI_Bcast(&iloihi,2,MPIU_INT,0,comm) );
     }else{
       iloihi[0] = 0;
       iloihi[1] = M;
