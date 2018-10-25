@@ -575,7 +575,7 @@ static PetscErrorCode MatInvExplicitly_Private(KSP ksp, Mat imat_explicit)
   TRY( MatGetLocalSize(A, &m, NULL) );
   TRY( MatGetOwnershipRange(A, &ilo, &ihi) );
 
-  TRY( PetscMalloc(m*sizeof(PetscInt), &rows) );
+  TRY( PetscMalloc1(m, &rows) );
   for (i=0; i<m; i++) rows[i] = ilo + i;
 
   /* col_I is a j-th column of eye(M) */
@@ -594,7 +594,7 @@ static PetscErrorCode MatInvExplicitly_Private(KSP ksp, Mat imat_explicit)
   }
   TRY( VecDestroy(&col_imat) );
   TRY( VecDestroy(&col_I) );
-  PetscFree(rows);
+  TRY( PetscFree(rows) );
   PetscFunctionReturnI(0);
 }
 
@@ -613,7 +613,7 @@ static PetscErrorCode MatInvExplicitlyTranspose_Private(PetscInt ilo, PetscInt i
   TRY( MatGetOwnershipRange(A, &Ailo, &Aihi) );
   localSize = Aihi-Ailo;
   
-  TRY( PetscMalloc(localSize * sizeof(PetscInt), &idxn) );
+  TRY( PetscMalloc1(localSize, &idxn) );
   for (i = 0; i < localSize; i++) idxn[i] = i+Ailo;
 
   /* col_I is a j-th column of eye(M) */
@@ -631,7 +631,7 @@ static PetscErrorCode MatInvExplicitlyTranspose_Private(PetscInt ilo, PetscInt i
   }
   TRY( VecDestroy(&row_imat) );
   TRY( VecDestroy(&col_I) );
-  PetscFree(idxn);
+  TRY( PetscFree(idxn) );
   PetscFunctionReturnI(0);
 }
 
