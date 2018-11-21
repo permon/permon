@@ -36,11 +36,11 @@ PetscErrorCode MatSumGetMat(Mat A,PetscInt i,Mat *Ai)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatMult_Sum"
 PetscErrorCode MatMult_Sum(Mat A,Vec x,Vec y)
 {
-  Mat_Composite     *shell = (Mat_Composite*)A->data;  
+  Mat_Composite     *shell = (Mat_Composite*)A->data;
   Mat_CompositeLink next = shell->head;
   PetscErrorCode    ierr;
   Vec               in,out;
@@ -75,11 +75,11 @@ PetscErrorCode MatMult_Sum(Mat A,Vec x,Vec y)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatMultTranspose_Sum"
 PetscErrorCode MatMultTranspose_Sum(Mat A,Vec x,Vec y)
 {
-  Mat_Composite     *shell = (Mat_Composite*)A->data;  
+  Mat_Composite     *shell = (Mat_Composite*)A->data;
   Mat_CompositeLink next = shell->head;
   PetscErrorCode    ierr;
   Vec               in;
@@ -105,17 +105,27 @@ PetscErrorCode MatMultTranspose_Sum(Mat A,Vec x,Vec y)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatMultAdd_Sum"
 PetscErrorCode MatMultAdd_Sum(Mat A,Vec x,Vec y,Vec z)
 {
+  Mat_Composite *shell = (Mat_Composite *) A->data;
+
   PetscFunctionBegin;
-  TRY( MatMult_Sum(A, x, z) );
-  TRY( VecAXPY(z, 1.0, y) );
+  if (y != z) {
+    TRY( MatMult_Sum(A,x,z) );
+    TRY( VecAXPY(z,1.0,y) );
+  } else {
+    if (!shell->rightwork) {
+      TRY( VecDuplicate(z,&shell->rightwork) );
+    }
+    TRY( MatMult(A,x,shell->rightwork) );
+    TRY( VecAXPY(z,1.0,shell->rightwork) );
+  }
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatMultTransposeAdd_Sum"
 PetscErrorCode MatMultTransposeAdd_Sum(Mat A,Vec x,Vec y,Vec z)
 {
@@ -125,7 +135,7 @@ PetscErrorCode MatMultTransposeAdd_Sum(Mat A,Vec x,Vec y,Vec z)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatCreate_Sum"
 FLLOP_EXTERN PetscErrorCode  MatCreate_Sum(Mat A)
 {
@@ -153,7 +163,7 @@ FLLOP_EXTERN PetscErrorCode  MatCreate_Sum(Mat A)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatCreateSum"
 /*@C
    MatCreateSum - Creates a matrix as the implicit sum of zero or more matrices.
@@ -172,7 +182,7 @@ FLLOP_EXTERN PetscErrorCode  MatCreate_Sum(Mat A)
    Level: advanced
 
    Notes:
-     Alternative construction 
+     Alternative construction
 $       MatCreate(comm,&mat);
 $       MatSetType(mat,MATSUM);
 $       MatCompositeAddMat(mat,mats[0]);
@@ -188,7 +198,7 @@ PetscErrorCode  MatCreateSum(MPI_Comm comm,PetscInt nmat,const Mat *mats,Mat *ma
 {
   PetscErrorCode ierr;
   PetscInt       m,n,M,N,i;
-  
+
   PetscFunctionBegin;
   if (nmat < 1) FLLOP_SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_OUTOFRANGE,"Must pass in at least one matrix");
   PetscValidPointer(mat,3);
