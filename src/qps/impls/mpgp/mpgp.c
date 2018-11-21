@@ -412,6 +412,12 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
   PetscScalar       min;
 
   PetscFunctionBegin;
+  /* reset statistics*/
+  mpgp->ncg                  = 0;
+  mpgp->nexp                 = 0;
+  mpgp->nmv                  = 0;
+  mpgp->nprop                = 0;
+  mpgp->currentStepType      = ' ';
   
   /* set the number of working vectors */
   TRY( QPSSetWorkVecs(qps,7) );
@@ -782,14 +788,6 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
   mpgp->btol                 = 10*PETSC_MACHINE_EPSILON; /* boundary tol */
   mpgp->bchop_tol            = 0.0; /* chop of bounds */
 
-  /* set the computed norms of gradients */
-  //TODO: set from options/command line
-  mpgp->ncg                  = 0;
-  mpgp->nexp                 = 0;
-  mpgp->nmv                  = 0;
-  mpgp->nprop                = 0;
-  mpgp->currentStepType      = ' ';
-  
   /*
        Sets the functions that are associated with this data structure 
        (in C++ this is the same as defining virtual functions)
