@@ -892,7 +892,8 @@ PetscErrorCode QPSSetFromOptions(QPS qps)
   /* actually check in setup - this is just here to go into help message */
   TRY( PetscOptionsName("-qps_view","print the QPS parameters at the end of a QPSSolve call","QPSView",&flg) );
   TRY( PetscOptionsName("-qps_view_convergence","print the QPS convergence info at the end of a QPSSolve call","QPSViewConvergence",&flg) );
-
+  TRY( PetscOptionsBool("-qps_monitor","Switches QPS monitor","QPSMonitorSet",PETSC_FALSE,&flg,NULL) );
+  if (flg) TRY( QPSMonitorSet(qps,QPSMonitorDefault,NULL,NULL) );
   if (qps->ops->setfromoptions) {
     TRY( (*qps->ops->setfromoptions)(PetscOptionsObject,qps) );
   }
