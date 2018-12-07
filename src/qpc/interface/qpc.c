@@ -440,7 +440,6 @@ PetscErrorCode QPCGetSubvector(QPC qpc,Vec x,Vec *xc)
   if (qpc->is) {
     /* IS is present, scatter the vector subject to IS */
     TRY( VecGetSubVector(x,qpc->is,&xc_out) );
-    TRY( PetscObjectReference((PetscObject)x) );
   } else {
     /* IS is not present, return whole vector of variables */
     xc_out = x;

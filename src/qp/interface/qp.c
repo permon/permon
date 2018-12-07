@@ -894,7 +894,7 @@ PetscErrorCode QPComputeMissingBoxMultipliers(QP qp)
   if (qp->BI) PetscFunctionReturn(0);
 
   TRY( QPDuplicate(qp,QP_DUPLICATE_COPY_POINTERS,&qp_E) );
-  TRY( QPSetBox(qp_E,NULL,NULL,NULL) );
+  TRY( QPCDestroy(&qp_E->qpc) );
   TRY( QPComputeLagrangianGradient(qp_E,qp->x,r,NULL) );
   TRY( QPDestroy(&qp_E) );
 
@@ -1915,10 +1915,10 @@ PetscErrorCode QPSetBox(QP qp, IS is, Vec lb, Vec ub)
     PetscCheckSameComm(qp,1,ub,3);
   }
 
-  TRY( QPCDestroy(&qp->qpc) );
   if (lb || ub) {
     TRY( QPCCreateBox(PetscObjectComm((PetscObject)qp),is,lb,ub,&qpc));
     TRY( QPSetQPC(qp, qpc) );
+    TRY( QPCDestroy(&qpc) );
   }
 
   if (qp->changeListener) TRY( (*qp->changeListener)(qp) );
@@ -2371,6 +2371,7 @@ PetscErrorCode QPSetQPC(QP qp, QPC qpc)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
   if (qpc) PetscValidHeaderSpecific(qpc,QPC_CLASSID,2);
+  TRY( QPCDestroy(&qp->qpc) );
   qp->qpc = qpc;
   TRY( PetscObjectReference((PetscObject)qpc) );
   PetscFunctionReturn(0);
