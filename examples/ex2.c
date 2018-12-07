@@ -163,6 +163,7 @@ int main(int argc,char **args)
   if (viewSol) ierr = viewDraw(c);CHKERRQ(ierr);
   if (viewSol) ierr = viewDraw(x);CHKERRQ(ierr);
 
+  ierr = ISDestroy(&is);CHKERRQ(ierr);
   ierr = QPSDestroy(&qps);CHKERRQ(ierr);
   ierr = QPDestroy(&qp);CHKERRQ(ierr);
   ierr = VecDestroy(&x);CHKERRQ(ierr);
