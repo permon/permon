@@ -503,7 +503,7 @@ PetscErrorCode CallPermonAndCompareResults(Tao tao, void *ctx)
   ierr = QPCreate(PETSC_COMM_WORLD, &qp);CHKERRQ(ierr);
   ierr = QPSetOperator(qp, user->A);CHKERRQ(ierr);
   ierr = QPSetRhsPlus(qp, user->B);CHKERRQ(ierr);
-  ierr = QPSetBox(qp, user->xl, user->xu);CHKERRQ(ierr);
+  ierr = QPSetBox(qp, NULL, user->xl, user->xu);CHKERRQ(ierr);
   ierr = VecDuplicate(user->B,&x_diff);CHKERRQ(ierr);
   
   /* Create the QP solver (QPS). */

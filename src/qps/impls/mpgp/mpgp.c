@@ -186,26 +186,6 @@ static PetscErrorCode QPSMPGPSetOperatorMaxEigenvalueIterations_MPGP(QPS qps,Pet
   PetscFunctionReturn(0);
 }
 
-
-#undef __FUNCT__
-#define __FUNCT__ "MPGPProj"
-/*
-MPGPProj - realize projection to feasible set
-
-Parameters:
-+ x - vector of variables
-. lb - vector of lower bounds
-- ub - vector of upper bounds 
-*/
-static PetscErrorCode MPGPProj(Vec x, Vec lb, Vec ub)
-{
-  PetscFunctionBegin;
-  if (ub) TRY( VecPointwiseMin(x,x,ub) );
-  if (lb) TRY( VecPointwiseMax(x,x,lb) );
-  PetscFunctionReturn(0);
-}
-
-
 #undef __FUNCT__
 #define __FUNCT__ "MPGPGrads"
 /*
@@ -215,186 +195,30 @@ Parameters:
 + qps - QP solver
 - g - gradient  
 */
-static PetscErrorCode MPGPGrads(QPS qps, Vec x, Vec lb, Vec ub, Vec g)
+static PetscErrorCode MPGPGrads(QPS qps, Vec x, Vec g)
 {
-  PetscInt          i;                  /* ... iterator                         */
-  PetscInt          m;                  /* ... local size                       */
+  QP                qp;
+  QPC               qpc;
 
   Vec               gP;                 /* ... projected gradient               */
   Vec               gr;                 /* ... reduced free gradient            */
   Vec               beta;               /* ... chopped gradient                 */
   Vec               phi;                /* ... free gradient                    */
 
-  /* vector arrays */
-  PetscScalar       *x_a, *lb_a, *ub_a, *g_a, *phi_a, *beta_a, *gP_a, *gr_a; 
-
   QPS_MPGP          *mpgp = (QPS_MPGP*)qps->data;
-  PetscReal         alpha;
   
   PetscFunctionBegin;
-  TRY( VecGetLocalSize(g, &m) );
+  TRY( QPSGetSolvedQP(qps,&qp) );
+  TRY( QPGetQPC(qp,&qpc) );
 
   gP                = qps->work[0];
   gr                = qps->work[6];
   phi               = qps->work[1];
   beta              = qps->work[2];
-  alpha             = 1.0/mpgp->alpha;
 
-  TRY( VecWAXPY(gr,-1.0,lb,x) ); /* gr = x-lb */
-  TRY( VecWAXPY(gP,-1.0,ub,x) ); /* gP = x-ub */
-
-  /* get local arrays */
-  TRY( VecGetArray(x, &x_a) );
-  TRY( VecGetArray(lb, &lb_a) );
-  TRY( VecGetArray(ub, &ub_a) );
-  TRY( VecGetArray(g, &g_a) );
-  TRY( VecGetArray(phi, &phi_a) );
-  TRY( VecGetArray(beta, &beta_a) );
-  TRY( VecGetArray(gP, &gP_a) );
-  TRY( VecGetArray(gr, &gr_a) );
-
-  /* go through the local array and fill the gradients */
-  for (i = 0; i < m; i++){
-      if (PetscAbsScalar(gr_a[i]) < mpgp->btol) {
-          /* index of this component is in ACTIVE SET */
-          phi_a[i] = 0.0;
-          gr_a[i] = 0.0;
-          /* active lower bound */
-          beta_a[i]= PetscMin(g_a[i],0.0);
-      } else if (PetscAbsScalar(gP_a[i]) < mpgp->btol) {
-         /* index of this component is in ACTIVE SET */
-          phi_a[i] = 0.0;
-          gr_a[i] = 0.0;
-          /* active upper bound */
-          beta_a[i]= PetscMax(g_a[i],0.0);
-      } else {
-          /* index of this component is in FREE SET */
-          phi_a[i] = g_a[i];
-          beta_a[i] = 0.0;
-          gr_a[i] = alpha*gr_a[i];
-          if (g_a[i] > 0) {
-            if (g_a[i] < gr_a[i]) gr_a[i] = g_a[i];
-          } else {
-            gr_a[i] = alpha*gP_a[i];
-            if (g_a[i] > gr_a[i]) gr_a[i] = g_a[i];
-          }
-      }
-      
-      /* compute projected gradient */
-      gP_a[i] = phi_a[i] + beta_a[i];
-      
-  }
-  
-  /* restore local arrays */
-  TRY( VecRestoreArray(x, &x_a) );
-  TRY( VecRestoreArray(lb, &lb_a) );
-  TRY( VecRestoreArray(ub, &ub_a) );
-  TRY( VecRestoreArray(g, &g_a) );
-  TRY( VecRestoreArray(phi, &phi_a) );
-  TRY( VecRestoreArray(beta, &beta_a) );
-  TRY( VecRestoreArray(gP, &gP_a) );
-  TRY( VecRestoreArray(gr, &gr_a) );
-  PetscFunctionReturn(0);
-}
-
-#undef __FUNCT__
-#define __FUNCT__ "MPGPFeas"
-/*
-MPGPFeas - compute the largest feasible step alpha,
-  i.e. lb <= x-alpha*p <= ub
-
-  MATLAB:
-  i = find(p > 0);
-  alpha_f1 = inf;
-  if min(size(i)) > 0
-      alpha_f1 = min((x(i)-l1(i))./p(i));
-  end
-  j = find(p < 0);
-  alpha_f2 = inf;
-  if min(size(j)) > 0
-      alpha_f2 = min((x(j)-l2(j))./p(j));
-  end
-  alpha_f = min(alpha_f1,alpha_f2);
-
-Parameters:
-+ x - vector of actual iteration
-. lb - vector of lower bounds
-. ub - vector of upper bounds
-. p - vector of direction
-- *alpha - pointer to return value  
-*/
-static PetscErrorCode MPGPFeas(Vec x, Vec lb, Vec ub, Vec p, PetscScalar *alpha)
-{
-  PetscInt          i, m;
-  PetscScalar       *x_a, *lb_a, *ub_a, *p_a;
-  PetscScalar       alpha_temp, alpha_loc;
-
-  PetscFunctionBegin;
-  
-  /* get local arrays */
-  TRY( VecGetLocalSize(x,&m) );
-  TRY( VecGetArray(x,    &x_a) );     
-  TRY( VecGetArray(lb,   &lb_a) );     
-  TRY( VecGetArray(ub,   &ub_a) );     
-  TRY( VecGetArray(p,    &p_a) );     
-
-  /* the initial value of max feasible step-size */
-  alpha_loc = PETSC_INFINITY;
-
-  /* go through local arrays */
-  for (i=0; i<m; i++) {
-    /* max step to lower bound */
-    if (p_a[i] > 0.0) {
-      alpha_temp=x_a[i]-lb_a[i];
-      alpha_temp=alpha_temp/p_a[i];
-      if (alpha_temp < alpha_loc) alpha_loc=alpha_temp;
-    }
-
-    /* max step to upper bound */
-    if (p_a[i] < 0.0) {
-      alpha_temp=x_a[i]-ub_a[i];
-      alpha_temp=alpha_temp/p_a[i];
-      if (alpha_temp < alpha_loc) alpha_loc=alpha_temp;
-    }
-  }
-  
-  /* compute the minimal alpha from all computed maximal steps */
-  TRY( MPI_Allreduce(&alpha_loc, alpha, 1, MPIU_SCALAR, MPIU_MIN, PetscObjectComm((PetscObject)x)) );
-
-  if (*alpha >= PETSC_INFINITY) *alpha = 0.0;
-
-  /* restore vectors */
-  TRY( VecRestoreArray(x, &x_a) );
-  TRY( VecRestoreArray(lb,&lb_a) );
-  TRY( VecRestoreArray(ub,&ub_a) );
-  TRY( VecRestoreArray(p, &p_a) );
-  PetscFunctionReturn(0);
-}
-
-//TODO move to Constraints
-#undef __FUNCT__
-#define __FUNCT__ "QPGetScaledProjectedGradient"
-PetscErrorCode QPGetScaledProjectedGradient(QP qp, PetscReal alpha, Vec galpha)
-{
-  Vec               x,b,lb,ub;
-  Mat               A;
-
-  PetscFunctionBegin;
-  PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  PetscValidLogicalCollectiveReal(qp,alpha,2);
-  PetscValidHeaderSpecific(galpha,VEC_CLASSID,3);
-  
-  A                 = qp->A;
-  x                 = qp->x;
-  b                 = qp->b;
-  lb                = qp->lb;
-  ub                = qp->ub;
-  TRY( MatMult(A, x, galpha) );          /* g=A*x         */
-  TRY( VecAXPY(galpha, -1.0, b) );       /* g=g-b         */
-  TRY( VecAYPX(galpha,-alpha,x) );       /* galpha = x - alpha*g */
-  TRY( MPGPProj(galpha,lb,ub) );         /* galpha = P(galpha) */
-  TRY( VecAYPX(galpha,-1.0,x) );         /* galpha = x - galpha */
-  TRY( VecScale(galpha,1.0/alpha) );     /* galpha = 1/alpha * galpha */
+  TRY( QPCGrads(qpc,x,g,phi,beta) );
+  TRY( QPCGradReduced(qpc,x,phi,mpgp->alpha,gr) );
+  TRY( VecWAXPY(gP,1.0,phi,beta) );
   PetscFunctionReturn(0);
 }
 
@@ -410,7 +234,6 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
 {
   QPS_MPGP          *mpgp = (QPS_MPGP*)qps->data;
   Vec               lb,ub,y;
-  PetscScalar       min;
 
   PetscFunctionBegin;
   /* reset statistics*/
@@ -423,9 +246,8 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
   /* set the number of working vectors */
   TRY( QPSSetWorkVecs(qps,7) );
 
-  lb                = qps->solQP->lb;
-  ub                = qps->solQP->ub;
-  y                 = qps->work[5];     /* here is used temporarily Ap vector */
+  TRY( QPGetBox(qps->solQP,NULL,&lb,&ub) );
+  y = qps->work[5];     /* here is used temporarily Ap vector */
   
   if (mpgp->bchop_tol) {
     if (lb) TRY( VecChop(lb,mpgp->bchop_tol) );
@@ -447,23 +269,6 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
     mpgp->alpha = mpgp->alpha_user;
   }
   TRY( PetscInfo1(qps,  "alpha      = %.8e\n", mpgp->alpha) );
-
-  if (ub) {
-    /* check that lb < ub */
-    TRY( VecWAXPY(y,-1.0,lb,ub) );
-    TRY( VecMin(y,NULL,&min) );
-    if (min <= 0.0) {
-      FLLOP_SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_INCOMP,"lower bounds must be less than upper bounds");
-    }
-  } else {
-    //TODO make MPGP compatible with ub = NULL
-    /* create ub=inf(size(lb)) */
-    TRY( VecDuplicate(lb,&ub) );
-    TRY( VecDuplicate(ub,&qps->solQP->lambda_ub) );
-    TRY( VecSet(ub,PETSC_INFINITY) );
-    TRY( VecSet(qps->solQP->lambda_ub,0.0) );
-    qps->solQP->ub = ub;
-  }
   PetscFunctionReturn(0);
 }
 
@@ -479,10 +284,10 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
 {
   QPS_MPGP          *mpgp = (QPS_MPGP*)qps->data;
   QP                qp;
+  QPC               qpc;
   Mat               A;                  /* ... hessian matrix                   */
   Vec               b;                  /* ... right-hand side vector           */
   Vec               x;                  /* ... vector of variables              */
-  Vec               lb, ub;             /* ... lower and upper bound            */
   Vec               gP;                 /* ... projected gradient               */
   Vec               beta;               /* ... chopped gradient                 */
   Vec               phi;                /* ... free gradient                    */
@@ -519,29 +324,19 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   gamma             = mpgp->gamma;
 
   TRY( QPSGetSolvedQP(qps,&qp) );
+  TRY( QPGetQPC(qp,&qpc) );                       /* get constraints */
   TRY( QPGetSolutionVector(qp, &x) );             /* get the solution vector */
-  TRY( QPGetOperator(qp, &A ) );                  /* get hessian matrix */
-  TRY( QPGetRhs(qp, &b  ) );                      /* get right-hand side vector */
-  TRY( QPGetBox(qp, &lb, &ub ) );                 /* get lower and upper bounds */
+  TRY( QPGetOperator(qp, &A) );                   /* get hessian matrix */
+  TRY( QPGetRhs(qp, &b) );                        /* get right-hand side vector */
 
-  //TODO make MPGP compatible with ub = NULL
-  if (!ub) {
-    /* create ub=inf(size(lb)) */
-    TRY( VecDuplicate(lb,&ub) );
-    TRY( VecDuplicate(ub,&qp->lambda_ub) );
-    TRY( VecSet(ub,PETSC_INFINITY) );
-    TRY( VecSet(qp->lambda_ub,0.0) );
-    qp->ub = ub;
-  }
-
-  TRY( MPGPProj(x, lb, ub) );                     /* project x initial guess to feasible set */
+  TRY( QPCProject(qpc,x,x) );                     /* project x initial guess to feasible set */
 
   /* compute gradient */
   TRY( MatMult(A, x, g) );                        /* g=A*x */
   nmv++;                                          /* matrix multiplication counter */
   TRY( VecAXPY(g, -1.0, b) );                     /* g=g-b */
 
-  TRY( MPGPGrads(qps, x, lb, ub, g) );            /* grad. splitting  gP,phi,beta */
+  TRY( MPGPGrads(qps, x, g) );            /* grad. splitting  gP,phi,beta */
 
   /* initiate CG method */
   TRY( VecCopy(phi, p) );                         /* p=phi */
@@ -578,7 +373,7 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
       TRY( VecDot(p, Ap, &pAp) );                 /* pAp=p'*Ap      */
       TRY( VecDot(g,  p, &acg) );                 /* acg=g'*p       */
       acg  = acg/pAp;                             /* acg=acg/pAp    */
-      TRY( MPGPFeas(x, lb, ub, p, &afeas) );      /* finds max.feas.steplength */
+      TRY( QPCFeas(qpc, x, p, &afeas) );          /* finds max.feas.steplength */
 
       /* decide if it is able to do full CG step */
       if (acg <= afeas)
@@ -591,7 +386,7 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
         TRY( VecAXPY(x, -acg, p) );               /* x=x-acg*p      */
         TRY( VecAXPY(g, -acg, Ap) );              /* g=g-acg*Ap      */
 
-        TRY( MPGPGrads(qps, x, lb, ub, g) );      /* grad. splitting  gP,phi,beta */
+        TRY( MPGPGrads(qps, x, g) );      /* grad. splitting  gP,phi,beta */
         
         /* compute orthogonalization parameter and next orthogonal vector */
         TRY( VecDot(Ap, phi, &bcg) );             /* bcg=Ap'*phi     */
@@ -605,18 +400,18 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
         TRY( VecAXPY(x, -afeas, p) );             /* x=x-afeas*p*/
         TRY( VecAXPY(g, -afeas, Ap) );            /* g=g-afeas*Ap    */
 
-        TRY( MPGPGrads(qps, x, lb, ub, g) );      /* grad. splitting  gP,phi,beta,gr */
+        TRY( MPGPGrads(qps, x, g) );      /* grad. splitting  gP,phi,beta,gr */
 
         /* make one more projected gradient step with constant step-length */
         TRY( VecAXPY(x, -alpha, phi) );           /* x=x-abar*phi */
-        TRY( MPGPProj(x, lb, ub) );               /* project x to feas.set */
+        TRY( QPCProject(qpc, x, x) );             /* project x to feas.set */
 
         /* compute new gradient */
         TRY( MatMult(A, x, g) );                  /* g=A*x */
         nmv++;                                    /* matrix multiplication counter */
         TRY( VecAXPY(g, -1.0, b) );               /* g=g-b           */
 
-        TRY( MPGPGrads(qps, x, lb, ub, g) );      /* grad. splitting  gP,phi,beta */
+        TRY( MPGPGrads(qps, x, g) );              /* grad. splitting  gP,phi,beta */
 
         /* restart CG method */
         TRY( VecCopy(phi, p) );                   /* p=phi           */
@@ -644,22 +439,13 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
       TRY( VecAXPY(x, -acg, p) );                 /* x=x-acg*p       */
       TRY( VecAXPY(g, -acg, Ap) );                /* g=g-acg*Ap      */
 
-      TRY( MPGPGrads(qps, x, lb, ub, g) );        /* grad. splitting  gP,phi,beta */
+      TRY( MPGPGrads(qps, x, g) );        /* grad. splitting  gP,phi,beta */
     
       /* restart CG method */
       TRY( VecCopy(phi, p) );                     /* p=phi           */
     }
     qps->iteration++;
   };
-
-  if (FllopDebugEnabled) {
-    PetscReal norm;
-
-    TRY( QPGetScaledProjectedGradient(qp,alpha,galpha) );
-    TRY( VecAXPY(galpha,-1.0,gP) );
-    TRY( VecNorm(galpha,NORM_2,&norm) );
-    TRY( FllopDebug1("||g_alpha - g_P|| = %.8e\n",norm) );
-  }
 
   mpgp->ncg     += ncg;
   mpgp->nexp    += nexp;
@@ -695,31 +481,22 @@ PetscErrorCode QPSDestroy_MPGP(QPS qps)
 
 #undef __FUNCT__  
 #define __FUNCT__ "QPSIsQPCompatible_MPGP"
-/*
-QPSIsQPCompatible_MPGP - verify if the algorithm is able to solve given QP problem
-
-Parameters:
-+ qps - QP solver
-. qp - quadratic programming problem
-- flg - the pointer to result
-*/
 PetscErrorCode QPSIsQPCompatible_MPGP(QPS qps,QP qp,PetscBool *flg)
 {
-  Vec lb,ub;
   Mat Beq,Bineq;
+  Vec ceq,cineq;
+  QPC qpc;
   
   PetscFunctionBegin;
-  *flg = PETSC_TRUE;
-  TRY( QPGetBox(qp,&lb,&ub) );
-  TRY( QPGetEq(qp,&Beq,NULL) );
-  TRY( QPGetIneq(qp,&Bineq,NULL) );
-  if (!(lb || (lb && ub))) {
+  TRY( QPGetEq(qp,&Beq,&ceq) );
+  TRY( QPGetIneq(qp,&Bineq,&cineq) );
+  TRY( QPGetQPC(qp,&qpc) );
+  if (Beq || ceq || Bineq || cineq) {
     *flg = PETSC_FALSE;
+  } else {
+    TRY( PetscObjectTypeCompare((PetscObject)qpc,QPCBOX,flg) );
   }
-  if (Beq || Bineq) {
-    *flg = PETSC_FALSE;
-  }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(0);   
 }
 
 #undef __FUNCT__

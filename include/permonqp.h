@@ -1,6 +1,6 @@
-#if !defined(__FLLOPQP_H)
-#define	__FLLOPQP_H
-#include "permonqppf.h"
+#if !defined(__PERMONQP_H)
+#define	__PERMONQP_H
+#include "permonqpc.h"
 
 typedef struct _p_QP* QP;
 
@@ -50,7 +50,6 @@ FLLOP_EXTERN PetscErrorCode QPComputeObjective(QP qp, Vec x, PetscReal *f);
 FLLOP_EXTERN PetscErrorCode QPComputeObjectiveGradient(QP qp, Vec x, Vec g);
 FLLOP_EXTERN PetscErrorCode QPComputeObjectiveFromGradient(QP qp, Vec x, Vec g, PetscReal *f);
 FLLOP_EXTERN PetscErrorCode QPComputeObjectiveAndGradient(QP qp, Vec x, Vec g, PetscReal *f);
-FLLOP_EXTERN PetscErrorCode QPRemoveInactiveBounds(QP qp);
 
 FLLOP_EXTERN PetscErrorCode QPSetInitialVector(QP qp,Vec x);
 FLLOP_EXTERN PetscErrorCode QPSetOperator(QP qp,Mat A);
@@ -62,7 +61,7 @@ FLLOP_EXTERN PetscErrorCode QPAddEq(QP qp,Mat Beq,Vec ceq);
 FLLOP_EXTERN PetscErrorCode QPSetEq(QP qp,Mat Beq,Vec ceq);
 FLLOP_EXTERN PetscErrorCode QPGetEqMultiplicityScaling(QP qp, Vec *dE, Vec *dI);
 FLLOP_EXTERN PetscErrorCode QPSetIneq(QP qp,Mat Bineq,Vec cineq);
-FLLOP_EXTERN PetscErrorCode QPSetBox(QP qp,Vec lb,Vec ub);
+FLLOP_EXTERN PetscErrorCode QPSetBox(QP qp,IS is,Vec lb,Vec ub);
 FLLOP_EXTERN PetscErrorCode QPSetQPPF(QP qp,QPPF pf);
 FLLOP_EXTERN PetscErrorCode QPSetChangeListener(QP qp,PetscErrorCode (*f)(QP));
 FLLOP_EXTERN PetscErrorCode QPSetChangeListenerContext(QP qp,void *ctx);
@@ -78,13 +77,16 @@ FLLOP_EXTERN PetscErrorCode QPGetOperatorNullSpace(QP qp,Mat *R);
 FLLOP_EXTERN PetscErrorCode QPGetRhs(QP qp,Vec *b);
 FLLOP_EXTERN PetscErrorCode QPGetIneq(QP qp,Mat *Bineq,Vec *cineq);
 FLLOP_EXTERN PetscErrorCode QPGetEq(QP qp,Mat *Beq,Vec *ceq);
-FLLOP_EXTERN PetscErrorCode QPGetBox(QP qp,Vec *lb,Vec *ub);
-FLLOP_EXTERN PetscErrorCode QPGetBoxQPC(QP qp,Vec *lb,Vec *ub);
+FLLOP_EXTERN PetscErrorCode QPGetBox(QP qp,IS *is,Vec *lb,Vec *ub);
 FLLOP_EXTERN PetscErrorCode QPGetQPPF(QP qp,QPPF *pf);
 FLLOP_EXTERN PetscErrorCode QPGetChangeListener(QP qp,PetscErrorCode (**f)(QP));
 FLLOP_EXTERN PetscErrorCode QPGetChangeListenerContext(QP qp,void *ctx);
 FLLOP_EXTERN PetscErrorCode QPIsSolved(QP qp,PetscBool *flg);
 FLLOP_EXTERN PetscErrorCode QPGetOptionsPrefix(QP qp,const char *prefix[]);
+
+/* QPC stuff */
+FLLOP_EXTERN PetscErrorCode QPSetQPC(QP qp,QPC qpc);
+FLLOP_EXTERN PetscErrorCode QPGetQPC(QP qp, QPC *qpc);
 
 /* QP transforms */
 FLLOP_EXTERN PetscErrorCode QPTEnforceEqByProjector(QP qp);

@@ -1,7 +1,8 @@
 
-static char help[] = "Solves a tridiagonal system with lower bound.\n\
+static char help[] = "Solves a tridiagonal system (finite differences discretization of string displacement) with lower bound on the first half of the domain.\n\
 Input parameters include:\n\
-  -view_sol   : view solution vector\n\
+  -view       : view solution vector\n\
+  -infinite   : use PETSC_NINFINITY to keep part of the domain unconstrained\n\
   -n <mesh_n> : number of mesh points in both x and y-direction\n\n";
 
 /*
@@ -50,14 +51,16 @@ int main(int argc,char **args)
   Mat            A;
   QP             qp;
   QPS            qps;
-  PetscInt       i,n = 10,col[3],rstart,rend;
+  IS             is = NULL;
+  PetscInt       i,n = 10,col[3],isn,rstart,rend;
   PetscReal      h,value[3];
-  PetscBool      converged,viewSol=PETSC_FALSE;
+  PetscBool      converged,infinite=PETSC_FALSE,viewSol=PETSC_FALSE;
   PetscErrorCode ierr;
 
   ierr = PermonInitialize(&argc,&args,(char *)0,help);if (ierr) return ierr;
   ierr = PetscOptionsGetInt(NULL,NULL,"-n",&n,NULL);CHKERRQ(ierr);
-  ierr = PetscOptionsGetBool(NULL,NULL,"-sol",&viewSol,NULL);CHKERRQ(ierr);
+  ierr = PetscOptionsGetBool(NULL,NULL,"-infinite",&infinite,NULL);CHKERRQ(ierr);
+  ierr = PetscOptionsGetBool(NULL,NULL,"-view",&viewSol,NULL);CHKERRQ(ierr);
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   * Setup matrices and vectors
@@ -69,8 +72,24 @@ int main(int argc,char **args)
   ierr = MatSetUp(A);CHKERRQ(ierr);
   ierr = MatGetOwnershipRange(A,&rstart,&rend);CHKERRQ(ierr);
   ierr = MatCreateVecs(A,&x,&b);CHKERRQ(ierr);
-  ierr = VecDuplicate(x,&c);CHKERRQ(ierr);
-
+  if (infinite) {
+    ierr = VecDuplicate(x,&c);CHKERRQ(ierr);
+  } else {
+    isn = rend;
+    if (n/2 < rend) {
+      if (n/2 < rstart) {
+        isn = 0;
+      } else {
+        isn = n/2;
+      }
+    }
+    if (isn) isn = isn - rstart; 
+    ierr = ISCreateStride(PETSC_COMM_WORLD,isn,rstart,1,&is);CHKERRQ(ierr);
+    ierr = VecCreate(PETSC_COMM_WORLD,&c);CHKERRQ(ierr);
+    ierr = VecSetSizes(c,isn,n/2);CHKERRQ(ierr);
+    ierr = VecSetFromOptions(c);CHKERRQ(ierr);
+  }
+    
   if (!rstart) {
     rstart = 1;
     i      = 0; value[0] = 1.0;
@@ -88,7 +107,11 @@ int main(int argc,char **args)
     col[0] = i-1; col[1] = i; col[2] = i+1;
     ierr = MatSetValues(A,1,&i,3,col,value,INSERT_VALUES);CHKERRQ(ierr);
     ierr = VecSetValue(b,i,-15*h*h*2,INSERT_VALUES);CHKERRQ(ierr);
-    ierr = VecSetValue(c,i,fobst(i,n),INSERT_VALUES);CHKERRQ(ierr);
+    if (i<n/2) {
+        ierr = VecSetValue(c,i,fobst(i,n),INSERT_VALUES);CHKERRQ(ierr);
+    } else if (infinite) {
+        ierr = VecSetValue(c,i,PETSC_NINFINITY,INSERT_VALUES);CHKERRQ(ierr);
+    }
   }
   ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
   ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
@@ -98,7 +121,7 @@ int main(int argc,char **args)
   ierr = VecAssemblyEnd(c);CHKERRQ(ierr);
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  * Setup QP: argmin 1/2 x'Ax -x'b s.t. c <= x
+  * Setup QP: argmin 1/2 x'Ax -x'b s.t. c_i <= x_i where i in [n/2,n]
   *  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ierr = QPCreate(PETSC_COMM_WORLD,&qp);CHKERRQ(ierr);
   /* Set matrix representing QP operator */
@@ -110,7 +133,7 @@ int main(int argc,char **args)
   ierr = QPSetInitialVector(qp,x);CHKERRQ(ierr);
   /* Set box constraints.
   * c <= x <= PETSC_INFINITY */
-  ierr = QPSetBox(qp,NULL,c,NULL);CHKERRQ(ierr);
+  ierr = QPSetBox(qp,is,c,NULL);CHKERRQ(ierr);
   /* Set runtime options, e.g
   *   -qp_chain_view_kkt */
   ierr = QPSetFromOptions(qp);CHKERRQ(ierr);
@@ -140,6 +163,7 @@ int main(int argc,char **args)
   if (viewSol) ierr = viewDraw(c);CHKERRQ(ierr);
   if (viewSol) ierr = viewDraw(x);CHKERRQ(ierr);
 
+  ierr = ISDestroy(&is);CHKERRQ(ierr);
   ierr = QPSDestroy(&qps);CHKERRQ(ierr);
   ierr = QPDestroy(&qp);CHKERRQ(ierr);
   ierr = VecDestroy(&x);CHKERRQ(ierr);
@@ -152,20 +176,10 @@ int main(int argc,char **args)
 
 
 /*TEST
-  testset:
+  test:
     suffix: 1
     filter: grep -e CONVERGED -e number -e "r ="
-    args: -n 100 -qps_view_convergence -qp_chain_view_kkt
-    test:
-    test:
-      nsize: 3
-  testset:
-    filter: grep -e CONVERGED -e "function/" -e Objective -e "r ="
-    args: -n 100 -qps_view_convergence -qp_chain_view_kkt -qps_type tao -qps_tao_type blmvm
-    test:
-      suffix: blmvm_1
-    test:
-      suffix: blmvm_3
-      nsize: 3
+    nsize: 3
+    args: -n 100 -qps_view_convergence -qp_chain_view_kkt -infinite {{false true}separate output}}
 TEST*/
 

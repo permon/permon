@@ -45,11 +45,8 @@ struct _p_QP {
   Vec              cI;
   Vec              lambda_I;
 
-  /* box constraints */
-  Vec              lb;
-  Vec              lambda_lb;
-  Vec              ub;
-  Vec              lambda_ub;
+  /* separable convex constraints */
+  QPC              qpc;
 
   /* post-processing action after THIS QP's solve */
   void             *postSolveCtx;
@@ -82,7 +79,5 @@ FLLOP_INTERN PetscErrorCode QPCompute_BEt_lambda(QP qp,Vec *BEt_lambda);
 FLLOP_INTERN PetscErrorCode QPDefaultPostSolve(QP child,QP parent);
 FLLOP_INTERN PetscErrorCode QPSetEqMultiplier(QP qp, Vec lambda_E);
 FLLOP_INTERN PetscErrorCode QPSetIneqMultiplier(QP qp, Vec lambda_I);
-FLLOP_INTERN PetscErrorCode QPSetLowerBoundMultiplier(QP qp, Vec lambda_lb);
-FLLOP_INTERN PetscErrorCode QPSetUpperBoundMultiplier(QP qp, Vec lambda_ub);
 FLLOP_INTERN PetscErrorCode QPSetWorkVector(QP qp,Vec xwork);
 #endif

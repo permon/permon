@@ -250,7 +250,6 @@ PetscErrorCode QPChainPostSolve(QP qp)
   solved = cqp->solved;
   first = PETSC_TRUE;
   while (1) {
-    TRY( QPRemoveInactiveBounds(cqp) );
     TRY( QPComputeMissingBoxMultipliers(cqp) );
     TRY( QPComputeMissingEqMultiplier(cqp) );
     parent = cqp->parent;
