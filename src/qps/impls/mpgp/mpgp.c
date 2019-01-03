@@ -233,7 +233,7 @@ Parameters:
 PetscErrorCode QPSSetup_MPGP(QPS qps)
 {
   QPS_MPGP          *mpgp = (QPS_MPGP*)qps->data;
-  Vec               lb,ub,y;
+  Vec               lb,ub;
 
   PetscFunctionBegin;
   /* reset statistics*/
@@ -247,8 +247,6 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
   TRY( QPSSetWorkVecs(qps,7) );
 
   TRY( QPGetBox(qps->solQP,NULL,&lb,&ub) );
-  y = qps->work[5];     /* here is used temporarily Ap vector */
-  
   if (mpgp->bchop_tol) {
     if (lb) TRY( VecChop(lb,mpgp->bchop_tol) );
     if (ub) TRY( VecChop(ub,mpgp->bchop_tol) );
