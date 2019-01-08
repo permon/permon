@@ -527,7 +527,7 @@ PetscErrorCode FllopAIFSetBox(PetscInt n,PetscScalar *lb,const char *lbname,Pets
     TRY( PetscObjectSetName((PetscObject)ub_g,ubname) );
   }
   
-  TRY( QPSetBox(aif_qp,lb_g,ub_g) );
+  TRY( QPSetBox(aif_qp,NULL,lb_g,ub_g) );
   TRY( VecDestroy(&lb_g) );
   TRY( VecDestroy(&ub_g) );
   aif_setup_called = PETSC_FALSE;
