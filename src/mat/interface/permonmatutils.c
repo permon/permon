@@ -150,7 +150,7 @@ PetscErrorCode MatIsSymmetricByType(Mat A, PetscBool *flg)
 {
   PetscBool _flg = PETSC_FALSE;
   MPI_Comm comm;
-  
+
   PetscFunctionBegin;
   TRY( PetscObjectGetComm((PetscObject)A, &comm) );
   TRY( PetscObjectTypeCompare((PetscObject)A, MATBLOCKDIAG, &_flg) );
@@ -264,6 +264,18 @@ PetscErrorCode MatDestroy_Diag(Mat D, Vec x, Vec y, Vec z)
 }
 
 #undef __FUNCT__
+#define __FUNCT__ "MatGetDiagonal_Diag"
+PetscErrorCode MatGetDiagonal_Diag(Mat D,Vec out_d)
+{
+  Vec d;
+
+  PetscFunctionBegin;
+  TRY( MatShellGetContext(D, (Vec*)&d) );
+  TRY( VecCopy(d,out_d) );
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ "MatCreateDiag"
 PetscErrorCode MatCreateDiag(Vec d, Mat *D)
 {
@@ -279,6 +291,7 @@ PetscErrorCode MatCreateDiag(Vec d, Mat *D)
   TRY( MatShellSetOperation(*D, MATOP_MULT_ADD, (void(*)()) MatMultAdd_Diag) );
   TRY( MatShellSetOperation(*D, MATOP_MULT_TRANSPOSE_ADD, (void(*)()) MatMultAdd_Diag) );
   TRY( MatShellSetOperation(*D, MATOP_DESTROY, (void(*)()) MatDestroy_Diag) );
+  TRY( MatShellSetOperation(*D, MATOP_GET_DIAGONAL, (void(*)()) MatGetDiagonal_Diag) );
   TRY( MatSetOption(*D, MAT_SYMMETRIC, PETSC_TRUE) );
   TRY( MatSetOption(*D, MAT_SYMMETRY_ETERNAL, PETSC_TRUE) );
   PetscFunctionReturn(0);
@@ -415,11 +428,11 @@ PetscErrorCode MatMatIsZero(Mat A, Mat B, PetscReal tol, PetscInt ntrials, Petsc
 #undef __FUNCT__
 #define __FUNCT__ "MatGetMaxEigenvalue"
 /*@
-   MatGetMaxEigenvalue - Computes approximate maximum eigenvalue lambda 
+   MatGetMaxEigenvalue - Computes approximate maximum eigenvalue lambda
    and its associated eigenvector v (i.e. A*v = lambda*v) with basic power method.
 
    Collective on Mat
- 
+
    Input Parameters:
 +  A - the matrix
 .  v - vector of initial guess (optional)
@@ -683,10 +696,10 @@ PetscErrorCode MatMergeAndDestroy(MPI_Comm comm, Mat *local_in, Vec column_layou
       TRY( PetscObjectTypeCompare((PetscObject)A,MATSEQDENSE,&flg) );
       if (flg) f = MatMergeAndDestroy_SeqDense;
     }
-    
+
     /* if no type-specific implementation is found, use the default one */
     if (!f) f = MatMergeAndDestroy_Default;
-    
+
     /* call the implementation */
     TRY( PetscLogEventBegin(Mat_MergeAndDestroy,A,0,0,0) );
     TRY( (*f)(comm,local_in,column_layout,global_out) );
@@ -743,7 +756,7 @@ PetscErrorCode MatGetRowNormalization2(Mat A, Vec *d_new)
 
    Input Parameter:
 .  A - the matrix to be row-normalized
- 
+
    Output Parameter:
 .  d - the vector holding normalization, i.e. MatDiagonalScale(mat,NULL,d)
        causes mat to have rows with 2-norm equal to 1
