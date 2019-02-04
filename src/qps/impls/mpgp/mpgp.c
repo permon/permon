@@ -236,13 +236,6 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
   Vec               lb,ub;
 
   PetscFunctionBegin;
-  /* reset statistics*/
-  mpgp->ncg                  = 0;
-  mpgp->nexp                 = 0;
-  mpgp->nmv                  = 0;
-  mpgp->nprop                = 0;
-  mpgp->currentStepType      = ' ';
-  
   /* set the number of working vectors */
   TRY( QPSSetWorkVecs(qps,7) );
 
@@ -340,6 +333,7 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   TRY( VecCopy(phi, p) );                         /* p=phi */
 
   alpha = mpgp->alpha;
+  mpgp->currentStepType = ' ';
   qps->iteration = 0;                             /* main iteration counter */
   while (1)                                       /* main cycle */
   {
