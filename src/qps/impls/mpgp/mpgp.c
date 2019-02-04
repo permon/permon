@@ -452,6 +452,19 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   PetscFunctionReturn(0);
 }
 
+#undef __FUNCT__
+#define __FUNCT__ "QPSResetStatistics_MPGP"
+PetscErrorCode QPSResetStatistics_MPGP(QPS qps)
+{
+  QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
+  PetscFunctionBegin;
+  mpgp->ncg   = 0;
+  mpgp->nexp  = 0;
+  mpgp->nmv   = 0;
+  mpgp->nprop = 0;
+  PetscFunctionReturn(0);
+}
+
 #undef __FUNCT__  
 #define __FUNCT__ "QPSDestroy_MPGP"
 /*
