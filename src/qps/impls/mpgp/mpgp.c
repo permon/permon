@@ -583,6 +583,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
   */
   qps->ops->setup            = QPSSetup_MPGP;
   qps->ops->solve            = QPSSolve_MPGP;
+  qps->ops->resetstatistics  = QPSResetStatistics_MPGP;
   qps->ops->destroy          = QPSDestroy_MPGP;
   qps->ops->isqpcompatible   = QPSIsQPCompatible_MPGP;
   qps->ops->setfromoptions   = QPSSetFromOptions_MPGP;
