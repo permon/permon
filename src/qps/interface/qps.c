@@ -269,6 +269,8 @@ PetscErrorCode QPSResetStatistics(QPS qps)
   qps->iteration = 0;
   qps->iterations_accumulated = 0;
   qps->nsolves = 0;
+
+  if (qps->ops->resetstatistics) TRY( qps->ops->resetstatistics(qps) );
   PetscFunctionReturn(0);
 }
 
