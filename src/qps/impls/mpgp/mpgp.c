@@ -236,13 +236,6 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
   Vec               lb,ub;
 
   PetscFunctionBegin;
-  /* reset statistics*/
-  mpgp->ncg                  = 0;
-  mpgp->nexp                 = 0;
-  mpgp->nmv                  = 0;
-  mpgp->nprop                = 0;
-  mpgp->currentStepType      = ' ';
-  
   /* set the number of working vectors */
   TRY( QPSSetWorkVecs(qps,7) );
 
@@ -340,6 +333,7 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   TRY( VecCopy(phi, p) );                         /* p=phi */
 
   alpha = mpgp->alpha;
+  mpgp->currentStepType = ' ';
   qps->iteration = 0;                             /* main iteration counter */
   while (1)                                       /* main cycle */
   {
@@ -449,6 +443,19 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   mpgp->nexp    += nexp;
   mpgp->nmv     += nmv;
   mpgp->nprop   += nprop;
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "QPSResetStatistics_MPGP"
+PetscErrorCode QPSResetStatistics_MPGP(QPS qps)
+{
+  QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
+  PetscFunctionBegin;
+  mpgp->ncg   = 0;
+  mpgp->nexp  = 0;
+  mpgp->nmv   = 0;
+  mpgp->nprop = 0;
   PetscFunctionReturn(0);
 }
 
@@ -570,6 +577,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
   */
   qps->ops->setup            = QPSSetup_MPGP;
   qps->ops->solve            = QPSSolve_MPGP;
+  qps->ops->resetstatistics  = QPSResetStatistics_MPGP;
   qps->ops->destroy          = QPSDestroy_MPGP;
   qps->ops->isqpcompatible   = QPSIsQPCompatible_MPGP;
   qps->ops->setfromoptions   = QPSSetFromOptions_MPGP;
