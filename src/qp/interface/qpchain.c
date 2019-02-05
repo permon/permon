@@ -214,7 +214,7 @@ PetscErrorCode QPChainPostSolve(QP qp)
   TRY( PetscObjectGetComm((PetscObject)qp,&comm) );
   TRY( PetscObjectGetOptionsPrefix((PetscObject)qp,&prefix) );
 
-  TRY( PetscOptionsGetViewer(comm,prefix,"-qp_view",&v,&format,&view) );
+  TRY( PetscOptionsGetViewer(comm,NULL,prefix,"-qp_view",&v,&format,&view) );
   if (view & !PetscPreLoadingOn) {
     TRY( PetscViewerPushFormat(v,format) );
     TRY( QPView(qp,v) );
@@ -222,7 +222,7 @@ PetscErrorCode QPChainPostSolve(QP qp)
     TRY( PetscViewerDestroy(&v) );
   }
 
-  TRY( PetscOptionsGetViewer(comm,prefix,"-qp_chain_view",&v,&format,&view) );
+  TRY( PetscOptionsGetViewer(comm,NULL,prefix,"-qp_chain_view",&v,&format,&view) );
   if (view & !PetscPreLoadingOn) {
     TRY( PetscViewerPushFormat(v,format) );
     TRY( QPChainView(qp,v) );
@@ -230,7 +230,7 @@ PetscErrorCode QPChainPostSolve(QP qp)
     TRY( PetscViewerDestroy(&v) );
   }
 
-  TRY( PetscOptionsGetViewer(comm,prefix,"-qp_chain_view_qppf",&v,&format,&view) );
+  TRY( PetscOptionsGetViewer(comm,NULL,prefix,"-qp_chain_view_qppf",&v,&format,&view) );
   if (view & !PetscPreLoadingOn) {
     TRY( PetscViewerPushFormat(v,format) );
     TRY( QPChainViewQPPF(qp,v) );
@@ -238,7 +238,7 @@ PetscErrorCode QPChainPostSolve(QP qp)
     TRY( PetscViewerDestroy(&v) );
   }
 
-  TRY( PetscOptionsGetViewer(comm,prefix,"-qp_chain_view_kkt",&v,&format,&view) );
+  TRY( PetscOptionsGetViewer(comm,NULL,prefix,"-qp_chain_view_kkt",&v,&format,&view) );
   view &= !PetscPreLoadingOn;
   if (view) {
     TRY( PetscObjectTypeCompare((PetscObject)v,PETSCVIEWERASCII,&flg) );

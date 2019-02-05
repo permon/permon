@@ -596,7 +596,7 @@ PetscErrorCode QPSPostSolve(QPS qps)
   
   FllopTraceBegin;
   TRY( PetscLogEventBegin(QPS_PostSolve,qps,0,0,0) );  
-  TRY( PetscOptionsGetViewer(((PetscObject)qps)->comm,((PetscObject)qps)->prefix,"-qps_view",&v,&format,&view) );
+  TRY( PetscOptionsGetViewer(((PetscObject)qps)->comm,NULL,((PetscObject)qps)->prefix,"-qps_view",&v,&format,&view) );
   if (view && !PetscPreLoadingOn) {
     TRY( PetscViewerPushFormat(v,format) );
     TRY( QPSView(qps,v) );
@@ -604,7 +604,7 @@ PetscErrorCode QPSPostSolve(QPS qps)
     TRY( PetscViewerDestroy(&v) );
   }
 
-  TRY( PetscOptionsGetViewer(((PetscObject)qps)->comm,((PetscObject)qps)->prefix,"-qps_view_convergence",&v,&format,&view) );
+  TRY( PetscOptionsGetViewer(((PetscObject)qps)->comm,NULL,((PetscObject)qps)->prefix,"-qps_view_convergence",&v,&format,&view) );
   if (view && !PetscPreLoadingOn) {
     TRY( PetscViewerPushFormat(v,format) );
     TRY( QPSViewConvergence(qps,v) );
