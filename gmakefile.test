@@ -12,7 +12,7 @@ include $(PERMON_DIR)/lib/permon/conf/permon_variables
 
 TESTDIR ?= ./$(PETSC_ARCH)/tests
 MODDIR := $(PETSC_DIR)/$(PETSC_ARCH)/include
-TESTLOGFILE = $(TESTDIR)/examples_$(PETSC_ARCH).log
+TESTLOGFILE ?= $(TESTDIR)/examples_$(PETSC_ARCH).log
 EXAMPLESDIR := $(TESTSRCDIR)
 
 pkgs := examples
@@ -75,10 +75,8 @@ ifdef TIMEOUT
   TESTFLAGS += -t $(TIMEOUT)  # Override the default timeout
 endif
 
-
-
-$(generatedtest) : $(petscconf) $(petscvariables) $(CONFIGDIR)/gmakegentest.py $(TESTDIR)/.DIR | $$(@D)/.DIR
-	$(PYTHON) $(CONFIGDIR)/gmakegentest.py --petsc-dir=$(PETSC_DIR) --petsc-arch=$(PETSC_ARCH) --testdir=$(TESTDIR)
+$(generatedtest) : $(generated) $(petscconf) $(petscvariables) $(PETSCCONFIGDIR)/gmakegentest.py $(TESTDIR)/.DIR | $$(@D)/.DIR
+	$(PYTHON) $(PETSCCONFIGDIR)/gmakegentest.py --petsc-dir=$(PETSC_DIR) --petsc-arch=$(PETSC_ARCH) --testdir=$(TESTDIR) --srcdir=$(PERMON_DIR) --pkg-name=permon --pkg-pkgs=$(pkgs) --pkg-arch=$(PETSC_ARCH) --pkg-dir=$(PERMON_DIR)
 
 -include $(generatedtest)
 
