@@ -150,12 +150,7 @@ define GFORTRAN_DEP_CLEANUP
   fi
 endef
 
-# link line constructed differently for gmakefile vs gmakefile.test invocation
-ifeq ($(libpermonall),)
-  PERMON_TEST_LIB = $(PERMON_LIB)
-else
-  PERMON_TEST_LIB = $(PERMON_C_SH_LIB_PATH) $(PERMON_EXTERNAL_LIB_BASIC)
-endif
+PERMON_TEST_LIB = $(PERMON_LIB)
 
 # Test executables
 $(testexe.c) $(testexe.cu) : $(TESTDIR)/% : $(TESTDIR)/%.o $$^ $(libpermonall)
