@@ -1,6 +1,8 @@
 #if !defined(__FLLOPSYS_H)
 #define	__FLLOPSYS_H
 
+#include <permonconf.h>
+
 #include <petscksp.h>
 #include <petsctime.h>
 

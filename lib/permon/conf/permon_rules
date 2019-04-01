@@ -22,6 +22,8 @@ permon-all-local: permon_info permon_libs
 
 permon_chk_all: chk_permon_pkg_dir chk_permon_petsc_dir chklib_dir
 
+permon_setup_all: write_permon_conf write_permon_mfem
+
 #
 # Builds the PERMON library using PETSc GNU Make parallel buildsystem
 #
@@ -116,6 +118,29 @@ permon_info:
 	-@echo "------------------------------------------"
 	-@echo "Using MAKEFLAGS: -j$(MAKE_NP) -l$(MAKE_LOAD) $(MAKEFLAGS)"
 	-@echo "=========================================="
+
+PERMON_CONF_FILE_DIR := $(PERMON_DIR)/$(PETSC_ARCH)/include
+PERMON_CONF_FILE := $(PERMON_CONF_FILE_DIR)/permonconf.h
+PERMON_VARS_FILE := $(PERMON_DIR)/$(PETSC_ARCH)/lib/permon/conf/variables
+write_permon_conf:
+	@mkdir -p $(PERMON_CONF_FILE_DIR)
+	@printf "#if !defined(__PERMONCONF_H)\n#define __PERMONCONF_H\n" > $(PERMON_CONF_FILE)
+	@printf "# -*- mode: makefile -*-\n" > $(PERMON_VARS_FILE)
+ifeq ($(with_mfem),1)
+	@printf "\n#if !defined(PERMON_HAVE_MFEM)\n#define PERMON_HAVE_MFEM 1\n#endif\n" >> $(PERMON_CONF_FILE)
+	@printf "\n#if !defined(PERMON_MFEM_DIR)\n#define PERMON_MFEM_DIR \"$(MFEM_DIR)\"\n#endif\n" >> $(PERMON_CONF_FILE)
+	@printf "\nwith_mfem = 1\nMFEM_DIR = $(MFEM_DIR)\n" >> $(PERMON_VARS_FILE)
+endif
+	@printf "\n#endif\n" >> $(PERMON_CONF_FILE)
+
+PERMON_MFEM_CONF_DIR := $(PERMON_DIR)/$(PETSC_ARCH)/share/mfem/
+write_permon_mfem:
+ifeq ($(with_mfem),1)
+	@mkdir -p $(PERMON_MFEM_CONF_DIR)
+	@cp $(MFEM_CONFIG_DIR)/config.mk $(PERMON_MFEM_CONF_DIR)/
+	@sed -i "s|MFEM_TPLFLAGS  =.*|MFEM_TPLFLAGS  = $(PERMON_INCLUDE) $(MFEM_TPLFLAGS)|" $(PERMON_MFEM_CONF_DIR)/config.mk
+	@sed -i "s|MFEM_EXT_LIBS  =.*|MFEM_EXT_LIBS  = $(PERMON_C_SH_LIB_PATH) -L$(PERMON_LIB_DIR) $(PERMON_LIB_BASIC)  $(MFEM_EXT_LIBS)|"  $(PERMON_MFEM_CONF_DIR)/config.mk
+endif
 
 # Builds all the documentation
 alldoc: alldoc1 alldoc2

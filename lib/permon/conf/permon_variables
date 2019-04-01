@@ -8,6 +8,9 @@ include ${PETSC_DIR}/lib/petsc/conf/variables
 endif
 endif
 
+# aditional vars, chiefly for ext pkgs
+-include ${PERMON_DIR}/${PETSC_ARCH}/lib/permon/conf/variables
+
 # Variables specific to PERMON that can be employed in user makefiles.
 # PERMON_LIB_DIR          - determines where the PermonQP library is built.
 # PERMON_CC_INCLUDES      - locations of PERMON, PETSc and external library include files
@@ -24,6 +27,32 @@ PERMON_C_SH_LIB_PATH      = ${CC_LINKER_SLFLAG}${PERMON_LIB_DIR}
 PERMON_F_SH_LIB_PATH      = ${FC_LINKER_SLFLAG}${PERMON_LIB_DIR}
 PERMON_DEP_LIBS           = ${PETSC_TAO_LIB}
 PERMON_MAIN_HEADER        = include/permonsys.h
+
+# MFEM
+with_mfem ?= 0
+ifeq ($(with_mfem),1)
+  ifndef MFEM_DIR
+    ifeq ($(wildcard $(PETSC_DIR)/$(PETSC_ARCH)/include/mfem.hpp),)
+      $(error MFEM_DIR not defined)
+    else
+      MFEM_DIR = $(PETSC_DIR)/$(PETSC_ARCH)
+  endif
+  endif
+  MFEM_CONFIG_DIR = $(MFEM_DIR)/share/mfem
+  ifeq ($(wildcard $(MFEM_CONFIG_DIR)/config.mk),)
+    MFEM_CONFIG_DIR = $(MFEM_DIR)/config
+    ifeq ($(wildcard $(MFEM_CONFIG_DIR)/config.mk),)
+      $(error $(with_mfem) Incorrect MFEM_DIR: $(MFEM_DIR). Unable to find MFEM configuration file in $(MFEM_CONFIG_DIR))
+    endif
+  endif
+  include $(MFEM_CONFIG_DIR)/config.mk
+  ifneq ("$(MFEM_USE_PETSC)","YES")
+    $(error MFEM need to be configured with MFEM_USE_PETSC=YES)
+  endif
+  PERMON_CC_INCLUDES = ${PERMON_INCLUDE} ${MFEM_INCFLAGS}
+  PERMON_CCPPFLAGS = ${PERMON_INCLUDE} ${MFEM_INCFLAGS}
+  PERMON_DEP_LIBS = ${MFEM_LIBS}
+endif
 
 # Convert ${PERMON_PKG_PREFIX}_<VARIABLE> (e.g. PERMON_DUMMY_DIR)
 # to PERMON_PKG_<VARIABLE> (e.g. PERMON_PKG_DIR).
