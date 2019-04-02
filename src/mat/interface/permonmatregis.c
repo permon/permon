@@ -23,6 +23,6 @@ PetscErrorCode  PermonMatRegisterAll()
   TRY( MatRegister(MATMPIDENSEPERMON,MatCreate_MPIDensePermon) );
   TRY( MatRegister(MATEXTENSION,     MatCreate_Extension) );
   TRY( MatRegister(MATGLUING,        MatCreate_Gluing) );
-  TRY( MatRegisterBaseName(MATDENSEPERMON,MATSEQDENSEPERMON,MATMPIDENSEPERMON) );
+  TRY( MatRegisterRootName(MATDENSEPERMON,MATSEQDENSEPERMON,MATMPIDENSEPERMON) );
   PetscFunctionReturn(0);
 }

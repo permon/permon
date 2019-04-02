@@ -1865,11 +1865,11 @@ static PetscErrorCode QPTPostSolve_QPTMatISToBlockDiag(QP child,QP parent)
     /* TODO: flag for pure Neumann? */
     TRY( VecGetLocalVector(child->b,matis->y) );
     TRY( VecLockGet(parent->b,&lock) );
-    if (lock) TRY( VecLockPop(parent->b) ); /* TODO: safe? */
+    if (lock) TRY( VecLockReadPop(parent->b) ); /* TODO: safe? */
     TRY( VecSet(parent->b,0.0) );
     TRY( VecScatterBegin(matis->rctx,matis->y,parent->b,ADD_VALUES,SCATTER_REVERSE) );
     TRY( VecScatterEnd(matis->rctx,matis->y,parent->b,ADD_VALUES,SCATTER_REVERSE) );
-    if (lock) TRY( VecLockPush(parent->b) );
+    if (lock) TRY( VecLockReadPush(parent->b) );
     TRY( VecRestoreLocalVector(child->b,matis->y) );
   }
 

@@ -8,10 +8,11 @@ PERMON_VERSION_MINOR    := $(shell git describe --tags | awk -F[.-] '{print $$2}
 PERMON_VERSION_SUBMINOR := $(shell git describe --tags | awk -F[.-] '{print $$3}')
 PERMON_VERSION_RELEASE  := 0
 
-OBJDIR := $(PETSC_ARCH)/obj
-LIBDIR := $(PETSC_ARCH)/lib
+OBJDIR := ./$(PETSC_ARCH)/obj
+LIBDIR := ./$(PETSC_ARCH)/lib
 
-pkgs := sys vec mat ksp qp qpc qppf pc qps interface
+pkgs  := sys vec mat ksp qp qpc qppf pc qps interface
+spkgs := sys,vec,mat,ksp,qp,qpc,qppf,pc,qps,interface
 
 # $(call SONAME_FUNCTION,libfoo,abiversion)
 SONAME_FUNCTION ?= $(1).$(SL_LINKER_SUFFIX).$(2)
@@ -47,14 +48,19 @@ else
 endif
 libpermonall := $(if $(filter-out no,$(BUILDSHAREDLIB)),$(libpermonall_shared),$(libpermonall_static))
 
-generated      := $(PETSC_ARCH)/lib/permon/conf/files
+generated      := ./$(PETSC_ARCH)/lib/permon/conf/files
 
 all : $(generated) $(libpermonall)
 
 .SECONDEXPANSION:		# to expand $$(@D)/.DIR
 
-$(generated) : $(permonconf) $(permonvariables) config/gmakegen.py
-	$(PYTHON) config/gmakegen.py --petsc-arch=$(PETSC_ARCH) --installed-petsc=$(INSTALLED_PETSC)
+PETSCCONFIGDIR := $(PETSC_DIR)/config
+ifeq ($(wildcard $(PETSCCONFIGDIR)/gmakegen.py),)
+	PETSCCONFIGDIR := $(PETSC_DIR)/share/petsc/examples/config
+endif
+
+$(generated) : $(permonconf) $(permonvariables) $(PETSCCONFIGDIR)/gmakegen.py
+	$(PYTHON) $(PETSCCONFIGDIR)/gmakegen.py --petsc-arch=$(PETSC_ARCH) --petsc-arch=$(PETSC_ARCH) --pkg-dir=$(PERMON_DIR) --pkg-name=permon --pkg-pkgs=$(spkgs)
 
 -include $(generated)
 

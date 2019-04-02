@@ -1,7 +1,6 @@
 # -*- mode: makefile-gmake -*-
 
 CONFIGDIR := config
-PETSCCONFIGDIR := $(PETSC_DIR)/config
 
 # TESTSRCDIR is always relative to gmakefile.test
 #  This must be before includes
@@ -12,7 +11,7 @@ include $(PERMON_DIR)/lib/permon/conf/permon_variables
 
 TESTDIR ?= ./$(PETSC_ARCH)/tests
 MODDIR := $(PETSC_DIR)/$(PETSC_ARCH)/include
-TESTLOGFILE = $(TESTDIR)/examples_$(PETSC_ARCH).log
+TESTLOGFILE ?= $(TESTDIR)/examples_$(PETSC_ARCH).log
 EXAMPLESDIR := $(TESTSRCDIR)
 
 pkgs := examples
@@ -75,10 +74,13 @@ ifdef TIMEOUT
   TESTFLAGS += -t $(TIMEOUT)  # Override the default timeout
 endif
 
+PETSCCONFIGDIR ?= $(PETSC_DIR)/config
+ifeq ($(wildcard $(PETSCCONFIGDIR)/gmakegentest.py),)
+	PETSCCONFIGDIR := $(PETSC_DIR)/share/petsc/examples/config
+endif
 
-
-$(generatedtest) : $(petscconf) $(petscvariables) $(CONFIGDIR)/gmakegentest.py $(TESTDIR)/.DIR | $$(@D)/.DIR
-	$(PYTHON) $(CONFIGDIR)/gmakegentest.py --petsc-dir=$(PETSC_DIR) --petsc-arch=$(PETSC_ARCH) --testdir=$(TESTDIR)
+$(generatedtest) : $(generated) $(petscconf) $(petscvariables) $(PETSCCONFIGDIR)/gmakegentest.py $(TESTDIR)/.DIR | $$(@D)/.DIR
+	$(PYTHON) $(PETSCCONFIGDIR)/gmakegentest.py --petsc-dir=$(PETSC_DIR) --petsc-arch=$(PETSC_ARCH) --testdir=$(TESTDIR) --srcdir=$(PERMON_DIR) --pkg-dir=$(PERMON_DIR) --pkg-name=permon --pkg-pkgs=$(pkgs) --pkg-arch=$(PETSC_ARCH)
 
 -include $(generatedtest)
 
@@ -148,12 +150,7 @@ define GFORTRAN_DEP_CLEANUP
   fi
 endef
 
-# link line constructed differently for gmakefile vs gmakefile.test invocation
-ifeq ($(libpermonall),)
-  PERMON_TEST_LIB = $(PERMON_LIB)
-else
-  PERMON_TEST_LIB = $(PERMON_C_SH_LIB_PATH) $(PERMON_EXTERNAL_LIB_BASIC)
-endif
+PERMON_TEST_LIB = $(PERMON_LIB)
 
 # Test executables
 $(testexe.c) $(testexe.cu) : $(TESTDIR)/% : $(TESTDIR)/%.o $$^ $(libpermonall)
