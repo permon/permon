@@ -163,11 +163,11 @@ static PetscErrorCode  KSPDCGConvergedAdaptive_DCG(KSP ksp,PetscInt n,PetscReal 
   if (PetscIsInfOrNanReal(rnorm)) {
     PCFailedReason pcreason;
     PetscInt       sendbuf,pcreason_max;
-    ierr = PCGetSetUpFailedReason(ksp->pc,&pcreason);CHKERRQ(ierr);
+    ierr = PCGetFailedReason(ksp->pc,&pcreason);CHKERRQ(ierr);
     sendbuf = (PetscInt)pcreason;
     ierr = MPI_Allreduce(&sendbuf,&pcreason_max,1,MPIU_INT,MPIU_MAX,PetscObjectComm((PetscObject)ksp));CHKERRQ(ierr);
     if (pcreason_max) {
-      *reason = KSP_DIVERGED_PCSETUP_FAILED;
+      *reason = KSP_DIVERGED_PC_FAILED;
       ierr    = VecSetInf(ksp->vec_sol);CHKERRQ(ierr);
       ierr    = PetscInfo(ksp,"Linear solver pcsetup fails, declaring divergence \n");CHKERRQ(ierr);
     } else {
