@@ -5,6 +5,8 @@
 //
 // Sample runs:
 //    mpirun -np 4 ex2p -m $MFEM_DIR/data/beam-quad.mesh --petscopts rc_ex2p
+//  If MFEM was installed by PETSc:
+//    mpirun -np 4 ex2p -m $PETSC_DIR/$PETSC_ARCH/externalpackages/git.mfem/data/beam-quad.mesh
 //
 // Description:  This example code solves a simple linear elasticity problem
 //               describing a multi-material cantilever beam.
@@ -296,7 +298,7 @@ int main(int argc, char *argv[])
    // 16. Save in parallel the displaced mesh and the inverted solution (which
    //     gives the backward displacements to the original grid). This output
    //     can be viewed later using GLVis: "glvis -np <np> -m mesh -g sol".
-   if (savesol) // PERMON change: save solution only when required */
+   if (visualization || savesol) // PERMON change: save solution only when required */
    {
       GridFunction *nodes = pmesh->GetNodes();
       *nodes += x;

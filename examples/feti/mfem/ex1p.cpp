@@ -6,6 +6,8 @@
 // Sample runs:
 //    mpirun -np 4 ex1p -m $MFEM_DIR/data/amr-quad.mesh
 //    mpirun -np 4 ex1p -m $MFEM_DIR/data/amr-quad.mesh --petscopts rc_ex1p
+//  If MFEM was installed by PETSc:
+//    mpirun -np 4 ex1p -m $PETSC_DIR/$PETSC_ARCH/externalpackages/git.mfem/data/amr-quad.mesh
 //
 // Description:  This example code demonstrates the use of MFEM to define a
 //               simple finite element discretization of the Laplace problem
@@ -85,13 +87,7 @@ int main(int argc, char *argv[])
 
    printf("start\n");
    // 2. Parse command-line options.
-   /* PERMON change: default data dir is $PERMON_MFEM_DIR/data; PERMON_MFEM_DIR=$MFEM_DIR that PERMON was linked with */
-   const char *mfemdir = PERMON_MFEM_DIR;
-   char *default_mesh_file = NULL;
-   printf("cat\n");
-   strcpy(default_mesh_file,mfemdir);
-   strcat(default_mesh_file,"/data/star.mesh");
-   const char *mesh_file = default_mesh_file;
+   const char *mesh_file = "square-disc.mesh";
    int order = 1;
    bool static_cond = false;
    bool visualization = false;
@@ -282,7 +278,7 @@ int main(int argc, char *argv[])
 
    // 14. Save the refined mesh and the solution in parallel. This output can
    //     be viewed later using GLVis: "glvis -np <np> -m mesh -g sol".
-   if (savesol) // PERMON change: save solution only when required */
+   if (visualization || savesol) // PERMON change: save solution only when required */
    {
       ostringstream mesh_name, sol_name;
       mesh_name << "mesh." << setfill('0') << setw(6) << myid;

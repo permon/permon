@@ -1,0 +1,7 @@
+# Options for the Krylov solver
+-ksp_type feti
+-ksp_converged_reason
+-ksp_view
+-ksp_norm_type unpreconditioned
+-qps_view
+-qp_chain_view_kkt
