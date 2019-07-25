@@ -5,11 +5,7 @@
 # Basic targets to build PERMON library
 permon-all: permon_chk_all
 	@mkdir -p ./${PETSC_ARCH}/lib/permon/conf
-	+@if [ "${MAKE_IS_GNUMAKE}" != "" ]; then \
-	   ${OMAKE_PRINTDIR} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} PERMON_PKG_DIR=${PERMON_PKG_DIR} permon-all-gnumake-local 2>&1 | tee ${PERMON_LOG}; \
-	 else \
-	   ${OMAKE} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} PERMON_PKG_DIR=${PERMON_PKG_DIR} permon-all-legacy-local 2>&1 | tee ${PERMON_LOG} | ${GREP} -v "has no symbols"; \
-	 fi
+	${OMAKE_PRINTDIR} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} PERMON_PKG_DIR=${PERMON_PKG_DIR} permon-all-local 2>&1 | tee ${PERMON_LOG};
 	@egrep -i "( error | error: |no such file or directory)" ${PERMON_LOG} | tee ${PERMON_ERRLOG} > /dev/null
 	+@if test -s ${PERMON_ERRLOG}; then \
            printf ${PETSC_TEXT_HILIGHT}"*******************************ERROR************************************\n" 2>&1 | tee -a ${PERMON_LOG}; \
@@ -21,65 +17,24 @@ permon-all: permon_chk_all
 		 echo "Completed building libraries in ${PERMON_PKG_DIR}/${PETSC_ARCH}" | tee -a ${PERMON_LOG}; \
  echo "=========================================" | tee -a ${PERMON_LOG}; \
 	 fi
-	@${OMAKE} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} PERMON_PKG_DIR=${PERMON_PKG_DIR} permon_hginfo
 
-permon-all-gnumake: permon_chk_all
-	@if [ "${MAKE_IS_GNUMAKE}" != "" ]; then \
-          ${OMAKE_PRINTDIR} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} PERMON_PKG_DIR=${PERMON_PKG_DIR} PERMON_BUILD_USING_CMAKE="" permon-all; \
-        else printf ${PETSC_TEXT_HILIGHT}"Build not configured for GNUMAKE. Quiting"${PETSC_TEXT_NORMAL}"\n"; exit 1; fi
-
-permon-all-legacy: permon_chk_all
-	@${OMAKE} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} PERMON_PKG_DIR=${PERMON_PKG_DIR} PERMON_BUILD_USING_CMAKE="" MAKE_IS_GNUMAKE="" permon-all
-
-permon-all-gnumake-local: permon_info permon_build_gnumake
-
-permon-all-legacy-local:  permon_info deletelibs permon_build_legacy permon_shared
+permon-all-local: permon_info permon_libs
 
 permon_chk_all: chk_permon_pkg_dir chk_permon_petsc_dir chklib_dir
 
 #
-# Builds the PERMON library using PETSc legacy buildsystem
-#
-permon_build_legacy:
-	-@echo "Building ${PERMON_PKG_NAME} using PETSc legacy buildsystem"
-	-@echo "========================================="
-	-@${OMAKE} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} ACTION=libfast tree
-	-@${RANLIB} ${LIBNAME}  > tmpf 2>&1 ; ${GREP} -v "has no symbols" tmpf; ${RM} tmpf;
-	-@echo "Completed building libraries"
-	-@echo "========================================="
-
-#
 # Builds the PERMON library using PETSc GNU Make parallel buildsystem
 #
-permon_build_gnumake:
-	+@cd ${PERMON_PKG_DIR} && MAKEFLAGS="-j$(MAKE_NP) $(MAKEFLAGS)" ${OMAKE_PRINTDIR} -f gmakefile -j ${MAKE_NP} V=${V}
-
-#
-# builds the PERMON shared library
-#
-permon_shared:
-	-@echo "BEGINNING TO LINK THE SHARED LIBRARY"
-	-@${OMAKE} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} OTHERSHAREDLIBS="${OTHERSHAREDLIBS}" shared_nomesg
-
-# Ranlib on the library
-ranlib:
-	${RANLIB} ${PERMON_PKG_LIB_DIR}/*.${AR_LIB_SUFFIX}
+permon_libs:
+	+@cd ${PERMON_PKG_DIR} && MAKEFLAGS="-j$(MAKE_NP) -l$(MAKE_LOAD) $(MAKEFLAGS)" ${OMAKE_PRINTDIR} -f gmakefile ${MAKE_PAR_OUT_FLG} V=${V}
 
 # Deletes PERMON library
 deletelibs:
 	-@${RM} -r ${PERMON_PKG_LIB_DIR}/lib*.*
 
 # Cleans up build
-allclean-legacy: deletelibs
-	-@${OMAKE} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} PERMON_PKG_DIR=${PERMON_PKG_DIR} ACTION=clean-legacy tree
-allclean-gnumake:
-	-@${OMAKE} -f gmakefile clean
 allclean:
-	@if [ "${MAKE_IS_GNUMAKE}" != "" ]; then \
-	   ${OMAKE} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} PERMON_PKG_DIR=${PERMON_PKG_DIR} allclean-gnumake; \
-	else \
-	   ${OMAKE} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} PERMON_PKG_DIR=${PERMON_PKG_DIR} allclean-legacy; \
-	fi
+	-@${OMAKE} -f gmakefile clean
 
 #
 # Check if PETSC_DIR variable specified is valid
@@ -133,8 +88,6 @@ chk_permon_pkg_dir:
           printf "********************************************************************"${PETSC_TEXT_NORMAL}"\n"; \
 	  false; fi
 
-permon_hginfo:
-
 #
 # Prints information about the system and version of PERMON being compiled
 #
@@ -161,7 +114,7 @@ permon_info:
 	-@echo "------------------------------------------"
 	-@echo "Using mpiexec: ${MPIEXEC}"
 	-@echo "------------------------------------------"
-	-@echo "Using MAKEFLAGS: -j$(MAKE_NP) $(MAKEFLAGS)"
+	-@echo "Using MAKEFLAGS: -j$(MAKE_NP) -l$(MAKE_LOAD) $(MAKEFLAGS)"
 	-@echo "=========================================="
 
 # Builds all the documentation
