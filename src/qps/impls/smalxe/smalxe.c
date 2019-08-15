@@ -633,8 +633,12 @@ PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,QP qp_inner,PetscInt i,Pe
 
   TRY( smalxe->updateNormBu(qps_outer,u,&smalxe->normBu,&smalxe->enorm) );
   qps_outer->rnorm = PetscMax(smalxe->enorm,gnorm);
-  cctx->MNormBu = smalxe->M1 * smalxe->normBu;
-  qps_inner->atol = PetscMin(cctx->MNormBu, smalxe->eta);
+  cctx->MNormBu = smalxe->M1*smalxe->normBu;
+  if (!smalxe->inner_stop_b) {
+    qps_inner->atol = PetscMin(cctx->MNormBu,smalxe->eta);
+  } else {
+    if (!i) qps_inner->atol = PetscMin(smalxe->M1*cctx->norm_rhs_outer,smalxe->eta);
+  }
   
   TRY( QPSConverged_Inner_SMALXE_Monitor_Outer(qps_inner,qp_inner,i,gnorm,cctx,PETSC_TRUE) );
   TRY( QPSConverged_Inner_SMALXE_Monitor_Inner(qps_inner,qp_inner,i,gnorm,cctx) );
@@ -775,6 +779,7 @@ PetscErrorCode QPSSetFromOptions_SMALXE(PetscOptionItems *PetscOptionsObject,QPS
   TRY( PetscOptionsReal("-qps_smalxe_norm_update_lag_upper","","",smalxe->upper,&smalxe->upper,NULL) );
 
   TRY( PetscOptionsBool("-qps_smalxe_knoll","","",smalxe->knoll,&smalxe->knoll,NULL) );
+  TRY( PetscOptionsBool("-qps_smalxe_inner_stop_b","Replace ||Bx-c|| with ||b|| in inner stopping criterion","",smalxe->inner_stop_b,&smalxe->inner_stop_b,NULL) );
   smalxe->setfromoptionscalled = PETSC_TRUE;
   TRY( PetscOptionsTail() );
   PetscFunctionReturn(0);
@@ -1218,7 +1223,8 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_SMALXE(QPS qps)
   smalxe->lower       = 0.1;
   smalxe->upper       = 1.1;
 
-  smalxe->knoll       = PETSC_FALSE;
+  smalxe->knoll        = PETSC_FALSE;
+  smalxe->inner_stop_b = PETSC_FALSE;
   /* set SMALXE-specific default maximum number of outer iterations */
   qps->max_it = 100;
 
