@@ -64,6 +64,7 @@ typedef struct {
 
   PetscBool knoll;
   PetscBool inner_stop_b;
+  PetscBool update_b;
   PetscErrorCode (*updateNormBu)(QPS qps,Vec u,PetscReal *normBu,PetscReal *enorm);
 } QPS_SMALXE;
 

@@ -442,14 +442,18 @@ static PetscErrorCode QPSSMALXEUpdateLambda_SMALXE(QPS qps,PetscReal rho)
 #define __FUNCT__ "QPSSMALXEUpdate_SMALXE"
 PetscErrorCode QPSSMALXEUpdate_SMALXE(QPS qps, PetscReal Lag_old, PetscReal Lag, PetscReal rho)
 {
-  QPS_SMALXE    *smalxe = (QPS_SMALXE*)qps->data;
-  PetscReal     M1_new, M1_update=smalxe->M1_update;
-  PetscReal     t,t2;
-  PetscBool     flag;
+  QPS_SMALXE                   *smalxe = (QPS_SMALXE*)qps->data;
+  QPSConvergedCtx_Inner_SMALXE *cctx = (QPSConvergedCtx_Inner_SMALXE*) smalxe->cctx_inner;
+  PetscReal                    M1_new, M1_update=smalxe->M1_update;
+  PetscReal                    t,t2;
+  PetscBool                    flag;
 
   PetscFunctionBegin;
-  {
-    t = 0.5*rho*smalxe->normBu*smalxe->normBu;
+  t = 0.5*rho;
+  if (!smalxe->update_b) {
+    t *= smalxe->normBu*smalxe->normBu;
+  } else {
+    t *= cctx->norm_rhs_outer*cctx->norm_rhs_outer;
   }
   t2 = Lag - (Lag_old + t);
   flag = (PetscBool)(t2 < smalxe->update_threshold);
@@ -458,7 +462,6 @@ PetscErrorCode QPSSMALXEUpdate_SMALXE(QPS qps, PetscReal Lag_old, PetscReal Lag,
     MPI_Comm comm;
     QPS qps_inner = smalxe->inner;
     PetscReal gnorm = qps_inner->rnorm;
-    QPSConvergedCtx_Inner_SMALXE *cctx = (QPSConvergedCtx_Inner_SMALXE*) qps_inner->cnvctx;
 
     TRY( PetscObjectGetComm((PetscObject)qps,&comm) );
     TRY( PetscPrintf(comm, "END   outer %3d:  Lagrangian L       L-L_old      L-(L_old+1/2*rho*||Bu||^2) %c threshold    1/2*rho*||Bu||^2\n",qps->iteration,flag?'<':'>') );
@@ -780,6 +783,7 @@ PetscErrorCode QPSSetFromOptions_SMALXE(PetscOptionItems *PetscOptionsObject,QPS
 
   TRY( PetscOptionsBool("-qps_smalxe_knoll","","",smalxe->knoll,&smalxe->knoll,NULL) );
   TRY( PetscOptionsBool("-qps_smalxe_inner_stop_b","Replace ||Bx-c|| with ||b|| in inner stopping criterion","",smalxe->inner_stop_b,&smalxe->inner_stop_b,NULL) );
+  TRY( PetscOptionsBool("-qps_smalxe_update_b","Replace ||Bx-c|| with ||b|| in Lagrangian difference check for M/rho update","",smalxe->update_b,&smalxe->update_b,NULL) );
   smalxe->setfromoptionscalled = PETSC_TRUE;
   TRY( PetscOptionsTail() );
   PetscFunctionReturn(0);
@@ -1225,6 +1229,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_SMALXE(QPS qps)
 
   smalxe->knoll        = PETSC_FALSE;
   smalxe->inner_stop_b = PETSC_FALSE;
+  smalxe->update_b     = PETSC_FALSE;
   /* set SMALXE-specific default maximum number of outer iterations */
   qps->max_it = 100;
 
