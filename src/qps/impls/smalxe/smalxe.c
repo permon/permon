@@ -1,6 +1,8 @@
 
 #include <../src/qps/impls/smalxe/smalxeimpl.h>
 
+const char *QPSSMALXEInnerTolTypes[]={"std","rhs","rhsinner","stdmax","rhsmax","rhsinnermax","outer","QPSSMALXEInnerTol",0};
+
 FLLOP_EXTERN PetscErrorCode QPSReset_SMALXE(QPS qps);
 
 #undef __FUNCT__
@@ -626,6 +628,7 @@ PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,QP qp_inner,PetscInt i,Pe
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps_outer->data;
   QP qp_outer = cctx->qp_outer;
   Vec u = qp_inner->x;
+  PetscReal nrm;
   MPI_Comm comm;
   
   PetscFunctionBegin;
@@ -637,11 +640,37 @@ PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,QP qp_inner,PetscInt i,Pe
   TRY( smalxe->updateNormBu(qps_outer,u,&smalxe->normBu,&smalxe->enorm) );
   qps_outer->rnorm = PetscMax(smalxe->enorm,gnorm);
   cctx->MNormBu = smalxe->M1*smalxe->normBu;
-  if (!smalxe->inner_stop_b) {
-    qps_inner->atol = PetscMin(cctx->MNormBu,smalxe->eta);
-  } else {
-    if (!i) qps_inner->atol = PetscMin(smalxe->M1*cctx->norm_rhs_outer,smalxe->eta);
+  switch (smalxe->inner_tol_type) {
+    case QPS_SMALXE_INNER_TOL_STD:
+      qps_inner->atol = PetscMin(cctx->MNormBu,smalxe->eta);
+      break;
+    case QPS_SMALXE_INNER_TOL_RHS:
+      if (!i) qps_inner->atol = PetscMin(smalxe->M1*cctx->norm_rhs_outer,smalxe->eta);
+      break;
+    case QPS_SMALXE_INNER_TOL_RHSINNER:
+      if (!i) {
+        TRY( VecNorm(qp_inner->b,NORM_2,&nrm) );
+        qps_inner->atol = PetscMin(smalxe->M1*nrm,smalxe->eta);
+      }
+      break;
+    case QPS_SMALXE_INNER_TOL_STDMAX:
+      qps_inner->atol = PetscMax(PetscMin(cctx->MNormBu,smalxe->eta),cctx->ttol_outer);
+      break;
+    case QPS_SMALXE_INNER_TOL_RHSMAX:
+      if (!i) qps_inner->atol = PetscMax(PetscMin(smalxe->M1*cctx->norm_rhs_outer,smalxe->eta),cctx->ttol_outer);
+      break;
+    case QPS_SMALXE_INNER_TOL_RHSINNERMAX:
+      if (!i) {
+        TRY( VecNorm(qp_inner->b,NORM_2,&nrm) );
+        qps_inner->atol = PetscMax(PetscMin(smalxe->M1*nrm,smalxe->eta),cctx->ttol_outer);
+      }
+      break;
+    case QPS_SMALXE_INNER_TOL_OUTER:
+      if (!i) qps_inner->atol = cctx->ttol_outer;
+      break;
+    default: SETERRQ(comm,PETSC_ERR_PLIB,"Unknown SMALXE inner stopping criterion type");
   }
+    if (!i) PetscPrintf(comm,"%e %e %e %e\n",smalxe->M1,cctx->MNormBu,smalxe->M1*cctx->norm_rhs_outer, smalxe->eta);
   
   TRY( QPSConverged_Inner_SMALXE_Monitor_Outer(qps_inner,qp_inner,i,gnorm,cctx,PETSC_TRUE) );
   TRY( QPSConverged_Inner_SMALXE_Monitor_Inner(qps_inner,qp_inner,i,gnorm,cctx) );
@@ -782,7 +811,7 @@ PetscErrorCode QPSSetFromOptions_SMALXE(PetscOptionItems *PetscOptionsObject,QPS
   TRY( PetscOptionsReal("-qps_smalxe_norm_update_lag_upper","","",smalxe->upper,&smalxe->upper,NULL) );
 
   TRY( PetscOptionsBool("-qps_smalxe_knoll","","",smalxe->knoll,&smalxe->knoll,NULL) );
-  TRY( PetscOptionsBool("-qps_smalxe_inner_stop_b","Replace ||Bx-c|| with ||b|| in inner stopping criterion","",smalxe->inner_stop_b,&smalxe->inner_stop_b,NULL) );
+  TRY( PetscOptionsEnum("-qps_smalxe_inner_tol_type","type inner stopping criterion","",QPSSMALXEInnerTolTypes,(PetscEnum)smalxe->inner_tol_type,(PetscEnum*)&smalxe->inner_tol_type,NULL) );
   TRY( PetscOptionsBool("-qps_smalxe_update_b","Replace ||Bx-c|| with ||b|| in Lagrangian difference check for M/rho update","",smalxe->update_b,&smalxe->update_b,NULL) );
   smalxe->setfromoptionscalled = PETSC_TRUE;
   TRY( PetscOptionsTail() );
@@ -1227,9 +1256,9 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_SMALXE(QPS qps)
   smalxe->lower       = 0.1;
   smalxe->upper       = 1.1;
 
-  smalxe->knoll        = PETSC_FALSE;
-  smalxe->inner_stop_b = PETSC_FALSE;
-  smalxe->update_b     = PETSC_FALSE;
+  smalxe->knoll          = PETSC_FALSE;
+  smalxe->inner_tol_type = QPS_SMALXE_INNER_TOL_STD;
+  smalxe->update_b       = PETSC_FALSE;
   /* set SMALXE-specific default maximum number of outer iterations */
   qps->max_it = 100;
 
