@@ -535,7 +535,7 @@ PetscErrorCode QPCFeas(QPC qpc, Vec x, Vec d, PetscScalar *alpha)
   /* compute largest step-size for the given QPC type */
   TRY((*qpc->ops->feas)(qpc, x_sub, d_sub, &alpha_temp));
   TRY( MPI_Allreduce(&alpha_temp, alpha, 1, MPIU_SCALAR, MPIU_MIN, PetscObjectComm((PetscObject)qpc)) );
-  if (*alpha >= PETSC_INFINITY) *alpha = 0.0;
+  //if (*alpha >= PETSC_INFINITY) *alpha = 0.0;
 
   /* restore the gradients */
   TRY(QPCRestoreSubvector( qpc, x, &x_sub));
