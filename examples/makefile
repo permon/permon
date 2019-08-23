@@ -4,8 +4,8 @@ CFLAGS      = -I.
 FFLAGS      =
 CPPFLAGS    =
 FPPFLAGS    =
-TUTORIALS   = ex1.c ex2.c jbearing2.c
-EXAMPLESC   = ex1.c ex2.c jbearing2.c
+TUTORIALS   = ex1.c ex2.c ex10.c jbearing2.c
+EXAMPLESC   = ex1.c ex2.c ex10.c jbearing2.c
 EXAMPLECH   =
 EXAMPLESF   =
 EXAMPLESFH  =
@@ -13,7 +13,7 @@ LOCDIR      = src/examples
 MANSEC      =
 DOCS        =
 DIRS        =
-CLEANFILES  = ex1 ex2 jbearing2
+CLEANFILES  = ex1 ex2 ex10 jbearing2
 
 include ${PERMON_DIR}/lib/permon/conf/permon_base
 
@@ -24,6 +24,10 @@ ex1: ex1.o chkopts
 ex2: ex2.o chkopts
 	-${CLINKER} -o ex2 ex2.o ${PETSC_TAO_LIB} ${PERMON_LIB}
 	${RM} ex2.o
+
+ex10: ex10.o chkopts
+	-${CLINKER} -o ex10 ex10.o ${PETSC_TAO_LIB} ${PERMON_LIB}
+	${RM} ex10.o
 
 jbearing2: jbearing2.o chkopts
 	-${CLINKER} -o jbearing2 jbearing2.o ${PETSC_TAO_LIB} ${PERMON_LIB}
