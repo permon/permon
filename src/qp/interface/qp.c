@@ -43,6 +43,35 @@ static PetscErrorCode QPInitializeInitialVector_Private(QP qp)
   PetscFunctionReturn(0);
 }
 
+
+
+PetscErrorCode QPDump(QP qp)
+{
+  PetscErrorCode  ierr;
+  PetscViewer     fd;
+  Vec lb,ub;
+
+  PetscFunctionBegin;
+  ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,"A.bin",FILE_MODE_WRITE,&fd);CHKERRQ(ierr);
+  ierr = MatView(qp->A,fd);CHKERRQ(ierr);
+  ierr = PetscViewerDestroy(&fd);CHKERRQ(ierr);
+  ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,"b.bin",FILE_MODE_WRITE,&fd);CHKERRQ(ierr);
+  ierr = VecView(qp->b,fd);CHKERRQ(ierr);
+  ierr = PetscViewerDestroy(&fd);CHKERRQ(ierr);
+  ierr = QPCBoxGet(qp->qpc,&lb,&ub);CHKERRQ(ierr);
+  if (lb) {
+    ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,"lb.bin",FILE_MODE_WRITE,&fd);CHKERRQ(ierr);
+    ierr = VecView(lb,fd);CHKERRQ(ierr);
+    ierr = PetscViewerDestroy(&fd);CHKERRQ(ierr);
+  }
+  if (ub) {
+    ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,"ub.bin",FILE_MODE_WRITE,&fd);CHKERRQ(ierr);
+    ierr = VecView(ub,fd);CHKERRQ(ierr);
+    ierr = PetscViewerDestroy(&fd);CHKERRQ(ierr);
+  }
+  PetscFunctionReturn(0);
+}
+
 #undef __FUNCT__
 #define __FUNCT__ "QPAddChild"
 PetscErrorCode QPAddChild(QP qp, QPDuplicateOption opt, QP *newchild)

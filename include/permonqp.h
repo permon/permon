@@ -11,6 +11,8 @@ typedef enum {QP_SCALE_NONE,QP_SCALE_ROWS_NORM_2,QP_SCALE_DDM_MULTIPLICITY} QPSc
 FLLOP_EXTERN const char *QPScaleTypes[];
 typedef enum {QP_DUPLICATE_DO_NOT_COPY,QP_DUPLICATE_COPY_POINTERS} QPDuplicateOption;
 
+FLLOP_EXTERN PetscErrorCode QPDump(QP qp);
+
 FLLOP_EXTERN PetscErrorCode QPChainAdd(QP qp,QPDuplicateOption opt,QP *newchild);
 FLLOP_EXTERN PetscErrorCode QPChainPop(QP qp);
 FLLOP_EXTERN PetscErrorCode QPChainFind(QP qp,PetscErrorCode(*transform)(QP),QP *child);
