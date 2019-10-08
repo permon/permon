@@ -16,16 +16,5 @@ DIRS        =
 CLEANFILES  = ex1 ex2 jbearing2
 
 include ${PERMON_DIR}/lib/permon/conf/permon_base
-
-ex1: ex1.o chkopts
-	-${CLINKER} -o ex1 ex1.o ${PETSC_TAO_LIB} ${PERMON_LIB}
-	${RM} ex1.o
-
-ex2: ex2.o chkopts
-	-${CLINKER} -o ex2 ex2.o ${PETSC_TAO_LIB} ${PERMON_LIB}
-	${RM} ex2.o
-
-jbearing2: jbearing2.o chkopts
-	-${CLINKER} -o jbearing2 jbearing2.o ${PETSC_TAO_LIB} ${PERMON_LIB}
-	${RM} jbearing2.o
+include ${PERMON_DIR}/lib/permon/conf/permon_test
 

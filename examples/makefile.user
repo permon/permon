@@ -1,0 +1,19 @@
+# This is an example makefile to compile and link an application with PERMON.
+
+ALL: ex1 # default target
+
+CFLAGS      = -I. # include current directory
+CPPFLAGS    =     # flags for cpp/cxx files
+CLEANFILES  = ex1 # delete executable with make clean
+
+include ${PERMON_DIR}/lib/permon/conf/permon_base # rules and variables
+
+ex1: ex1.o
+	-${CLINKER} -o ex1 ex1.o ${PETSC_TAO_LIB} ${PERMON_LIB}
+	${RM} ex1.o
+
+# use the following example for program consisting of multiple files
+#ex1: ex1.o file2.o
+#	-${CLINKER} -o ex1 ex1.o file2.o ${PETSC_TAO_LIB} ${PERMON_LIB}
+#	${RM} ex1.o file2.o
+
