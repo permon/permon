@@ -137,6 +137,7 @@ int main(int argc,char **args)
   /* Set runtime options, e.g
   *   -qp_chain_view_kkt */
   ierr = QPSetFromOptions(qp);CHKERRQ(ierr);
+  QPDump(qp);
   
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   * Setup QPS, i.e. QP Solver
@@ -159,7 +160,7 @@ int main(int argc,char **args)
   /* Check that QPS converged */
   ierr = QPIsSolved(qp,&converged);CHKERRQ(ierr);
   if (!converged) PetscPrintf(PETSC_COMM_WORLD,"QPS did not converge!\n");
-  if (viewSol) ierr = VecView(x,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+  //if (viewSol) ierr = VecView(x,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
   if (viewSol) ierr = viewDraw(c);CHKERRQ(ierr);
   if (viewSol) ierr = viewDraw(x);CHKERRQ(ierr);
 
