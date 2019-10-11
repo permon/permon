@@ -952,6 +952,7 @@ PetscErrorCode MatCreateInv(Mat A, MatInvType invType, Mat *newimat)
   TRY( MatSetType(imat, MATINV) );
   TRY( MatInvSetMat(imat, A) );
   TRY( MatInvSetType(imat, invType) );
+  TRY( PetscLayoutReference(A->cmap,&imat->cmap) );
   *newimat = imat;
   PetscFunctionReturn(0);
 }
