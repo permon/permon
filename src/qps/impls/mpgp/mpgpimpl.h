@@ -22,6 +22,7 @@ typedef struct {
   PetscInt  nexp;             /* ... expansion step counter           */
   char      currentStepType;
 
+  QPSMPGPExpansionType exptype;
   PetscErrorCode (*expansion)(QPS,PetscReal,PetscReal);
 } QPS_MPGP;
 

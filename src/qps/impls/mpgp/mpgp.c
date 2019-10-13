@@ -1,6 +1,8 @@
 
 #include <../src/qps/impls/mpgp/mpgpimpl.h>
 
+const char *const QPSMPGPExpansionTypes[] = {"std","projcg","QPSMPGPExpansionType","QPS_MPGP_EXPANSION_",0};
+
 /*
   WORK VECTORS:
 
@@ -270,6 +272,39 @@ static PetscErrorCode MPGPExpansion_Std(QPS qps, PetscReal afeas, PetscReal acg)
 }
 
 #undef __FUNCT__
+#define __FUNCT__ "MPGPExpansion_ProjCG"
+/*
+MPGPExpansion - expand active set
+
+Parameters:
++ qps   - QP solver
+. afeas - feasible step length in p direction
+- acg   - cg step length in p direction
+*/
+static PetscErrorCode MPGPExpansion_ProjCG(QPS qps, PetscReal afeas, PetscReal acg)
+{
+  QP                qp;
+  QPC               qpc;
+  Vec               g;                  /* ... gradient                         */
+  Vec               p;                  /* ... conjugate gradient               */
+  Vec               x;
+  QPS_MPGP          *mpgp = (QPS_MPGP*)qps->data;
+
+  PetscFunctionBegin;
+  TRY( QPSGetSolvedQP(qps,&qp) );
+  TRY( QPGetQPC(qp,&qpc) );
+  TRY( QPGetSolutionVector(qp, &x) );
+
+  g                 = qps->work[3];
+  p                 = qps->work[4];
+
+  /* make projected CG step */
+  TRY( VecAXPY(x, -acg, p) );               /* x=x-acg*p      */
+  TRY( QPCProject(qpc, x, x) );             /* project x to feas.set */
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ "QPSSetup_MPGP"
 /*
 QPSSetup_MPGP - the setup function of MPGP algorithm; initialize constant step-size, check the constraints
@@ -290,6 +325,16 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
   if (mpgp->bchop_tol) {
     if (lb) TRY( VecChop(lb,mpgp->bchop_tol) );
     if (ub) TRY( VecChop(ub,mpgp->bchop_tol) );
+  }
+
+  switch (mpgp->exptype) {
+    case QPS_MPGP_EXPANSION_STD:
+      mpgp->expansion = MPGPExpansion_Std;
+      break;
+    case QPS_MPGP_EXPANSION_PROJCG:
+      mpgp->expansion = MPGPExpansion_ProjCG;
+      break;
+    default: SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_PLIB,"Unknown MPGP expansion type");
   }
 
   /* initialize alpha */
@@ -566,6 +611,7 @@ PetscErrorCode QPSSetFromOptions_MPGP(PetscOptionItems *PetscOptionsObject,QPS q
   if (flg1) TRY( QPSMPGPSetOperatorMaxEigenvalueIterations(qps,maxeig_iter) );
   TRY( PetscOptionsReal("-qps_mpgp_btol","Boundary overshoot tolerance; default: 10*PETSC_MACHINE_EPSILON","",mpgp->btol,&mpgp->btol,&flg1) );
   TRY( PetscOptionsReal("-qps_mpgp_bound_chop_tol","Sets boundary to 0 for |boundary|<tol ; default: 0","",mpgp->bchop_tol,&mpgp->bchop_tol,NULL) );
+  TRY( PetscOptionsEnum("-qps_mpgp_expansion_type","Set expansion step type","",QPSMPGPExpansionTypes,(PetscEnum)mpgp->exptype,(PetscEnum*)&mpgp->exptype,NULL) );
   TRY( PetscOptionsTail() );
   PetscFunctionReturn(0);
 }
@@ -606,6 +652,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
   mpgp->maxeig_iter          = PETSC_DECIDE;
   mpgp->btol                 = 10*PETSC_MACHINE_EPSILON; /* boundary tol */
   mpgp->bchop_tol            = 0.0; /* chop of bounds */
+  mpgp->exptype              = QPS_MPGP_EXPANSION_STD;
 
   /*
        Sets the functions that are associated with this data structure
@@ -619,7 +666,6 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
   qps->ops->setfromoptions   = QPSSetFromOptions_MPGP;
   qps->ops->monitor          = QPSMonitorDefault_MPGP;
   qps->ops->viewconvergence  = QPSViewConvergence_MPGP;
-  mpgp->expansion            = MPGPExpansion_Std;
 
   TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetCurrentStepType_MPGP_C",QPSMPGPGetCurrentStepType_MPGP) );
   TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetAlpha_MPGP_C",QPSMPGPGetAlpha_MPGP) );
