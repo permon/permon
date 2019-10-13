@@ -223,6 +223,53 @@ static PetscErrorCode MPGPGrads(QPS qps, Vec x, Vec g)
 }
 
 #undef __FUNCT__
+#define __FUNCT__ "MPGPExpansion_Std"
+/*
+MPGPExpansion - expand active set
+
+Parameters:
++ qps   - QP solver
+. afeas - feasible step length in p direction
+- acg   - cg step length in p direction
+*/
+static PetscErrorCode MPGPExpansion_Std(QPS qps, PetscReal afeas, PetscReal acg)
+{
+  QP                qp;
+  QPC               qpc;
+  Vec               gr;                 /* ... reduced free gradient            */
+  Vec               gf;                 /* ... free gradient                    */
+  Vec               g;                  /* ... gradient                         */
+  Vec               p;                  /* ... conjugate gradient               */
+  Vec               Ap;                 /* ... multiplicated vector             */
+  Vec               x;
+  QPS_MPGP          *mpgp = (QPS_MPGP*)qps->data;
+
+  PetscFunctionBegin;
+  TRY( QPSGetSolvedQP(qps,&qp) );
+  TRY( QPGetQPC(qp,&qpc) );
+  TRY( QPGetSolutionVector(qp, &x) );
+
+  gr                = qps->work[6];
+  gf                = qps->work[1];
+
+  g                 = qps->work[3];
+  p                 = qps->work[4];
+  Ap                = qps->work[5];
+
+  /* make maximal feasible step */
+  TRY( VecAXPY(x, -afeas, p) );             /* x=x-afeas*p*/
+  TRY( VecAXPY(g, -afeas, Ap) );            /* g=g-afeas*Ap    */
+
+  TRY( MPGPGrads(qps, x, g) );              /* grad. splitting  gP,gf,gc,gr */
+
+  /* make one more projected gradient step with constant step-length */
+  /* TRY( VecAXPY(x, -mpgp->alpha, gr) ); */     /* x=x-abar*gr */
+  TRY( VecAXPY(x, -mpgp->alpha, gf) );      /* x=x-abar*gf */
+  TRY( QPCProject(qpc, x, x) );             /* project x to feas.set */
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ "QPSSetup_MPGP"
 /*
 QPSSetup_MPGP - the setup function of MPGP algorithm; initialize constant step-size, check the constraints
@@ -385,15 +432,7 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
       else                                        /* expansion step  */
       {
         /* EXPANSION STEP */
-        /* make maximal feasible step */
-        TRY( VecAXPY(x, -afeas, p) );             /* x=x-afeas*p*/
-        TRY( VecAXPY(g, -afeas, Ap) );            /* g=g-afeas*Ap    */
-
-        TRY( MPGPGrads(qps, x, g) );              /* grad. splitting  gP,gf,gc,gr */
-
-        /* make one more projected gradient step with constant step-length */
-        TRY( VecAXPY(x, -alpha, gf) );            /* x=x-abar*gf */
-        TRY( QPCProject(qpc, x, x) );             /* project x to feas.set */
+        mpgp->expansion(qps,afeas,acg);
 
         /* compute new gradient */
         TRY( MatMult(A, x, g) );                  /* g=A*x */
@@ -580,6 +619,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
   qps->ops->setfromoptions   = QPSSetFromOptions_MPGP;
   qps->ops->monitor          = QPSMonitorDefault_MPGP;
   qps->ops->viewconvergence  = QPSViewConvergence_MPGP;
+  mpgp->expansion            = MPGPExpansion_Std;
 
   TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetCurrentStepType_MPGP_C",QPSMPGPGetCurrentStepType_MPGP) );
   TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetAlpha_MPGP_C",QPSMPGPGetAlpha_MPGP) );

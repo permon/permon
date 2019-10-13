@@ -21,6 +21,8 @@ typedef struct {
   PetscInt  nprop;            /* ... proportional step counter        */
   PetscInt  nexp;             /* ... expansion step counter           */
   char      currentStepType;
+
+  PetscErrorCode (*expansion)(QPS,PetscReal,PetscReal);
 } QPS_MPGP;
 
 #endif
