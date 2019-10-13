@@ -1,12 +1,12 @@
 
 #include <../src/qps/impls/mpgp/mpgpimpl.h>
 
-/* 
+/*
   WORK VECTORS:
 
   gP = qps->work[0];
-  phi = qps->work[1];
-  beta = qps->work[2];
+  gf = qps->work[1];
+  gc = qps->work[2];
 
   g  = qps->work[3];
   p  = qps->work[4];
@@ -20,14 +20,14 @@ PetscErrorCode QPSMonitorDefault_MPGP(QPS qps,PetscInt n,PetscViewer viewer)
 {
    QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
 
-   PetscFunctionBegin;  
+   PetscFunctionBegin;
    if (n == 0 && ((PetscObject)qps)->prefix) {
      TRY( PetscViewerASCIIPrintf(viewer,"  Projected gradient norms for %s solve.\n",((PetscObject)qps)->prefix) );
    }
 
    TRY( PetscViewerASCIIPrintf(viewer,"%3D MPGP [%c] ||gp||=%.10e",n,mpgp->currentStepType,(double)qps->rnorm) );
-   TRY( PetscViewerASCIIPrintf(viewer,",\t||phi||=%.10e",(double)mpgp->phinorm) );
-   TRY( PetscViewerASCIIPrintf(viewer,",\t||beta||=%.10e",(double)mpgp->betanorm) );
+   TRY( PetscViewerASCIIPrintf(viewer,",\t||gf||=%.10e",(double)mpgp->gfnorm) );
+   TRY( PetscViewerASCIIPrintf(viewer,",\t||gc||=%.10e",(double)mpgp->gcnorm) );
    TRY( PetscViewerASCIIPrintf(viewer,",\talpha=%.10e",(double)mpgp->alpha) );
    TRY( PetscViewerASCIIPrintf(viewer,"\n") );
    PetscFunctionReturn(0);
@@ -49,7 +49,7 @@ PetscErrorCode QPSMPGPGetCurrentStepType_MPGP(QPS qps,char *stepType)
 static PetscErrorCode QPSMPGPGetAlpha_MPGP(QPS qps,PetscReal *alpha,QPSScalarArgType *argtype)
 {
   QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
-  
+
   PetscFunctionBegin;
   if (alpha) *alpha = mpgp->alpha_user;
   if (argtype) *argtype = mpgp->alpha_type;
@@ -61,7 +61,7 @@ static PetscErrorCode QPSMPGPGetAlpha_MPGP(QPS qps,PetscReal *alpha,QPSScalarArg
 static PetscErrorCode QPSMPGPSetAlpha_MPGP(QPS qps,PetscReal alpha,QPSScalarArgType argtype)
 {
   QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
-  
+
   PetscFunctionBegin;
   mpgp->alpha_user = alpha;
   mpgp->alpha_type = argtype;
@@ -74,7 +74,7 @@ static PetscErrorCode QPSMPGPSetAlpha_MPGP(QPS qps,PetscReal alpha,QPSScalarArgT
 static PetscErrorCode QPSMPGPGetGamma_MPGP(QPS qps,PetscReal *gamma)
 {
   QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
-  
+
   PetscFunctionBegin;
   *gamma = mpgp->gamma;
   PetscFunctionReturn(0);
@@ -85,7 +85,7 @@ static PetscErrorCode QPSMPGPGetGamma_MPGP(QPS qps,PetscReal *gamma)
 static PetscErrorCode QPSMPGPSetGamma_MPGP(QPS qps,PetscReal gamma)
 {
   QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
-  
+
   PetscFunctionBegin;
   mpgp->gamma = gamma;
   PetscFunctionReturn(0);
@@ -96,7 +96,7 @@ static PetscErrorCode QPSMPGPSetGamma_MPGP(QPS qps,PetscReal gamma)
 static PetscErrorCode QPSMPGPGetOperatorMaxEigenvalue_MPGP(QPS qps,PetscReal *maxeig)
 {
   QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
-  
+
   PetscFunctionBegin;
   *maxeig = mpgp->maxeig;
   PetscFunctionReturn(0);
@@ -107,7 +107,7 @@ static PetscErrorCode QPSMPGPGetOperatorMaxEigenvalue_MPGP(QPS qps,PetscReal *ma
 static PetscErrorCode QPSMPGPSetOperatorMaxEigenvalue_MPGP(QPS qps,PetscReal maxeig)
 {
   QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
-  
+
   PetscFunctionBegin;
   mpgp->maxeig = maxeig;
   qps->setupcalled = PETSC_FALSE;
@@ -121,7 +121,7 @@ static PetscErrorCode  QPSMPGPUpdateMaxEigenvalue_MPGP(QPS qps, PetscReal maxeig
   QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
   PetscReal maxeig_old = mpgp->maxeig;
   PetscReal alpha_old = mpgp->alpha;
-  
+
   PetscFunctionBegin;
   if (!qps->setupcalled) FLLOP_SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_WRONGSTATE,"this routine is intended to be called after QPSSetUp");
 
@@ -147,7 +147,7 @@ static PetscErrorCode  QPSMPGPUpdateMaxEigenvalue_MPGP(QPS qps, PetscReal maxeig
 static PetscErrorCode QPSMPGPGetOperatorMaxEigenvalueTolerance_MPGP(QPS qps,PetscReal *tol)
 {
   QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
-  
+
   PetscFunctionBegin;
   *tol = mpgp->maxeig_tol;
   PetscFunctionReturn(0);
@@ -158,7 +158,7 @@ static PetscErrorCode QPSMPGPGetOperatorMaxEigenvalueTolerance_MPGP(QPS qps,Pets
 static PetscErrorCode QPSMPGPSetOperatorMaxEigenvalueTolerance_MPGP(QPS qps,PetscReal tol)
 {
   QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
-  
+
   PetscFunctionBegin;
   mpgp->maxeig_tol = tol;
   PetscFunctionReturn(0);
@@ -169,7 +169,7 @@ static PetscErrorCode QPSMPGPSetOperatorMaxEigenvalueTolerance_MPGP(QPS qps,Pets
 static PetscErrorCode QPSMPGPGetOperatorMaxEigenvalueIterations_MPGP(QPS qps,PetscInt *numit)
 {
   QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
-  
+
   PetscFunctionBegin;
   *numit = mpgp->maxeig_iter;
   PetscFunctionReturn(0);
@@ -180,7 +180,7 @@ static PetscErrorCode QPSMPGPGetOperatorMaxEigenvalueIterations_MPGP(QPS qps,Pet
 static PetscErrorCode QPSMPGPSetOperatorMaxEigenvalueIterations_MPGP(QPS qps,PetscInt numit)
 {
   QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
-  
+
   PetscFunctionBegin;
   mpgp->maxeig_iter = numit;
   PetscFunctionReturn(0);
@@ -193,7 +193,7 @@ MPGPGrads - compute projected, chopped, and free gradient
 
 Parameters:
 + qps - QP solver
-- g - gradient  
+- g - gradient
 */
 static PetscErrorCode MPGPGrads(QPS qps, Vec x, Vec g)
 {
@@ -202,27 +202,27 @@ static PetscErrorCode MPGPGrads(QPS qps, Vec x, Vec g)
 
   Vec               gP;                 /* ... projected gradient               */
   Vec               gr;                 /* ... reduced free gradient            */
-  Vec               beta;               /* ... chopped gradient                 */
-  Vec               phi;                /* ... free gradient                    */
+  Vec               gc;                 /* ... chopped gradient                 */
+  Vec               gf;                 /* ... free gradient                    */
 
   QPS_MPGP          *mpgp = (QPS_MPGP*)qps->data;
-  
+
   PetscFunctionBegin;
   TRY( QPSGetSolvedQP(qps,&qp) );
   TRY( QPGetQPC(qp,&qpc) );
 
   gP                = qps->work[0];
   gr                = qps->work[6];
-  phi               = qps->work[1];
-  beta              = qps->work[2];
+  gf                = qps->work[1];
+  gc                = qps->work[2];
 
-  TRY( QPCGrads(qpc,x,g,phi,beta) );
-  TRY( QPCGradReduced(qpc,x,phi,mpgp->alpha,gr) );
-  TRY( VecWAXPY(gP,1.0,phi,beta) );
+  TRY( QPCGrads(qpc,x,g,gf,gc) );
+  TRY( QPCGradReduced(qpc,x,gf,mpgp->alpha,gr) );
+  TRY( VecWAXPY(gP,1.0,gf,gc) );
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSSetup_MPGP"
 /*
 QPSSetup_MPGP - the setup function of MPGP algorithm; initialize constant step-size, check the constraints
@@ -263,7 +263,7 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSSolve_MPGP"
 /*
 QPSSolve_MPGP - the solver; solve the problem using MPGP algorithm
@@ -280,21 +280,21 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   Vec               b;                  /* ... right-hand side vector           */
   Vec               x;                  /* ... vector of variables              */
   Vec               gP;                 /* ... projected gradient               */
-  Vec               beta;               /* ... chopped gradient                 */
-  Vec               phi;                /* ... free gradient                    */
+  Vec               gc;                 /* ... chopped gradient                 */
+  Vec               gf;                 /* ... free gradient                    */
   Vec               gr;                 /* ... reduced free gradient            */
   Vec               g;                  /* ... gradient                         */
   Vec               p;                  /* ... conjugate gradient               */
   Vec               Ap;                 /* ... multiplicated vector             */
-  
-  PetscReal         alpha, gamma;       /* ... algorithm constants              */
+
+  PetscReal         gamma2;             /* ... algorithm constants              */
   PetscReal         acg;                /* ... conjugate gradient step-size     */
   PetscReal         bcg;                /* ... cg ortogonalization parameter    */
   PetscReal         afeas;              /* ... maximum feasible step-size       */
-  PetscReal         pAp, betaTbeta, phiTphi;  /* ... results of dot products    */
+  PetscReal         pAp, gcTgc, gfTgf;  /* ... results of dot products    */
 
   PetscInt          nmv=0;              /* ... matrix-vector mult. counter      */
-  PetscInt          ncg=0;              /* ... cg step counter                  */ 
+  PetscInt          ncg=0;              /* ... cg step counter                  */
   PetscInt          nprop=0;            /* ... proportional step counter        */
   PetscInt          nexp=0;             /* ... expansion step counter           */
 
@@ -302,15 +302,15 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   /* set working vectors */
   gP                = qps->work[0];
   gr                = qps->work[6];
-  phi               = qps->work[1];
-  beta              = qps->work[2];
+  gf                = qps->work[1];
+  gc                = qps->work[2];
 
   g                 = qps->work[3];
   p                 = qps->work[4];
   Ap                = qps->work[5];
 
   /* set constants of algorithm */
-  gamma             = mpgp->gamma;
+  gamma2            = mpgp->gamma*mpgp->gamma;
 
   TRY( QPSGetSolvedQP(qps,&qp) );
   TRY( QPGetQPC(qp,&qpc) );                       /* get constraints */
@@ -325,12 +325,11 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   nmv++;                                          /* matrix multiplication counter */
   TRY( VecAXPY(g, -1.0, b) );                     /* g=g-b */
 
-  TRY( MPGPGrads(qps, x, g) );            /* grad. splitting  gP,phi,beta */
+  TRY( MPGPGrads(qps, x, g) );                    /* grad. splitting  gP,gf,gc */
 
   /* initiate CG method */
-  TRY( VecCopy(phi, p) );                         /* p=phi */
+  TRY( VecCopy(gf, p) );                          /* p=gf */
 
-  alpha = mpgp->alpha;
   mpgp->currentStepType = ' ';
   qps->iteration = 0;                             /* main iteration counter */
   while (1)                                       /* main cycle */
@@ -339,26 +338,26 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
     TRY( VecNorm(gP, NORM_2, &qps->rnorm) );      /* qps->rnorm=norm(gP)*/
 
     /* compute dot products to control the proportionality */
-    TRY( VecDot(beta, beta, &betaTbeta) );        /* betaTbeta=beta'*beta   */
-    TRY( VecDot(gr, phi, &phiTphi) );            /* phiTphi=gr'*phi   */
+    TRY( VecDot(gc, gc, &gcTgc) );               /* gcTgc=gc'*gc   */
+    TRY( VecDot(gr, gf, &gfTgf) );               /* gfTgf=gr'*gf   */
 
-    /* compute norm of phi, beta from computed dot products */
+    /* compute norm of gf, gc from computed dot products */
     if (qps->numbermonitors) {
-      mpgp->phinorm =  PetscSqrtScalar(phiTphi);
-      mpgp->betanorm =  PetscSqrtScalar(betaTbeta);
+      mpgp->gfnorm =  PetscSqrtScalar(gfTgf);
+      mpgp->gcnorm =  PetscSqrtScalar(gcTgc);
       TRY( QPSMonitor(qps,qps->iteration,qps->rnorm)) ;
     }
 
     /* test the convergence of algorithm */
     TRY( (*qps->convergencetest)(qps,&qps->reason) ); /* test for convergence */
     if (qps->reason != KSP_CONVERGED_ITERATING) break;
-    
+
     /* proportional condition */
-    if (betaTbeta <= gamma*gamma*phiTphi)         /* u is proportional */
+    if (gcTgc <= gamma2*gfTgf)                    /* u is proportional */
     {
       TRY( MatMult(A, p, Ap) );                   /* Ap=A*p */
       nmv++;                                      /* matrix multiplication counter */
-      
+
       /* compute step-sizes */
       TRY( VecDot(p, Ap, &pAp) );                 /* pAp=p'*Ap      */
       TRY( VecDot(g,  p, &acg) );                 /* acg=g'*p       */
@@ -376,12 +375,12 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
         TRY( VecAXPY(x, -acg, p) );               /* x=x-acg*p      */
         TRY( VecAXPY(g, -acg, Ap) );              /* g=g-acg*Ap      */
 
-        TRY( MPGPGrads(qps, x, g) );      /* grad. splitting  gP,phi,beta */
-        
+        TRY( MPGPGrads(qps, x, g) );              /* grad. splitting  gP,gf,gc */
+
         /* compute orthogonalization parameter and next orthogonal vector */
-        TRY( VecDot(Ap, phi, &bcg) );             /* bcg=Ap'*phi     */
+        TRY( VecDot(Ap, gf, &bcg) );              /* bcg=Ap'*gf     */
         bcg  = bcg/pAp;                           /* bcg=bcg/pAp     */
-        TRY( VecAYPX(p, -bcg, phi) );             /* p=phi-bcg*p     */
+        TRY( VecAYPX(p, -bcg, gf) );              /* p=gf-bcg*p     */
       }
       else                                        /* expansion step  */
       {
@@ -390,10 +389,10 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
         TRY( VecAXPY(x, -afeas, p) );             /* x=x-afeas*p*/
         TRY( VecAXPY(g, -afeas, Ap) );            /* g=g-afeas*Ap    */
 
-        TRY( MPGPGrads(qps, x, g) );      /* grad. splitting  gP,phi,beta,gr */
+        TRY( MPGPGrads(qps, x, g) );              /* grad. splitting  gP,gf,gc,gr */
 
         /* make one more projected gradient step with constant step-length */
-        TRY( VecAXPY(x, -alpha, phi) );           /* x=x-abar*phi */
+        TRY( VecAXPY(x, -alpha, gf) );            /* x=x-abar*gf */
         TRY( QPCProject(qpc, x, x) );             /* project x to feas.set */
 
         /* compute new gradient */
@@ -401,10 +400,10 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
         nmv++;                                    /* matrix multiplication counter */
         TRY( VecAXPY(g, -1.0, b) );               /* g=g-b           */
 
-        TRY( MPGPGrads(qps, x, g) );              /* grad. splitting  gP,phi,beta */
+        TRY( MPGPGrads(qps, x, g) );              /* grad. splitting  gP,gf,gc */
 
         /* restart CG method */
-        TRY( VecCopy(phi, p) );                   /* p=phi           */
+        TRY( VecCopy(gf, p) );                    /* p=gf           */
 
         nexp++;                                   /* increase expansion step counter */
         mpgp->currentStepType = 'e';
@@ -415,8 +414,8 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
       /* PROPORTIONING STEP */
       nprop++;                                    /* increase proportioning step counter */
       mpgp->currentStepType = 'p';
- 
-      TRY( VecCopy(beta, p) );                    /* p=beta           */
+
+      TRY( VecCopy(gc, p) );                      /* p=gc           */
       TRY( MatMult(A, p, Ap) );                   /* Ap=A*p */
       nmv++;                                      /* matrix multiplication counter */
 
@@ -429,10 +428,10 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
       TRY( VecAXPY(x, -acg, p) );                 /* x=x-acg*p       */
       TRY( VecAXPY(g, -acg, Ap) );                /* g=g-acg*Ap      */
 
-      TRY( MPGPGrads(qps, x, g) );        /* grad. splitting  gP,phi,beta */
-    
+      TRY( MPGPGrads(qps, x, g) );                /* grad. splitting  gP,gf,gc */
+
       /* restart CG method */
-      TRY( VecCopy(phi, p) );                     /* p=phi           */
+      TRY( VecCopy(gf, p) );                      /* p=gf           */
     }
     qps->iteration++;
   };
@@ -457,7 +456,7 @@ PetscErrorCode QPSResetStatistics_MPGP(QPS qps)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSDestroy_MPGP"
 /*
 QPSDestroy_MPGP - MPGP afterparty
@@ -479,17 +478,17 @@ PetscErrorCode QPSDestroy_MPGP(QPS qps)
   TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetOperatorMaxEigenvalueIterations_MPGP_C",NULL) );
   TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetOperatorMaxEigenvalueIterations_MPGP_C",NULL) );
   TRY( QPSDestroyDefault(qps) );
-  PetscFunctionReturn(0);  
+  PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSIsQPCompatible_MPGP"
 PetscErrorCode QPSIsQPCompatible_MPGP(QPS qps,QP qp,PetscBool *flg)
 {
   Mat Beq,Bineq;
   Vec ceq,cineq;
   QPC qpc;
-  
+
   PetscFunctionBegin;
   TRY( QPGetEq(qp,&Beq,&ceq) );
   TRY( QPGetIneq(qp,&Bineq,&cineq) );
@@ -499,7 +498,7 @@ PetscErrorCode QPSIsQPCompatible_MPGP(QPS qps,QP qp,PetscBool *flg)
   } else {
     TRY( PetscObjectTypeCompare((PetscObject)qpc,QPCBOX,flg) );
   }
-  PetscFunctionReturn(0);   
+  PetscFunctionReturn(0);
 }
 
 #undef __FUNCT__
@@ -550,12 +549,12 @@ PetscErrorCode QPSViewConvergence_MPGP(QPS qps, PetscViewer v)
   }
   PetscFunctionReturn(0);
 }
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSCreate_MPGP"
 FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
 {
   QPS_MPGP         *mpgp;
-  
+
   PetscFunctionBegin;
   TRY( PetscNewLog(qps,&mpgp) );
   qps->data                  = (void*)mpgp;
@@ -570,7 +569,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
   mpgp->bchop_tol            = 0.0; /* chop of bounds */
 
   /*
-       Sets the functions that are associated with this data structure 
+       Sets the functions that are associated with this data structure
        (in C++ this is the same as defining virtual functions)
   */
   qps->ops->setup            = QPSSetup_MPGP;
@@ -618,7 +617,7 @@ QPSMPGPGetAlpha - get the constant step-size used in algorithm based on spectral
 Parameters:
 + qps - QP solver
 . alpha - pointer to store the value
-- argtype -  
+- argtype -
 
 Level: advanced
 @*/
@@ -640,7 +639,7 @@ QPSMPGPSetAlpha - set the constant step-size used in algorithm based on spectral
 Parameters:
 + qps - QP solver
 . alpha - new value of parameter
-- argtype -  
+- argtype -
 
 Level: intermediate
 @*/
@@ -660,7 +659,7 @@ QPSMPGPGetGamma - get the proportioning parameter used in algorithm
 
 Parameters:
 + qps - QP solver
-- gamma - pointer to store the value  
+- gamma - pointer to store the value
 
 Level: advanced
 @*/
@@ -680,7 +679,7 @@ QPSMPGPSetGamma - set the proportioning parameter used in algorithm
 
 Parameters:
 + qps - QP solver
-- gamma - new value of parameter  
+- gamma - new value of parameter
 
 Level: intermediate
 @*/
@@ -711,7 +710,7 @@ QPSMPGPSetOperatorMaxEigenvalue - set the estimation of largest eigenvalue
 
 Parameters:
 + qps - QP solver
-- maxeig - new value  
+- maxeig - new value
 
 Level: intermediate
 @*/
@@ -744,7 +743,7 @@ QPSMPGPSetOperatorMaxEigenvalueTolerance - set the tolerance of the largest eige
 
 Parameters:
 + qps - QP solver
-- tol - new value 
+- tol - new value
 
 Level: intermediate
 @*/
@@ -764,7 +763,7 @@ QPSMPGPGetOperatorMaxEigenvalueTolerance - get the tolerance of the largest eige
 
 Parameters:
 + qps - QP solver
-- tol - pointer to returned value 
+- tol - pointer to returned value
 
 Level: advanced
 @*/
@@ -784,7 +783,7 @@ QPSMPGPGetOperatorMaxEigenvalueIterations - get the maximum number of iterations
 
 Parameters:
 + qps - QP solver
-- numit - pointer to returned value 
+- numit - pointer to returned value
 
 Level: advanced
 @*/
@@ -817,3 +816,4 @@ PetscErrorCode QPSMPGPSetOperatorMaxEigenvalueIterations(QPS qps,PetscInt numit)
   TRY( PetscTryMethod(qps,"QPSMPGPSetOperatorMaxEigenvalueIterations_MPGP_C",(QPS,PetscInt),(qps,numit)) );
   PetscFunctionReturn(0);
 }
+

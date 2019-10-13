@@ -13,8 +13,8 @@ typedef struct {
   PetscReal btol;
   PetscReal bchop_tol;
 
-  PetscReal phinorm;
-  PetscReal betanorm;
+  PetscReal gfnorm;
+  PetscReal gcnorm;
 
   PetscInt  nmv;              /* ... matrix-vector mult. counter      */
   PetscInt  ncg;              /* ... cg step counter                  */ 
