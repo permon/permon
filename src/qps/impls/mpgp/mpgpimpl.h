@@ -23,8 +23,11 @@ typedef struct {
   char      currentStepType;
 
   QPSMPGPExpansionType       exptype;
+  QPSMPGPExpansionLengthType explengthtype;
   PetscErrorCode             (*expansion)(QPS,PetscReal,PetscReal);
   Vec                        expdirection;
+  Vec                        explengthvec;
+  Vec                        explengthvecold;
   PetscBool                  expproject;
 } QPS_MPGP;
 

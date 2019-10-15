@@ -2,6 +2,7 @@
 #include <../src/qps/impls/mpgp/mpgpimpl.h>
 
 const char *const QPSMPGPExpansionTypes[] = {"std","projcg","gf","g","gfgr","ggr","QPSMPGPExpansionType","QPS_MPGP_EXPANSION_",0};
+const char *const QPSMPGPExpansionLengthTypes[] = {"fixed","opt","optapprox","bb","QPSMPGPExpansionLengthType","QPS_MPGP_EXPANSION_LENGTH_",0};
 
 /*
   WORK VECTORS:
@@ -225,6 +226,56 @@ static PetscErrorCode MPGPGrads(QPS qps, Vec x, Vec g)
 }
 
 #undef __FUNCT__
+#define __FUNCT__ "MPGPExpansionLength"
+/*
+MPGPExpansionLength - compute expanson step length type
+
+Parameters:
+. qps   - QP solver
+*/
+static PetscErrorCode MPGPExpansionLength(QPS qps)
+{
+  QP                qp;
+  Mat               A;
+  Vec               vecs[2];
+  PetscReal         dots[2];
+  QPS_MPGP          *mpgp = (QPS_MPGP*)qps->data;
+
+  PetscFunctionBegin;
+  TRY( QPSGetSolvedQP(qps,&qp) );
+  TRY( QPGetOperator(qp, &A) );                   /* get hessian matrix */
+  switch (mpgp->explengthtype) {
+    case QPS_MPGP_EXPANSION_LENGTH_FIXED:
+      break;
+    case QPS_MPGP_EXPANSION_LENGTH_OPT:
+      vecs[0] = qps->work[3]; /* g */
+      vecs[1] = qps->work[5]; /* Ap  */
+      TRY( MatMult(A,mpgp->expdirection,vecs[1]) );
+      mpgp->nmv++;
+      TRY( VecMDot(mpgp->explengthvec,2,vecs,dots) );
+      mpgp->alpha = mpgp->alpha_user*dots[0]/dots[1];
+      break;
+    case QPS_MPGP_EXPANSION_LENGTH_OPTAPPROX:
+      vecs[0] = qps->work[3]; /* g */
+      vecs[1] = mpgp->explengthvec;
+      TRY( VecMDot(mpgp->explengthvec,2,vecs,dots) );
+      mpgp->alpha = mpgp->alpha_user*dots[0]/dots[1];
+      mpgp->alpha = mpgp->alpha/mpgp->maxeig;
+      break;
+    case QPS_MPGP_EXPANSION_LENGTH_BB:
+      vecs[0] = mpgp->explengthvecold;
+      vecs[1] = qps->work[5]; /* Ap  */
+      TRY( MatMult(A,mpgp->explengthvecold,vecs[1]) );
+      mpgp->nmv++;
+      TRY( VecMDot(mpgp->explengthvecold,2,vecs,dots) );
+      mpgp->alpha = mpgp->alpha_user*dots[0]/dots[1];
+      break;
+    default: SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_PLIB,"Unknown MPGP expansion length type");
+  }
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ "MPGPExpansion_Std"
 /*
 MPGPExpansion - expand active set
@@ -255,6 +306,7 @@ static PetscErrorCode MPGPExpansion_Std(QPS qps, PetscReal afeas, PetscReal acg)
   TRY( VecAXPY(g, -afeas, Ap) );            /* g=g-afeas*Ap    */
   TRY( MPGPGrads(qps, x, g) );              /* grad. splitting  gP,gf,gc,gr */
 
+  TRY( MPGPExpansionLength(qps) );
   TRY( VecAXPY(x, -mpgp->alpha, mpgp->expdirection) );      /* x=x-abar*direction */
   PetscFunctionReturn(0);
 }
@@ -311,26 +363,35 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
   switch (mpgp->exptype) {
     case QPS_MPGP_EXPANSION_STD:
       mpgp->expdirection = qps->work[6];     /* gr */
+      mpgp->explengthvec = qps->work[6];
       if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_FIXED) {
         mpgp->expproject   = PETSC_FALSE;
       }
       break;
     case QPS_MPGP_EXPANSION_GF:
       mpgp->expdirection = qps->work[1];     /* gf */
+      mpgp->explengthvec = qps->work[1];
       break;
     case QPS_MPGP_EXPANSION_G:
       mpgp->expdirection = qps->work[3];     /* g  */
+      mpgp->explengthvec = qps->work[3];
       break;
     case QPS_MPGP_EXPANSION_GFGR:
       mpgp->expdirection = qps->work[1];     /* gf */
+      mpgp->explengthvec = qps->work[6];
       break;
     case QPS_MPGP_EXPANSION_GGR:
       mpgp->expdirection = qps->work[3];     /* g  */
+      mpgp->explengthvec = qps->work[6];
       break;
     case QPS_MPGP_EXPANSION_PROJCG:
       mpgp->expansion = MPGPExpansion_ProjCG;
       break;
     default: SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_PLIB,"Unknown MPGP expansion type");
+  }
+
+  if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
+    TRY( VecDuplicate(mpgp->explengthvec,&mpgp->explengthvecold) );
   }
 
   /* initialize alpha */
@@ -439,6 +500,11 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
     /* test the convergence of algorithm */
     TRY( (*qps->convergencetest)(qps,&qps->reason) ); /* test for convergence */
     if (qps->reason != KSP_CONVERGED_ITERATING) break;
+
+    /* save old direction vec for BB expansion step length */
+    if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
+      TRY( VecCopy(mpgp->explengthvec,mpgp->explengthvecold) );
+    }
 
     /* proportional condition */
     if (gcTgc <= gamma2*gfTgf)                    /* u is proportional */
@@ -611,6 +677,7 @@ PetscErrorCode QPSSetFromOptions_MPGP(PetscOptionItems *PetscOptionsObject,QPS q
   TRY( PetscOptionsReal("-qps_mpgp_btol","Boundary overshoot tolerance; default: 10*PETSC_MACHINE_EPSILON","",mpgp->btol,&mpgp->btol,&flg1) );
   TRY( PetscOptionsReal("-qps_mpgp_bound_chop_tol","Sets boundary to 0 for |boundary|<tol ; default: 0","",mpgp->bchop_tol,&mpgp->bchop_tol,NULL) );
   TRY( PetscOptionsEnum("-qps_mpgp_expansion_type","Set expansion step type","",QPSMPGPExpansionTypes,(PetscEnum)mpgp->exptype,(PetscEnum*)&mpgp->exptype,NULL) );
+  TRY( PetscOptionsEnum("-qps_mpgp_expansion_length_type","Set expansion step length type","",QPSMPGPExpansionLengthTypes,(PetscEnum)mpgp->explengthtype,(PetscEnum*)&mpgp->explengthtype,NULL) );
   TRY( PetscOptionsTail() );
   PetscFunctionReturn(0);
 }
@@ -653,6 +720,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
   mpgp->bchop_tol            = 0.0; /* chop of bounds */
 
   mpgp->exptype              = QPS_MPGP_EXPANSION_STD;
+  mpgp->explengthtype        = QPS_MPGP_EXPANSION_LENGTH_FIXED;
   mpgp->expansion            = MPGPExpansion_Std;
   mpgp->expproject           = PETSC_TRUE;
 
