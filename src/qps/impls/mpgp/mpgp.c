@@ -1,7 +1,7 @@
 
 #include <../src/qps/impls/mpgp/mpgpimpl.h>
 
-const char *const QPSMPGPExpansionTypes[] = {"std","projcg","QPSMPGPExpansionType","QPS_MPGP_EXPANSION_",0};
+const char *const QPSMPGPExpansionTypes[] = {"std","projcg","gf","g","gfgr","ggr","QPSMPGPExpansionType","QPS_MPGP_EXPANSION_",0};
 
 /*
   WORK VECTORS:
@@ -237,9 +237,6 @@ Parameters:
 static PetscErrorCode MPGPExpansion_Std(QPS qps, PetscReal afeas, PetscReal acg)
 {
   QP                qp;
-  QPC               qpc;
-  Vec               gr;                 /* ... reduced free gradient            */
-  Vec               gf;                 /* ... free gradient                    */
   Vec               g;                  /* ... gradient                         */
   Vec               p;                  /* ... conjugate gradient               */
   Vec               Ap;                 /* ... multiplicated vector             */
@@ -248,12 +245,7 @@ static PetscErrorCode MPGPExpansion_Std(QPS qps, PetscReal afeas, PetscReal acg)
 
   PetscFunctionBegin;
   TRY( QPSGetSolvedQP(qps,&qp) );
-  TRY( QPGetQPC(qp,&qpc) );
   TRY( QPGetSolutionVector(qp, &x) );
-
-  gr                = qps->work[6];
-  gf                = qps->work[1];
-
   g                 = qps->work[3];
   p                 = qps->work[4];
   Ap                = qps->work[5];
@@ -261,13 +253,9 @@ static PetscErrorCode MPGPExpansion_Std(QPS qps, PetscReal afeas, PetscReal acg)
   /* make maximal feasible step */
   TRY( VecAXPY(x, -afeas, p) );             /* x=x-afeas*p*/
   TRY( VecAXPY(g, -afeas, Ap) );            /* g=g-afeas*Ap    */
-
   TRY( MPGPGrads(qps, x, g) );              /* grad. splitting  gP,gf,gc,gr */
 
-  /* make one more projected gradient step with constant step-length */
-  /* TRY( VecAXPY(x, -mpgp->alpha, gr) ); */     /* x=x-abar*gr */
-  TRY( VecAXPY(x, -mpgp->alpha, gf) );      /* x=x-abar*gf */
-  TRY( QPCProject(qpc, x, x) );             /* project x to feas.set */
+  TRY( VecAXPY(x, -mpgp->alpha, mpgp->expdirection) );      /* x=x-abar*direction */
   PetscFunctionReturn(0);
 }
 
@@ -284,23 +272,16 @@ Parameters:
 static PetscErrorCode MPGPExpansion_ProjCG(QPS qps, PetscReal afeas, PetscReal acg)
 {
   QP                qp;
-  QPC               qpc;
-  Vec               g;                  /* ... gradient                         */
   Vec               p;                  /* ... conjugate gradient               */
   Vec               x;
-  QPS_MPGP          *mpgp = (QPS_MPGP*)qps->data;
 
   PetscFunctionBegin;
   TRY( QPSGetSolvedQP(qps,&qp) );
-  TRY( QPGetQPC(qp,&qpc) );
   TRY( QPGetSolutionVector(qp, &x) );
-
-  g                 = qps->work[3];
   p                 = qps->work[4];
 
   /* make projected CG step */
   TRY( VecAXPY(x, -acg, p) );               /* x=x-acg*p      */
-  TRY( QPCProject(qpc, x, x) );             /* project x to feas.set */
   PetscFunctionReturn(0);
 }
 
@@ -329,7 +310,22 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
 
   switch (mpgp->exptype) {
     case QPS_MPGP_EXPANSION_STD:
-      mpgp->expansion = MPGPExpansion_Std;
+      mpgp->expdirection = qps->work[6];     /* gr */
+      if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_FIXED) {
+        mpgp->expproject   = PETSC_FALSE;
+      }
+      break;
+    case QPS_MPGP_EXPANSION_GF:
+      mpgp->expdirection = qps->work[1];     /* gf */
+      break;
+    case QPS_MPGP_EXPANSION_G:
+      mpgp->expdirection = qps->work[3];     /* g  */
+      break;
+    case QPS_MPGP_EXPANSION_GFGR:
+      mpgp->expdirection = qps->work[1];     /* gf */
+      break;
+    case QPS_MPGP_EXPANSION_GGR:
+      mpgp->expdirection = qps->work[3];     /* g  */
       break;
     case QPS_MPGP_EXPANSION_PROJCG:
       mpgp->expansion = MPGPExpansion_ProjCG;
@@ -478,6 +474,9 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
       {
         /* EXPANSION STEP */
         mpgp->expansion(qps,afeas,acg);
+        if (mpgp->expproject) {
+          TRY( QPCProject(qpc, x, x) );             /* project x to feas.set */
+        }
 
         /* compute new gradient */
         TRY( MatMult(A, x, g) );                  /* g=A*x */
@@ -652,7 +651,10 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
   mpgp->maxeig_iter          = PETSC_DECIDE;
   mpgp->btol                 = 10*PETSC_MACHINE_EPSILON; /* boundary tol */
   mpgp->bchop_tol            = 0.0; /* chop of bounds */
+
   mpgp->exptype              = QPS_MPGP_EXPANSION_STD;
+  mpgp->expansion            = MPGPExpansion_Std;
+  mpgp->expproject           = PETSC_TRUE;
 
   /*
        Sets the functions that are associated with this data structure

@@ -17,13 +17,15 @@ typedef struct {
   PetscReal gcnorm;
 
   PetscInt  nmv;              /* ... matrix-vector mult. counter      */
-  PetscInt  ncg;              /* ... cg step counter                  */ 
+  PetscInt  ncg;              /* ... cg step counter                  */
   PetscInt  nprop;            /* ... proportional step counter        */
   PetscInt  nexp;             /* ... expansion step counter           */
   char      currentStepType;
 
-  QPSMPGPExpansionType exptype;
-  PetscErrorCode (*expansion)(QPS,PetscReal,PetscReal);
+  QPSMPGPExpansionType       exptype;
+  PetscErrorCode             (*expansion)(QPS,PetscReal,PetscReal);
+  Vec                        expdirection;
+  PetscBool                  expproject;
 } QPS_MPGP;
 
 #endif
