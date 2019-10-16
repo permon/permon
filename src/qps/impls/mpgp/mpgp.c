@@ -392,6 +392,7 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
 
   if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
     TRY( VecDuplicate(mpgp->explengthvec,&mpgp->explengthvecold) );
+    TRY( VecDuplicate(mpgp->explengthvec,&mpgp->explengthvecold2) );
   }
 
   /* initialize alpha */
@@ -501,11 +502,6 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
     TRY( (*qps->convergencetest)(qps,&qps->reason) ); /* test for convergence */
     if (qps->reason != KSP_CONVERGED_ITERATING) break;
 
-    /* save old direction vec for BB expansion step length */
-    if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
-      TRY( VecCopy(mpgp->explengthvec,mpgp->explengthvecold) );
-    }
-
     /* proportional condition */
     if (gcTgc <= gamma2*gfTgf)                    /* u is proportional */
     {
@@ -525,10 +521,14 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
         ncg++;                                    /* increase CG step counter */
         mpgp->currentStepType = 'c';
 
+        /* save old direction vec for BB expansion step length */
+        if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
+          TRY( VecCopy(mpgp->explengthvec,mpgp->explengthvecold) );
+        }
+
         /* make CG step */
         TRY( VecAXPY(x, -acg, p) );               /* x=x-acg*p      */
         TRY( VecAXPY(g, -acg, Ap) );              /* g=g-acg*Ap      */
-
         TRY( MPGPGrads(qps, x, g) );              /* grad. splitting  gP,gf,gc */
 
         /* compute orthogonalization parameter and next orthogonal vector */
@@ -539,23 +539,32 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
       else                                        /* expansion step  */
       {
         /* EXPANSION STEP */
+        nexp++;                                   /* increase expansion step counter */
+        mpgp->currentStepType = 'e';
+
+        /* save old direction vec for BB expansion step length */
+        if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
+          TRY( VecCopy(mpgp->explengthvec,mpgp->explengthvecold2) );
+        }
+
         mpgp->expansion(qps,afeas,acg);
         if (mpgp->expproject) {
           TRY( QPCProject(qpc, x, x) );             /* project x to feas.set */
+        }
+
+        /* save old direction vec for BB expansion step length */
+        if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
+          TRY( VecCopy(mpgp->explengthvecold2,mpgp->explengthvecold) );
         }
 
         /* compute new gradient */
         TRY( MatMult(A, x, g) );                  /* g=A*x */
         nmv++;                                    /* matrix multiplication counter */
         TRY( VecAXPY(g, -1.0, b) );               /* g=g-b           */
-
         TRY( MPGPGrads(qps, x, g) );              /* grad. splitting  gP,gf,gc */
 
         /* restart CG method */
         TRY( VecCopy(gf, p) );                    /* p=gf           */
-
-        nexp++;                                   /* increase expansion step counter */
-        mpgp->currentStepType = 'e';
       }
     }
     else                                          /* proportioning step  */
@@ -563,6 +572,11 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
       /* PROPORTIONING STEP */
       nprop++;                                    /* increase proportioning step counter */
       mpgp->currentStepType = 'p';
+
+      /* save old direction vec for BB expansion step length */
+      if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
+        TRY( VecCopy(mpgp->explengthvec,mpgp->explengthvecold) );
+      }
 
       TRY( VecCopy(gc, p) );                      /* p=gc           */
       TRY( MatMult(A, p, Ap) );                   /* Ap=A*p */
@@ -576,7 +590,6 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
       /* make a step */
       TRY( VecAXPY(x, -acg, p) );                 /* x=x-acg*p       */
       TRY( VecAXPY(g, -acg, Ap) );                /* g=g-acg*Ap      */
-
       TRY( MPGPGrads(qps, x, g) );                /* grad. splitting  gP,gf,gc */
 
       /* restart CG method */
