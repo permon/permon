@@ -352,7 +352,11 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
 
   PetscFunctionBegin;
   /* set the number of working vectors */
-  TRY( QPSSetWorkVecs(qps,7) );
+  if (mpgp->explengthtype != QPS_MPGP_EXPANSION_LENGTH_BB) {
+    TRY( QPSSetWorkVecs(qps,7) );
+  } else {
+    TRY( QPSSetWorkVecs(qps,9) );
+  }
 
   TRY( QPGetBox(qps->solQP,NULL,&lb,&ub) );
   if (mpgp->bchop_tol) {
@@ -388,11 +392,6 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
       mpgp->expansion = MPGPExpansion_ProjCG;
       break;
     default: SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_PLIB,"Unknown MPGP expansion type");
-  }
-
-  if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
-    TRY( VecDuplicate(mpgp->explengthvec,&mpgp->explengthvecold) );
-    TRY( VecDuplicate(mpgp->explengthvec,&mpgp->explengthvecold2) );
   }
 
   /* initialize alpha */
@@ -436,6 +435,7 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   Vec               g;                  /* ... gradient                         */
   Vec               p;                  /* ... conjugate gradient               */
   Vec               Ap;                 /* ... multiplicated vector             */
+  Vec               explengthvecold2;   /* ... old vector for BB step length    */
 
   PetscReal         gamma2;             /* ... algorithm constants              */
   PetscReal         acg;                /* ... conjugate gradient step-size     */
@@ -458,6 +458,11 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   g                 = qps->work[3];
   p                 = qps->work[4];
   Ap                = qps->work[5];
+
+  if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
+    mpgp->explengthvecold = qps->work[7];
+    explengthvecold2      = qps->work[8];
+  }
 
   /* set constants of algorithm */
   gamma2            = mpgp->gamma*mpgp->gamma;
@@ -544,7 +549,7 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
 
         /* save old direction vec for BB expansion step length */
         if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
-          TRY( VecCopy(mpgp->explengthvec,mpgp->explengthvecold2) );
+          TRY( VecCopy(mpgp->explengthvec,explengthvecold2) );
         }
 
         mpgp->expansion(qps,afeas,acg);
@@ -554,7 +559,7 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
 
         /* save old direction vec for BB expansion step length */
         if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
-          TRY( VecCopy(mpgp->explengthvecold2,mpgp->explengthvecold) );
+          TRY( VecCopy(explengthvecold2,mpgp->explengthvecold) );
         }
 
         /* compute new gradient */
