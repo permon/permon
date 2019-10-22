@@ -481,6 +481,9 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   TRY( VecAXPY(g, -1.0, b) );                     /* g=g-b */
 
   TRY( MPGPGrads(qps, x, g) );                    /* grad. splitting  gP,gf,gc */
+  if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
+    TRY( VecCopy(mpgp->explengthvec,mpgp->explengthvecold) );
+  }
 
   /* initiate CG method */
   TRY( VecCopy(gf, p) );                          /* p=gf */
