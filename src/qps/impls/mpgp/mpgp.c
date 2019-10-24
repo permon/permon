@@ -250,7 +250,7 @@ static PetscErrorCode MPGPExpansionLength(QPS qps)
     case QPS_MPGP_EXPANSION_LENGTH_OPT:
       vecs[0] = qps->work[3]; /* g */
       vecs[1] = qps->work[5]; /* Ap  */
-      TRY( MatMult(A,mpgp->expdirection,vecs[1]) );
+      TRY( MatMult(A,mpgp->explengthvec,vecs[1]) );
       mpgp->nmv++;
       TRY( VecMDot(mpgp->explengthvec,2,vecs,dots) );
       mpgp->alpha = mpgp->alpha_user*dots[0]/dots[1];
