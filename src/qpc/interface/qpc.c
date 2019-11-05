@@ -25,11 +25,26 @@ PetscErrorCode QPCCreate(MPI_Comm comm,QPC *qpc_new)
 
   qpc->lambdawork   = NULL;
   qpc->is           = NULL;
-  /* TODO QPCSetFromOptions */
   qpc->astol        = 10*PETSC_MACHINE_EPSILON;
   qpc->setupcalled  = PETSC_FALSE; /* the setup was not called yet */
 
   *qpc_new = qpc;
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "QPCSetFromOptions"
+PetscErrorCode QPCSetFromOptions(QPC qpc)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
+  _fllop_ierr = PetscObjectOptionsBegin((PetscObject)qpc);CHKERRQ(_fllop_ierr);
+  /* TODO QPCSetActiveSetTolerance */
+  TRY( PetscOptionsReal("-qpc_activeset_tol","Absolute tolerance for active set determination","QPCSetActiveSetTolerance",qpc->astol,&qpc->astol,NULL) );
+  if (qpc->ops->setfromoptions) {
+    TRY( (*qpc->ops->setfromoptions)(PetscOptionsObject,qpc) );
+  }
+  _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
   PetscFunctionReturn(0);
 }
 
@@ -590,7 +605,7 @@ PetscErrorCode QPCGrads(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
 #define __FUNCT__ "QPCGradReduced"
 /*@
   QPCGradReduced - compute reduced free gradient
-  
+ 
   Given the step size alpha, the reduce free gradient is defined component wise such that
   x + alpha*gr is a step in the direction of gf if it doesn't violate constraint, otherwise it is gf component shortened
   so that the component of x + alpha*gr will be in active set. E.g., with only lower bound constraint gr=min(gf,(x-lb)/alpha).

@@ -2502,14 +2502,15 @@ static PetscErrorCode QPSetFromOptions_Private(QP qp)
   _fllop_ierr = PetscObjectOptionsBegin((PetscObject)qp);CHKERRQ(_fllop_ierr);
   if (!qp->pc) TRY( QPGetPC(qp,&qp->pc) );
 
+  if (qp->qpc) {
+    TRY( FllopPetscObjectInheritPrefixIfNotSet((PetscObject)qp->qpc,(PetscObject)qp,NULL) );
+    TRY( QPCSetFromOptions(qp->qpc) );
+  }
   if (qp->pf) {
     TRY( FllopPetscObjectInheritPrefixIfNotSet((PetscObject)qp->pf,(PetscObject)qp,NULL) );
-  }
-  TRY( FllopPetscObjectInheritPrefixIfNotSet((PetscObject)qp->pc,(PetscObject)qp,NULL) );
-
-  if (qp->pf) {
     TRY( QPPFSetFromOptions(qp->pf) );
   }
+  TRY( FllopPetscObjectInheritPrefixIfNotSet((PetscObject)qp->pc,(PetscObject)qp,NULL) );
   TRY( PCSetFromOptions(qp->pc) );
 
   _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
