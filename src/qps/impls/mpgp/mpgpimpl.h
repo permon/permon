@@ -28,7 +28,9 @@ typedef struct {
   Vec                        expdirection;
   Vec                        explengthvec;
   Vec                        explengthvecold;
+  Vec                        xold;
   PetscBool                  expproject;
+  PetscBool                  resetalpha;
 } QPS_MPGP;
 
 #endif

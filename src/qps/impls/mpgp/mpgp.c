@@ -2,7 +2,7 @@
 #include <../src/qps/impls/mpgp/mpgpimpl.h>
 
 const char *const QPSMPGPExpansionTypes[] = {"std","projcg","gf","g","gfgr","ggr","QPSMPGPExpansionType","QPS_MPGP_EXPANSION_",0};
-const char *const QPSMPGPExpansionLengthTypes[] = {"fixed","opt","optapprox","bb","QPSMPGPExpansionLengthType","QPS_MPGP_EXPANSION_LENGTH_",0};
+const char *const QPSMPGPExpansionLengthTypes[] = {"fixed","opt","optapprox","bb","bb2","QPSMPGPExpansionLengthType","QPS_MPGP_EXPANSION_LENGTH_",0};
 
 /*
   WORK VECTORS:
@@ -237,7 +237,7 @@ static PetscErrorCode MPGPExpansionLength(QPS qps)
 {
   QP                qp;
   Mat               A;
-  Vec               vecs[2];
+  Vec               x,vecs[2];
   PetscReal         dots[2];
   QPS_MPGP          *mpgp = (QPS_MPGP*)qps->data;
 
@@ -253,7 +253,11 @@ static PetscErrorCode MPGPExpansionLength(QPS qps)
       TRY( MatMult(A,mpgp->explengthvec,vecs[1]) );
       mpgp->nmv++;
       TRY( VecMDot(mpgp->explengthvec,2,vecs,dots) );
-      mpgp->alpha = mpgp->alpha_user*dots[0]/dots[1];
+      if (dots[1] == .0 && mpgp->resetalpha) {  /* TODO && flg? ,dots[1] is tiny? */
+        mpgp->alpha = mpgp->alpha/mpgp->maxeig;
+      } else {
+        mpgp->alpha = mpgp->alpha_user*dots[0]/dots[1];
+      }
       break;
     case QPS_MPGP_EXPANSION_LENGTH_OPTAPPROX:
       vecs[0] = qps->work[3]; /* g */
@@ -263,12 +267,17 @@ static PetscErrorCode MPGPExpansionLength(QPS qps)
       mpgp->alpha = mpgp->alpha/mpgp->maxeig;
       break;
     case QPS_MPGP_EXPANSION_LENGTH_BB:
+      TRY( QPGetSolutionVector(qp, &x) );
       vecs[0] = mpgp->explengthvecold;
-      vecs[1] = qps->work[5]; /* Ap  */
-      TRY( MatMult(A,mpgp->explengthvecold,vecs[1]) );
-      mpgp->nmv++;
-      TRY( VecMDot(mpgp->explengthvecold,2,vecs,dots) );
-      mpgp->alpha = mpgp->alpha_user*dots[0]/dots[1];
+      vecs[1] = mpgp->xold;
+      TRY( VecAYPX(vecs[0],-1.0,mpgp->explengthvec) ); /* s_k = x_k - x_{k-1} */
+      TRY( VecAYPX(vecs[1],-1.0,x) ); /* y+k = d_k - d_{k-1} */ 
+      TRY( VecMDot(vecs[0],2,vecs,dots) );
+      if (dots[1] == .0 && mpgp->resetalpha) {  /* TODO && flg? ,dots[1] is tiny? can be skipped?*/
+        mpgp->alpha = mpgp->alpha/mpgp->maxeig;
+      } else {
+        mpgp->alpha = mpgp->alpha_user*dots[0]/dots[1];
+      }
       break;
     default: SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_PLIB,"Unknown MPGP expansion length type");
   }
@@ -355,7 +364,7 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
   if (mpgp->explengthtype != QPS_MPGP_EXPANSION_LENGTH_BB) {
     TRY( QPSSetWorkVecs(qps,7) );
   } else {
-    TRY( QPSSetWorkVecs(qps,9) );
+    TRY( QPSSetWorkVecs(qps,11) );
   }
 
   TRY( QPGetBox(qps->solQP,NULL,&lb,&ub) );
@@ -435,7 +444,6 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   Vec               g;                  /* ... gradient                         */
   Vec               p;                  /* ... conjugate gradient               */
   Vec               Ap;                 /* ... multiplicated vector             */
-  Vec               explengthvecold2;   /* ... old vector for BB step length    */
 
   PetscReal         gamma2;             /* ... algorithm constants              */
   PetscReal         acg;                /* ... conjugate gradient step-size     */
@@ -461,7 +469,7 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
 
   if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
     mpgp->explengthvecold = qps->work[7];
-    explengthvecold2      = qps->work[8];
+    mpgp->xold            = qps->work[8];
   }
 
   /* set constants of algorithm */
@@ -481,9 +489,6 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   TRY( VecAXPY(g, -1.0, b) );                     /* g=g-b */
 
   TRY( MPGPGrads(qps, x, g) );                    /* grad. splitting  gP,gf,gc */
-  if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
-    TRY( VecCopy(mpgp->explengthvec,mpgp->explengthvecold) );
-  }
 
   /* initiate CG method */
   TRY( VecCopy(gf, p) );                          /* p=gf */
@@ -498,6 +503,7 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
     /* compute dot products to control the proportionality */
     TRY( VecDot(gc, gc, &gcTgc) );               /* gcTgc=gc'*gc   */
     TRY( VecDot(gr, gf, &gfTgf) );               /* gfTgf=gr'*gf   */
+    //TRY( VecDot(gf, gf, &gfTgf) );               /* gfTgf=gr'*gf   */
 
     /* compute norm of gf, gc from computed dot products */
     if (qps->numbermonitors) {
@@ -529,11 +535,6 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
         ncg++;                                    /* increase CG step counter */
         mpgp->currentStepType = 'c';
 
-        /* save old direction vec for BB expansion step length */
-        if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
-          TRY( VecCopy(mpgp->explengthvec,mpgp->explengthvecold) );
-        }
-
         /* make CG step */
         TRY( VecAXPY(x, -acg, p) );               /* x=x-acg*p      */
         TRY( VecAXPY(g, -acg, Ap) );              /* g=g-acg*Ap      */
@@ -552,17 +553,13 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
 
         /* save old direction vec for BB expansion step length */
         if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
-          TRY( VecCopy(mpgp->explengthvec,explengthvecold2) );
+          TRY( VecCopy(x,mpgp->xold) );
+          TRY( VecCopy(mpgp->explengthvec,mpgp->explengthvecold) );
         }
 
         mpgp->expansion(qps,afeas,acg);
         if (mpgp->expproject) {
           TRY( QPCProject(qpc, x, x) );             /* project x to feas.set */
-        }
-
-        /* save old direction vec for BB expansion step length */
-        if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
-          TRY( VecCopy(explengthvecold2,mpgp->explengthvecold) );
         }
 
         /* compute new gradient */
@@ -580,11 +577,6 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
       /* PROPORTIONING STEP */
       nprop++;                                    /* increase proportioning step counter */
       mpgp->currentStepType = 'p';
-
-      /* save old direction vec for BB expansion step length */
-      if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
-        TRY( VecCopy(mpgp->explengthvec,mpgp->explengthvecold) );
-      }
 
       TRY( VecCopy(gc, p) );                      /* p=gc           */
       TRY( MatMult(A, p, Ap) );                   /* Ap=A*p */
@@ -699,6 +691,7 @@ PetscErrorCode QPSSetFromOptions_MPGP(PetscOptionItems *PetscOptionsObject,QPS q
   TRY( PetscOptionsReal("-qps_mpgp_bound_chop_tol","Sets boundary to 0 for |boundary|<tol ; default: 0","",mpgp->bchop_tol,&mpgp->bchop_tol,NULL) );
   TRY( PetscOptionsEnum("-qps_mpgp_expansion_type","Set expansion step type","",QPSMPGPExpansionTypes,(PetscEnum)mpgp->exptype,(PetscEnum*)&mpgp->exptype,NULL) );
   TRY( PetscOptionsEnum("-qps_mpgp_expansion_length_type","Set expansion step length type","",QPSMPGPExpansionLengthTypes,(PetscEnum)mpgp->explengthtype,(PetscEnum*)&mpgp->explengthtype,NULL) );
+  TRY( PetscOptionsBool("-qps_mpgp_alpha_reset","If alpha=Nan reset to initial value, otherwise keep last alpaha","QPSMPGPSetAlpha",(PetscBool) mpgp->resetalpha,&mpgp->resetalpha,NULL) );
   TRY( PetscOptionsTail() );
   PetscFunctionReturn(0);
 }
@@ -744,6 +737,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
   mpgp->explengthtype        = QPS_MPGP_EXPANSION_LENGTH_FIXED;
   mpgp->expansion            = MPGPExpansion_Std;
   mpgp->expproject           = PETSC_TRUE;
+  mpgp->resetalpha           = PETSC_FALSE;
 
   /*
        Sets the functions that are associated with this data structure
