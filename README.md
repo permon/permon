@@ -30,7 +30,7 @@ Quick guide to PERMON installation
 
 Documentation and examples
 ----------------------------------
-The documentation of the routines is available at <http://permon.vsb.cz/documentation.htm>. There are several examples in the [examples](https://github.com/permon/permon/tree/master/examples) directory illustrating the basic usage of both modules.
+The documentation of the routines is available at <http://permon.vsb.cz/documentation.htm>. There are several examples in the [tutorials](https://github.com/permon/permon/tree/master/src/tutorials) directory illustrating the basic usage of both modules.
 
 Supported PETSc versions
 ----------------------------------

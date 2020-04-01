@@ -200,10 +200,9 @@ PetscErrorCode FllopSetFromOptions()
     
     if (fllop_info || info) {
       FllopInfoEnabled = PETSC_TRUE;
+      ierr = PetscInfoAllow(PETSC_TRUE);CHKERRQ(ierr);
       if (logname[0]) {
-        ierr = PetscInfoAllow(PETSC_TRUE, logname);CHKERRQ(ierr);
-      } else {
-        ierr = PetscInfoAllow(PETSC_TRUE, NULL);CHKERRQ(ierr);
+        ierr = PetscInfoSetFile(logname,"w");CHKERRQ(ierr);
       }
     }
     

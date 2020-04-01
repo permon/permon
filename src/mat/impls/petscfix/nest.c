@@ -420,14 +420,13 @@ PetscErrorCode MatNestPermonGetVecs(Mat A,Vec *x,Vec *y)
 
 #undef __FUNCT__
 #define __FUNCT__ "MatMatMult_NestPermon_NestPermon"
-static PetscErrorCode MatMatMult_NestPermon_NestPermon(Mat A,Mat B,MatReuse scall,PetscReal fill,Mat *AB_new)
+static PetscErrorCode MatMatMult_NestPermon_NestPermon(Mat A,Mat B,PetscReal fill,Mat *AB_new)
 {
   PetscInt i,j,k,M,K1,K2,N,MN;
   Mat *mats_row,*mats_out,**A_mats_in,**B_mats_in;
   Mat AB;
 
   PetscFunctionBeginI;
-  if (scall != MAT_INITIAL_MATRIX) FLLOP_SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_SUP,"only MAT_INITIAL_MATRIX supported for MATNEST");
   TRY( MatNestGetSubMats(A,&M,&K1,&A_mats_in) );
   TRY( MatNestGetSubMats(B,&K2,&N,&B_mats_in) );
   FLLOP_ASSERT(K1==K2,"# nest columns of A  =  # nest rows of B");
@@ -464,6 +463,37 @@ static PetscErrorCode MatMatMult_NestPermon_NestPermon(Mat A,Mat B,MatReuse scal
   TRY( PetscFree(mats_out) );
   *AB_new = AB;
   PetscFunctionReturnI(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "MatProductNumeric_NestPermon"
+static PetscErrorCode MatProductNumeric_NestPermon(Mat C)
+{
+  Mat_Product    *product = C->product;
+  Mat            A=product->A,B=product->B;
+  Mat            new;
+  MatType        *type;
+
+  switch (product->type) {
+  case MATPRODUCT_AB:
+    TRY( MatMatMult_NestPermon_NestPermon(A,B,product->fill,&new) );
+    break;
+  default: SETERRQ(PetscObjectComm((PetscObject)C),PETSC_ERR_SUP,"MATPRODUCT type is not supported");
+  }
+  TRY( MatHeaderReplace(C,&new) );
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "MatProductSetFromOptions_NestPermon"
+static PetscErrorCode MatProductSetFromOptions_NestPermon(Mat C)
+{
+  Mat_Product    *product = C->product;
+
+  PetscFunctionBegin;
+  C->ops->productsymbolic = MatProductSymbolic_NOP;
+  C->ops->productnumeric  = MatProductNumeric_NestPermon;
+  PetscFunctionReturn(0);
 }
 
 #undef __FUNCT__
@@ -575,12 +605,12 @@ PETSC_EXTERN PetscErrorCode MatConvert_Nest_NestPermon(Mat A,MatType type,MatReu
   if (reuse == MAT_INITIAL_MATRIX) {
     TRY( MatDuplicate(A,MAT_COPY_VALUES,&B) );
   }
-  
+
   TRY( PetscObjectChangeTypeName((PetscObject)B,MATNESTPERMON) );
 
-  B->ops->duplicate          = MatDuplicate_NestPermon;
-  B->ops->axpy               = MatAXPY_NestPermon;
-  B->ops->matmult            = MatMatMult_NestPermon_NestPermon;
+  B->ops->duplicate             = MatDuplicate_NestPermon;
+  B->ops->axpy                  = MatAXPY_NestPermon;
+  B->ops->productsetfromoptions = MatProductSetFromOptions_NestPermon;
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatGetColumnVectors_C",MatGetColumnVectors_NestPermon) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatRestoreColumnVectors_C",MatRestoreColumnVectors_NestPermon) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatFilterZeros_C",MatFilterZeros_NestPermon) );

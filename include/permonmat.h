@@ -51,6 +51,8 @@ FLLOP_EXTERN PetscErrorCode MatCreateNestPermon(MPI_Comm comm,PetscInt nr,const 
 FLLOP_EXTERN PetscErrorCode MatCreateNestPermonVerticalMerge(MPI_Comm comm,PetscInt nmats,Mat mats[],Mat *merged);
 FLLOP_EXTERN PetscErrorCode MatCreateTransposePermon(Mat A,Mat *At);
 
+PetscErrorCode MatProductSymbolic_NOP(Mat C);
+
 /*   REGULARIZATION   */
 typedef enum {MAT_REG_NONE=0, MAT_REG_EXPLICIT=1, MAT_REG_IMPLICIT=2} MatRegularizationType;
 FLLOP_EXTERN PetscErrorCode MatRegularize(Mat K, Mat R, MatRegularizationType type, Mat *newKreg);

@@ -1,0 +1,11 @@
+  last QPSSolve CONVERGED due to CONVERGED_RTOL, KSPReason=2, required 117 iterations
+r = ||A*x - b|| = 3.99e-03    rO/||b|| = 6.13e-07
+r = ||A*x - b + (B'*lambda)|| = 0.00e+00    rO/||b|| = 0.00e+00
+r = ||BE*x||             = 0.00e+00    r/||b|| = 0.00e+00
+r = ||A*x - b + (B'*lambda)|| = 0.00e+00    rO/||b|| = 0.00e+00
+r = ||BE*x||             = 0.00e+00    r/||b|| = 0.00e+00
+r = ||A*x - b + B'*lambda|| = 1.50e-12    rO/||b|| = 3.85e-14
+r = ||BE*x||             = 3.99e-03    r/||b|| = 1.03e-04
+r = ||A*x - b + B'*lambda|| = 1.50e-12    rO/||b|| = 3.85e-14
+r = ||BE*x||             = 3.99e-03    r/||b|| = 1.03e-04
+r = ||A*x - b|| = 1.46e-02    rO/||b|| = 3.14e-04

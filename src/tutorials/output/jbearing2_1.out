@@ -1,45 +1,45 @@
 
 ---- Journal Bearing Problem SHB-----
-mx: 10,  my: 16,  ecc: 0.1 
+mx: 8,  my: 12,  ecc: 0.1 
 
 Value of Tao are gatol = 1.000000e-08, grtol =  1.000000e-08, gttol = 0.000000e+00  
-QPS Object: 2 MPI processes
+QPS Object: 1 MPI processes
   type: tao
-  last QPSSolve CONVERGED due to CONVERGED_ATOL, KSPReason=3, required 196 iterations
-  all 1 QPSSolves from last QPSReset/QPSResetStatistics have required 196 iterations
+  last QPSSolve CONVERGED due to CONVERGED_ATOL, KSPReason=3, required 141 iterations
+  all 1 QPSSolves from last QPSReset/QPSResetStatistics have required 141 iterations
   tolerances: rtol=1.0e-08, abstol=1.0e-08, dtol=1.0e+04, maxits=10000
   tao specific:
     TaoType: blmvm
     Number of KSP iterations in last iteration: 0
     Total number of KSP iterations: 0
     Information about last TAOSolve:
-      Tao Object: (qps_) 2 MPI processes
+      Tao Object: (qps_) 1 MPI processes
         type: blmvm
-        Gradient steps: 24
-        Mat Object: (tao_blmvm_) 2 MPI processes
+        Gradient steps: 13
+        Mat Object: (tao_blmvm_) 1 MPI processes
           type: lmvmbfgs
-          rows=160, cols=160
-            Scale type: diagonal
+          rows=96, cols=96
+            Scale type: DIAGONAL
             Scale history: 1
             Scale params: alpha=1., beta=0.5, rho=1.
             Convex factors: phi=0., theta=0.125
             Max. storage: 5
             Used storage: 0
-            Number of updates: 195
+            Number of updates: 140
             Number of rejects: 0
-            Number of resets: 27
-            Mat Object: (J0_) 2 MPI processes
-              type: lmvmdiagbrdn
-              rows=160, cols=160
+            Number of resets: 15
+            Mat Object: (J0_) 1 MPI processes
+              type: lmvmdiagbroyden
+              rows=96, cols=96
                 Scale history: 1
                 Scale params: alpha=1., beta=0.5, rho=1.
                 Convex factor: theta=0.125
                 Max. storage: 1
                 Used storage: 0
-                Number of updates: 195
+                Number of updates: 140
                 Number of rejects: 0
-                Number of resets: 27
-        TaoLineSearch Object: (qps_) 2 MPI processes
+                Number of resets: 15
+        TaoLineSearch Object: (qps_) 1 MPI processes
           type: more-thuente
           maximum function evaluations=30
           tolerances: ftol=0.0001, rtol=1e-10, gtol=0.9
@@ -50,9 +50,9 @@ QPS Object: 2 MPI processes
           Termination reason: 1
         Active Set subset type: subvec
         convergence tolerances: gatol=1e-08,         steptol=0.,         gttol=0.
-        Residual in Function/Gradient:=9.74428e-09
-        Objective value=-0.182408
-        total number of iterations=196,                                (max: 2000)
-        total number of function/gradient evaluations=398,            (max: 4000)
+        Residual in Function/Gradient:=8.52591e-09
+        Objective value=-0.183437
+        total number of iterations=141,                                (max: 2000)
+        total number of function/gradient evaluations=264,            (max: 4000)
         Solution converged:          User Terminated
-norm of difference of results from TAO and QP = 6.765046e-09  
+norm of difference of results from TAO and QP = 2.006012e-09  

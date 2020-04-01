@@ -937,6 +937,7 @@ PetscErrorCode PermonMatCreateDenseProductMatrix(Mat A, PetscBool A_transpose, M
   PetscFunctionReturnI(0);
 }
 
+// TODO can be removed with MatProd?
 #undef __FUNCT__
 #define __FUNCT__ "PermonMatMatMult"
 PetscErrorCode PermonMatMatMult(Mat A,Mat B,MatReuse scall,PetscReal fill,Mat *C)
@@ -959,20 +960,7 @@ PetscErrorCode PermonMatMatMult(Mat A,Mat B,MatReuse scall,PetscReal fill,Mat *C
     TRY( MatTransposeMatMult(T,B,scall,fill,C) );
   } else if (flg_B) {
     TRY( MatTransposeGetMat(B,&T) );
-    //TODO PETSc workaround MatMatTransposeMult
-    PetscErrorCode (*transposematmult)(Mat,Mat,MatReuse,PetscReal,Mat*) = NULL;
-    char multname[256];
-    TRY( PetscStrcpy(multname,"MatMatTransposeMult_") );
-    TRY( PetscStrcat(multname,((PetscObject)A)->type_name) );
-    TRY( PetscStrcat(multname,"_") );
-    TRY( PetscStrcat(multname,((PetscObject)T)->type_name) );
-    TRY( PetscStrcat(multname,"_C") ); /* e.g., multname = "MatMatMult_seqdense_seqaij_C" */
-    TRY( PetscObjectQueryFunction((PetscObject)A,multname,&transposematmult) );
-    if (!transposematmult) SETERRQ2(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_INCOMP,"MatMatTransposeMult requires A, %s, to be compatible with B, %s",((PetscObject)A)->type_name,((PetscObject)T)->type_name);
-    TRY( PetscLogEventBegin(MAT_TransposeMatMult,A,T,0,0) );
-    TRY( (*transposematmult)(A,T,scall,fill,C) );
-    TRY( PetscLogEventEnd(MAT_TransposeMatMult,A,T,0,0) );
-    //TRY( MatMatTransposeMult(A,T,scall,fill,C) );
+    TRY( MatMatTransposeMult(A,T,scall,fill,C) );
   } else {
     TRY( MatMatMult(A,B,scall,fill,C) );
   }
@@ -1003,14 +991,15 @@ PetscErrorCode PermonMatConvertBlocks(Mat A, MatType newtype,MatReuse reuse,Mat 
   PetscFunctionReturn(0);
 }
 
+//TODO remove or fix with MatProd
 #undef __FUNCT__
 #define __FUNCT__ "MatTransposeMatMultWorks"
 PetscErrorCode  MatTransposeMatMultWorks(Mat A,Mat B,PetscBool *flg)
 {
   PetscErrorCode ierr;
-  PetscErrorCode (*fA)(Mat,Mat,MatReuse,PetscReal,Mat*);
-  PetscErrorCode (*fB)(Mat,Mat,MatReuse,PetscReal,Mat*);
-  PetscErrorCode (*transposematmult)(Mat,Mat,MatReuse,PetscReal,Mat*) = NULL;
+  PetscErrorCode (*fA)(Mat,Mat,Mat);
+  PetscErrorCode (*fB)(Mat,Mat,Mat);
+  PetscErrorCode (*transposematmult)(Mat,Mat,Mat) = NULL;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
@@ -1026,11 +1015,10 @@ PetscErrorCode  MatTransposeMatMultWorks(Mat A,Mat B,PetscBool *flg)
   MatCheckPreallocated(A,1);
 
   *flg = PETSC_TRUE;
-  fA = A->ops->transposematmult;
-  fB = B->ops->transposematmult;
+  fA = A->ops->transposematmultnumeric;
+  fB = B->ops->transposematmultnumeric;
   if (fB==fA) {
     if (!fA) *flg = PETSC_FALSE;
-    transposematmult = fA;
   } else {
     /* dispatch based on the type of A and B from their PetscObject's PetscFunctionLists. */
     char multname[256];
@@ -1199,3 +1187,4 @@ PetscErrorCode PermonMatConvertInplace(Mat A, MatType type)
   ((PetscObject)A)->prefix = prefix;
   PetscFunctionReturnI(0);
 }
+

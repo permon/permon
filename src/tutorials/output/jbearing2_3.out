@@ -19,7 +19,7 @@ QPS Object: 3 MPI processes
         Mat Object: (tao_blmvm_) 3 MPI processes
           type: lmvmbfgs
           rows=2500, cols=2500
-            Scale type: diagonal
+            Scale type: DIAGONAL
             Scale history: 1
             Scale params: alpha=1., beta=0.5, rho=1.
             Convex factors: phi=0., theta=0.125
@@ -29,7 +29,7 @@ QPS Object: 3 MPI processes
             Number of rejects: 8
             Number of resets: 688
             Mat Object: (J0_) 3 MPI processes
-              type: lmvmdiagbrdn
+              type: lmvmdiagbroyden
               rows=2500, cols=2500
                 Scale history: 1
                 Scale params: alpha=1., beta=0.5, rho=1.
