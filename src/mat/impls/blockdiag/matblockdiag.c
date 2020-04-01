@@ -249,7 +249,7 @@ PetscErrorCode MatMultTransposeAdd_BlockDiag(Mat mat,Vec v1,Vec v2,Vec v3)
 
 #undef __FUNCT__
 #define __FUNCT__ "MatMatMult_BlockDiag_BlockDiag"
-PetscErrorCode MatMatMult_BlockDiag_BlockDiag(Mat A, Mat B, MatReuse scall, PetscReal fill, Mat *C) {
+PetscErrorCode MatMatMult_BlockDiag_BlockDiag(Mat A, Mat B, PetscReal fill, Mat *C) {
   MPI_Comm comm;
   Mat A_loc, B_loc, C_loc;
 
@@ -265,7 +265,7 @@ PetscErrorCode MatMatMult_BlockDiag_BlockDiag(Mat A, Mat B, MatReuse scall, Pets
 
 #undef __FUNCT__
 #define __FUNCT__ "MatMatMult_BlockDiag_AIJ"
-static PetscErrorCode MatMatMult_BlockDiag_AIJ(Mat A, Mat B, MatReuse scall, PetscReal fill, Mat *C) {
+static PetscErrorCode MatMatMult_BlockDiag_AIJ(Mat A, Mat B, PetscReal fill, Mat *C) {
   MPI_Comm comm;
   Mat A_loc, B_loc, C_loc;
   Vec x;
@@ -292,7 +292,7 @@ static PetscErrorCode MatMatMult_BlockDiag_AIJ(Mat A, Mat B, MatReuse scall, Pet
 
 #undef __FUNCT__
 #define __FUNCT__ "MatTransposeMatMult_BlockDiag_BlockDiag"
-PetscErrorCode MatTransposeMatMult_BlockDiag_BlockDiag(Mat A, Mat B, MatReuse scall, PetscReal fill, Mat *C) {
+PetscErrorCode MatTransposeMatMult_BlockDiag_BlockDiag(Mat A, Mat B, PetscReal fill, Mat *C) {
   MPI_Comm comm;
   Mat A_loc, B_loc, C_loc;
 
@@ -308,7 +308,7 @@ PetscErrorCode MatTransposeMatMult_BlockDiag_BlockDiag(Mat A, Mat B, MatReuse sc
 
 #undef __FUNCT__
 #define __FUNCT__ "MatTransposeMatMult_BlockDiag_AIJ"
-static PetscErrorCode MatTransposeMatMult_BlockDiag_AIJ(Mat A, Mat B, MatReuse scall, PetscReal fill, Mat *C) {
+static PetscErrorCode MatTransposeMatMult_BlockDiag_AIJ(Mat A, Mat B, PetscReal fill, Mat *C) {
   MPI_Comm comm;
   Mat A_loc, B_loc, C_loc;
   Vec x;
@@ -330,6 +330,68 @@ static PetscErrorCode MatTransposeMatMult_BlockDiag_AIJ(Mat A, Mat B, MatReuse s
   TRY( MatCreateVecs(B, &x, NULL) );
   TRY( MatMergeAndDestroy(comm, &C_loc, x, C) );
   TRY( VecDestroy(&x) );
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "MatProductNumeric_BlockDiag_AIJ"
+static PetscErrorCode MatProductNumeric_BlockDiag_AIJ(Mat C)
+{
+  Mat_Product    *product = C->product;
+  Mat            A=product->A,B=product->B;
+  Mat            new;
+
+  switch (product->type) {
+  case MATPRODUCT_AB:
+    TRY( MatMatMult_BlockDiag_AIJ(A,B,product->fill,&new) );
+    break;
+  case MATPRODUCT_AtB:
+    TRY( MatTransposeMatMult_BlockDiag_AIJ(A,B,product->fill,&new) );
+    break;
+  default: SETERRQ(PetscObjectComm((PetscObject)C),PETSC_ERR_SUP,"MATPRODUCT type is not supported");
+  }
+  TRY( MatHeaderReplace(C,&new) );
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "MatProductSetFromOptions_BlockDiag_AIJ"
+static PetscErrorCode MatProductSetFromOptions_BlockDiag_AIJ(Mat C)
+{
+  PetscFunctionBegin;
+  C->ops->productsymbolic = MatProductSymbolic_NOP;
+  C->ops->productnumeric  = MatProductNumeric_BlockDiag_AIJ;
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "MatProductNumeric_BlockDiag"
+static PetscErrorCode MatProductNumeric_BlockDiag(Mat C)
+{
+  Mat_Product    *product = C->product;
+  Mat            A=product->A,B=product->B;
+  Mat            new;
+
+  switch (product->type) {
+  case MATPRODUCT_AB:
+    TRY( MatMatMult_BlockDiag_BlockDiag(A,B,product->fill,&new) );
+    break;
+  case MATPRODUCT_AtB:
+    TRY( MatTransposeMatMult_BlockDiag_BlockDiag(A,B,product->fill,&new) );
+    break;
+  default: SETERRQ(PetscObjectComm((PetscObject)C),PETSC_ERR_SUP,"MATPRODUCT type is not supported");
+  }
+  TRY( MatHeaderReplace(C,&new) );
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "MatProductSetFromOptions_BlockDiag"
+static PetscErrorCode MatProductSetFromOptions_BlockDiag(Mat C)
+{
+  PetscFunctionBegin;
+  C->ops->productsymbolic = MatProductSymbolic_NOP;
+  C->ops->productnumeric  = MatProductNumeric_BlockDiag;
   PetscFunctionReturn(0);
 }
 
@@ -639,7 +701,6 @@ FLLOP_EXTERN PetscErrorCode MatCreate_BlockDiag(Mat B) {
   B->ops->multtranspose      = MatMultTranspose_BlockDiag;
   B->ops->multadd            = MatMultAdd_BlockDiag;
   B->ops->multtransposeadd   = MatMultTransposeAdd_BlockDiag;
-  B->ops->matmult            = MatMatMult_BlockDiag_BlockDiag;
   B->ops->duplicate          = MatDuplicate_BlockDiag;
   B->ops->getinfo            = MatGetInfo_BlockDiag;
   B->ops->setoption          = MatSetOption_BlockDiag;
@@ -653,12 +714,13 @@ FLLOP_EXTERN PetscErrorCode MatCreate_BlockDiag(Mat B) {
   B->ops->zeroentries        = MatZeroEntries_BlockDiag;
   B->ops->zerorows           = MatZeroRows_BlockDiag;
   B->ops->zerorowscolumns    = MatZeroRowsColumns_BlockDiag;
-  B->ops->transposematmult   = MatTransposeMatMult_BlockDiag_BlockDiag;
   B->ops->scale              = MatScale_BlockDiag;
+  B->ops->productsetfromoptions = MatProductSetFromOptions_BlockDiag;
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatGetColumnVectors_C",MatGetColumnVectors_BlockDiag) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatRestoreColumnVectors_C",MatRestoreColumnVectors_BlockDiag) );
-  TRY( PetscObjectComposeFunction((PetscObject)B,"MatMatMult_blockdiag_aij_C",MatMatMult_BlockDiag_AIJ) );
-  TRY( PetscObjectComposeFunction((PetscObject)B,"MatTransposeMatMult_blockdiag_aij_C",MatTransposeMatMult_BlockDiag_AIJ) );
+  TRY( PetscObjectComposeFunction((PetscObject)B,"MaProductSetFromOptions_blockdiag_aij_C",MatProductSetFromOptions_BlockDiag_AIJ) );
+  TRY( PetscObjectComposeFunction((PetscObject)B,"MaProductSetFromOptions_blockdiag_seqaij_C",MatProductSetFromOptions_BlockDiag_AIJ) );
+  TRY( PetscObjectComposeFunction((PetscObject)B,"MaProductSetFromOptions_blockdiag_mpiaij",MatProductSetFromOptions_BlockDiag_AIJ) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatConvert_blockdiag_aij_C",MatConvert_BlockDiag_AIJ) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatOrthColumns_C",MatOrthColumns_BlockDiag) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"PermonMatConvertBlocks_C",PermonMatConvertBlocks_BlockDiag) );

@@ -260,3 +260,11 @@ PetscErrorCode MatTransposeMatMultByColumns(Mat A, Mat B, PetscBool filter, Mat 
   TRY( PetscLogEventEnd(  Mat_TransposeMatMultByColumns,A,0,0,0) );
   PetscFunctionReturnI(0);
 }
+
+#undef __FUNCT__
+#define __FUNCT__ "MatProductSymbolic_NOP"
+PetscErrorCode MatProductSymbolic_NOP(Mat C)
+{
+  return 0;
+}
+

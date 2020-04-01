@@ -868,7 +868,8 @@ static PetscErrorCode MatTransposeMatMult_R_Bt(Mat R, Mat Bt, Mat *G_new)
 
   TRY( PetscObjectTypeCompareAny((PetscObject)Bt,&flg,MATNEST,MATNESTPERMON,"") );
   if (!flg) {
-    TRY( MatTransposeMatMultWorks(R,Bt,&flg) );
+    TRY( PetscObjectTypeCompare((PetscObject)Bt,MATEXTENSION,&flg) );
+    //TRY( MatTransposeMatMultWorks(R,Bt,&flg) );
     if (flg) {
       TRY( MatTransposeMatMult(R,Bt,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&G) );
     } else {

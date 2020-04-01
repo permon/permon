@@ -681,32 +681,38 @@ PetscErrorCode MatTransposeMatMult_BlockDiag_Extension_2MPIAIJ(Mat B, Mat TA, Ma
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "MatTransposeMatMult_BlockDiag_Extension"
-PetscErrorCode MatTransposeMatMult_BlockDiag_Extension(Mat B, Mat TA, MatReuse scall, PetscReal fill, Mat *C) {
-  Mat C_out=NULL;
-  IS myneighbors;
-  PetscBool flg = PETSC_FALSE;
-  MPI_Comm comm;
+#define __FUNCT__ "MatProductNumeric_BlockDiag_Extension"
+static PetscErrorCode MatProductNumeric_BlockDiag_Extension(Mat C)
+{
+  Mat_Product    *product = C->product;
+  Mat            A=product->A,B=product->B;
+  Mat            new;
+  PetscBool      flg = PETSC_FALSE;
+
+  switch (product->type) {
+  case MATPRODUCT_AtB:
+    _fllop_ierr = PetscObjectOptionsBegin((PetscObject)C);CHKERRQ(_fllop_ierr);
+    TRY( PetscOptionsBool("-MatTrMatMult_2extension","MatTransposeMatMult_BlockDiag_Extension_2extension","Mat type of resulting matrix will be extension",flg,&flg,NULL) );
+    _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
+    if (flg){
+      TRY( MatTransposeMatMult_BlockDiag_Extension_2extension(A, B, MAT_INITIAL_MATRIX, product->fill, &new) );
+    }else{
+      TRY( MatTransposeMatMult_BlockDiag_Extension_2MPIAIJ(A, B, MAT_INITIAL_MATRIX, product->fill, &new) );
+    }
+    break;
+  default: SETERRQ(PetscObjectComm((PetscObject)C),PETSC_ERR_SUP,"MATPRODUCT type is not supported");
+  }
+  TRY( MatHeaderReplace(C,&new) );
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "MatProductSetFromOptions_BlockDiag_Extension"
+static PetscErrorCode MatProductSetFromOptions_BlockDiag_Extension(Mat C) {
 
   PetscFunctionBegin;
-  TRY( PetscObjectGetComm((PetscObject)B, &comm) );
-  if ( scall != MAT_INITIAL_MATRIX){
-    FLLOP_SETERRQ(comm,PETSC_ERR_ARG_WRONG,"scall must be MAT_INITIAL_MATRIX");
-  }
-  _fllop_ierr = PetscObjectOptionsBegin((PetscObject)TA);CHKERRQ(_fllop_ierr);
-  TRY( PetscOptionsBool("-MatTrMatMult_2extension","MatTransposeMatMult_BlockDiag_Extension_2extension","Mat type of resulting matrix will be extension",flg,&flg,NULL) );
-  _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr); 
-  if (flg){
-    TRY( MatTransposeMatMult_BlockDiag_Extension_2extension(B, TA, scall, fill, &C_out) );
-    /* inherit ranks of neighbors from B */
-    TRY( PetscObjectQuery((PetscObject)TA,"myneighbors",(PetscObject*)&myneighbors) );
-    if (myneighbors) {
-      TRY( PetscObjectCompose((PetscObject)C_out,"myneighbors",(PetscObject)myneighbors) );
-    }
-  }else{
-    TRY( MatTransposeMatMult_BlockDiag_Extension_2MPIAIJ(B, TA, scall, fill, &C_out) );
-  }
-  *C = C_out;
+  C->ops->productsymbolic = MatProductSymbolic_NOP;
+  C->ops->productnumeric  = MatProductNumeric_BlockDiag_Extension;
   PetscFunctionReturn(0);
 }
 
@@ -1027,29 +1033,38 @@ PetscErrorCode MatMatTransposeMult_Extension_Extension_same(Mat A, Mat B, MatReu
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "MatMatTransposeMult_Extension_Extension"
-PetscErrorCode MatMatTransposeMult_Extension_Extension(Mat A, Mat B, MatReuse scall, PetscReal fill, Mat *C) {
-  Mat C_out;
-  const char *allowedMats[3] = {"aij","baij","sbaij"};
-  PetscInt mattype = 0; /* make aij default type */
-  MPI_Comm comm;
+#define __FUNCT__ "MatProductNumeric_Extension"
+static PetscErrorCode MatProductNumeric_Extension(Mat C)
+{
+  Mat_Product *product = C->product;
+  Mat         A=product->A,B=product->B;
+  Mat         new;
+  PetscInt    mattype = 0; /* make aij default type */
+  const char  *allowedMats[3] = {"aij","baij","sbaij"};
 
-  PetscFunctionBegin;
-  TRY( PetscObjectGetComm((PetscObject)B, &comm) );
   /* TODO add general mult, resulting mat MPIAIJ || extension */
-  if (A != B) {
-    FLLOP_SETERRQ(comm,PETSC_ERR_ARG_WRONG,"implemented only for A=B");
+  switch (product->type) {
+  case MATPRODUCT_ABt:
+    if (A != B) {
+      FLLOP_SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_WRONG,"implemented only for A=B");
+    }
+    _fllop_ierr = PetscObjectOptionsBegin((PetscObject)C);CHKERRQ(_fllop_ierr);
+    TRY( PetscOptionsEList("-MatMatMultExt_mattype","MatMatMultExt_mattype","Set type of resulting matrix when assembling from extension type",allowedMats,3,MATAIJ,&mattype,NULL) );
+    _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
+    TRY( MatMatTransposeMult_Extension_Extension_same(A,B,MAT_INITIAL_MATRIX,product->fill,mattype,&new) );
+    break;
+  default: SETERRQ(PetscObjectComm((PetscObject)C),PETSC_ERR_SUP,"MATPRODUCT type is not supported");
   }
-  //TODO scall??
-  if (scall != MAT_INITIAL_MATRIX) {
-    FLLOP_SETERRQ(comm,PETSC_ERR_ARG_WRONG,"scall must be MAT_INITIAL_MATRIX");
-  }
-  _fllop_ierr = PetscObjectOptionsBegin((PetscObject)A);CHKERRQ(_fllop_ierr);
-  TRY( PetscOptionsEList("-MatMatMultExt_mattype","MatMatMultExt_mattype","Set type of resulting matrix when assembling from extension type",allowedMats,3,MATAIJ,&mattype,NULL) );
-  _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr); 
-  TRY( MatMatTransposeMult_Extension_Extension_same(A,B,scall,fill,mattype,&C_out) );
+  TRY( MatHeaderReplace(C,&new) );
+  PetscFunctionReturn(0);
+}
 
-  *C = C_out;
+#undef __FUNCT__
+#define __FUNCT__ "MatProductSetFromOptions_Extension"
+static PetscErrorCode MatProductSetFromOptions_Extension(Mat C) {
+  PetscFunctionBegin;
+  C->ops->productsymbolic = MatProductSymbolic_NOP;
+  C->ops->productnumeric  = MatProductNumeric_Extension;
   PetscFunctionReturn(0);
 }
 
@@ -1106,6 +1121,7 @@ FLLOP_EXTERN PetscErrorCode MatCreate_Extension(Mat TA)
   TA->ops->multadd            = MatMultAdd_Extension;
   TA->ops->multtransposeadd   = MatMultTransposeAdd_Extension;
   TA->ops->convertfrom        = MatConvertFrom_Extension;
+  TA->ops->productsetfromoptions = MatProductSetFromOptions_Extension;
 
   /* set type-specific methods */
   TRY( PetscObjectComposeFunction((PetscObject)TA,"MatConvert_nestpermon_extension_C", MatConvert_NestPermon_Extension) );
@@ -1119,8 +1135,7 @@ FLLOP_EXTERN PetscErrorCode MatCreate_Extension(Mat TA)
   TRY( PetscObjectComposeFunction((PetscObject)TA,"MatExtensionGetCondensed_Extension_C",MatExtensionGetCondensed_Extension) );
   TRY( PetscObjectComposeFunction((PetscObject)TA,"MatExtensionSetCondensed_Extension_C",MatExtensionSetCondensed_Extension) );
   TRY( PetscObjectComposeFunction((PetscObject)TA,"MatExtensionSetUp_Extension_C",MatExtensionSetUp_Extension) );
-  TRY( PetscObjectComposeFunction((PetscObject)TA,"MatTransposeMatMult_blockdiag_extension_C",MatTransposeMatMult_BlockDiag_Extension) );
-  TRY( PetscObjectComposeFunction((PetscObject)TA,"MatMatTransposeMult_extension_extension_C",MatMatTransposeMult_Extension_Extension) );
+  TRY( PetscObjectComposeFunction((PetscObject)TA,"MatProductSetFromOptions_blockdiag_extension_C",MatProductSetFromOptions_BlockDiag_Extension) );
   PetscFunctionReturn(0);
 }
 
