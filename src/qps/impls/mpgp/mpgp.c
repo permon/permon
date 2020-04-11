@@ -22,6 +22,9 @@ const char *const QPSMPGPExpansionLengthTypes[] = {"fixed","opt","optapprox","bb
 PetscErrorCode QPSMonitorDefault_MPGP(QPS qps,PetscInt n,PetscViewer viewer)
 {
    QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
+   QP        qp;
+   Vec       x;
+   PetscReal f;
 
    PetscFunctionBegin;
    if (n == 0 && ((PetscObject)qps)->prefix) {
@@ -32,6 +35,12 @@ PetscErrorCode QPSMonitorDefault_MPGP(QPS qps,PetscInt n,PetscViewer viewer)
    TRY( PetscViewerASCIIPrintf(viewer,",\t||gf||=%.10e",(double)mpgp->gfnorm) );
    TRY( PetscViewerASCIIPrintf(viewer,",\t||gc||=%.10e",(double)mpgp->gcnorm) );
    TRY( PetscViewerASCIIPrintf(viewer,",\talpha=%.10e",(double)mpgp->alpha) );
+   {
+   TRY( QPSGetSolvedQP(qps,&qp) );
+   TRY( QPGetSolutionVector(qp, &x) );
+   TRY( QPComputeObjectiveFromGradient(qp,x,qps->work[3],&f) );
+   TRY( PetscViewerASCIIPrintf(viewer,",\tf=%.10e",(double)f) );
+   }
    TRY( PetscViewerASCIIPrintf(viewer,"\n") );
    PetscFunctionReturn(0);
 }
@@ -399,6 +408,9 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
       break;
     case QPS_MPGP_EXPANSION_PROJCG:
       mpgp->expansion = MPGPExpansion_ProjCG;
+      //falback
+      mpgp->expdirection = qps->work[1];     /* gf */
+      mpgp->explengthvec = qps->work[1];
       break;
     default: SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_PLIB,"Unknown MPGP expansion type");
   }
@@ -467,6 +479,11 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   p                 = qps->work[4];
   Ap                = qps->work[5];
 
+  PetscReal f,oldf;
+  Vec oldx,oldg;
+  VecDuplicate(g,&oldx);
+  VecDuplicate(g,&oldg);
+
   if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
     mpgp->explengthvecold = qps->work[7];
     mpgp->xold            = qps->work[8];
@@ -502,8 +519,8 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
 
     /* compute dot products to control the proportionality */
     TRY( VecDot(gc, gc, &gcTgc) );               /* gcTgc=gc'*gc   */
-    TRY( VecDot(gr, gf, &gfTgf) );               /* gfTgf=gr'*gf   */
-    //TRY( VecDot(gf, gf, &gfTgf) );               /* gfTgf=gr'*gf   */
+    //TRY( VecDot(gr, gf, &gfTgf) );               /* gfTgf=gr'*gf   */
+    TRY( VecDot(gf, gf, &gfTgf) );               /* gfTgf=gr'*gf   */
 
     /* compute norm of gf, gc from computed dot products */
     if (qps->numbermonitors) {
@@ -557,15 +574,45 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
           TRY( VecCopy(mpgp->explengthvec,mpgp->explengthvecold) );
         }
 
+        VecCopy(x,oldx);
         mpgp->expansion(qps,afeas,acg);
         if (mpgp->expproject) {
           TRY( QPCProject(qpc, x, x) );             /* project x to feas.set */
         }
 
         /* compute new gradient */
+        VecCopy(g,oldg);
         TRY( MatMult(A, x, g) );                  /* g=A*x */
         nmv++;                                    /* matrix multiplication counter */
         TRY( VecAXPY(g, -1.0, b) );               /* g=g-b           */
+
+        QPComputeObjectiveFromGradient(qp,oldx,oldg,&oldf);
+        QPComputeObjectiveFromGradient(qp,x,g,&f);
+        if (f>oldf) {
+          PetscPrintf(PETSC_COMM_WORLD,"f =%g > oldf = %g\n",(double)f,(double)oldf);
+          if (mpgp->fallback && mpgp->fallback2){
+            TRY( MPGPGrads(qps, x, g) );              /* grad. splitting  gP,gf,gc */
+            TRY( VecDot(gc, gc, &gcTgc) );               /* gcTgc=gc'*gc   */
+            TRY( VecDot(gf, gf, &gfTgf) );               /* gfTgf=gr'*gf   */
+            if (gcTgc <= gamma2*gfTgf)                    /* u is proportional */
+              mpgp->fallback = PETSC_FALSE;
+            }
+
+          if (mpgp->fallback){
+            PetscPrintf(PETSC_COMM_WORLD,"fallback\n");
+            VecCopy(oldx,x);
+            VecCopy(oldg,g);
+            if (mpgp->fallback2) {
+              TRY( MPGPGrads(qps, oldx, oldg) );              /* grad. splitting  gP,gf,gc */
+            }
+            MPGPExpansion_Std(qps,afeas,acg);
+            TRY( QPCProject(qpc, x, x) );             /* project x to feas.set */
+            TRY( MatMult(A, x, g) );                  /* g=A*x */
+            nmv++;                                    /* matrix multiplication counter */
+            TRY( VecAXPY(g, -1.0, b) );               /* g=g-b           */
+          }
+        }
+
         TRY( MPGPGrads(qps, x, g) );              /* grad. splitting  gP,gf,gc */
 
         /* restart CG method */
@@ -692,6 +739,8 @@ PetscErrorCode QPSSetFromOptions_MPGP(PetscOptionItems *PetscOptionsObject,QPS q
   TRY( PetscOptionsEnum("-qps_mpgp_expansion_type","Set expansion step type","",QPSMPGPExpansionTypes,(PetscEnum)mpgp->exptype,(PetscEnum*)&mpgp->exptype,NULL) );
   TRY( PetscOptionsEnum("-qps_mpgp_expansion_length_type","Set expansion step length type","",QPSMPGPExpansionLengthTypes,(PetscEnum)mpgp->explengthtype,(PetscEnum*)&mpgp->explengthtype,NULL) );
   TRY( PetscOptionsBool("-qps_mpgp_alpha_reset","If alpha=Nan reset to initial value, otherwise keep last alpaha","QPSMPGPSetAlpha",(PetscBool) mpgp->resetalpha,&mpgp->resetalpha,NULL) );
+  TRY( PetscOptionsBool("-qps_mpgp_fallback","","",(PetscBool) mpgp->fallback,&mpgp->fallback,NULL) );
+  TRY( PetscOptionsBool("-qps_mpgp_fallback2","","",(PetscBool) mpgp->fallback2,&mpgp->fallback2,NULL) );
   TRY( PetscOptionsTail() );
   PetscFunctionReturn(0);
 }
@@ -738,6 +787,9 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
   mpgp->expansion            = MPGPExpansion_Std;
   mpgp->expproject           = PETSC_TRUE;
   mpgp->resetalpha           = PETSC_FALSE;
+
+  mpgp->fallback              = PETSC_FALSE;
+  mpgp->fallback2              = PETSC_FALSE;
 
   /*
        Sets the functions that are associated with this data structure

@@ -31,6 +31,8 @@ typedef struct {
   Vec                        xold;
   PetscBool                  expproject;
   PetscBool                  resetalpha;
+  PetscBool                  fallback;
+  PetscBool                  fallback2;
 } QPS_MPGP;
 
 #endif
