@@ -926,7 +926,7 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
   tprim = qp->xwork;
   K = qp->A;
   f = qp->b;
-  if (!qp->BE && !qp->BI) FLLOP_SETERRQ_WORLD(PETSC_ERR_ARG_NULL,"lin. equality and/or inequality constraint matrix (BE/BI) is needed for dualization");
+  if (!qp->B) FLLOP_SETERRQ_WORLD(PETSC_ERR_ARG_NULL,"lin. equality and/or inequality constraint matrix (BE/BI) is needed for dualization");
 
   TRY( PetscOptionsGetBool(NULL,NULL,"-qpt_dualize_B_explicit",&B_explicit,NULL) );
   TRY( PetscOptionsGetBool(NULL,NULL,"-qpt_dualize_B_extension",&B_extension,NULL) );
