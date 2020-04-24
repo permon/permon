@@ -1,8 +1,14 @@
 
 static char help[] = "Solves a tridiagonal system with lower bound specified as an inequality constraint.\n\
+Sovles finite differences discretizatio of:\n\
+-u''(x) = -15,  x in [0,1]\n\
+u(0) = u(1) = 0\n\
+s.t. u(x) >= sin(4*pi*x -pi/6)/2 -2\n\
+Based on ex1.\n\
 Input parameters include:\n\
-  -sol   : view solution vector\n\
-  -n <mesh_n> : number of mesh points in both x and y-direction\n\n";
+  -n <mesh_n> : number of mesh points\n\
+  -sol        : view and draw the solution vector\n\
+  -draw_puase : number of seconds to pause, -1 implies until user input, see PetscDrawSetPause()\n";
 
 /*
 * Include "permonqps.h" so that we can use QPS solvers.  Note that this file
@@ -102,7 +108,7 @@ int main(int argc,char **args)
   ierr = MatAssemblyEnd(B,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
   ierr = MatShift(B,1.0);CHKERRQ(ierr);
 
-  /* Empty null space matrix for dualization*/
+  /* Empty null space matrix for dualization */
   ierr = MatCreateAIJ(PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,n,0,0,NULL,0,NULL,&R);CHKERRQ(ierr);
   ierr = MatAssemblyBegin(R,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
   ierr = MatAssemblyEnd(R,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
@@ -154,7 +160,6 @@ int main(int argc,char **args)
   if (!converged) PetscPrintf(PETSC_COMM_WORLD,"QPS did not converge!\n");
   if (viewSol) ierr = VecView(x,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
   if (viewSol) ierr = viewDraw(c);CHKERRQ(ierr);
-  if (viewSol) ierr = viewDraw(x);CHKERRQ(ierr);
 
   ierr = QPSDestroy(&qps);CHKERRQ(ierr);
   ierr = QPDestroy(&qp);CHKERRQ(ierr);
@@ -170,20 +175,12 @@ int main(int argc,char **args)
 
 
 /*TEST
-#  testset:
-#    suffix: 1
-#    filter: grep -e CONVERGED -e number -e "r ="
-#    args: -n 100 -qps_view_convergence -qp_chain_view_kkt
-#    test:
-#    test:
-#      nsize: 3
-#  testset:
-#    filter: grep -e CONVERGED -e "function/" -e Objective -e "r ="
-#    args: -n 100 -qps_view_convergence -qp_chain_view_kkt -qps_type tao -qps_tao_type blmvm
-#    test:
-#      suffix: blmvm_1
-#    test:
-#      suffix: blmvm_3
-#      nsize: 3
+  testset:
+    suffix: 1
+    filter: grep -e CONVERGED -e number -e "r ="
+    args: -n 100 -qps_view_convergence -qp_chain_view_kkt
+    test:
+    test:
+      nsize: 3
 TEST*/
 
