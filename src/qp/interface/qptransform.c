@@ -788,11 +788,13 @@ static PetscErrorCode QPTDualizePostSolve_Private(QP child,QP parent)
     Vec f          = parent->b;
     Vec u          = parent->x;
     Vec tprim      = parent->xwork;
-    PetscBool flg;
+    PetscBool flg, spd;
 
     PetscFunctionBegin;
     TRY( PetscObjectQuery((PetscObject)F,"Kplus",(PetscObject*)&Kplus) );
     FLLOP_ASSERT(Kplus,"Kplus != NULL");
+    TRY( MatGetOption(parent->A,MAT_SPD,&spd) );
+    if (!spd && !alpha) SETERRQ(PetscObjectComm((PetscObject)parent), PETSC_ERR_PLIB, "parent->A not marked as SPD but no alpha present");
 
     /* copy lambda back to lambda_E and lambda_I */
     if (parent->BE && parent->BI) {
@@ -816,19 +818,21 @@ static PetscErrorCode QPTDualizePostSolve_Private(QP child,QP parent)
     TRY( VecAYPX(tprim, -1.0, f) );
     TRY( MatMult(Kplus, tprim, u) );
 
-    TRY( VecIsInvalidated(alpha,&flg) );
-    if (flg) {
-      /* compute alpha = (G*G')\G(G'*alpha) where G'*alpha = child->Bt_lambda */
-      TRY( VecIsInvalidated(child->Bt_lambda,&flg) );
+    if (alpha) {
+      TRY( VecIsInvalidated(alpha,&flg) );
       if (flg) {
-        TRY( MatMultTranspose(child->B,child->lambda,child->Bt_lambda) );
+        /* compute alpha = (G*G')\G(G'*alpha) where G'*alpha = child->Bt_lambda */
+        TRY( VecIsInvalidated(child->Bt_lambda,&flg) );
+        if (flg) {
+          TRY( MatMultTranspose(child->B,child->lambda,child->Bt_lambda) );
+        }
+        TRY( QPPFApplyHalfQ(child->pf,child->Bt_lambda,alpha) );
       }
-      TRY( QPPFApplyHalfQ(child->pf,child->Bt_lambda,alpha) );
-    }
 
-    /* u = u - R*alpha */
-    TRY( MatMult(parent->R, alpha, tprim) );
-    TRY( VecAXPY(u, -1.0, tprim) );
+      /* u = u - R*alpha */
+      TRY( MatMult(parent->R, alpha, tprim) );
+      TRY( VecAXPY(u, -1.0, tprim) );
+    }
     PetscFunctionReturn(0);
 }
 
@@ -912,6 +916,7 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
   PetscBool        B_nest_extension = PETSC_FALSE;
   PetscBool        mp = PETSC_FALSE;
   PetscBool        true_mp = PETSC_FALSE;
+  PetscBool        spd = PETSC_FALSE;
 
   PetscFunctionBeginI;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
@@ -919,6 +924,8 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
   TRY( QPTransformBegin(QPTDualize, QPTDualizePostSolve_Private,NULL, QP_DUPLICATE_DO_NOT_COPY,&qp,&child,&comm) );
   TRY( QPAppendOptionsPrefix(child,"dual_") );
 
+  G = NULL;
+  e = NULL;
   Kplus_orig = NULL;
   B = NULL;
   c = qp->c;
@@ -980,20 +987,38 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
   TRY( FllopPetscObjectInheritPrefix((PetscObject)Kplus,(PetscObject)child,NULL) );
 
   /* get or compute stiffness matrix kernel (R) */
-  R = NULL;
   TRY( QPGetOperatorNullSpace(qp,&R) );
+  TRY( MatGetOption(qp->A,MAT_SPD,&spd) );
+  if (!spd) {
+    if (R) {
+      TRY( MatInvSetNullSpace(Kplus,R) );
+    } else {
+      TRY( PetscInfo(qp,"null space matrix not set => using -qpt_dualize_Kplus_left and MAT_REG_NONE\n") );
+      mp = PETSC_TRUE;
+      true_mp = PETSC_TRUE;
+      regType = MAT_REG_NONE;
+      TRY( PetscInfo(qp,"null space matrix not set => trying to compute one\n") );
+      TRY( MatInvComputeNullSpace(Kplus) );
+      TRY( MatInvGetNullSpace(Kplus,&R) );
+      //TODO memleak below?
+      TRY( MatOrthColumns(R, MAT_ORTH_GS, MAT_ORTH_FORM_EXPLICIT, &R, NULL) );
+      TRY( QPSetOperatorNullSpace(qp,R) );
+    }
+  }
   if (R) {
-    TRY( MatInvSetNullSpace(Kplus,R) );
-  } else {
-    TRY( PetscInfo(qp,"null space matrix not set => using -qpt_dualize_Kplus_left and -regularize 0\n") );
-    mp = PETSC_TRUE;
-    true_mp = PETSC_TRUE;
+    PetscInt n;
+    TRY( MatGetSize(R,NULL,&n) );
+    if (!n) {
+      TRY( QPSetOperatorNullSpace(qp,NULL) );
+      R=NULL;
+    }
+  }
+  if (!R) {
+    TRY( MatSetOption(qp->A,MAT_SPD,PETSC_TRUE) );
+    spd = PETSC_TRUE;
+  }
+  if (spd) {
     regType = MAT_REG_NONE;
-    TRY( PetscInfo(qp,"null space matrix not set => trying to compute one\n") );
-    TRY( MatInvComputeNullSpace(Kplus) );
-    TRY( MatInvGetNullSpace(Kplus,&R) );
-    TRY( MatOrthColumns(R, MAT_ORTH_GS, MAT_ORTH_FORM_EXPLICIT, &R, NULL) );
-    TRY( QPSetOperatorNullSpace(qp,R) );
   }
   TRY( MatInvSetRegularizationType(Kplus,regType) );
   TRY( MatSetFromOptions(Kplus) );
@@ -1008,7 +1033,7 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
   }
 
   /* convert to Moore-Penrose pseudoinverse using projector to image of K (kernel of R') */
-  if (true_mp || mp) {
+  if (!spd && (true_mp || mp)) {
     QPPF pf_R;
     Mat P_R;
     Mat mats[3];
@@ -1065,11 +1090,6 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
 
   TRY( PetscObjectSetName((PetscObject)Kplus,"Kplus") );
 
-  /* G = R'*B' */
-  TRY( PetscLogEventBegin(QPT_Dualize_AssembleG,qp,0,0,0) );
-  TRY( MatTransposeMatMult_R_Bt(R,Bt,&G) );
-  TRY( PetscLogEventEnd(  QPT_Dualize_AssembleG,qp,0,0,0) );
-
   /* F = B*Kplus*Bt (implicitly) */
   {
     Mat F_arr[3];
@@ -1099,9 +1119,16 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
   TRY( MatMult(B, tprim, d) );
   if(c) TRY( VecAXPY(d,-1.0,c) );
 
-  /* e = R'*f */
-  TRY( MatCreateVecs(R,&e,NULL) );
-  TRY( MatMultTranspose(R,f,e) );
+  if (R) {
+    /* G = R'*B' */
+    TRY( PetscLogEventBegin(QPT_Dualize_AssembleG,qp,0,0,0) );
+    TRY( MatTransposeMatMult_R_Bt(R,Bt,&G) );
+    TRY( PetscLogEventEnd(  QPT_Dualize_AssembleG,qp,0,0,0) );
+
+    /* e = R'*f */
+    TRY( MatCreateVecs(R,&e,NULL) );
+    TRY( MatMultTranspose(R,f,e) );
+  }
 
   /* lb(E) = -inf; lb(I) = 0 */
   if (qp->BI) {
