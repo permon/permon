@@ -286,7 +286,6 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   Vec               g;                  /* ... gradient                         */
   Vec               p;                  /* ... conjugate gradient               */
   Vec               Ap;                 /* ... multiplicated vector             */
-  Vec               galpha;             /* ... scaled projected gradient        */
   
   PetscReal         alpha, gamma;       /* ... algorithm constants              */
   PetscReal         acg;                /* ... conjugate gradient step-size     */
@@ -309,7 +308,6 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   g                 = qps->work[3];
   p                 = qps->work[4];
   Ap                = qps->work[5];
-  galpha            = qps->work[5];     /* uses the same work vector as Ap */
 
   /* set constants of algorithm */
   gamma             = mpgp->gamma;
