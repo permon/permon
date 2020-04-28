@@ -1,16 +1,13 @@
 PERMON toolbox
 ================================
-PERMON (Parallel Efficient Robust Modular Object Numerical) is a software toolbox for quadratic programming (QP) based on [PETSc](http://www.mcs.anl.gov/petsc/). It also includes domain decomposition methods (FETI and Total FETI) as a specific QP implementation.
+PERMON (Parallel Efficient Robust Modular Object Numerical) is a software toolbox for quadratic programming (QP) based on [PETSc](http://www.mcs.anl.gov/petsc/). It also includes domain decomposition methods (FETI and Total FETI) and Support Vector Machines (SVM) machine learning methods.
 
 Project homepage: <http://permon.vsb.cz>  
 
 PERMON contains following modules:
 
-* [PermonQP](http://permon.vsb.cz/permonqp.htm) - contains QP transformations and solvers
-* [PermonFLLOP](http://permon.vsb.cz/permonfllop.htm) - (FETI Light Layer On top of PETSc) implements (Total) FETI
-
-Support Vector Machines (SVMs) implementation [PermonSVM](http://permon.vsb.cz/permonsvm.htm) based on PermonQP can be found at <https://github.com/permon/permonsvm>.
-
+* [PermonQP](http://permon.vsb.cz/permonqp.htm) - contains QP solvers and (Total) FETI domain decomposition methods
+* [PermonSVM](http://permon.vsb.cz/permonsvm.htm) - SVM machine learning implementation based on PermonQP.
 
 Please use [GitHub](https://github.com/permon/permon) for issues and pull requests.
 
