@@ -20,6 +20,7 @@ struct _QPSOps {
   PetscErrorCode (*resetstatistics)(QPS);
   PetscErrorCode (*isqpcompatible)(QPS,QP,PetscBool *);
   PetscErrorCode (*monitor)(QPS,PetscInt,PetscViewer);  
+  PetscErrorCode (*monitorcostfunction)(QPS,PetscInt,PetscViewer);
 };
 
 struct _p_QPS {
