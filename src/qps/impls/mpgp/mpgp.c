@@ -35,12 +35,6 @@ PetscErrorCode QPSMonitorDefault_MPGP(QPS qps,PetscInt n,PetscViewer viewer)
    TRY( PetscViewerASCIIPrintf(viewer,",\t||gf||=%.10e",(double)mpgp->gfnorm) );
    TRY( PetscViewerASCIIPrintf(viewer,",\t||gc||=%.10e",(double)mpgp->gcnorm) );
    TRY( PetscViewerASCIIPrintf(viewer,",\talpha=%.10e",(double)mpgp->alpha) );
-   {
-   TRY( QPSGetSolvedQP(qps,&qp) );
-   TRY( QPGetSolutionVector(qp, &x) );
-   TRY( QPComputeObjectiveFromGradient(qp,x,qps->work[3],&f) );
-   TRY( PetscViewerASCIIPrintf(viewer,",\tf=%.10e",(double)f) );
-   }
    TRY( PetscViewerASCIIPrintf(viewer,"\n") );
    PetscFunctionReturn(0);
 }
@@ -590,16 +584,20 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
         QPComputeObjectiveFromGradient(qp,x,g,&f);
         if (f>oldf) {
           PetscPrintf(PETSC_COMM_WORLD,"f =%g > oldf = %g\n",(double)f,(double)oldf);
-          if (mpgp->fallback && mpgp->fallback2){
+          if (mpgp->fallback2) {
             TRY( MPGPGrads(qps, x, g) );              /* grad. splitting  gP,gf,gc */
             TRY( VecDot(gc, gc, &gcTgc) );               /* gcTgc=gc'*gc   */
             TRY( VecDot(gf, gf, &gfTgf) );               /* gfTgf=gr'*gf   */
-            if (gcTgc <= gamma2*gfTgf)                    /* u is proportional */
+            if (gcTgc <= gamma2*gfTgf) {                   /* u is proportional */
               mpgp->fallback = PETSC_FALSE;
+            } else {
+              mpgp->fallback = PETSC_TRUE;
             }
+          }
 
           if (mpgp->fallback){
-            PetscPrintf(PETSC_COMM_WORLD,"fallback\n");
+            //PetscPrintf(PETSC_COMM_WORLD,"fallback\n");
+            mpgp->currentStepType = 'f';
             VecCopy(oldx,x);
             VecCopy(oldg,g);
             if (mpgp->fallback2) {
@@ -741,6 +739,7 @@ PetscErrorCode QPSSetFromOptions_MPGP(PetscOptionItems *PetscOptionsObject,QPS q
   TRY( PetscOptionsBool("-qps_mpgp_alpha_reset","If alpha=Nan reset to initial value, otherwise keep last alpaha","QPSMPGPSetAlpha",(PetscBool) mpgp->resetalpha,&mpgp->resetalpha,NULL) );
   TRY( PetscOptionsBool("-qps_mpgp_fallback","","",(PetscBool) mpgp->fallback,&mpgp->fallback,NULL) );
   TRY( PetscOptionsBool("-qps_mpgp_fallback2","","",(PetscBool) mpgp->fallback2,&mpgp->fallback2,NULL) );
+  if (mpgp->fallback2) mpgp->fallback = PETSC_FALSE;
   TRY( PetscOptionsTail() );
   PetscFunctionReturn(0);
 }
