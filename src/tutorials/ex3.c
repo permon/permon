@@ -1,6 +1,6 @@
 
-static char help[] = "Solves a tridiagonal system with lower bound specified as an inequality constraint.\n\
-Sovles finite differences discretizatio of:\n\
+static char help[] = "Solves a tridiagonal system with lower bound specified as a linear inequality constraint.\n\
+Solves finite difference discretization of:\n\
 -u''(x) = -15,  x in [0,1]\n\
 u(0) = u(1) = 0\n\
 s.t. u(x) >= sin(4*pi*x -pi/6)/2 -2\n\
@@ -48,8 +48,6 @@ PetscReal fobst(PetscInt i,PetscInt n) {
   return sin(4*PI*i*h-PI/6.)/2 -2; 
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "main"
 int main(int argc,char **args)
 {
   Vec            b,c,x;
@@ -183,4 +181,3 @@ int main(int argc,char **args)
     test:
       nsize: 3
 TEST*/
-
