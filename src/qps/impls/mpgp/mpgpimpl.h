@@ -20,6 +20,8 @@ typedef struct {
   PetscInt  ncg;              /* ... cg step counter                  */
   PetscInt  nprop;            /* ... proportional step counter        */
   PetscInt  nexp;             /* ... expansion step counter           */
+  PetscInt  nfinc;            /* ... functional increase counter      */
+  PetscInt  nfall;            /* ... fallback step counter            */
   char      currentStepType;
 
   QPSMPGPExpansionType       exptype;

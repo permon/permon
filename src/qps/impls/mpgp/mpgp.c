@@ -22,9 +22,6 @@ const char *const QPSMPGPExpansionLengthTypes[] = {"fixed","opt","optapprox","bb
 PetscErrorCode QPSMonitorDefault_MPGP(QPS qps,PetscInt n,PetscViewer viewer)
 {
    QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
-   QP        qp;
-   Vec       x;
-   PetscReal f;
 
    PetscFunctionBegin;
    if (n == 0 && ((PetscObject)qps)->prefix) {
@@ -462,6 +459,9 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   PetscInt          nprop=0;            /* ... proportional step counter        */
   PetscInt          nexp=0;             /* ... expansion step counter           */
 
+  PetscInt          nfinc=0;            /* ... functional increase counter      */
+  PetscInt          nfall=0;            /* ... fallback step counter            */
+
   PetscFunctionBegin;
   /* set working vectors */
   gP                = qps->work[0];
@@ -584,6 +584,7 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
         QPComputeObjectiveFromGradient(qp,x,g,&f);
         if (f>oldf) {
           PetscPrintf(PETSC_COMM_WORLD,"f =%g > oldf = %g\n",(double)f,(double)oldf);
+          nfinc++;
           if (mpgp->fallback2) {
             TRY( MPGPGrads(qps, x, g) );              /* grad. splitting  gP,gf,gc */
             TRY( VecDot(gc, gc, &gcTgc) );               /* gcTgc=gc'*gc   */
@@ -596,6 +597,7 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
           }
 
           if (mpgp->fallback){
+            nfall++;
             //PetscPrintf(PETSC_COMM_WORLD,"fallback\n");
             mpgp->currentStepType = 'f';
             VecCopy(oldx,x);
@@ -647,6 +649,8 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   mpgp->nexp    += nexp;
   mpgp->nmv     += nmv;
   mpgp->nprop   += nprop;
+  mpgp->nfinc    += nfinc;
+  mpgp->nfall   += nfall;
   PetscFunctionReturn(0);
 }
 
@@ -759,6 +763,8 @@ PetscErrorCode QPSViewConvergence_MPGP(QPS qps, PetscViewer v)
     TRY( PetscViewerASCIIPrintf(v,"number of CG steps %d\n",mpgp->ncg) );
     TRY( PetscViewerASCIIPrintf(v,"number of expansion steps %d\n",mpgp->nexp) );
     TRY( PetscViewerASCIIPrintf(v,"number of proportioning steps %d\n",mpgp->nprop) );
+    TRY( PetscViewerASCIIPrintf(v,"number of cost function value increases: %d\n",mpgp->nfinc) );
+    TRY( PetscViewerASCIIPrintf(v,"number of fallbacks: %d\n",mpgp->nfall) );
   }
   PetscFunctionReturn(0);
 }
