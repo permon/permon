@@ -86,6 +86,8 @@ int main(int argc,char **args)
   value[0] = -1.0; value[1] = 2.0; value[2] = -1.0;
   for (i=rstart; i<rend; i++) {
     col[0] = i-1; col[1] = i; col[2] = i+1;
+    if (i == 1)   col[0] = -1; /* ignore the first value in the second row (Dirichlet BC) */
+    if (i == n-2) col[2] = -1; /* ignore the third value in the second to last row (Dirichlet BC) */
     ierr = MatSetValues(A,1,&i,3,col,value,INSERT_VALUES);CHKERRQ(ierr);
     ierr = VecSetValue(b,i,-15*h*h*2,INSERT_VALUES);CHKERRQ(ierr);
     ierr = VecSetValue(c,i,fobst(i,n),INSERT_VALUES);CHKERRQ(ierr);
