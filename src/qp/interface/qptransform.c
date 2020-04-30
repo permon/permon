@@ -909,7 +909,7 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
   Mat              R,B,Bt,F,G,K,Kplus,Kplus_orig;
   Vec              c,d,e,f,lb,tprim,lambda;
   PetscBool        B_explicit = PETSC_FALSE, B_extension = PETSC_FALSE, B_view_spectra = PETSC_FALSE;
-  PetscBool        B_nest_extension = PETSC_TRUE;
+  PetscBool        B_nest_extension = PETSC_FALSE;
   PetscBool        mp = PETSC_FALSE;
   PetscBool        true_mp = PETSC_FALSE;
 
