@@ -472,7 +472,6 @@ static PetscErrorCode MatProductNumeric_NestPermon(Mat C)
   Mat_Product    *product = C->product;
   Mat            A=product->A,B=product->B;
   Mat            new;
-  MatType        *type;
 
   switch (product->type) {
   case MATPRODUCT_AB:
@@ -488,8 +487,6 @@ static PetscErrorCode MatProductNumeric_NestPermon(Mat C)
 #define __FUNCT__ "MatProductSetFromOptions_NestPermon"
 static PetscErrorCode MatProductSetFromOptions_NestPermon(Mat C)
 {
-  Mat_Product    *product = C->product;
-
   PetscFunctionBegin;
   C->ops->productsymbolic = MatProductSymbolic_NOP;
   C->ops->productnumeric  = MatProductNumeric_NestPermon;
