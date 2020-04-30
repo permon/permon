@@ -1,8 +1,13 @@
 
 static char help[] = "Solves a tridiagonal system with lower bound.\n\
+Solves finite difference discretization of:\n\
+-u''(x) = -15,  x in [0,1]\n\
+u(0) = u(1) = 0\n\
+s.t. u(x) >= sin(4*pi*x -pi/6)/2 -2\n\
 Input parameters include:\n\
-  -view_sol   : view solution vector\n\
-  -n <mesh_n> : number of mesh points in both x and y-direction\n\n";
+  -n <mesh_n> : number of mesh points\n\
+  -sol        : view solution vector\n\
+  -draw_pause : number of seconds to pause, -1 implies until user input, see PetscDrawSetPause()\n";
 
 /*
 * Include "permonqps.h" so that we can use QPS solvers.  Note that this file
@@ -40,8 +45,6 @@ PetscReal fobst(PetscInt i,PetscInt n) {
   return PetscSinReal(4*PETSC_PI*i*h-PETSC_PI/6.)/2 -2;
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "main"
 int main(int argc,char **args)
 {
   Vec            b,c,x;
@@ -105,7 +108,7 @@ int main(int argc,char **args)
   ierr = QPSetOperator(qp,A);CHKERRQ(ierr);
   /* Set right hand side */
   ierr = QPSetRhs(qp,b);CHKERRQ(ierr);
-  /* Set initial guess. 
+  /* Set initial guess.
   * THIS VECTOR WILL ALSO HOLD THE SOLUTION OF QP */
   ierr = QPSetInitialVector(qp,x);CHKERRQ(ierr);
   /* Set box constraints.
@@ -114,7 +117,7 @@ int main(int argc,char **args)
   /* Set runtime options, e.g
   *   -qp_chain_view_kkt */
   ierr = QPSetFromOptions(qp);CHKERRQ(ierr);
-  
+
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   * Setup QPS, i.e. QP Solver
   *   Note the use of PetscObjectComm() to get the same comm as in qp object.
