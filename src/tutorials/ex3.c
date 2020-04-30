@@ -6,9 +6,7 @@ u(0) = u(1) = 0\n\
 s.t. u(x) >= sin(4*pi*x -pi/6)/2 -2\n\
 Based on ex1.\n\
 Input parameters include:\n\
-  -n <mesh_n> : number of mesh points\n\
-  -sol        : view and draw the solution vector\n\
-  -draw_puase : number of seconds to pause, -1 implies until user input, see PetscDrawSetPause()\n";
+  -n <mesh_n> : number of mesh points\n";
 
 /*
 * Include "permonqps.h" so that we can use QPS solvers.  Note that this file
@@ -22,30 +20,11 @@ Input parameters include:\n\
 *   petsctao.h   - Toolkit for Advanced Optimization solvers
 */
 #include <permonqps.h>
-#include <petscdraw.h>
-#include <math.h>
-#define PI 3.14159265
-
-/* Draw vector */
-PetscErrorCode viewDraw(Vec x) {
-  PetscViewer    v1;
-  PetscDraw      draw;
-  PetscErrorCode ierr;
-
-  PetscFunctionBeginUser;
-  ierr = PetscViewerDrawOpen(PETSC_COMM_WORLD,0,"",80,380,400,160,&v1);CHKERRQ(ierr);
-  ierr = PetscViewerDrawGetDraw(v1,0,&draw);CHKERRQ(ierr);
-  ierr = PetscDrawSetDoubleBuffer(draw);CHKERRQ(ierr);
-  ierr = PetscDrawSetFromOptions(draw);CHKERRQ(ierr);
-  ierr = VecView(x,v1);CHKERRQ(ierr);
-  ierr = PetscViewerDestroy(&v1);CHKERRQ(ierr);
-  PetscFunctionReturn(0);
-}
 
 /* Lower bound (obstacle) function */
 PetscReal fobst(PetscInt i,PetscInt n) {
   PetscReal h = 1./(n-1);
-  return sin(4*PI*i*h-PI/6.)/2 -2; 
+  return PetscSinReal(4*PETSC_PI*i*h-PETSC_PI/6.)/2 -2;
 }
 
 int main(int argc,char **args)
@@ -56,12 +35,11 @@ int main(int argc,char **args)
   QPS            qps;
   PetscInt       i,n = 10,col[3],rstart,rend;
   PetscReal      h,value[3];
-  PetscBool      converged,viewSol=PETSC_FALSE;
+  PetscBool      converged;
   PetscErrorCode ierr;
 
   ierr = PermonInitialize(&argc,&args,(char *)0,help);if (ierr) return ierr;
   ierr = PetscOptionsGetInt(NULL,NULL,"-n",&n,NULL);CHKERRQ(ierr);
-  ierr = PetscOptionsGetBool(NULL,NULL,"-sol",&viewSol,NULL);CHKERRQ(ierr);
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   * Setup matrices and vectors
@@ -156,8 +134,6 @@ int main(int argc,char **args)
   /* Check that QPS converged */
   ierr = QPIsSolved(qp,&converged);CHKERRQ(ierr);
   if (!converged) PetscPrintf(PETSC_COMM_WORLD,"QPS did not converge!\n");
-  if (viewSol) ierr = VecView(x,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-  if (viewSol) ierr = viewDraw(c);CHKERRQ(ierr);
 
   ierr = QPSDestroy(&qps);CHKERRQ(ierr);
   ierr = QPDestroy(&qp);CHKERRQ(ierr);
