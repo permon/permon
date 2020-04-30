@@ -1,11 +1,11 @@
-ALL: ex1 ex2
+ALL: ex1 ex2 ex3
 
 CFLAGS      =
 FFLAGS      =
 CPPFLAGS    =
 FPPFLAGS    =
 LOCDIR      = src/tests
-EXAMPLESC   = ex1.c ex2.c
+EXAMPLESC   = ex1.c ex2.c ex3.c
 EXAMPLESF   =
 MANSEC      =
 CLEANFILES  =
