@@ -17,8 +17,6 @@ Input parameters include:\n\
 */
 #include <permonqps.h>
 #include <petscdraw.h>
-#include <math.h>
-#define PI 3.14159265
 
 /* Draw vector */
 PetscErrorCode viewDraw(Vec x) {
@@ -39,7 +37,7 @@ PetscErrorCode viewDraw(Vec x) {
 /* Lower bound (obstacle) function */
 PetscReal fobst(PetscInt i,PetscInt n) {
   PetscReal h = 1./(n-1);
-  return sin(4*PI*i*h-PI/6.)/2 -2; 
+  return PetscSinReal(4*PETSC_PI*i*h-PETSC_PI/6.)/2 -2;
 }
 
 #undef __FUNCT__
