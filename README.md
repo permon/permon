@@ -7,7 +7,7 @@ Project homepage: <http://permon.vsb.cz>
 PERMON contains following modules:
 
 * [PermonQP](http://permon.vsb.cz/permonqp.htm) - contains QP solvers and (Total) FETI domain decomposition methods
-* [PermonSVM](http://permon.vsb.cz/permonsvm.htm) - SVM machine learning implementation based on PermonQP.
+* [PermonSVM](http://permon.vsb.cz/permonsvm.htm) - SVM machine learning implementation based on PermonQP - [separate repository](https://github.com/permon/permonsvm)
 
 Please use [GitHub](https://github.com/permon/permon) for issues and pull requests.
 
@@ -32,4 +32,3 @@ The documentation of the routines is available at <http://permon.vsb.cz/document
 Supported PETSc versions
 ----------------------------------
 PERMON tries to support newest versions of PETSc as soon as possible. The [releases](https://github.com/permon/permon/releases) are tagged with major.minor.sub-minor numbers. The major.minor numbers correspond to the major.minor release numbers of the supported PETSc version.
-
