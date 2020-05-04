@@ -6,7 +6,7 @@ Project homepage: <http://permon.vsb.cz>
 
 PERMON contains following modules:
 
-* [PermonQP](http://permon.vsb.cz/permonqp.htm) - contains QP solvers and (Total) FETI domain decomposition methods
+* [PermonQP](http://permon.vsb.cz/permonqp.htm) - solvers and routines for QP problems and (Total) [FETI](http://permon.vsb.cz/permonfllop.htm) domain decomposition methods
 * [PermonSVM](http://permon.vsb.cz/permonsvm.htm) - SVM machine learning implementation based on PermonQP - [separate repository](https://github.com/permon/permonsvm)
 
 Please use [GitHub](https://github.com/permon/permon) for issues and pull requests.
