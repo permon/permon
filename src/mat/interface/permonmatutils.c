@@ -1215,3 +1215,69 @@ PetscErrorCode MatCheckNullSpace(Mat K,Mat R,PetscReal tol)
   TRY( VecDestroy(&y) );
   PetscFunctionReturnI(0);
 }
+
+/* TODO: this is factored out from PETSc MatMatSolve and could be employed also therein */
+PetscErrorCode MatRedistributeRows(Mat mat_from,IS rowperm,PetscInt base,Mat mat_to)
+{
+  PetscMPIInt     commsize;
+  PetscInt        i,m_from,m_to,M_to,N;
+  PetscInt        *idxx;
+  const PetscInt  *rstart,*indices;
+  PetscScalar     *arr_from,*arr_to;
+  Vec             v_from,v_to;
+  IS              is_to;
+  VecScatter      sc;
+  PetscErrorCode  ierr;
+
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(mat_from,MAT_CLASSID,1);
+  PetscValidHeaderSpecific(mat_to,MAT_CLASSID,4);
+  PetscCheckSameComm(mat_from,1,mat_to,4);
+  if (mat_from->rmap->N != mat_to->rmap->N) SETERRQ2(PetscObjectComm((PetscObject)mat_from),PETSC_ERR_ARG_SIZ,"Input matrices must have equal global number of rows, %D != %D",mat_from->rmap->N,mat_to->rmap->N);
+  if (mat_from->cmap->N != mat_to->cmap->N) SETERRQ2(PetscObjectComm((PetscObject)mat_from),PETSC_ERR_ARG_SIZ,"Input matrices must have equal global number of columns, %D != %D",mat_from->cmap->N,mat_to->cmap->N);
+  m_from = mat_from->rmap->n;
+  m_to = mat_to->rmap->n;
+  M_to = mat_to->rmap->N;
+  N = mat_to->cmap->N;
+  ierr = MatGetOwnershipRanges(mat_to,&rstart);CHKERRQ(ierr);
+  ierr = MPI_Comm_size(PetscObjectComm((PetscObject)mat_to),&commsize);CHKERRQ(ierr);
+  ierr = ISGetIndices(rowperm,&indices);CHKERRQ(ierr);
+
+  ierr = MatDenseGetArray(mat_from,&arr_from);CHKERRQ(ierr);
+  ierr = VecCreateSeqWithArray(PETSC_COMM_SELF,1,m_from*N,arr_from,&v_from);CHKERRQ(ierr);
+  ierr = MatDenseGetArray(mat_to,&arr_to);CHKERRQ(ierr);
+  ierr = VecCreateMPIWithArray(PetscObjectComm((PetscObject)mat_to),1,m_to*N,M_to*N,arr_to,&v_to);CHKERRQ(ierr);
+
+  ierr = PetscMalloc1(m_from*N,&idxx);CHKERRQ(ierr);
+  for (i=0; i<m_from; i++) {
+    PetscInt proc,idx,iidx,j,m;
+
+    idx = indices[i] - base;
+    for (proc=0; proc<commsize; proc++){
+      if (idx >= rstart[proc] && idx < rstart[proc+1]) {
+        iidx     = idx - rstart[proc] + rstart[proc]*N;
+        m        = rstart[proc+1] - rstart[proc];
+        break;
+      }
+    }
+
+    for (j=0; j<N; j++) idxx[i+j*m_from] = iidx + j*m;
+  }
+  ierr = ISCreateGeneral(PETSC_COMM_SELF,m_from*N,idxx,PETSC_COPY_VALUES,&is_to);CHKERRQ(ierr);
+  ierr = VecScatterCreate(v_from,NULL,v_to,is_to,&sc);CHKERRQ(ierr);
+  ierr = VecScatterBegin(sc,v_from,v_to,INSERT_VALUES,SCATTER_FORWARD);CHKERRQ(ierr);
+  ierr = ISDestroy(&is_to);CHKERRQ(ierr);
+  ierr = VecScatterEnd(sc,v_from,v_to,INSERT_VALUES,SCATTER_FORWARD);CHKERRQ(ierr);
+  ierr = VecScatterDestroy(&sc);CHKERRQ(ierr);
+
+  TRY( MatAssemblyBegin(mat_to,MAT_FINAL_ASSEMBLY) );
+  TRY( MatAssemblyEnd(mat_to,MAT_FINAL_ASSEMBLY) );
+
+  ierr = ISRestoreIndices(rowperm,&indices);CHKERRQ(ierr);
+  ierr = MatDenseRestoreArray(mat_to,&arr_to);CHKERRQ(ierr);
+  ierr = VecDestroy(&v_to);CHKERRQ(ierr);
+  ierr = PetscFree(idxx);CHKERRQ(ierr);
+  ierr = VecDestroy(&v_from);CHKERRQ(ierr);
+  ierr = MatDenseRestoreArray(mat_from,&arr_from);CHKERRQ(ierr);
+  PetscFunctionReturn(0);
+}
