@@ -640,33 +640,6 @@ PetscErrorCode QPSetUp(QP qp)
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "QPCheckNullSpace"
-PetscErrorCode QPCheckNullSpace(QP qp,PetscReal tol)
-{
-  Mat K,R;
-  Vec d,x,y;
-  PetscReal normd,normy;
-
-  PetscFunctionBeginI;
-  TRY( QPGetOperator(qp,&K) );
-  TRY( QPGetOperatorNullSpace(qp,&R) );
-  TRY( MatCreateVecs(K,&d,&y) );
-  TRY( MatCreateVecs(R,&x,NULL) );
-  TRY( MatGetDiagonal(K,d) );
-  TRY( VecNorm(d,NORM_2,&normd) );
-  TRY( VecSetRandom(x,NULL) );
-  TRY( MatMult(R,x,d) );
-  TRY( MatMult(K,d,y) );
-  TRY( VecNorm(y,NORM_2,&normy) );
-  TRY( PetscInfo3(fllop,"||K*R*x|| = %.3e   ||diag(K)|| = %.3e    ||K*R*x|| / ||diag(K)|| = %.3e\n",normy,normd,normy/normd) );
-  FLLOP_ASSERT1(normy / normd < tol, "||K*R*x|| / ||diag(K)|| < %.1e", tol);
-  TRY( VecDestroy(&d) );
-  TRY( VecDestroy(&x) );
-  TRY( VecDestroy(&y) );
-  PetscFunctionReturnI(0);
-}
-
-#undef __FUNCT__
 #define __FUNCT__ "QPCompute_BEt_lambda"
 PetscErrorCode QPCompute_BEt_lambda(QP qp,Vec *BEt_lambda)
 {
@@ -1241,10 +1214,16 @@ PetscErrorCode QPSetOperatorNullSpace(QP qp,Mat R)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
+  if (R) PetscValidHeaderSpecific(R,MAT_CLASSID,2);
   if (R == qp->R) PetscFunctionReturn(0);
+  if (R) {
+#if defined(PETSC_USE_DEBUG)
+    TRY( MatCheckNullSpace(qp->A, R, PETSC_SMALL) );
+#endif
+    TRY( PetscObjectReference((PetscObject)R) );
+  }
   TRY( MatDestroy(&qp->R) );
   qp->R = R;
-  TRY( PetscObjectReference((PetscObject)R) );
   if (qp->changeListener) TRY( (*qp->changeListener)(qp) );
   PetscFunctionReturn(0);
 }

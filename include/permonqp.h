@@ -40,7 +40,6 @@ FLLOP_EXTERN PetscErrorCode QPSetUp(QP qp);
 FLLOP_EXTERN PetscErrorCode QPDestroy(QP *qp);
 FLLOP_EXTERN PetscErrorCode QPDump(QP qp);
 
-FLLOP_EXTERN PetscErrorCode QPCheckNullSpace(QP qp,PetscReal tol);
 FLLOP_EXTERN PetscErrorCode QPCompareEqMultiplierWithLeastSquare(QP qp,PetscReal *norm);
 FLLOP_EXTERN PetscErrorCode QPComputeMissingEqMultiplier(QP qp);
 FLLOP_EXTERN PetscErrorCode QPComputeMissingBoxMultipliers(QP qp);
