@@ -17,10 +17,6 @@ Before filing a pull request (PR):
 - Include tests which cover any changes to the source code.
 - Before submitting any PR, run the full test suite - i.e `make alltests TIMEOUT=600` on your machine
 
-### Guidelines for maintainers
-
-- All merges to master shall be with no fast forward - i.e. `--no-ff`
-
 ## Certificate of Origin
 
 PERMON is distributed under a 2-clause BSD license (see LICENSE).  The
