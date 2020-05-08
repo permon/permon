@@ -1,16 +1,15 @@
 PERMON toolbox
 ================================
-PERMON (Parallel Efficient Robust Modular Object Numerical) is a software toolbox for quadratic programming (QP) based on [PETSc](http://www.mcs.anl.gov/petsc/). It also includes domain decomposition methods (FETI and Total FETI) as a specific QP implementation.
+PERMON (Parallel Efficient Robust Modular Object Numerical) is a software toolbox for the scalable (parallel) solution of  quadratic programming (QP) problems based on [PETSc](http://www.mcs.anl.gov/petsc/). It also includes domain decomposition methods (FETI and Total FETI) and Support Vector Machines (SVM) machine learning methods.
 
 Project homepage: <http://permon.vsb.cz>  
 
 PERMON contains following modules:
 
-* [PermonQP](http://permon.vsb.cz/permonqp.htm) - contains QP transformations and solvers
-* [PermonFLLOP](http://permon.vsb.cz/permonfllop.htm) - (FETI Light Layer On top of PETSc) implements (Total) FETI
-
-Support Vector Machines (SVMs) implementation [PermonSVM](http://permon.vsb.cz/permonsvm.htm) based on PermonQP can be found at <https://github.com/permon/permonsvm>.
-
+* [PermonQP](http://permon.vsb.cz/permonqp.htm) - this repository
+  - solvers and routines for solution of QP problems
+  - constrained (Total) [FETI](http://permon.vsb.cz/permonfllop.htm) domain decomposition methods able to solve contact problems
+* [PermonSVM](http://permon.vsb.cz/permonsvm.htm) - SVM machine learning implementation based on PermonQP - [separate repository](https://github.com/permon/permonsvm)
 
 Please use [GitHub](https://github.com/permon/permon) for issues and pull requests.
 
@@ -35,4 +34,3 @@ The documentation of the routines is available at <http://permon.vsb.cz/document
 Supported PETSc versions
 ----------------------------------
 PERMON tries to support newest versions of PETSc as soon as possible. The [releases](https://github.com/permon/permon/releases) are tagged with major.minor.sub-minor numbers. The major.minor numbers correspond to the major.minor release numbers of the supported PETSc version.
-
