@@ -2,7 +2,7 @@
 ALL: lib
 
 LIBBASE  = libpermon
-DIRS     = ksp mpgp pcpg smalxe tao
+DIRS     = ksp mpgp gp pcpg smalxe tao
 LOCDIR   = src/qps/impls/
 MANSEX   = QPS
 

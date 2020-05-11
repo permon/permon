@@ -3,6 +3,7 @@
 
 FLLOP_EXTERN PetscErrorCode QPSCreate_KSP(QPS);
 FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS);
+FLLOP_EXTERN PetscErrorCode QPSCreate_GP(QPS);
 FLLOP_EXTERN PetscErrorCode QPSCreate_SMALXE(QPS);
 FLLOP_EXTERN PetscErrorCode QPSCreate_Tao(QPS);
 FLLOP_EXTERN PetscErrorCode QPSCreate_PCPG(QPS);
@@ -21,6 +22,7 @@ PetscErrorCode  QPSRegisterAll(void)
   QPSRegisterAllCalled = PETSC_TRUE;
   PetscCall(QPSRegister(QPSKSP,      QPSCreate_KSP));
   PetscCall(QPSRegister(QPSMPGP,     QPSCreate_MPGP));
+  PetscCall(QPSRegister(QPSGP,       QPSCreate_GP));
   PetscCall(QPSRegister(QPSSMALXE,   QPSCreate_SMALXE));
   PetscCall(QPSRegister(QPSTAO,      QPSCreate_Tao));
   PetscCall(QPSRegister(QPSPCPG,     QPSCreate_PCPG));

@@ -11,7 +11,7 @@ FLLOP_EXTERN PetscClassId QPS_CLASSID;
 #define QPSType char*
 #define QPSKSP          "ksp"
 #define QPSMPGP         "mpgp"
-#define QPSMPGPQPC      "mpgpqpc"
+#define QPSGP           "gp"
 #define QPSPCPG         "pcpg"
 #define QPSSMALXE       "smalxe"
 #define QPSTAO          "tao"
