@@ -11,8 +11,12 @@ PERMON_VERSION_RELEASE  := 0
 OBJDIR := ./$(PETSC_ARCH)/obj
 LIBDIR := ./$(PETSC_ARCH)/lib
 
-pkgs  := sys vec mat ksp qp qpc qppf pc qps interface
-spkgs := sys,vec,mat,ksp,qp,qpc,qppf,pc,qps,interface
+empty :=
+space := $(empty) $(empty)
+comma := ,
+
+pkgs  := sys vec mat qpc qppf qp qps pc ksp interface
+spkgs := $(subst $(space),$(comma),$(pkgs))
 
 # $(call SONAME_FUNCTION,libfoo,abiversion)
 SONAME_FUNCTION ?= $(1).$(SL_LINKER_SUFFIX).$(2)
@@ -50,14 +54,12 @@ libpermonall := $(if $(filter-out no,$(BUILDSHAREDLIB)),$(libpermonall_shared),$
 
 generated      := ./$(PETSC_ARCH)/lib/permon/conf/files
 
+# Account for PETSc prefix installation (empty/unset PETSC_ARCH)
+PETSCCONFIGDIR = $(if $(PETSC_ARCH), $(PETSC_DIR)/config, $(PETSC_DIR)/share/petsc/examples/config)
+
 all : $(generated) $(libpermonall)
 
 .SECONDEXPANSION:		# to expand $$(@D)/.DIR
-
-PETSCCONFIGDIR := $(PETSC_DIR)/config
-ifeq ($(wildcard $(PETSCCONFIGDIR)/gmakegen.py),)
-	PETSCCONFIGDIR := $(PETSC_DIR)/share/petsc/examples/config
-endif
 
 $(generated) : $(permonconf) $(permonvariables) $(PETSCCONFIGDIR)/gmakegen.py
 	$(PYTHON) $(PETSCCONFIGDIR)/gmakegen.py --petsc-arch=$(PETSC_ARCH) --petsc-arch=$(PETSC_ARCH) --pkg-dir=$(PERMON_DIR) --pkg-name=permon --pkg-pkgs=$(spkgs)
