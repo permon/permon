@@ -77,6 +77,7 @@ int main( int argc, char **argv )
   KSP                ksp;
   AppCtx             user;               /* user-defined work context */
   PetscReal          zero=0.0;           /* lower bound on all variables */
+  TaoConvergedReason reason;
 
   /* Initialize PETSC and PERMON */
   PermonInitialize(&argc, &argv, (char*)0, help);
@@ -131,12 +132,10 @@ int main( int argc, char **argv )
   /* The TAO code begins here */
 
   /*
-     Create the optimization solver
+     Create the TAO optimization solver
      Suitable methods: TAOGPCG, TAOBQPIP, TAOTRON, TAOBLMVM
   */
   ierr = TaoCreate(PETSC_COMM_WORLD,&tao);CHKERRQ(ierr);
-  ierr = TaoSetType(tao,TAOBLMVM);CHKERRQ(ierr);
-
 
   /* Set the initial vector */
   ierr = VecSet(x, zero);CHKERRQ(ierr);
@@ -168,11 +167,17 @@ int main( int argc, char **argv )
     ierr = TaoSetConvergenceTest(tao,ConvergenceTest,&user);CHKERRQ(ierr);
   }
 
-  /* Check for any tao command line options */
+  /* Set default. Check for any TAO command line options. */
+  /* Note PERMON/KSP rtol is equivalent to TAO gttol. */
+  /* TAO grtol currently has not counterpart in PERMON, so we deactivate it by setting ridiculously small value. */
+  ierr = TaoSetType(tao,TAOTRON);CHKERRQ(ierr);
+  ierr = TaoSetTolerances(tao,1e-8,1e-50,1e-8);CHKERRQ(ierr);
   ierr = TaoSetFromOptions(tao);CHKERRQ(ierr);
 
   /* Solve the bound constrained problem */
   ierr = TaoSolve(tao);CHKERRQ(ierr);
+  ierr = TaoGetConvergedReason(tao, &reason);CHKERRQ(ierr);
+  if (reason < 0) SETERRQ2(PETSC_COMM_WORLD, PETSC_ERR_NOT_CONVERGED, "TAO diverged, reason %D (%s)", reason, TaoConvergedReasons[reason]);
   
   /* Call PERMON solver and compare results */
   ierr = CallPermonAndCompareResults(tao, &user);CHKERRQ(ierr);
@@ -493,9 +498,11 @@ PetscErrorCode CallPermonAndCompareResults(Tao tao, void *ctx)
   PetscReal      rtol,atol,dtol;
   PetscInt       maxit;
   PetscReal      gatol, grtol, gttol;
+  PetscReal      rhs_norm;
+  PetscReal      tao_diff_tol = 1e2*PETSC_SQRT_MACHINE_EPSILON;
+  KSPConvergedReason reason;
   
   PetscFunctionBeginI;
-  
   /* Compute Hessian */
   ierr = FormHessian(tao, NULL, user->A, NULL, (void*) user);CHKERRQ(ierr);
   
@@ -518,10 +525,11 @@ PetscErrorCode CallPermonAndCompareResults(Tao tao, void *ctx)
   
   /* Get Tao tolerances */
   ierr = TaoGetTolerances(tao, &gatol, &grtol, &gttol);CHKERRQ(ierr);
-  ierr = PetscPrintf(PETSC_COMM_WORLD,"Value of Tao are gatol = %e, grtol =  %e, gttol = %e  \n",gatol, grtol, gttol);CHKERRQ(ierr);
+  ierr = PetscPrintf(PETSC_COMM_WORLD,"TAO tolerances are gatol = %e, grtol =  %e, gttol = %e\n",gatol, grtol, gttol);CHKERRQ(ierr);
 
   /* Set default QPS options. */
-  rtol  = grtol;
+  ierr = PetscPrintf(PETSC_COMM_WORLD,"Setting PERMON rtol = gttol, atol = gatol\n");CHKERRQ(ierr);
+  rtol  = gttol;
   atol  = gatol;
   dtol  = PETSC_DEFAULT;
   maxit = PETSC_DEFAULT;
@@ -535,17 +543,22 @@ PetscErrorCode CallPermonAndCompareResults(Tao tao, void *ctx)
 
   /* Solve the QP */
   ierr = QPSSolve(qps);CHKERRQ(ierr);  
+  ierr = QPSGetConvergedReason(qps, &reason);CHKERRQ(ierr);
+  if (reason < 0) SETERRQ2(PETSC_COMM_WORLD, PETSC_ERR_NOT_CONVERGED, "QPS diverged, reason %D (%s)", reason, KSPConvergedReasons[reason]);
 
   /* Get the solution vector */
   ierr = QPGetSolutionVector(qp, &x_qp);CHKERRQ(ierr);
   ierr = TaoGetSolutionVector(tao,&x_tao);CHKERRQ(ierr);
   
-  /*Different of results from Snes and QP */
+  /* Difference of results from TAO and QP */
+  ierr = VecNorm(user->B, NORM_2, &rhs_norm);CHKERRQ(ierr);
+  tao_diff_tol = 1e1 * PetscMax(rtol*rhs_norm,atol); /* 10 times the tolerance for the default convergence test */
+  ierr = PetscOptionsGetReal(NULL, NULL, "-tao_diff_tol", &tao_diff_tol, NULL);CHKERRQ(ierr);
   ierr = VecCopy(x_tao, x_diff);CHKERRQ(ierr);
   ierr = VecAXPY(x_diff, -1.0, x_qp);CHKERRQ(ierr);
   ierr = VecNorm(x_diff, NORM_2, &x_diff_norm);CHKERRQ(ierr);
-  ierr = PetscPrintf(PETSC_COMM_WORLD,"norm of difference of results from TAO and QP = %e  \n",x_diff_norm);CHKERRQ(ierr);
-  
+  ierr = PetscPrintf(PetscObjectComm((PetscObject)qps),"Norm of difference of results from TAO and QP = %e %s %e = tolerance\n",x_diff_norm, (x_diff_norm <= tao_diff_tol) ? "<=" : ">", tao_diff_tol);CHKERRQ(ierr);
+  if (x_diff_norm > tao_diff_tol) SETERRQ(PetscObjectComm((PetscObject)qps), PETSC_ERR_PLIB, "PERMON and TAO yield different results!");
   ierr = QPSDestroy(&qps);CHKERRQ(ierr);
   ierr = QPDestroy(&qp);CHKERRQ(ierr);
   ierr = VecDestroy(&x_diff);CHKERRQ(ierr);
@@ -559,7 +572,7 @@ PetscErrorCode CallPermonAndCompareResults(Tao tao, void *ctx)
     requires: !complex !single
 
   testset:
-    args: -qps_view_convergence
+    args: -tao_gttol 1e-6 -qps_view_convergence
     test:
       args: -mx 8 -my 12 
     test:
@@ -569,10 +582,10 @@ PetscErrorCode CallPermonAndCompareResults(Tao tao, void *ctx)
     test:
       suffix: 3
       nsize: 3
-      args: -mx 50 -my 50
+      args: -mx 30 -my 30
     
   testset:
-    args: -qps_view_convergence -qps_type mpgp
+    args: -tao_gttol 1e-6 -qps_view_convergence -qps_type mpgp
     test:
       suffix: 4
       args: -mx 8 -my 12 
@@ -583,6 +596,5 @@ PetscErrorCode CallPermonAndCompareResults(Tao tao, void *ctx)
     test:
       suffix: 6
       nsize: 3
-      args: -mx 50 -my 50
+      args: -mx 30 -my 30
 TEST*/
-
