@@ -116,6 +116,7 @@ int main(int argc,char **args)
 /*TEST
   testset:
     nsize: 4
+    requires: mumps
     filter: grep -e CONVERGED -e "r ="
     args: -ne 7 -qp_chain_view_kkt -qpt_matis_to_diag_norm
     test:
