@@ -40,7 +40,9 @@ GTAGS
 makefile.html
 index.html
 /arch-*/
-/lib/
+/lib/*
+!/lib/permon/
+/lib/permon/conf/files
 /obj/
 /tests/
 /env*
