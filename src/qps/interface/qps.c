@@ -889,7 +889,10 @@ PetscErrorCode QPSSetFromOptions(QPS qps)
   TRY( QPSSetTolerances(qps,rtol,atol,dtol,maxit) );
   TRY( PetscOptionsBool("-qps_auto_post_solve","QPSSolve automatically triggers PostSolve","QPSSetAutoPostSolve",qps->autoPostSolve,&qps->autoPostSolve,NULL) );
   flg = PETSC_FALSE;
-  TRY( PetscOptionsBool("-qps_monitor","Switches QPS monitor","QPSMonitorSet",flg,&flg,NULL) );
+  TRY( PetscOptionsBool("-qps_monitor_cancel","Turn off all QPS monitors","QPSMonitorCancel",flg,&flg,NULL) );
+  if (flg) TRY( QPSMonitorCancel(qps) );
+  flg = PETSC_FALSE;
+  TRY( PetscOptionsBool("-qps_monitor","Turn on default QPS monitor","QPSMonitorSet",flg,&flg,NULL) );
   if (flg) TRY( QPSMonitorSet(qps,QPSMonitorDefault,NULL,NULL) );
   /* actually checked in setup - this is just here to go into help message */
   TRY( PetscOptionsName("-qps_view","print the QPS parameters at the end of a QPSSolve call","QPSView",&flg) );
@@ -1132,7 +1135,7 @@ PetscErrorCode QPSSolutionVecStateChanged(QPS qps,PetscBool *flg)
 -  rnorm - relative norm of the residual
 
    Notes:
-   This routine is called by the KSP implementations.
+   This routine is called by the QPS implementations.
    It does not typically need to be called by the user.
 
    Level: developer
@@ -1160,75 +1163,57 @@ PetscErrorCode QPSMonitor(QPS qps, PetscInt it, PetscReal rnorm)
 
    Input Parameters:
 +  qps - iterative context obtained from QPSCreate()
-.  monitor - pointer to function (if this is NULL, it turns off monitoring
-.  mctx    - [optional] context for private data for the
-              monitor routine (use NULL if no context is desired)
--  monitordestroy - [optional] routine that frees monitor context
-                    (may be NULL)
+.  monitor - pointer to function
+.  mctx    - [optional] context for private data for the monitor routine (use NULL if no context is desired)
+-  monitordestroy - [optional] routine that frees monitor context (may be NULL)
 
    Calling Sequence of monitor:
-$     monitor (QPS qps, int it, PetscReal rnorm, void *mctx)
+$     monitor (QPS qps, PetscInt it, PetscReal rnorm, void *mctx)
 
 +  qps - iterative context obtained from QPSCreate()
 .  it - iteration number
-.  rnorm - (estimated) 2-norm of (preconditioned) residual
+.  rnorm - 2-norm of the residual (more general, a vector whose norm determines convergence, such as a projected gradient for QPSMPGP)
 -  mctx  - optional monitoring context, as set by QPSMonitorSet()
 
    Options Database Keys:
 +  -qps_monitor - sets QPSMonitorDefault()
-.  -qps_monitor_true_residual    - sets QPSMonitorTrueResidualNorm()
-.  -qps_monitor_max    - sets QPSMonitorTrueResidualMaxNorm()
-.  -qps_monitor_lg_residualnorm    - sets line graph monitor,
-                             uses QPSMonitorLGResidualNormCreate()
-.  -qps_monitor_lg_true_residualnorm   - sets line graph monitor,
-                             uses KSPMonitorLGResidualNormCreate()
-.  -qps_monitor_singular_value    - sets QPSMonitorSingularValue()
--  -qps_monitor_cancel - cancels all monitors that have
-         been hardwired into a code by
-         calls to QPSMonitorSet(), but
-         does not cancel those set via
-         the options database.
+-  -qps_monitor_cancel - cancels all monitors that have been hardwired into a code by
+    calls to QPSMonitorSet(), but does not cancel those set via the options database.
 
    Notes:
-   The default is to do nothing.  To print the residual, or preconditioned
-   residual if QPSSetNormType(qps,QPS_NORM_PRECONDITIONED) was called, use
-   QPSMonitorDefault() as the monitoring routine, with a null monitoring
-   context.
+   The default is to do nothing. To print the residual, use
+   QPSMonitorDefault() as the monitoring routine, with a null monitoring context.
    
    Several different monitoring routines may be set by calling
    QPSMonitorSet() multiple times; all will be called in the
    order in which they were set.
    
-   
    Level: beginner
 
-.keywords: QPS, set, monitor
-
-.seealso: QPSMonitorDefault(), QPSMonitorLGResidualNormCreate(), QPSMonitorCancel()
+.seealso: QPSMonitorDefault(), QPSMonitorCancel()
 @*/
 PetscErrorCode  QPSMonitorSet(QPS qps,PetscErrorCode (*monitor)(QPS,PetscInt,PetscReal,void*),void *mctx,PetscErrorCode (*monitordestroy)(void**))
 {
-//   PetscInt       i;
+   PetscInt i;
 
    PetscFunctionBegin;  
+   if (!monitor) SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_NULL,"Monitor function must be specified");
+
    /* verify the number of monitors */
    if (qps->numbermonitors >= MAXQPSMONITORS) SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_OUTOFRANGE,"Too many QPS monitors set");
 
-   /*
+   /* don't add exactly the same monitor twice */
+   //TODO we could use PetscMonitorCompare() once it gets fixed
    for (i=0; i<qps->numbermonitors;i++) {
      if (monitor == qps->monitor[i] && monitordestroy == qps->monitordestroy[i] && mctx == qps->monitorcontext[i]) {
-       if (monitordestroy) {
-         (*monitordestroy)(&mctx);
-       }
-       return(0);
+       PetscFunctionReturn(0);
      }
    }
-   */
-   
+
    /* set new QPS monitor */
    qps->monitor[qps->numbermonitors]          = monitor;
    qps->monitordestroy[qps->numbermonitors]   = monitordestroy;
-   qps->monitorcontext[qps->numbermonitors] = (void*)mctx;
+   qps->monitorcontext[qps->numbermonitors]   = (void*)mctx;
    qps->numbermonitors++;
    PetscFunctionReturn(0);
 }
@@ -1244,15 +1229,12 @@ PetscErrorCode  QPSMonitorSet(QPS qps,PetscErrorCode (*monitor)(QPS,PetscInt,Pet
 .  qps - iterative context obtained from QPSCreate()
 
    Options Database Key:
-.  -qps_monitor_cancel - Cancels all monitors that have
-     been hardwired into a code by calls to QPSMonitorSet(),
-     but does not cancel those set via the options database.
+.  -qps_monitor_cancel - cancels all monitors that have been hardwired into a code by
+    calls to QPSMonitorSet(), but does not cancel those set via the options database.
 
    Level: intermediate
 
-.keywords: QPS, set, monitor
-
-.seealso: QPSMonitorDefault(), QPSMonitorLGResidualNormCreate(), QPSMonitorSet()
+.seealso: QPSMonitorDefault(), QPSMonitorSet()
 @*/
 PetscErrorCode  QPSMonitorCancel(QPS qps)
 {
@@ -1286,7 +1268,7 @@ PetscErrorCode  QPSMonitorCancel(QPS qps)
 
 .keywords: QPS, get, monitor, context
 
-.seealso: QPSMonitorDefault(), QPSMonitorLGResidualNormCreate()
+.seealso: QPSMonitorDefault()
 @*/
 PetscErrorCode  QPSGetMonitorContext(QPS qps,void **ctx)
 {
@@ -1387,17 +1369,17 @@ PetscErrorCode  QPSGetResidualHistory(QPS qps,PetscReal *a[],PetscInt *na)
 +  qps   - iterative context
 .  n     - iteration number
 .  rnorm - 2-norm residual value (may be estimated).
--  dummy - unused monitor context
+-  ctx   - the PetscViewer
 
    Level: intermediate
 
 .keywords: QPS, default, monitor, residual
 
-.seealso: QPSMonitorSet(), QPSMonitorTrueResidualNorm(), QPSMonitorLGResidualNormCreate()
+.seealso: QPSMonitorSet(), QPSMonitorCancel()
 @*/
-PetscErrorCode QPSMonitorDefault(QPS qps,PetscInt n,PetscReal rnorm,void *dummy)
+PetscErrorCode QPSMonitorDefault(QPS qps,PetscInt n,PetscReal rnorm,void *ctx)
 {
-   PetscViewer    viewer = (PetscViewer) dummy;
+   PetscViewer    viewer = (PetscViewer) ctx;
 
    PetscFunctionBegin;  
    if (!viewer) {
