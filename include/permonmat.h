@@ -148,6 +148,7 @@ FLLOP_EXTERN PetscErrorCode PermonMatConvertBlocks(Mat A, MatType newtype,MatReu
 FLLOP_EXTERN PetscErrorCode PermonMatCopyProperties(Mat A,Mat B);
 FLLOP_EXTERN PetscErrorCode PermonMatSetFromOptions(Mat B);
 FLLOP_EXTERN PetscErrorCode PermonMatConvertInplace(Mat B, MatType type);
+FLLOP_EXTERN PetscErrorCode MatCheckNullSpace(Mat K,Mat R,PetscReal tol);
 
 /* FETI UTILITIES */
 FLLOP_EXTERN PetscErrorCode MatRemoveGluingOfDirichletDofs(Mat Bgt, Vec cg, Mat Bdt, Mat *Bgt_new, Vec *cg_new, IS *is_new);

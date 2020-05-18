@@ -141,9 +141,14 @@ static PetscErrorCode MatInvSetNullSpace_Inv(Mat imat,Mat R)
   
   PetscFunctionBegin;
   if (R != inv->R) {
+    if (R) {
+#if defined(PETSC_USE_DEBUG)
+      TRY( MatCheckNullSpace(inv->A, R, PETSC_SMALL) );
+#endif
+      TRY( PetscObjectReference((PetscObject)R) );
+    }
     TRY( MatDestroy(&inv->R) );
     inv->R = R;
-    TRY( PetscObjectReference((PetscObject)R) );
     inv->setupcalled = PETSC_FALSE;
   }
   PetscFunctionReturn(0);
@@ -1038,7 +1043,7 @@ PetscErrorCode MatInvSetNullSpace(Mat imat,Mat R)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
-  PetscValidHeaderSpecific(R,MAT_CLASSID,2);
+  if (R) PetscValidHeaderSpecific(R,MAT_CLASSID,2);
   TRY( PetscTryMethod(imat,"MatInvSetNullSpace_Inv_C",(Mat,Mat),(imat,R)) );
   PetscFunctionReturn(0);
 }
