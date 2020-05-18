@@ -621,7 +621,7 @@ PetscErrorCode QPSPostSolve(QPS qps)
 
 #undef __FUNCT__  
 #define __FUNCT__ "QPSSetConvergenceTest"
-PetscErrorCode QPSSetConvergenceTest(QPS qps,PetscErrorCode (*converge)(QPS,QP,PetscInt,PetscReal,KSPConvergedReason*,void*),void *cctx,PetscErrorCode (*destroy)(void*))
+PetscErrorCode QPSSetConvergenceTest(QPS qps,PetscErrorCode (*converge)(QPS,KSPConvergedReason*,void*),void *cctx,PetscErrorCode (*destroy)(void*))
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
@@ -652,9 +652,7 @@ PetscErrorCode QPSGetConvergenceContext(QPS qps,void **ctx)
    Collective on QPS
 
    Input Parameters:
-+  qps   - iterative context
-.  i     - iteration number
--  rnorm - 2-norm residual value (may be estimated)
+.  qps   - iterative context
 
    Reason is set to:
 +  positive - if the iteration has converged;
@@ -683,14 +681,19 @@ $      rnorm > dtol * rnorm_0,
 .seealso: QPSSetConvergenceTest(), QPSSetTolerances(), QPSConvergedSkip(), KSPConvergedReason, QPSGetConvergedReason(),
           QPSConvergedDefaultCreate(), QPSConvergedDefaultDestroy()
 @*/
-PetscErrorCode QPSConvergedDefault(QPS qps,QP qp,PetscInt i,PetscReal rnorm,KSPConvergedReason *reason,void *ctx)
+PetscErrorCode QPSConvergedDefault(QPS qps,KSPConvergedReason *reason,void *ctx)
 {
   QPSConvergedDefaultCtx *cctx = (QPSConvergedDefaultCtx*) ctx;
+  QP qp = qps->solQP;
+  PetscInt i = qps->iteration;
+  PetscReal rnorm = qps->rnorm;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
+  PetscValidHeaderSpecific(qp,QP_CLASSID,2);
   *reason = KSP_CONVERGED_ITERATING;
 
+  if (!qps->setupcalled) FLLOP_SETERRQ(((PetscObject) qps)->comm, PETSC_ERR_ARG_WRONGSTATE, "QPSSetUp() not yet called");
   if (!cctx->setup_called) {
     TRY( QPSConvergedDefaultSetUp(ctx,qps) );
   }
@@ -779,12 +782,12 @@ PetscErrorCode QPSConvergedDefaultCreate(void **ctx)
 
 #undef __FUNCT__  
 #define __FUNCT__ "QPSConvergedSkip"
-PetscErrorCode QPSConvergedSkip(QPS qps,QP qp,PetscInt i,PetscReal rnorm,KSPConvergedReason *reason,void *ctx)
+PetscErrorCode QPSConvergedSkip(QPS qps,KSPConvergedReason *reason,void *ctx)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   *reason = KSP_CONVERGED_ITERATING;
-  if (i >= qps->max_it) *reason = KSP_CONVERGED_ITS;
+  if (qps->iteration >= qps->max_it) *reason = KSP_CONVERGED_ITS;
   PetscFunctionReturn(0);
 }
 

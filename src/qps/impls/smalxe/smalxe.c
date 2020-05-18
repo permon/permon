@@ -616,19 +616,22 @@ PETSC_STATIC_INLINE PetscErrorCode QPSConverged_Inner_SMALXE_Monitor_Inner(QPS q
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSConverged_Inner_SMALXE"
-PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,QP qp_inner,PetscInt i,PetscReal gnorm,KSPConvergedReason *reason,void *ctx)
+PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,KSPConvergedReason *reason,void *ctx)
 {
   QPSConvergedCtx_Inner_SMALXE *cctx = (QPSConvergedCtx_Inner_SMALXE*) ctx;
   QPS qps_outer = cctx->qps_outer;
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps_outer->data;
-  QP qp_outer = cctx->qp_outer;
+  QP qp_inner = qps_inner->solQP;
   Vec u = qp_inner->x;
+  PetscInt i = qps_inner->iteration;
+  PetscReal gnorm = qps_inner->rnorm;
   MPI_Comm comm;
   
   PetscFunctionBegin;
-  FLLOP_ASSERT(qp_inner->parent == qp_outer,"qp_inner->parent == qp_outer");
-  FLLOP_ASSERT(qp_inner->x == qp_outer->x, "qp_inner->x == qp_outer->x");
+  FLLOP_ASSERT(qp_inner->parent == cctx->qp_outer,"qp_inner->parent == qp_outer");
+  FLLOP_ASSERT(qp_inner->x == cctx->qp_outer->x, "qp_inner->x == qp_outer->x");
   TRY( PetscObjectGetComm((PetscObject)qps_inner,&comm) );
+  if (!qps_inner->setupcalled) FLLOP_SETERRQ(comm, PETSC_ERR_ARG_WRONGSTATE, "Inner QPSSetUp() not yet called");
   *reason = KSP_CONVERGED_ITERATING;
 
   TRY( smalxe->updateNormBu(qps_outer,u,&smalxe->normBu,&smalxe->enorm) );
@@ -655,7 +658,7 @@ PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,QP qp_inner,PetscInt i,Pe
   }
 
   
-  TRY( (*qps_outer->convergencetest)(qps_outer,qp_outer,qps_outer->iteration,qps_outer->rnorm,&qps_outer->reason,qps_outer->cnvctx) );
+  TRY( (*qps_outer->convergencetest)(qps_outer,&qps_outer->reason,qps_outer->cnvctx) );
 
   if (qps_outer->reason) {
     if (qps_outer->reason > 0) {

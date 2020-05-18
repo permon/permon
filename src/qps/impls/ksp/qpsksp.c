@@ -8,7 +8,9 @@ static PetscErrorCode QPSKSPConverged_KSP(KSP ksp,PetscInt i,PetscReal rnorm,KSP
   QPS qps = (QPS) ctx;
 
   PetscFunctionBegin;
-  TRY( (*qps->convergencetest)(qps,qps->solQP,i,rnorm,reason,qps->cnvctx) );
+  qps->iteration = i;
+  qps->rnorm = rnorm;
+  TRY( (*qps->convergencetest)(qps,reason,qps->cnvctx) );
   PetscFunctionReturn(0);
 }
 

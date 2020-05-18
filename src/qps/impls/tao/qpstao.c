@@ -12,7 +12,7 @@ static PetscErrorCode QPSTaoConverged_Tao(Tao tao,void *ctx)
   //TODO sqrt?
   qps->rnorm = tao->residual;
   qps->iteration = tao->niter;
-  TRY( (*qps->convergencetest)(qps,qps->solQP,qps->iteration,qps->rnorm,&qps->reason,qps->cnvctx) );
+  TRY( (*qps->convergencetest)(qps,&qps->reason,qps->cnvctx) );
 
   //TODO quick&dirty
   if (qps->reason > 0) {
