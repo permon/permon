@@ -690,7 +690,6 @@ PetscErrorCode QPSConvergedDefault(QPS qps,KSPConvergedReason *reason,void *ctx)
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscValidHeaderSpecific(qp,QP_CLASSID,2);
   *reason = KSP_CONVERGED_ITERATING;
 
   if (!qps->setupcalled) FLLOP_SETERRQ(((PetscObject) qps)->comm, PETSC_ERR_ARG_WRONGSTATE, "QPSSetUp() not yet called");
