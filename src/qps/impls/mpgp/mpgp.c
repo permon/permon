@@ -350,7 +350,7 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
     }
 
     /* test the convergence of algorithm */
-    TRY( (*qps->convergencetest)(qps,qp,qps->iteration,qps->rnorm,&qps->reason,qps->cnvctx) ); /* test for convergence */
+    TRY( (*qps->convergencetest)(qps,&qps->reason) ); /* test for convergence */
     if (qps->reason != KSP_CONVERGED_ITERATING) break;
     
     /* proportional condition */

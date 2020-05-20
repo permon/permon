@@ -69,7 +69,7 @@ typedef struct {
 FLLOP_EXTERN PetscErrorCode QPSCreate_SMALXE(QPS qps);
 FLLOP_INTERN PetscErrorCode QPSSetFromOptions_SMALXE(PetscOptionItems *PetscOptionsObject,QPS qps);
 FLLOP_INTERN PetscErrorCode QPSSetUp_SMALXE(QPS qps);
-FLLOP_INTERN PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,QP qp_inner,PetscInt i,PetscReal rnorm_inner,KSPConvergedReason *reason,void *ctx);
+FLLOP_INTERN PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,KSPConvergedReason *reason);
 FLLOP_INTERN PetscErrorCode QPSConvergedSetUp_Inner_SMALXE(QPS qps_inner);
 FLLOP_INTERN PetscErrorCode QPSConvergedCreate_Inner_SMALXE(QPS qps_outer, void **ctx);
 FLLOP_INTERN PetscErrorCode QPSConvergedDestroy_Inner_SMALXE(void *ctx);

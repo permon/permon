@@ -621,7 +621,7 @@ PetscErrorCode QPSPostSolve(QPS qps)
 
 #undef __FUNCT__  
 #define __FUNCT__ "QPSSetConvergenceTest"
-PetscErrorCode QPSSetConvergenceTest(QPS qps,PetscErrorCode (*converge)(QPS,QP,PetscInt,PetscReal,KSPConvergedReason*,void*),void *cctx,PetscErrorCode (*destroy)(void*))
+PetscErrorCode QPSSetConvergenceTest(QPS qps,PetscErrorCode (*converge)(QPS,KSPConvergedReason*),void *cctx,PetscErrorCode (*destroy)(void*))
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
@@ -652,9 +652,7 @@ PetscErrorCode QPSGetConvergenceContext(QPS qps,void **ctx)
    Collective on QPS
 
    Input Parameters:
-+  qps   - iterative context
-.  i     - iteration number
--  rnorm - 2-norm residual value (may be estimated)
+.  qps   - iterative context
 
    Reason is set to:
 +  positive - if the iteration has converged;
@@ -683,20 +681,21 @@ $      rnorm > dtol * rnorm_0,
 .seealso: QPSSetConvergenceTest(), QPSSetTolerances(), QPSConvergedSkip(), KSPConvergedReason, QPSGetConvergedReason(),
           QPSConvergedDefaultCreate(), QPSConvergedDefaultDestroy()
 @*/
-PetscErrorCode QPSConvergedDefault(QPS qps,QP qp,PetscInt i,PetscReal rnorm,KSPConvergedReason *reason,void *ctx)
+PetscErrorCode QPSConvergedDefault(QPS qps,KSPConvergedReason *reason)
 {
-  QPSConvergedDefaultCtx *cctx = (QPSConvergedDefaultCtx*) ctx;
+  QPSConvergedDefaultCtx *cctx = (QPSConvergedDefaultCtx*) qps->cnvctx;
+  PetscInt i = qps->iteration;
+  PetscReal rnorm = qps->rnorm;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   *reason = KSP_CONVERGED_ITERATING;
 
-  if (!cctx->setup_called) {
-    TRY( QPSConvergedDefaultSetUp(ctx,qps) );
-  }
-  
   if (!cctx) FLLOP_SETERRQ(((PetscObject) qps)->comm, PETSC_ERR_ARG_NULL, "Convergence context must have been created with QPSConvergedDefaultCreate()");
-  
+  if (!cctx->setup_called) {
+    TRY( QPSConvergedDefaultSetUp(qps) );
+  }
+
   if (i > qps->max_it) {
     *reason = KSP_DIVERGED_ITS;
     TRY( PetscInfo3(qps,"QP solver is diverging (iteration count reached the maximum). Initial right hand size norm %14.12e, current residual norm %14.12e at iteration %D\n",(double)cctx->norm_rhs,(double)rnorm,i) );
@@ -725,12 +724,13 @@ PetscErrorCode QPSConvergedDefault(QPS qps,QP qp,PetscInt i,PetscReal rnorm,KSPC
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSConvergedDefaultSetUp"
-PetscErrorCode QPSConvergedDefaultSetUp(void *ctx, QPS qps)
+PetscErrorCode QPSConvergedDefaultSetUp(QPS qps)
 {
-  QPSConvergedDefaultCtx *cctx = (QPSConvergedDefaultCtx*) ctx;
+  QPSConvergedDefaultCtx *cctx = (QPSConvergedDefaultCtx*) qps->cnvctx;
 
   PetscFunctionBegin;
   if (cctx->setup_called) PetscFunctionReturn(0);
+  if (!qps->setupcalled) FLLOP_SETERRQ(((PetscObject) qps)->comm, PETSC_ERR_ARG_WRONGSTATE, "QPSSetUp() not yet called");
   TRY( VecNorm(qps->solQP->b, NORM_2, &cctx->norm_rhs) );
   cctx->ttol = PetscMax(qps->rtol*cctx->norm_rhs, qps->atol);
   cctx->norm_rhs_div = cctx->norm_rhs;
@@ -779,12 +779,12 @@ PetscErrorCode QPSConvergedDefaultCreate(void **ctx)
 
 #undef __FUNCT__  
 #define __FUNCT__ "QPSConvergedSkip"
-PetscErrorCode QPSConvergedSkip(QPS qps,QP qp,PetscInt i,PetscReal rnorm,KSPConvergedReason *reason,void *ctx)
+PetscErrorCode QPSConvergedSkip(QPS qps,KSPConvergedReason *reason)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   *reason = KSP_CONVERGED_ITERATING;
-  if (i >= qps->max_it) *reason = KSP_CONVERGED_ITS;
+  if (qps->iteration >= qps->max_it) *reason = KSP_CONVERGED_ITS;
   PetscFunctionReturn(0);
 }
 

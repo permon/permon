@@ -104,7 +104,7 @@ PetscErrorCode QPSSolve_PCPG(QPS qps){
     
     //convergence test
     TRY( VecNorm(w, NORM_2, &qps->rnorm) );
-    TRY( (*qps->convergencetest)(qps,qp,qps->iteration,qps->rnorm,&qps->reason,qps->cnvctx) );
+    TRY( (*qps->convergencetest)(qps,&qps->reason) );
     if (qps->reason) break;
     
     if (pcnone) {
