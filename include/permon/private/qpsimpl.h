@@ -44,7 +44,7 @@ struct _p_QPS {
   PetscObjectState xstate;
   
   /* convergence tests */  
-  PetscErrorCode   (*convergencetest)(QPS,KSPConvergedReason*,void*);
+  PetscErrorCode   (*convergencetest)(QPS,KSPConvergedReason*);
   PetscErrorCode   (*convergencetestdestroy)(void*);
   void             *cnvctx;
 

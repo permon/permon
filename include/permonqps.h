@@ -45,7 +45,7 @@ FLLOP_EXTERN PetscErrorCode QPSSetQP(QPS qps,QP qp);
 FLLOP_EXTERN PetscErrorCode QPSSetTolerances(QPS qps,PetscReal rtol,PetscReal abstol,PetscReal dtol,PetscInt maxits);
 FLLOP_EXTERN PetscErrorCode QPSSetOptionsPrefix(QPS qps,const char prefix[]);
 FLLOP_EXTERN PetscErrorCode QPSAppendOptionsPrefix(QPS qps,const char prefix[]);
-FLLOP_EXTERN PetscErrorCode QPSSetConvergenceTest(QPS qps,PetscErrorCode (*converge)(QPS,KSPConvergedReason*,void*),void *cctx,PetscErrorCode (*destroy)(void*));
+FLLOP_EXTERN PetscErrorCode QPSSetConvergenceTest(QPS qps,PetscErrorCode (*converge)(QPS,KSPConvergedReason*),void *cctx,PetscErrorCode (*destroy)(void*));
 FLLOP_EXTERN PetscErrorCode QPSSetAutoPostSolve(QPS qps,PetscBool flg);
 
 FLLOP_EXTERN PetscErrorCode QPSGetType(QPS qps,const QPSType *type);
@@ -61,9 +61,9 @@ FLLOP_EXTERN PetscErrorCode QPSGetAccumulatedIterationNumber(QPS qps,PetscInt *i
 FLLOP_EXTERN PetscErrorCode QPSGetAutoPostSolve(QPS qps,PetscBool *flg);
 FLLOP_EXTERN PetscErrorCode QPSGetVecs(QPS qps,PetscInt rightn, Vec **right,PetscInt leftn,Vec **left);
 
-FLLOP_EXTERN PetscErrorCode QPSConvergedSkip(QPS qps,KSPConvergedReason *reason,void *ctx);
-FLLOP_EXTERN PetscErrorCode QPSConvergedDefault(QPS qps,KSPConvergedReason *reason,void*);
-FLLOP_EXTERN PetscErrorCode QPSConvergedDefaultSetUp(void *ctx, QPS qps);
+FLLOP_EXTERN PetscErrorCode QPSConvergedSkip(QPS qps,KSPConvergedReason *reason);
+FLLOP_EXTERN PetscErrorCode QPSConvergedDefault(QPS qps,KSPConvergedReason *reason);
+FLLOP_EXTERN PetscErrorCode QPSConvergedDefaultSetUp(QPS qps);
 FLLOP_EXTERN PetscErrorCode QPSConvergedDefaultSetRhsForDivergence(void *cctx, Vec b);
 FLLOP_EXTERN PetscErrorCode QPSConvergedDefaultDestroy(void *);
 FLLOP_EXTERN PetscErrorCode QPSConvergedDefaultCreate(void **);

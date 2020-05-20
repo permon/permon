@@ -616,9 +616,9 @@ PETSC_STATIC_INLINE PetscErrorCode QPSConverged_Inner_SMALXE_Monitor_Inner(QPS q
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSConverged_Inner_SMALXE"
-PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,KSPConvergedReason *reason,void *ctx)
+PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,KSPConvergedReason *reason)
 {
-  QPSConvergedCtx_Inner_SMALXE *cctx = (QPSConvergedCtx_Inner_SMALXE*) ctx;
+  QPSConvergedCtx_Inner_SMALXE *cctx = (QPSConvergedCtx_Inner_SMALXE*) qps_inner->cnvctx;
   QPS qps_outer = cctx->qps_outer;
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps_outer->data;
   QP qp_inner = qps_inner->solQP;
@@ -655,7 +655,7 @@ PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,KSPConvergedReason *reaso
   }
 
   
-  TRY( (*qps_outer->convergencetest)(qps_outer,&qps_outer->reason,qps_outer->cnvctx) );
+  TRY( (*qps_outer->convergencetest)(qps_outer,&qps_outer->reason) );
 
   if (qps_outer->reason) {
     if (qps_outer->reason > 0) {

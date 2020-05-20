@@ -10,7 +10,7 @@ static PetscErrorCode QPSKSPConverged_KSP(KSP ksp,PetscInt i,PetscReal rnorm,KSP
   PetscFunctionBegin;
   qps->iteration = i;
   qps->rnorm = rnorm;
-  TRY( (*qps->convergencetest)(qps,reason,qps->cnvctx) );
+  TRY( (*qps->convergencetest)(qps,reason) );
   PetscFunctionReturn(0);
 }
 

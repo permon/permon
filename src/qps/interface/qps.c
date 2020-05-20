@@ -621,7 +621,7 @@ PetscErrorCode QPSPostSolve(QPS qps)
 
 #undef __FUNCT__  
 #define __FUNCT__ "QPSSetConvergenceTest"
-PetscErrorCode QPSSetConvergenceTest(QPS qps,PetscErrorCode (*converge)(QPS,KSPConvergedReason*,void*),void *cctx,PetscErrorCode (*destroy)(void*))
+PetscErrorCode QPSSetConvergenceTest(QPS qps,PetscErrorCode (*converge)(QPS,KSPConvergedReason*),void *cctx,PetscErrorCode (*destroy)(void*))
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
@@ -681,9 +681,9 @@ $      rnorm > dtol * rnorm_0,
 .seealso: QPSSetConvergenceTest(), QPSSetTolerances(), QPSConvergedSkip(), KSPConvergedReason, QPSGetConvergedReason(),
           QPSConvergedDefaultCreate(), QPSConvergedDefaultDestroy()
 @*/
-PetscErrorCode QPSConvergedDefault(QPS qps,KSPConvergedReason *reason,void *ctx)
+PetscErrorCode QPSConvergedDefault(QPS qps,KSPConvergedReason *reason)
 {
-  QPSConvergedDefaultCtx *cctx = (QPSConvergedDefaultCtx*) ctx;
+  QPSConvergedDefaultCtx *cctx = (QPSConvergedDefaultCtx*) qps->cnvctx;
   PetscInt i = qps->iteration;
   PetscReal rnorm = qps->rnorm;
 
@@ -693,7 +693,7 @@ PetscErrorCode QPSConvergedDefault(QPS qps,KSPConvergedReason *reason,void *ctx)
 
   if (!cctx) FLLOP_SETERRQ(((PetscObject) qps)->comm, PETSC_ERR_ARG_NULL, "Convergence context must have been created with QPSConvergedDefaultCreate()");
   if (!cctx->setup_called) {
-    TRY( QPSConvergedDefaultSetUp(ctx,qps) );
+    TRY( QPSConvergedDefaultSetUp(qps) );
   }
 
   if (i > qps->max_it) {
@@ -724,9 +724,9 @@ PetscErrorCode QPSConvergedDefault(QPS qps,KSPConvergedReason *reason,void *ctx)
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSConvergedDefaultSetUp"
-PetscErrorCode QPSConvergedDefaultSetUp(void *ctx, QPS qps)
+PetscErrorCode QPSConvergedDefaultSetUp(QPS qps)
 {
-  QPSConvergedDefaultCtx *cctx = (QPSConvergedDefaultCtx*) ctx;
+  QPSConvergedDefaultCtx *cctx = (QPSConvergedDefaultCtx*) qps->cnvctx;
 
   PetscFunctionBegin;
   if (cctx->setup_called) PetscFunctionReturn(0);
@@ -779,7 +779,7 @@ PetscErrorCode QPSConvergedDefaultCreate(void **ctx)
 
 #undef __FUNCT__  
 #define __FUNCT__ "QPSConvergedSkip"
-PetscErrorCode QPSConvergedSkip(QPS qps,KSPConvergedReason *reason,void *ctx)
+PetscErrorCode QPSConvergedSkip(QPS qps,KSPConvergedReason *reason)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
