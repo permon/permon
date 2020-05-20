@@ -628,10 +628,7 @@ PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,KSPConvergedReason *reaso
   MPI_Comm comm;
   
   PetscFunctionBegin;
-  FLLOP_ASSERT(qp_inner->parent == cctx->qp_outer,"qp_inner->parent == qp_outer");
-  FLLOP_ASSERT(qp_inner->x == cctx->qp_outer->x, "qp_inner->x == qp_outer->x");
   TRY( PetscObjectGetComm((PetscObject)qps_inner,&comm) );
-  if (!qps_inner->setupcalled) FLLOP_SETERRQ(comm, PETSC_ERR_ARG_WRONGSTATE, "Inner QPSSetUp() not yet called");
   *reason = KSP_CONVERGED_ITERATING;
 
   TRY( smalxe->updateNormBu(qps_outer,u,&smalxe->normBu,&smalxe->enorm) );
@@ -924,7 +921,6 @@ PetscErrorCode QPSSolve_SMALXE(QPS qps)
   Vec           b,b_inner,u,Btmu;
   PetscReal     Lag, Lag_old, rho;
   PetscInt      i,it_inner,maxits;
-  PetscErrorCode(*transform)(QP);
 
   PetscFunctionBegin;
   qp            = qps->solQP;
@@ -934,9 +930,20 @@ PetscErrorCode QPSSolve_SMALXE(QPS qps)
   maxits        = qps->max_it;
   it_inner      = 0;
 
-  FLLOP_ASSERT(qp_inner->parent == qp,"qp_inner->parent == qp");
-  TRY( QPGetTransform(qp_inner,&transform) );
-  if (transform != (PetscErrorCode(*)(QP))QPTEnforceEqByPenalty) FLLOP_SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_WRONGSTATE,"last QP transform must be QPTEnforceEqByPenalty");
+#if defined(PETSC_USE_DEBUG)
+  {
+    QPSConvergedCtx_Inner_SMALXE *cctx = (QPSConvergedCtx_Inner_SMALXE*) qps_inner->cnvctx;
+    PetscErrorCode(*transform)(QP);
+
+    FLLOP_ASSERT(qp == cctx->qp_outer,"qp == cctx->qp_outer");
+    FLLOP_ASSERT(qp_inner == qp->child,"qp_inner == qp->child");
+    FLLOP_ASSERT(qp_inner->parent == qp,"qp_inner->parent == qp");
+    FLLOP_ASSERT(qp_inner->x == qp->x, "qp_inner->x == qp->x");
+
+    TRY( QPGetTransform(qp_inner,&transform) );
+    if (transform != (PetscErrorCode(*)(QP))QPTEnforceEqByPenalty) FLLOP_SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_WRONGSTATE,"last QP transform must be QPTEnforceEqByPenalty");
+  }
+#endif
 
   TRY( QPGetRhs(qp, &b) );
   TRY( QPGetSolutionVector(qp, &u) );

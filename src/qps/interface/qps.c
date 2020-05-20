@@ -684,7 +684,6 @@ $      rnorm > dtol * rnorm_0,
 PetscErrorCode QPSConvergedDefault(QPS qps,KSPConvergedReason *reason,void *ctx)
 {
   QPSConvergedDefaultCtx *cctx = (QPSConvergedDefaultCtx*) ctx;
-  QP qp = qps->solQP;
   PetscInt i = qps->iteration;
   PetscReal rnorm = qps->rnorm;
 
@@ -692,13 +691,11 @@ PetscErrorCode QPSConvergedDefault(QPS qps,KSPConvergedReason *reason,void *ctx)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   *reason = KSP_CONVERGED_ITERATING;
 
-  if (!qps->setupcalled) FLLOP_SETERRQ(((PetscObject) qps)->comm, PETSC_ERR_ARG_WRONGSTATE, "QPSSetUp() not yet called");
+  if (!cctx) FLLOP_SETERRQ(((PetscObject) qps)->comm, PETSC_ERR_ARG_NULL, "Convergence context must have been created with QPSConvergedDefaultCreate()");
   if (!cctx->setup_called) {
     TRY( QPSConvergedDefaultSetUp(ctx,qps) );
   }
-  
-  if (!cctx) FLLOP_SETERRQ(((PetscObject) qps)->comm, PETSC_ERR_ARG_NULL, "Convergence context must have been created with QPSConvergedDefaultCreate()");
-  
+
   if (i > qps->max_it) {
     *reason = KSP_DIVERGED_ITS;
     TRY( PetscInfo3(qps,"QP solver is diverging (iteration count reached the maximum). Initial right hand size norm %14.12e, current residual norm %14.12e at iteration %D\n",(double)cctx->norm_rhs,(double)rnorm,i) );
@@ -733,6 +730,7 @@ PetscErrorCode QPSConvergedDefaultSetUp(void *ctx, QPS qps)
 
   PetscFunctionBegin;
   if (cctx->setup_called) PetscFunctionReturn(0);
+  if (!qps->setupcalled) FLLOP_SETERRQ(((PetscObject) qps)->comm, PETSC_ERR_ARG_WRONGSTATE, "QPSSetUp() not yet called");
   TRY( VecNorm(qps->solQP->b, NORM_2, &cctx->norm_rhs) );
   cctx->ttol = PetscMax(qps->rtol*cctx->norm_rhs, qps->atol);
   cctx->norm_rhs_div = cctx->norm_rhs;
