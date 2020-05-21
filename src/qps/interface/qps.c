@@ -1156,8 +1156,7 @@ PetscErrorCode QPSMonitor(QPS qps, PetscInt it, PetscReal rnorm)
 #undef __FUNCT__
 #define __FUNCT__ "QPSMonitorSet"
 /*@
-   QPSMonitorSet - Sets an ADDITIONAL function to be called at every iteration to monitor
-    the residual/error etc.
+   QPSMonitorSet - Sets an ADDITIONAL function to be called at every iteration to monitor the residual/error etc.
 
    Logically Collective on QPS
 
@@ -1183,48 +1182,48 @@ $     monitor (QPS qps, PetscInt it, PetscReal rnorm, void *mctx)
    Notes:
    The default is to do nothing. To print the residual, use
    QPSMonitorDefault() as the monitoring routine, with a null monitoring context.
-   
+
    Several different monitoring routines may be set by calling
    QPSMonitorSet() multiple times; all will be called in the
    order in which they were set.
-   
+
    Level: beginner
 
 .seealso: QPSMonitorDefault(), QPSMonitorCancel()
 @*/
 PetscErrorCode  QPSMonitorSet(QPS qps,PetscErrorCode (*monitor)(QPS,PetscInt,PetscReal,void*),void *mctx,PetscErrorCode (*monitordestroy)(void**))
 {
-   PetscInt i;
+  PetscInt i;
 
-   PetscFunctionBegin;  
-   if (!monitor) SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_NULL,"Monitor function must be specified");
+  PetscFunctionBegin;  
+  if (!monitor) SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_NULL,"Monitor function must be specified");
 
-   /* verify the number of monitors */
-   if (qps->numbermonitors >= MAXQPSMONITORS) SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_OUTOFRANGE,"Too many QPS monitors set");
+  /* verify the number of monitors */
+  if (qps->numbermonitors >= MAXQPSMONITORS) SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_OUTOFRANGE,"Too many QPS monitors set");
 
-   /* don't add exactly the same monitor twice */
-   //TODO we could use PetscMonitorCompare() once it gets fixed
-   for (i=0; i<qps->numbermonitors;i++) {
-     if (monitor == qps->monitor[i] && monitordestroy == qps->monitordestroy[i] && mctx == qps->monitorcontext[i]) {
-       PetscFunctionReturn(0);
-     }
-   }
+  /* don't add exactly the same monitor twice */
+  //TODO we could use PetscMonitorCompare() once it gets fixed
+  for (i=0; i<qps->numbermonitors;i++) {
+    if (monitor == qps->monitor[i] && monitordestroy == qps->monitordestroy[i] && mctx == qps->monitorcontext[i]) {
+      PetscFunctionReturn(0);
+    }
+  }
 
-   /* set new QPS monitor */
-   qps->monitor[qps->numbermonitors]          = monitor;
-   qps->monitordestroy[qps->numbermonitors]   = monitordestroy;
-   qps->monitorcontext[qps->numbermonitors]   = (void*)mctx;
-   qps->numbermonitors++;
-   PetscFunctionReturn(0);
+  /* set new QPS monitor */
+  qps->monitor[qps->numbermonitors]          = monitor;
+  qps->monitordestroy[qps->numbermonitors]   = monitordestroy;
+  qps->monitorcontext[qps->numbermonitors]   = (void*)mctx;
+  qps->numbermonitors++;
+  PetscFunctionReturn(0);
 }
 
 #undef __FUNCT__  
 #define __FUNCT__ "QPSMonitorCancel"
 /*@
    QPSMonitorCancel - Clears all monitors for a QPS object.
-   
+
    Logically Collective on QPS
-   
+
    Input Parameters:
 .  qps - iterative context obtained from QPSCreate()
 
@@ -1238,16 +1237,16 @@ PetscErrorCode  QPSMonitorSet(QPS qps,PetscErrorCode (*monitor)(QPS,PetscInt,Pet
 @*/
 PetscErrorCode  QPSMonitorCancel(QPS qps)
 {
-   PetscInt       i;
+  PetscInt       i;
 
-   PetscFunctionBegin;  
-   for (i=0; i<qps->numbermonitors; i++) {
-     if (qps->monitordestroy[i]) {
-       (*qps->monitordestroy[i])(&qps->monitorcontext[i]);
-     }
-   }
-   qps->numbermonitors = 0;
-   PetscFunctionReturn(0);
+  PetscFunctionBegin;  
+  for (i=0; i<qps->numbermonitors; i++) {
+    if (qps->monitordestroy[i]) {
+      (*qps->monitordestroy[i])(&qps->monitorcontext[i]);
+    }
+  }
+  qps->numbermonitors = 0;
+  PetscFunctionReturn(0);
 }
 
 #undef __FUNCT__  
@@ -1257,7 +1256,7 @@ PetscErrorCode  QPSMonitorCancel(QPS qps)
      QPSMonitorSet() for the FIRST monitor only.
 
    Not Collective
-   
+
    Input Parameter:
 .  qps - iterative context obtained from QPSCreate()
 
@@ -1272,9 +1271,9 @@ PetscErrorCode  QPSMonitorCancel(QPS qps)
 @*/
 PetscErrorCode  QPSGetMonitorContext(QPS qps,void **ctx)
 {
-   PetscFunctionBegin;  
-   *ctx = (qps->monitorcontext[0]);
-   PetscFunctionReturn(0);
+  PetscFunctionBegin;  
+  *ctx = (qps->monitorcontext[0]);
+  PetscFunctionReturn(0);
 }
 
 #undef __FUNCT__  
@@ -1308,21 +1307,21 @@ PetscErrorCode  QPSGetMonitorContext(QPS qps,void **ctx)
 @*/
 PetscErrorCode  QPSSetResidualHistory(QPS qps,PetscReal a[],PetscInt na,PetscBool reset)
 {
-   PetscFunctionBegin;  
-   PetscFree(qps->res_hist_alloc);
-   if (na != PETSC_DECIDE && na != PETSC_DEFAULT && a) {
-     qps->res_hist     = a;
-     qps->res_hist_max = na;
-   } else {
-     if (na != PETSC_DECIDE && na != PETSC_DEFAULT) qps->res_hist_max = na;
-     else                                           qps->res_hist_max = 10000; /* like default ksp->max_it */
-     PetscMalloc(qps->res_hist_max,&qps->res_hist_alloc);
+  PetscFunctionBegin;  
+  PetscFree(qps->res_hist_alloc);
+  if (na != PETSC_DECIDE && na != PETSC_DEFAULT && a) {
+    qps->res_hist     = a;
+    qps->res_hist_max = na;
+  } else {
+    if (na != PETSC_DECIDE && na != PETSC_DEFAULT) qps->res_hist_max = na;
+    else                                           qps->res_hist_max = 10000; /* like default ksp->max_it */
+    PetscMalloc(qps->res_hist_max,&qps->res_hist_alloc);
 
-     qps->res_hist = qps->res_hist_alloc;
-   }
-   qps->res_hist_len   = 0;
-   qps->res_hist_reset = reset;
-   PetscFunctionReturn(0);
+    qps->res_hist = qps->res_hist_alloc;
+  }
+  qps->res_hist_len   = 0;
+  qps->res_hist_reset = reset;
+  PetscFunctionReturn(0);
 }
 
 #undef __FUNCT__  
@@ -1330,9 +1329,9 @@ PetscErrorCode  QPSSetResidualHistory(QPS qps,PetscReal a[],PetscInt na,PetscBoo
 /*@
    QPSGetResidualHistory - Gets the array used to hold the residual history
        and the number of residuals it contains.
-   
+
    Not Collective
-   
+
    Input Parameter:
 .  qps - iterative context obtained from QPSCreate()
 
@@ -1351,10 +1350,10 @@ PetscErrorCode  QPSSetResidualHistory(QPS qps,PetscReal a[],PetscInt na,PetscBoo
 @*/
 PetscErrorCode  QPSGetResidualHistory(QPS qps,PetscReal *a[],PetscInt *na)
 {
-   PetscFunctionBegin;  
-   if (a) *a = qps->res_hist;
-   if (na) *na = qps->res_hist_len;
-   PetscFunctionReturn(0);
+  PetscFunctionBegin;  
+  if (a) *a = qps->res_hist;
+  if (na) *na = qps->res_hist_len;
+  PetscFunctionReturn(0);
 }
 
 #undef __FUNCT__  
@@ -1362,9 +1361,9 @@ PetscErrorCode  QPSGetResidualHistory(QPS qps,PetscReal *a[],PetscInt *na)
 /*@
    QPSMonitorDefault - Print the projected gradient norm at each iteration of an
                        iterative solver. 
-   
+
    Collective on QPS
-   
+
    Input Parameters:
 +  qps   - iterative context
 .  n     - iteration number
@@ -1379,26 +1378,26 @@ PetscErrorCode  QPSGetResidualHistory(QPS qps,PetscReal *a[],PetscInt *na)
 @*/
 PetscErrorCode QPSMonitorDefault(QPS qps,PetscInt n,PetscReal rnorm,void *ctx)
 {
-   PetscViewer    viewer = (PetscViewer) ctx;
+  PetscViewer    viewer = (PetscViewer) ctx;
 
-   PetscFunctionBegin;  
-   if (!viewer) {
-     TRY( PetscViewerASCIIGetStdout(PetscObjectComm((PetscObject)qps),&viewer) );
-   }
-   TRY( PetscViewerASCIIAddTab(viewer,((PetscObject)qps)->tablevel) );
-   
-   if (qps->ops->monitor){
-       /* this algorithm has own monitor */
-       TRY( (*qps->ops->monitor)(qps,n,viewer) );
-   } else {
-       /* use default QPS monitor */
-       if (n == 0 && ((PetscObject)qps)->prefix) {
-             TRY( PetscViewerASCIIPrintf(viewer,"  Projected gradient norms for %s solve.\n",((PetscObject)qps)->prefix) );
-       }
-       TRY( PetscViewerASCIIPrintf(viewer,"%3D QPS Projected gradient norm %14.12e \n",n,(double)rnorm) );
-       TRY( PetscViewerASCIISubtractTab(viewer,((PetscObject)qps)->tablevel) );
-   }
+  PetscFunctionBegin;  
+  if (!viewer) {
+    TRY( PetscViewerASCIIGetStdout(PetscObjectComm((PetscObject)qps),&viewer) );
+  }
+  TRY( PetscViewerASCIIAddTab(viewer,((PetscObject)qps)->tablevel) );
 
-   TRY( PetscViewerASCIISubtractTab(viewer,((PetscObject)qps)->tablevel) );
-   PetscFunctionReturn(0);
+  if (qps->ops->monitor){
+    /* this algorithm has own monitor */
+    TRY( (*qps->ops->monitor)(qps,n,viewer) );
+  } else {
+    /* use default QPS monitor */
+    if (n == 0 && ((PetscObject)qps)->prefix) {
+      TRY( PetscViewerASCIIPrintf(viewer,"  Projected gradient norms for %s solve.\n",((PetscObject)qps)->prefix) );
+    }
+    TRY( PetscViewerASCIIPrintf(viewer,"%3D QPS Projected gradient norm %14.12e \n",n,(double)rnorm) );
+    TRY( PetscViewerASCIISubtractTab(viewer,((PetscObject)qps)->tablevel) );
+  }
+
+  TRY( PetscViewerASCIISubtractTab(viewer,((PetscObject)qps)->tablevel) );
+  PetscFunctionReturn(0);
 }
