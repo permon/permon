@@ -2,7 +2,8 @@
 ---- Journal Bearing Problem SHB-----
 mx: 8,  my: 12,  ecc: 0.1 
 
-Value of Tao are gatol = 1.000000e-08, grtol =  1.000000e-08, gttol = 0.000000e+00  
+TAO tolerances are gatol = 1.000000e-08, grtol =  1.000000e-50, gttol = 1.000000e-06
+Setting PERMON rtol = gttol, atol = gatol
   0 MPGP [ ] ||gp||=5.5809211207e-01,	||phi||=0.0000000000e+00,	||beta||=5.5809211207e-01,	alpha=2.0061100039e-01
   1 MPGP [p] ||gp||=3.1464391336e-01,	||phi||=3.0615634395e-01,	||beta||=7.2588465186e-02,	alpha=2.0061100039e-01
   2 MPGP [c] ||gp||=2.4361746033e-01,	||phi||=1.1989793746e-01,	||beta||=2.1207062873e-01,	alpha=2.0061100039e-01
@@ -27,19 +28,15 @@ Value of Tao are gatol = 1.000000e-08, grtol =  1.000000e-08, gttol = 0.000000e+
  21 MPGP [c] ||gp||=3.3212967541e-06,	||phi||=3.3212967541e-06,	||beta||=0.0000000000e+00,	alpha=2.0061100039e-01
  22 MPGP [c] ||gp||=1.3208278169e-06,	||phi||=1.3208278169e-06,	||beta||=0.0000000000e+00,	alpha=2.0061100039e-01
  23 MPGP [c] ||gp||=4.1716887962e-07,	||phi||=4.1716887962e-07,	||beta||=0.0000000000e+00,	alpha=2.0061100039e-01
- 24 MPGP [c] ||gp||=1.4038958708e-07,	||phi||=1.4038958708e-07,	||beta||=0.0000000000e+00,	alpha=2.0061100039e-01
- 25 MPGP [c] ||gp||=5.2033160069e-08,	||phi||=5.2033160069e-08,	||beta||=0.0000000000e+00,	alpha=2.0061100039e-01
- 26 MPGP [c] ||gp||=1.6049206653e-08,	||phi||=1.6049206653e-08,	||beta||=0.0000000000e+00,	alpha=2.0061100039e-01
- 27 MPGP [c] ||gp||=2.9754648165e-09,	||phi||=2.9754648165e-09,	||beta||=0.0000000000e+00,	alpha=2.0061100039e-01
 QPS Object: 1 MPI processes
   type: mpgp
-  last QPSSolve CONVERGED due to CONVERGED_ATOL, KSPReason=3, required 27 iterations
-  all 1 QPSSolves from last QPSReset/QPSResetStatistics have required 27 iterations
-  tolerances: rtol=1.0e-08, abstol=1.0e-08, dtol=1.0e+04, maxits=10000
+  last QPSSolve CONVERGED due to CONVERGED_RTOL, KSPReason=2, required 23 iterations
+  all 1 QPSSolves from last QPSReset/QPSResetStatistics have required 23 iterations
+  tolerances: rtol=1.0e-06, abstol=1.0e-08, dtol=1.0e+04, maxits=10000
   mpgp specific:
     from the last QPSReset:
-    number of Hessian multiplications 28
-    number of CG steps 25
+    number of Hessian multiplications 24
+    number of CG steps 21
     number of expansion steps 0
     number of proportioning steps 2
-norm of difference of results from TAO and QP = 1.211218e-08  
+Norm of difference of results from TAO and QP = 1.802216e-07 <= 7.892614e-06 = tolerance
