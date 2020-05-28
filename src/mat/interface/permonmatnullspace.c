@@ -1,6 +1,33 @@
 
 #include <permon/private/permonmatimpl.h>
 
+PetscErrorCode MatSetNullSpaceMat(Mat mat, Mat R)
+{
+  PetscErrorCode ierr;
+
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(mat,MAT_CLASSID,1);
+#if defined(PETSC_USE_DEBUG)
+  if (R) {
+    PetscValidHeaderSpecific(R,MAT_CLASSID,2);
+    TRY( MatCheckNullSpaceMat(mat, R, PETSC_DEFAULT) );
+  }
+#endif
+  ierr = PetscObjectCompose((PetscObject)mat, "NullSpace_Mat", (PetscObject)R);CHKERRQ(ierr);
+  PetscFunctionReturn(0);
+}
+
+PetscErrorCode MatGetNullSpaceMat(Mat mat, Mat *R)
+{
+  PetscErrorCode ierr;
+
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(mat,MAT_CLASSID,1);
+  PetscValidPointer(R,2);
+  ierr = PetscObjectQuery((PetscObject)mat, "NullSpace_Mat", (PetscObject*)R);CHKERRQ(ierr);
+  PetscFunctionReturn(0);
+}
+
 PetscErrorCode MatCheckNullSpaceMat(Mat K,Mat R,PetscReal tol)
 {
   Vec d,x,y;

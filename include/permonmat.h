@@ -161,6 +161,8 @@ FLLOP_EXTERN PetscErrorCode MatOrthColumns(Mat mat, MatOrthType type, MatOrthFor
 FLLOP_EXTERN PetscErrorCode MatOrthRows(Mat mat, MatOrthType type, MatOrthForm form, Mat *matOrth, Mat *T);
 
 /* Null Space */
+FLLOP_EXTERN PetscErrorCode MatSetNullSpaceMat(Mat mat, Mat R);
+FLLOP_EXTERN PetscErrorCode MatGetNullSpaceMat(Mat mat, Mat *R);
 FLLOP_EXTERN PetscErrorCode MatCheckNullSpaceMat(Mat K,Mat R,PetscReal tol);
 
 #endif
