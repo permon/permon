@@ -134,6 +134,8 @@ PETSC_STATIC_INLINE PetscErrorCode MatMatMultByColumns_MatMult_Private(Mat A, Pe
 
   TRY( MatRestoreColumnVectors(B,&N1,&B_cols) );
   TRY( MatRestoreColumnVectors(C,&N1,&C_cols) );
+  TRY( MatAssemblyBegin(C,MAT_FINAL_ASSEMBLY) );
+  TRY( MatAssemblyEnd(C,MAT_FINAL_ASSEMBLY) );
   PetscFunctionReturnI(0);
 }
 

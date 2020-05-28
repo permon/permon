@@ -55,30 +55,48 @@ static PetscErrorCode MatInvGetRegularizationType_Inv(Mat imat,MatRegularization
 #if defined(PETSC_HAVE_MUMPS)
 static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
 {
-  Mat Kl,R,Rl,F;
-  PetscScalar *array;
+  Mat Kl=NULL,R=NULL,Rl=NULL,F=NULL;
   KSP ksp;
   PC pc;
-  PetscInt m,defect;
-  PetscBool flg;
+  PetscInt m,M,mm = 0,defect;
+  PetscBool flg,blockdiag = PETSC_FALSE;
   MatSolverType type;
   Mat_MUMPS *mumps = NULL;
   PetscReal null_pivot_threshold = -1e-8;
+  MPI_Comm blockComm;
 
   PetscFunctionBeginI;
   TRY( MatInvGetKSP(imat,&ksp) );
   TRY( KSPGetPC(ksp,&pc) );
   TRY( PCGetOperators(pc,&Kl,NULL) );
-  TRY( MatGetSize(Kl,&m,NULL) );
+  TRY( MatGetLocalSize(Kl,&m,NULL) );
+  TRY( MatGetSize(Kl,&M,NULL) );
   TRY( MatPrintInfo(Kl) );
+  TRY( PetscObjectGetComm((PetscObject)Kl,&blockComm) );
+
+  {
+    Mat K;
+    PetscMPIInt commsize;
+
+    TRY( MatInvGetMat(imat,&K) );
+    TRY( MPI_Comm_size(blockComm,&commsize) );
+    if (K != Kl) {
+      TRY( PetscObjectTypeCompare((PetscObject)K,MATBLOCKDIAG,&blockdiag) );
+      FLLOP_ASSERT(blockdiag, "K should be blockdiag in this case");
+      FLLOP_ASSERT(commsize==1, "Kl should be serial");
+    }
+  }
   
   if (Kl->spd_set && Kl->spd) {
     defect = 0;
+    mm = m;
   } else {
     /* MUMPS matrix type (sym) is set to 2 automatically (see MatGetFactor_aij_mumps). */
     TRY( PCFactorGetMatSolverType(pc,&type) );
     TRY( PetscStrcmp(type,MATSOLVERMUMPS,&flg) ); 
     if (flg) TRY( PetscObjectTypeCompare((PetscObject)pc,PCCHOLESKY,&flg) );
+    /* TODO We need to call PCSetUP() (which does the factorization) before being able to call PCFactorGetMatrix().
+       Maybe we could do something on the PETSc side to overcome this. */
     if (flg) {
       /* If MUMPS Cholesky is used, avoid doubled factorization. */
       char opts[128];
@@ -98,29 +116,65 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
       TRY( MatCholeskyFactorNumeric(F,Kl,NULL) );
     }
     TRY( MatMumpsGetInfog(F,28,&defect) ); /* get numerical defect, i.e. number of null pivots encountered during factorization */
+    /* mumps->petsc_size > 1 implies mumps->id.ICNTL(21) = 1 (distributed solution ) */
+    mm = (defect && mumps->petsc_size > 1) ? mumps->id.lsol_loc : m;  /* = length of sol_loc = INFO(23) */
   }
 
-  TRY( MatCreateDensePermon(PETSC_COMM_SELF,m,defect,m,defect,NULL,&Rl) );
+  TRY( MatCreateDensePermon(blockComm,mm,PETSC_DECIDE,M,defect,NULL,&Rl) );
 
   if (defect) {
-    TRY( MatDenseGetArray(Rl,&array) );
-    mumps->id.rhs = (MumpsScalar*)array;
-    mumps->id.lrhs = m;
+    /* stash sol_loc allocated in MatFactorNumeric_MUMPS() */
+    MumpsScalar *sol_loc_orig = mumps->id.sol_loc;
+    MumpsScalar *array;
+
+    /* inject matrix array as sol_loc */
+    TRY( MatDenseGetArray(Rl,(MumpsScalar**)&array) );
+    if (mumps->petsc_size > 1) {
+      mumps->id.sol_loc = array;
+      if (!mumps->myid) {
+        /* Define dummy rhs on the host otherwise MUMPS fails with INFOG(1)=-22,INFOG(2)=7 */
+        TRY( PetscMalloc1(M,&mumps->id.rhs) );
+      }
+    } else mumps->id.rhs = array;
+    /* mumps->id.nrhs is reset by MatMatSolve_MUMPS()/MatSolve_MUMPS() */
     mumps->id.nrhs = defect;
     TRY( MatMumpsSetIcntl(F,25,-1) ); /* compute complete null space */
     mumps->id.job = JOB_SOLVE;
     PetscMUMPS_c(&mumps->id);
     if (mumps->id.INFOG(1) < 0) SETERRQ2(PETSC_COMM_SELF,PETSC_ERR_LIB,"Error reported by MUMPS in solve phase: INFOG(1)=%d,INFOG(2)=%d\n",mumps->id.INFOG(1),mumps->id.INFOG(2));
-    TRY( MatDenseRestoreArray(Rl,&array) );
+
+    if (mumps->petsc_size > 1 && !mumps->myid) {
+      TRY( PetscFree(mumps->id.rhs) );
+    }
     TRY( MatMumpsSetIcntl(F,25,0) ); /* perform a normal solution step next time */
+
+    /* restore matrix array */
+    TRY( MatDenseRestoreArray(Rl,(MumpsScalar**)&array) );
+    /* restore stashed sol_loc */
+    mumps->id.sol_loc = sol_loc_orig;
   }
 
-  TRY( MatCreateBlockDiag(PETSC_COMM_WORLD,Rl,&R) );
+  //TODO return just NULL if defect=0 ?
+  if (blockdiag) {
+    TRY( MatCreateBlockDiag(PETSC_COMM_WORLD,Rl,&R) );
+    TRY( FllopPetscObjectInheritName((PetscObject)Rl,(PetscObject)R,"_loc") );
+    TRY( MatDestroy(&Rl) );
+  } else if (defect && mumps->petsc_size > 1) {
+    IS isol_is;
+    /* redistribute to get conforming local size */
+    TRY( MatCreateDensePermon(blockComm,m,PETSC_DECIDE,M,defect,NULL,&R) );
+    TRY( ISCreateGeneral(PETSC_COMM_SELF,mm,mumps->id.isol_loc,PETSC_USE_POINTER,&isol_is) );
+    TRY( MatRedistributeRows(Rl,isol_is,1,R) ); /* MUMPS uses 1-based numbering */
+    TRY( MatDestroy(&Rl) );
+    TRY( ISDestroy(&isol_is) );
+  } else {
+    R = Rl;
+  }
+  TRY( MatAssemblyBegin(R,MAT_FINAL_ASSEMBLY) );
+  TRY( MatAssemblyEnd(R,MAT_FINAL_ASSEMBLY) );
   TRY( PetscObjectSetName((PetscObject)R,"R") );
-  TRY( FllopPetscObjectInheritName((PetscObject)Rl,(PetscObject)R,"_loc") );
   TRY( MatPrintInfo(R) );
   TRY( MatInvSetNullSpace(imat,R) );
-  TRY( MatDestroy(&Rl) );
   TRY( MatDestroy(&R) );
   PetscFunctionReturnI(0);
 }
@@ -132,7 +186,7 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
   PetscFunctionReturnI(0);
 }
 #endif
- 
+
 #undef __FUNCT__
 #define __FUNCT__ "MatInvSetNullSpace_Inv"
 static PetscErrorCode MatInvSetNullSpace_Inv(Mat imat,Mat R)
