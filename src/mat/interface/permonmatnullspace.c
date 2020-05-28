@@ -34,6 +34,7 @@ PetscErrorCode MatCheckNullSpaceMat(Mat K,Mat R,PetscReal tol)
   PetscReal normd,normy;
 
   PetscFunctionBegin;
+  if (tol == PETSC_DECIDE || tol == PETSC_DEFAULT) tol = PETSC_SMALL;
   PetscValidHeaderSpecific(K,MAT_CLASSID,1);
   PetscValidHeaderSpecific(R,MAT_CLASSID,2);
   PetscValidLogicalCollectiveReal(K,tol,3);
