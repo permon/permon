@@ -105,7 +105,6 @@ PetscErrorCode QPCreate(MPI_Comm comm, QP *qp_new)
   TRY( PetscHeaderCreate(qp,QP_CLASSID,"QP","Quadratic Programming Problem","QP",comm,QPDestroy,QPView) );
   TRY( PetscObjectChangeTypeName((PetscObject)qp,"QP") );
   qp->A            = NULL;
-  qp->R            = NULL;
   qp->b            = NULL;
   qp->b_plus       = PETSC_FALSE;
   qp->BE           = NULL;
@@ -189,7 +188,6 @@ PetscErrorCode QPDuplicate(QP qp1,QPDuplicateOption opt,QP *qp2)
   TRY( QPSetIneqMultiplier(qp2_,qp1->lambda_I) );
   TRY( QPSetInitialVector(qp2_,qp1->x) );
   TRY( QPSetOperator(qp2_,qp1->A) );
-  TRY( QPSetOperatorNullSpace(qp2_,qp1->R) );
   if (qp1->pc) TRY( QPSetPC(qp2_,qp1->pc) );
   TRY( QPSetQPPF(qp2_,qp1->pf) );
   TRY( QPSetRhs(qp2_,qp1->b) );
@@ -409,7 +407,7 @@ PetscErrorCode QPView(QP qp,PetscViewer v)
   TRY( PetscViewerASCIIPrintf(v, "#%d in chain, derived by %s\n",qp->id,qp->transform_name) );
 
   TRY( QPGetOperator(qp, &A) );
-  TRY( QPGetOperatorNullSpace(qp, &R) );
+  TRY( MatGetNullSpaceMat(A, &R) );
   TRY( QPGetRhs(qp, &b) );
   TRY( QPGetBox(qp, NULL, &lb, &ub) );
   TRY( QPGetEq(qp, &BE, &cE) );
@@ -420,8 +418,8 @@ PetscErrorCode QPView(QP qp,PetscViewer v)
   TRY( PetscViewerASCIIPrintf(v,"  LOADED OBJECTS:\n") );
   TRY( PetscViewerASCIIPrintf(v,"    %-32s %-16s %s\n", "what", "name", "present") );
   TRY( QPView_PrintObjectLoaded(v, A,   "Hessian") );
+  TRY( QPView_PrintObjectLoaded(v, R,   "Hessian null space") );
   TRY( QPView_PrintObjectLoaded(v, b,   "linear term (right-hand-side)") );
-  TRY( QPView_PrintObjectLoaded(v, R,   "R (kernel of K)") );
   TRY( QPView_PrintObjectLoaded(v, lb,  "lower bounds") );
   TRY( QPView_PrintObjectLoaded(v, ub,  "upper bounds") );
   TRY( QPView_PrintObjectLoaded(v, BE,  "linear eq. constraint matrix") );
@@ -463,7 +461,6 @@ PetscErrorCode QPReset(QP qp)
   TRY( QPDestroy( &qp->child) );
 
   TRY( MatDestroy(&qp->A) );
-  TRY( MatDestroy(&qp->R) );
   TRY( MatDestroy(&qp->BE) );
   TRY( MatDestroy(&qp->BI) );
   TRY( MatDestroy(&qp->B) );
@@ -1192,65 +1189,6 @@ PetscErrorCode QPGetPC(QP qp,PC *pc)
     TRY( PCSetOperators(qp->pc,qp->A,qp->A) );
   }
   *pc = qp->pc;
-  PetscFunctionReturn(0);
-}
-
-#undef __FUNCT__
-#define __FUNCT__ "QPSetOperatorNullSpace"
-/*@
-   QPSetOperatorNullSpace - Sets matrix with columns representing the null space of the Hessian operator.
-
-   Collective on QP
-
-   Input Parameters:
-+  qp - the QP
--  R - the null space matrix
-
-   Level: intermediate
-
-.seealso QPGetOperatorNullSpace(), QPSetOperator(), QPSSolve()
-@*/
-PetscErrorCode QPSetOperatorNullSpace(QP qp,Mat R)
-{
-  PetscFunctionBegin;
-  PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  if (R) PetscValidHeaderSpecific(R,MAT_CLASSID,2);
-  if (R == qp->R) PetscFunctionReturn(0);
-  if (R) {
-#if defined(PETSC_USE_DEBUG)
-    TRY( MatCheckNullSpaceMat(qp->A, R, PETSC_SMALL) );
-#endif
-    TRY( PetscObjectReference((PetscObject)R) );
-  }
-  TRY( MatDestroy(&qp->R) );
-  qp->R = R;
-  if (qp->changeListener) TRY( (*qp->changeListener)(qp) );
-  PetscFunctionReturn(0);
-}
-
-#undef __FUNCT__
-#define __FUNCT__ "QPGetOperatorNullSpace"
-/*@
-   QPGetOperatorNullSpace - Get matrix with columns representing the null space of the Hessian operator.
-
-   Not Collective
-
-   Input Parameter:
-.  qp - the QP
-
-   Output Parameter:
-.  R - the null space matrix
-
-   Level: advanced
-
-.seealso QPSetOperatorNullSpace(), QPGetOperator()
-@*/
-PetscErrorCode QPGetOperatorNullSpace(QP qp,Mat *R)
-{
-  PetscFunctionBegin;
-  PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  PetscValidPointer(R,2);
-  *R = qp->R;
   PetscFunctionReturn(0);
 }
 

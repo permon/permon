@@ -283,7 +283,7 @@ PetscErrorCode QPTEnforceEqByProjector(QP qp)
     TRY( MatCreateProd(comm,3,A_arr,&newA) );
   }
   TRY( QPSetOperator(child,newA) );
-  TRY( QPSetOperatorNullSpace(child,qp->R) );
+  //TODO Maybe we can derive the null space of newA?
   TRY( MatDestroy(&newA) );
 
   /* newb = P*b */
@@ -393,7 +393,7 @@ PetscErrorCode QPTEnforceEqByPenalty(QP qp, PetscReal rho_user, PetscBool rho_di
   /* newA = A + rho*BE'*BE */
   TRY( MatCreatePenalized(qp,rho,&newA) );
   TRY( QPSetOperator(child,newA) );
-  TRY( QPSetOperatorNullSpace(child,qp->R) );
+  //TODO Maybe we can derive the null space of newA?
   TRY( MatDestroy(&newA) );
 
   /* newb = b + rho*BE'*c */
@@ -709,7 +709,7 @@ static PetscErrorCode QPTDualizeView_Private(QP qp, QP child)
   TRY( PetscObjectQuery((PetscObject)F,"Bt",(PetscObject*)&Bt) );
   
   K = qp->A;
-  R = qp->R;
+  TRY( MatGetNullSpaceMat(K, &R) );
   G = child->BE;
   c = qp->c;
   d = child->b;
@@ -788,6 +788,7 @@ static PetscErrorCode QPTDualizePostSolve_Private(QP child,QP parent)
     Vec f          = parent->b;
     Vec u          = parent->x;
     Vec tprim      = parent->xwork;
+    Mat R_parent;
     PetscBool flg;
 
     PetscFunctionBegin;
@@ -827,7 +828,8 @@ static PetscErrorCode QPTDualizePostSolve_Private(QP child,QP parent)
     }
 
     /* u = u - R*alpha */
-    TRY( MatMult(parent->R, alpha, tprim) );
+    TRY( MatGetNullSpaceMat(parent->A, &R_parent) );
+    TRY( MatMult(R_parent, alpha, tprim) );
     TRY( VecAXPY(u, -1.0, tprim) );
     PetscFunctionReturn(0);
 }
@@ -981,10 +983,8 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
 
   /* get or compute stiffness matrix kernel (R) */
   R = NULL;
-  TRY( QPGetOperatorNullSpace(qp,&R) );
-  if (R) {
-    TRY( MatSetNullSpaceMat(K,R) );
-  } else {
+  TRY( MatGetNullSpaceMat(K,&R) );
+  if (!R) {
     PC pc;
 
     TRY( PetscInfo(qp,"null space matrix not set => using -qpt_dualize_Kplus_left and -regularize 0\n") );
@@ -996,7 +996,6 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
     //TODO should the orthonormalization be specified from options?
     TRY( MatComputeNullSpaceMat(K,pc,MAT_ORTH_GS,MAT_ORTH_FORM_EXPLICIT,&R) );
     TRY( MatSetNullSpaceMat(K,R) );
-    TRY( QPSetOperatorNullSpace(qp,R) );
   }
   TRY( MatInvSetRegularizationType(Kplus,regType) );
   TRY( MatSetFromOptions(Kplus) );
@@ -1427,7 +1426,7 @@ PetscErrorCode QPTScale(QP qp)
   PetscBool remove_gluing_of_dirichlet=PETSC_FALSE;
   PetscBool set;
   QP child;
-  Mat A,DA;
+  Mat A,DA,R;
   Vec b,d,Db;
   QPTScale_Ctx *ctx;
 
@@ -1522,15 +1521,17 @@ PetscErrorCode QPTScale(QP qp)
     TRY( VecDestroy(&Db) );
   }
 
-  if (qp->R) {
+  //TODO R is no more a QP property, so this should probably be moved somewhere else
+  TRY( MatGetNullSpaceMat(qp->A, &R) );
+  if (R) {
     TRY( PetscOptionsEnum("-qp_R_orth_type", "type of nullspace matrix orthonormalization", "", MatOrthTypes, (PetscEnum)R_orth_type, (PetscEnum*)&R_orth_type, NULL) );
     TRY( PetscOptionsEnum("-qp_R_orth_form", "form of nullspace matrix orthonormalization", "", MatOrthForms, (PetscEnum)R_orth_form, (PetscEnum*)&R_orth_form, NULL) );
     TRY( PetscInfo1(qp, "-qp_R_orth_type %s\n",MatOrthTypes[R_orth_type]) );
     TRY( PetscInfo1(qp, "-qp_R_orth_form %s\n",MatOrthForms[R_orth_form]) );
     if (R_orth_type) {
       Mat Rnew;
-      TRY( MatOrthColumns(qp->R, R_orth_type, R_orth_form, &Rnew, NULL) );
-      TRY( QPSetOperatorNullSpace(child,Rnew) );
+      TRY( MatOrthColumns(R, R_orth_type, R_orth_form, &Rnew, NULL) );
+      TRY( MatSetNullSpaceMat(qp->A, Rnew) );
       TRY( MatDestroy(&Rnew) );
     }
   }
@@ -1972,9 +1973,9 @@ PetscErrorCode QPTMatISToBlockDiag(QP qp)
   /* create block diag */
   Mat_IS *matis  = (Mat_IS*)qp->A->data;
   TRY( MatCreateBlockDiag(comm,matis->A,&A) );
+  TRY( MatCopyNullSpaceMat(matis->A,A) );
   TRY( QPSetOperator(child,A) );
   TRY( QPSetEq(child,qp->BE,NULL) );
-  TRY( QPSetOperatorNullSpace(child,qp->R) );
   TRY( MatDestroy(&qp->BE) );
 
   /* get mappings for RHS decomposition
@@ -2173,4 +2174,3 @@ PetscErrorCode QPTFromOptions(QP qp)
   PetscFunctionReturn(0);
 }
 #undef QPTransformBegin
-

@@ -53,7 +53,6 @@ FLLOP_EXTERN PetscErrorCode QPComputeObjectiveAndGradient(QP qp, Vec x, Vec g, P
 FLLOP_EXTERN PetscErrorCode QPSetInitialVector(QP qp,Vec x);
 FLLOP_EXTERN PetscErrorCode QPSetOperator(QP qp,Mat A);
 FLLOP_EXTERN PetscErrorCode QPSetPC(QP qp,PC pc);
-FLLOP_EXTERN PetscErrorCode QPSetOperatorNullSpace(QP qp,Mat R);
 FLLOP_EXTERN PetscErrorCode QPSetRhs(QP qp,Vec b);
 FLLOP_EXTERN PetscErrorCode QPSetRhsPlus(QP qp,Vec b);
 FLLOP_EXTERN PetscErrorCode QPAddEq(QP qp,Mat Beq,Vec ceq);
@@ -72,7 +71,6 @@ FLLOP_EXTERN PetscErrorCode QPGetVecs(QP qp,Vec *right,Vec *left);
 FLLOP_EXTERN PetscErrorCode QPGetSolutionVector(QP qp,Vec *x);
 FLLOP_EXTERN PetscErrorCode QPGetOperator(QP qp,Mat *A);
 FLLOP_EXTERN PetscErrorCode QPGetPC(QP qp,PC *pc);
-FLLOP_EXTERN PetscErrorCode QPGetOperatorNullSpace(QP qp,Mat *R);
 FLLOP_EXTERN PetscErrorCode QPGetRhs(QP qp,Vec *b);
 FLLOP_EXTERN PetscErrorCode QPGetIneq(QP qp,Mat *Bineq,Vec *cineq);
 FLLOP_EXTERN PetscErrorCode QPGetEq(QP qp,Mat *Beq,Vec *ceq);

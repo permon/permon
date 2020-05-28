@@ -90,6 +90,7 @@ int main(int argc,char **args)
   ierr = MatCreateAIJ(PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,n,0,0,NULL,0,NULL,&R);CHKERRQ(ierr);
   ierr = MatAssemblyBegin(R,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
   ierr = MatAssemblyEnd(R,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+  ierr = MatSetNullSpaceMat(A,R);CHKERRQ(ierr);
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   * Setup QP: argmin 1/2 x'Ax -x'b s.t. c <= I*x
@@ -108,7 +109,6 @@ int main(int argc,char **args)
   ierr = MatScale(B,-1.0);CHKERRQ(ierr);
   ierr = QPSetIneq(qp,B,c);CHKERRQ(ierr);
   /* Dualize QP */
-  ierr = QPSetOperatorNullSpace(qp,R);CHKERRQ(ierr);
   ierr = PetscOptionsInsertString(NULL,"-qpt_dualize_B_nest_extension 0 -qpt_dualize_G_explicit 0");CHKERRQ(ierr); /* workaround for empty nullspace */
   ierr = QPTDualize(qp,MAT_INV_MONOLITHIC,MAT_REG_NONE);CHKERRQ(ierr);
   /* Set runtime options, e.g
