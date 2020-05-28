@@ -160,6 +160,7 @@ FLLOP_EXTERN PetscErrorCode MatOrthRows(Mat mat, MatOrthType type, MatOrthForm f
 /* Null Space */
 FLLOP_EXTERN PetscErrorCode MatSetNullSpaceMat(Mat mat, Mat R);
 FLLOP_EXTERN PetscErrorCode MatGetNullSpaceMat(Mat mat, Mat *R);
+FLLOP_EXTERN PetscErrorCode MatCopyNullSpaceMat(Mat mat1, Mat mat2);
 FLLOP_EXTERN PetscErrorCode MatComputeNullSpaceMat(Mat K, PC pc, MatOrthType orthType, MatOrthForm orthForm, Mat *R_new);
 FLLOP_EXTERN PetscErrorCode MatCheckNullSpaceMat(Mat K,Mat R,PetscReal tol);
 

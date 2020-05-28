@@ -28,6 +28,19 @@ PetscErrorCode MatGetNullSpaceMat(Mat mat, Mat *R)
   PetscFunctionReturn(0);
 }
 
+PetscErrorCode MatCopyNullSpaceMat(Mat mat1, Mat mat2)
+{
+  Mat R;
+  PetscErrorCode ierr;
+
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(mat1,MAT_CLASSID,1);
+  PetscValidHeaderSpecific(mat2,MAT_CLASSID,2);
+  ierr = PetscObjectQuery((PetscObject)mat1, "NullSpace_Mat", (PetscObject*)&R);CHKERRQ(ierr);
+  ierr = PetscObjectCompose((PetscObject)mat2, "NullSpace_Mat", (PetscObject)R);CHKERRQ(ierr);
+  PetscFunctionReturn(0);
+}
+
 PetscErrorCode MatCheckNullSpaceMat(Mat K,Mat R,PetscReal tol)
 {
   Vec d,x,y;
