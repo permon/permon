@@ -109,7 +109,6 @@ int main(int argc,char **args)
   ierr = QPSetIneq(qp,B,c);CHKERRQ(ierr);
   /* Dualize QP */
   ierr = QPSetOperatorNullSpace(qp,R);CHKERRQ(ierr);
-  ierr = PetscOptionsInsertString(NULL,"-qpt_dualize_B_nest_extension 0 -qpt_dualize_G_explicit 0");CHKERRQ(ierr); /* workaround for empty nullspace */
   ierr = QPTDualize(qp,MAT_INV_MONOLITHIC,MAT_REG_NONE);CHKERRQ(ierr);
   /* Set runtime options, e.g
   *   -qp_chain_view_kkt */
