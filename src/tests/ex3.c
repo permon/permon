@@ -34,7 +34,7 @@ int main(int argc,char **args)
   /* nullspace is checked automatically in MatInvComputeNullSpace() in debug mode */
   {
     Mat R;
-    ierr = MatInvGetNullSpace(Ainv,&R);CHKERRQ(ierr);
+    ierr = MatGetNullSpaceMat(A,&R);CHKERRQ(ierr);
     ierr = MatCheckNullSpaceMat(A,R,PETSC_SMALL);CHKERRQ(ierr);
   }
 

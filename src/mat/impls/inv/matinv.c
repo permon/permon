@@ -55,7 +55,7 @@ static PetscErrorCode MatInvGetRegularizationType_Inv(Mat imat,MatRegularization
 #if defined(PETSC_HAVE_MUMPS)
 static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
 {
-  Mat Kl=NULL,R=NULL,Rl=NULL,F=NULL;
+  Mat K=NULL,Kl=NULL,R=NULL,Rl=NULL,F=NULL;
   KSP ksp;
   PC pc;
   PetscInt m,M,mm = 0,defect;
@@ -74,11 +74,10 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
   TRY( MatPrintInfo(Kl) );
   TRY( PetscObjectGetComm((PetscObject)Kl,&blockComm) );
 
+  TRY( MatInvGetMat(imat,&K) );
   {
-    Mat K;
     PetscMPIInt commsize;
 
-    TRY( MatInvGetMat(imat,&K) );
     TRY( MPI_Comm_size(blockComm,&commsize) );
     if (K != Kl) {
       TRY( PetscObjectTypeCompare((PetscObject)K,MATBLOCKDIAG,&blockdiag) );
@@ -158,6 +157,7 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
   if (blockdiag) {
     TRY( MatCreateBlockDiag(PETSC_COMM_WORLD,Rl,&R) );
     TRY( FllopPetscObjectInheritName((PetscObject)Rl,(PetscObject)R,"_loc") );
+    TRY( MatSetNullSpaceMat(Kl,Rl) );
     TRY( MatDestroy(&Rl) );
   } else if (defect && mumps->petsc_size > 1) {
     IS isol_is;
@@ -174,7 +174,7 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
   TRY( MatAssemblyEnd(R,MAT_FINAL_ASSEMBLY) );
   TRY( PetscObjectSetName((PetscObject)R,"R") );
   TRY( MatPrintInfo(R) );
-  TRY( MatInvSetNullSpace(imat,R) );
+  TRY( MatSetNullSpaceMat(K,R) );
   TRY( MatDestroy(&R) );
   PetscFunctionReturnI(0);
 }
@@ -186,38 +186,6 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
   PetscFunctionReturnI(0);
 }
 #endif
-
-#undef __FUNCT__
-#define __FUNCT__ "MatInvSetNullSpace_Inv"
-static PetscErrorCode MatInvSetNullSpace_Inv(Mat imat,Mat R)
-{
-  Mat_Inv        *inv = (Mat_Inv*)imat->data;
-  
-  PetscFunctionBegin;
-  if (R != inv->R) {
-    if (R) {
-#if defined(PETSC_USE_DEBUG)
-      TRY( MatCheckNullSpaceMat(inv->A, R, PETSC_SMALL) );
-#endif
-      TRY( PetscObjectReference((PetscObject)R) );
-    }
-    TRY( MatDestroy(&inv->R) );
-    inv->R = R;
-    inv->setupcalled = PETSC_FALSE;
-  }
-  PetscFunctionReturn(0);
-}
-
-#undef __FUNCT__
-#define __FUNCT__ "MatInvGetNullSpace_Inv"
-static PetscErrorCode MatInvGetNullSpace_Inv(Mat imat,Mat *R)
-{
-  Mat_Inv        *inv = (Mat_Inv*)imat->data;
-  
-  PetscFunctionBegin;
-  *R = inv->R;
-  PetscFunctionReturn(0);
-}
 
 #undef __FUNCT__  
 #define __FUNCT__ "MatInvSetTolerances_Inv"
@@ -407,11 +375,13 @@ static PetscErrorCode MatInvReset_Inv(Mat imat)
 static PetscErrorCode MatInvSetUp_Inv(Mat imat)
 {
   Mat_Inv *inv = (Mat_Inv*) imat->data;
+  Mat     R;
 
   FllopTracedFunctionBegin;
+  TRY( MatGetNullSpaceMat(inv->A, &R) );
   if (inv->setupcalled) PetscFunctionReturn(0);
   if (inv->type == MAT_INV_BLOCKDIAG && inv->redundancy > 0) FLLOP_SETERRQ(PetscObjectComm((PetscObject)imat),PETSC_ERR_SUP, "Cannot use MAT_INV_BLOCKDIAG and redundancy at the same time");
-  if (inv->regtype && !inv->R) FLLOP_SETERRQ(PetscObjectComm((PetscObject)imat),PETSC_ERR_ARG_WRONGSTATE,"regularization is requested but nullspace is not set");
+  if (inv->regtype && !R) FLLOP_SETERRQ(PetscObjectComm((PetscObject)imat),PETSC_ERR_ARG_WRONGSTATE,"regularization is requested but nullspace is not set");
 
   FllopTraceBegin;
   TRY( PetscLogEventBegin(Mat_Inv_SetUp,imat,0,0,0) );
@@ -432,6 +402,7 @@ static PetscErrorCode MatInvSetUp_Inv(Mat imat)
 static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
 {
   Mat_Inv *inv = (Mat_Inv*) imat->data;
+  Mat R;
   Mat Areg,A_inner;
   PC pc;
   PetscBool factorizable,parallel,flg,own;
@@ -441,9 +412,10 @@ static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
   PetscMPIInt size;
 
   FllopTracedFunctionBegin;
+  TRY( MatGetNullSpaceMat(inv->A, &R) );
   if (inv->inner_objects_created) PetscFunctionReturn(0);
   if (inv->type == MAT_INV_BLOCKDIAG && inv->redundancy > 0) FLLOP_SETERRQ(PetscObjectComm((PetscObject)imat),PETSC_ERR_SUP, "Cannot use MAT_INV_BLOCKDIAG and redundancy at the same time");
-  if (inv->regtype && !inv->R) FLLOP_SETERRQ(PetscObjectComm((PetscObject)imat),PETSC_ERR_ARG_WRONGSTATE,"regularization is requested but nullspace is not set");
+  if (inv->regtype && !R) FLLOP_SETERRQ(PetscObjectComm((PetscObject)imat),PETSC_ERR_ARG_WRONGSTATE,"regularization is requested but nullspace is not set");
   TRY( MPI_Comm_size(PetscObjectComm((PetscObject)imat),&size) );
 
   FllopTraceBegin;
@@ -454,7 +426,8 @@ static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
   }
 
   own = ((PetscObject)inv->A)->refct == 1 ? PETSC_TRUE : PETSC_FALSE;
-  TRY( MatRegularize(inv->A,inv->R,inv->regtype,&Areg) );
+  //TODO MatRegularize can take R directly from A
+  TRY( MatRegularize(inv->A,R,inv->regtype,&Areg) );
   TRY( PetscOptionsHasName(NULL,((PetscObject)imat)->prefix,"-mat_inv_mat_type",&flg) );
   if (inv->setfromoptionscalled && flg && inv->A == Areg && !own) {
     TRY( PetscInfo(fllop,"duplicating inner matrix to allow to apply options only internally\n") );
@@ -793,7 +766,6 @@ PetscErrorCode MatDestroy_Inv(Mat imat)
   PetscFunctionBegin;
   inv = (Mat_Inv*) imat->data;
   TRY( MatDestroy(&inv->A) );
-  TRY( MatDestroy(&inv->R) );
   TRY( KSPDestroy(&inv->ksp) );
   TRY( PetscFree(inv) );
   PetscFunctionReturn(0);
@@ -962,8 +934,6 @@ FLLOP_EXTERN PetscErrorCode MatCreate_Inv(Mat imat)
   TRY( PetscObjectComposeFunction((PetscObject)imat,"MatInvSetUp_Inv_C",MatInvSetUp_Inv) );
   TRY( PetscObjectComposeFunction((PetscObject)imat,"MatInvGetRegularizationType_Inv_C",MatInvGetRegularizationType_Inv) );
   TRY( PetscObjectComposeFunction((PetscObject)imat,"MatInvSetRegularizationType_Inv_C",MatInvSetRegularizationType_Inv) );
-  TRY( PetscObjectComposeFunction((PetscObject)imat,"MatInvGetNullSpace_Inv_C",MatInvGetNullSpace_Inv) );
-  TRY( PetscObjectComposeFunction((PetscObject)imat,"MatInvSetNullSpace_Inv_C",MatInvSetNullSpace_Inv) );
   TRY( PetscObjectComposeFunction((PetscObject)imat,"MatInvComputeNullSpace_Inv_C",MatInvComputeNullSpace_Inv) );
   TRY( PetscObjectComposeFunction((PetscObject)imat,"MatInvSetTolerances_Inv_C",MatInvSetTolerances_Inv) );
   TRY( PetscObjectComposeFunction((PetscObject)imat,"MatInvGetKSP_Inv_C",MatInvGetKSP_Inv) );
@@ -980,7 +950,6 @@ FLLOP_EXTERN PetscErrorCode MatCreate_Inv(Mat imat)
 
   /* set default values of inner inv */
   inv->A                            = NULL;
-  inv->R                            = NULL;
   inv->setfromoptionscalled         = PETSC_FALSE;
   inv->setupcalled                  = PETSC_FALSE;
   inv->inner_objects_created        = PETSC_FALSE;
@@ -1088,28 +1057,6 @@ PetscErrorCode MatInvComputeNullSpace(Mat imat)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
   TRY( PetscTryMethod(imat,"MatInvComputeNullSpace_Inv_C",(Mat),(imat)) );
-  PetscFunctionReturn(0);
-}
-
-#undef __FUNCT__
-#define __FUNCT__ "MatInvSetNullSpace"
-PetscErrorCode MatInvSetNullSpace(Mat imat,Mat R)
-{
-  PetscFunctionBegin;
-  PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
-  if (R) PetscValidHeaderSpecific(R,MAT_CLASSID,2);
-  TRY( PetscTryMethod(imat,"MatInvSetNullSpace_Inv_C",(Mat,Mat),(imat,R)) );
-  PetscFunctionReturn(0);
-}
-
-#undef __FUNCT__
-#define __FUNCT__ "MatInvGetNullSpace"
-PetscErrorCode MatInvGetNullSpace(Mat imat,Mat *R)
-{
-  PetscFunctionBegin;
-  PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
-  PetscValidPointer(R,2);
-  TRY( PetscUseMethod(imat,"MatInvGetNullSpace_Inv_C",(Mat,Mat*),(imat,R)) );
   PetscFunctionReturn(0);
 }
 

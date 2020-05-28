@@ -78,7 +78,6 @@ FLLOP_EXTERN PetscErrorCode MatInvGetType(Mat imat, MatInvType *type);
 FLLOP_EXTERN PetscErrorCode MatInvGetRedundancy(Mat imat, PetscInt *red);
 FLLOP_EXTERN PetscErrorCode MatInvGetPsubcommType(Mat imat, PetscSubcommType *type);
 FLLOP_EXTERN PetscErrorCode MatInvGetRegularizationType(Mat imat,MatRegularizationType *type);
-FLLOP_EXTERN PetscErrorCode MatInvGetNullSpace(Mat imat,Mat *R);
 
 FLLOP_EXTERN PetscErrorCode MatInvSetMat(Mat imat, Mat A);
 FLLOP_EXTERN PetscErrorCode MatInvSetType(Mat imat, MatInvType type);
@@ -87,7 +86,6 @@ FLLOP_EXTERN PetscErrorCode MatInvSetRedundancy(Mat imat, PetscInt red);
 FLLOP_EXTERN PetscErrorCode MatInvSetPsubcommType(Mat imat, PetscSubcommType type);
 FLLOP_EXTERN PetscErrorCode MatInvSetRegularizationType(Mat imat,MatRegularizationType type);
 FLLOP_EXTERN PetscErrorCode MatInvComputeNullSpace(Mat imat);
-FLLOP_EXTERN PetscErrorCode MatInvSetNullSpace(Mat imat,Mat R);
 
 FLLOP_EXTERN PetscErrorCode MatInvExplicitly(Mat imat, PetscBool transpose, MatReuse scall, Mat *imat_explicit);
 FLLOP_EXTERN PetscErrorCode MatInvReset(Mat imat);

@@ -983,7 +983,7 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
   R = NULL;
   TRY( QPGetOperatorNullSpace(qp,&R) );
   if (R) {
-    TRY( MatInvSetNullSpace(Kplus,R) );
+    TRY( MatSetNullSpaceMat(K,R) );
   } else {
     TRY( PetscInfo(qp,"null space matrix not set => using -qpt_dualize_Kplus_left and -regularize 0\n") );
     mp = PETSC_TRUE;
@@ -991,7 +991,7 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
     regType = MAT_REG_NONE;
     TRY( PetscInfo(qp,"null space matrix not set => trying to compute one\n") );
     TRY( MatInvComputeNullSpace(Kplus) );
-    TRY( MatInvGetNullSpace(Kplus,&R) );
+    TRY( MatGetNullSpaceMat(K,&R) );
     TRY( MatOrthColumns(R, MAT_ORTH_GS, MAT_ORTH_FORM_EXPLICIT, &R, NULL) );
     TRY( QPSetOperatorNullSpace(qp,R) );
   }

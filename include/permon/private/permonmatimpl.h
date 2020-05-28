@@ -5,7 +5,7 @@
 #include <permon/private/permonimpl.h>
 
 typedef struct {
-  Mat               A,R;
+  Mat               A;
   KSP               ksp, innerksp;
   PetscInt          redundancy;
   PetscSubcommType  psubcommType;
