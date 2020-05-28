@@ -50,14 +50,14 @@ static PetscErrorCode MatInvGetRegularizationType_Inv(Mat imat,MatRegularization
   PetscFunctionReturn(0);
 }
 
+//TODO MOVE THIS TO permonmatnullspace.c
+//TODO Passing the PC is awkward. We will want to avoid that but it needs deeper refactoring.
 #undef __FUNCT__
-#define __FUNCT__ "MatInvComputeNullSpace_Inv"
+#define __FUNCT__ "MatComputeNullSpaceMat"
 #if defined(PETSC_HAVE_MUMPS)
-static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
+PetscErrorCode MatComputeNullSpaceMat(Mat K, PC pc, MatOrthType orthType, MatOrthForm orthForm, Mat *R_new)
 {
-  Mat K=NULL,Kl=NULL,R=NULL,Rl=NULL,F=NULL;
-  KSP ksp;
-  PC pc;
+  Mat Kl=NULL,R=NULL,Rl=NULL,F=NULL;
   PetscInt m,M,mm = 0,defect;
   PetscBool flg,blockdiag = PETSC_FALSE;
   MatSolverType type;
@@ -66,34 +66,34 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
   MPI_Comm blockComm;
 
   PetscFunctionBeginI;
-  TRY( MatInvGetKSP(imat,&ksp) );
-  TRY( KSPGetPC(ksp,&pc) );
-  TRY( PCGetOperators(pc,&Kl,NULL) );
+  PetscValidHeaderSpecific(K,MAT_CLASSID,1);
+  if (pc) PetscValidHeaderSpecific(pc,PC_CLASSID,2);
+  TRY( PetscObjectTypeCompare((PetscObject)K,MATBLOCKDIAG,&blockdiag) );
+  if (blockdiag) {
+    TRY( MatGetDiagonalBlock(K,&Kl) );
+  } else {
+    Kl = K;
+  }
+  TRY( PetscObjectGetComm((PetscObject)Kl,&blockComm) );
   TRY( MatGetLocalSize(Kl,&m,NULL) );
   TRY( MatGetSize(Kl,&M,NULL) );
-  TRY( MatPrintInfo(Kl) );
-  TRY( PetscObjectGetComm((PetscObject)Kl,&blockComm) );
-
-  TRY( MatInvGetMat(imat,&K) );
-  {
-    PetscMPIInt commsize;
-
-    TRY( MPI_Comm_size(blockComm,&commsize) );
-    if (K != Kl) {
-      TRY( PetscObjectTypeCompare((PetscObject)K,MATBLOCKDIAG,&blockdiag) );
-      FLLOP_ASSERT(blockdiag, "K should be blockdiag in this case");
-      FLLOP_ASSERT(commsize==1, "Kl should be serial");
-    }
+  if (pc) {
+    Mat Kl_pc;
+    TRY( PCGetOperators(pc,&Kl_pc,NULL) );
+    if (Kl != Kl_pc) SETERRQ(blockComm, PETSC_ERR_ARG_WRONG, "the passed preconditioner must contain the local block");
   }
-  
+
   if (Kl->spd_set && Kl->spd) {
     defect = 0;
     mm = m;
   } else {
     /* MUMPS matrix type (sym) is set to 2 automatically (see MatGetFactor_aij_mumps). */
-    TRY( PCFactorGetMatSolverType(pc,&type) );
-    TRY( PetscStrcmp(type,MATSOLVERMUMPS,&flg) ); 
-    if (flg) TRY( PetscObjectTypeCompare((PetscObject)pc,PCCHOLESKY,&flg) );
+    flg = PETSC_FALSE;
+    if (pc) {
+      TRY( PCFactorGetMatSolverType(pc,&type) );
+      TRY( PetscStrcmp(type,MATSOLVERMUMPS,&flg) );
+      if (flg) TRY( PetscObjectTypeCompare((PetscObject)pc,PCCHOLESKY,&flg) );
+    }
     /* TODO We need to call PCSetUP() (which does the factorization) before being able to call PCFactorGetMatrix().
        Maybe we could do something on the PETSc side to overcome this. */
     if (flg) {
@@ -106,7 +106,7 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
       TRY( PCFactorGetMatrix(pc,&F) );
       mumps =(Mat_MUMPS*)F->data;
     } else {
-      TRY( PetscPrintf(PetscObjectComm((PetscObject)imat), "WARNING: Performing extra factorization with MUMPS Cholesky just for nullspace detection. Avoid this by setting MUMPS Cholesky as MATINV solver.\n") );
+      if (pc) TRY( PetscPrintf(PetscObjectComm((PetscObject)K), "WARNING: Performing extra factorization with MUMPS Cholesky just for nullspace detection. Avoid this by setting MUMPS Cholesky as MATINV solver.\n") );
       TRY( MatGetFactor(Kl,MATSOLVERMUMPS,MAT_FACTOR_CHOLESKY,&F) );
       TRY( MatMumpsSetIcntl(F,24,1) ); /* null pivot detection */
       TRY( MatMumpsSetCntl(F,3,null_pivot_threshold) ); /* null pivot threshold */
@@ -172,14 +172,14 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
   }
   TRY( MatAssemblyBegin(R,MAT_FINAL_ASSEMBLY) );
   TRY( MatAssemblyEnd(R,MAT_FINAL_ASSEMBLY) );
+  //TODO mem leak?
+  TRY( MatOrthColumns(R, orthType, orthForm, &R, NULL) );
   TRY( PetscObjectSetName((PetscObject)R,"R") );
-  TRY( MatPrintInfo(R) );
-  TRY( MatSetNullSpaceMat(K,R) );
-  TRY( MatDestroy(&R) );
+  *R_new = R;
   PetscFunctionReturnI(0);
 }
 #else
-static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
+PetscErrorCode MatComputeNullSpaceMat(Mat K, PC pc, MatOrthType orthType, MatOrthForm orthForm, Mat *R_new)
 {
   PetscFunctionBeginI;
   FLLOP_SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"MUMPS library is currently needed for nullspace computation");
@@ -934,7 +934,6 @@ FLLOP_EXTERN PetscErrorCode MatCreate_Inv(Mat imat)
   TRY( PetscObjectComposeFunction((PetscObject)imat,"MatInvSetUp_Inv_C",MatInvSetUp_Inv) );
   TRY( PetscObjectComposeFunction((PetscObject)imat,"MatInvGetRegularizationType_Inv_C",MatInvGetRegularizationType_Inv) );
   TRY( PetscObjectComposeFunction((PetscObject)imat,"MatInvSetRegularizationType_Inv_C",MatInvSetRegularizationType_Inv) );
-  TRY( PetscObjectComposeFunction((PetscObject)imat,"MatInvComputeNullSpace_Inv_C",MatInvComputeNullSpace_Inv) );
   TRY( PetscObjectComposeFunction((PetscObject)imat,"MatInvSetTolerances_Inv_C",MatInvSetTolerances_Inv) );
   TRY( PetscObjectComposeFunction((PetscObject)imat,"MatInvGetKSP_Inv_C",MatInvGetKSP_Inv) );
   TRY( PetscObjectComposeFunction((PetscObject)imat,"MatInvGetRegularizedMat_Inv_C",MatInvGetRegularizedMat_Inv) );
@@ -1047,16 +1046,6 @@ PetscErrorCode MatInvGetRegularizationType(Mat imat,MatRegularizationType *type)
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
   PetscValidPointer(type,2);
   TRY( PetscUseMethod(imat,"MatInvGetRegularizationType_Inv_C",(Mat,MatRegularizationType*),(imat,type)) );
-  PetscFunctionReturn(0);
-}
-
-#undef __FUNCT__
-#define __FUNCT__ "MatInvComputeNullSpace"
-PetscErrorCode MatInvComputeNullSpace(Mat imat)
-{
-  PetscFunctionBegin;
-  PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
-  TRY( PetscTryMethod(imat,"MatInvComputeNullSpace_Inv_C",(Mat),(imat)) );
   PetscFunctionReturn(0);
 }
 

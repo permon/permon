@@ -985,14 +985,17 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
   if (R) {
     TRY( MatSetNullSpaceMat(K,R) );
   } else {
+    PC pc;
+
     TRY( PetscInfo(qp,"null space matrix not set => using -qpt_dualize_Kplus_left and -regularize 0\n") );
     mp = PETSC_TRUE;
     true_mp = PETSC_TRUE;
     regType = MAT_REG_NONE;
     TRY( PetscInfo(qp,"null space matrix not set => trying to compute one\n") );
-    TRY( MatInvComputeNullSpace(Kplus) );
-    TRY( MatGetNullSpaceMat(K,&R) );
-    TRY( MatOrthColumns(R, MAT_ORTH_GS, MAT_ORTH_FORM_EXPLICIT, &R, NULL) );
+    TRY( MatInvGetPC(Kplus,&pc) );
+    //TODO should the orthonormalization be specified from options?
+    TRY( MatComputeNullSpaceMat(K,pc,MAT_ORTH_GS,MAT_ORTH_FORM_EXPLICIT,&R) );
+    TRY( MatSetNullSpaceMat(K,R) );
     TRY( QPSetOperatorNullSpace(qp,R) );
   }
   TRY( MatInvSetRegularizationType(Kplus,regType) );
