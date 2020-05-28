@@ -197,7 +197,7 @@ static PetscErrorCode MatInvSetNullSpace_Inv(Mat imat,Mat R)
   if (R != inv->R) {
     if (R) {
 #if defined(PETSC_USE_DEBUG)
-      TRY( MatCheckNullSpace(inv->A, R, PETSC_SMALL) );
+      TRY( MatCheckNullSpaceMat(inv->A, R, PETSC_SMALL) );
 #endif
       TRY( PetscObjectReference((PetscObject)R) );
     }

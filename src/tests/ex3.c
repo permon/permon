@@ -35,7 +35,7 @@ int main(int argc,char **args)
   {
     Mat R;
     ierr = MatInvGetNullSpace(Ainv,&R);CHKERRQ(ierr);
-    ierr = MatCheckNullSpace(A,R,PETSC_SMALL);CHKERRQ(ierr);
+    ierr = MatCheckNullSpaceMat(A,R,PETSC_SMALL);CHKERRQ(ierr);
   }
 
   ierr = MatDestroy(&A);CHKERRQ(ierr);

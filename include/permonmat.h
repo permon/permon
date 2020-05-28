@@ -148,7 +148,6 @@ FLLOP_EXTERN PetscErrorCode PermonMatConvertBlocks(Mat A, MatType newtype,MatReu
 FLLOP_EXTERN PetscErrorCode PermonMatCopyProperties(Mat A,Mat B);
 FLLOP_EXTERN PetscErrorCode PermonMatSetFromOptions(Mat B);
 FLLOP_EXTERN PetscErrorCode PermonMatConvertInplace(Mat B, MatType type);
-FLLOP_EXTERN PetscErrorCode MatCheckNullSpace(Mat K,Mat R,PetscReal tol);
 FLLOP_EXTERN PetscErrorCode MatRedistributeRows(Mat mat_from,IS rowperm,PetscInt base,Mat mat_to);
 
 /* FETI UTILITIES */
@@ -160,5 +159,8 @@ typedef enum {MAT_ORTH_FORM_IMPLICIT=0, MAT_ORTH_FORM_EXPLICIT=1} MatOrthForm;
 FLLOP_EXTERN const char *MatOrthTypes[], *MatOrthForms[];
 FLLOP_EXTERN PetscErrorCode MatOrthColumns(Mat mat, MatOrthType type, MatOrthForm form, Mat *matOrth, Mat *T);
 FLLOP_EXTERN PetscErrorCode MatOrthRows(Mat mat, MatOrthType type, MatOrthForm form, Mat *matOrth, Mat *T);
+
+/* Null Space */
+FLLOP_EXTERN PetscErrorCode MatCheckNullSpaceMat(Mat K,Mat R,PetscReal tol);
 
 #endif

@@ -1218,7 +1218,7 @@ PetscErrorCode QPSetOperatorNullSpace(QP qp,Mat R)
   if (R == qp->R) PetscFunctionReturn(0);
   if (R) {
 #if defined(PETSC_USE_DEBUG)
-    TRY( MatCheckNullSpace(qp->A, R, PETSC_SMALL) );
+    TRY( MatCheckNullSpaceMat(qp->A, R, PETSC_SMALL) );
 #endif
     TRY( PetscObjectReference((PetscObject)R) );
   }
