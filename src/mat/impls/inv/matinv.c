@@ -166,6 +166,7 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
     TRY( ISCreateGeneral(PETSC_COMM_SELF,mm,mumps->id.isol_loc,PETSC_USE_POINTER,&isol_is) );
     TRY( MatRedistributeRows(Rl,isol_is,1,R) ); /* MUMPS uses 1-based numbering */
     TRY( MatDestroy(&Rl) );
+    TRY( ISDestroy(&isol_is) );
   } else {
     R = Rl;
   }

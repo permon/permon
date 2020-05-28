@@ -1266,8 +1266,8 @@ PetscErrorCode MatRedistributeRows(Mat mat_from,IS rowperm,PetscInt base,Mat mat
   ierr = ISCreateGeneral(PETSC_COMM_SELF,m_from*N,idxx,PETSC_COPY_VALUES,&is_to);CHKERRQ(ierr);
   ierr = VecScatterCreate(v_from,NULL,v_to,is_to,&sc);CHKERRQ(ierr);
   ierr = VecScatterBegin(sc,v_from,v_to,INSERT_VALUES,SCATTER_FORWARD);CHKERRQ(ierr);
-  ierr = ISDestroy(&is_to);CHKERRQ(ierr);
   ierr = VecScatterEnd(sc,v_from,v_to,INSERT_VALUES,SCATTER_FORWARD);CHKERRQ(ierr);
+  ierr = ISDestroy(&is_to);CHKERRQ(ierr);
   ierr = VecScatterDestroy(&sc);CHKERRQ(ierr);
 
   TRY( MatAssemblyBegin(mat_to,MAT_FINAL_ASSEMBLY) );
