@@ -1,20 +1,13 @@
-  last QPSSolve CONVERGED due to CONVERGED_RTOL, KSPReason=2, required 1 iterations
-    Total number of inner iterations 46
-      last QPSSolve CONVERGED due to CONVERGED_HAPPY_BREAKDOWN, KSPReason=8, required 46 iterations
-        number of Hessian multiplications 74
-        number of CG steps 18
-        number of expansion steps 27
-        number of proportioning steps 1
+  last QPSSolve CONVERGED due to CONVERGED_RTOL, KSPReason=2, required 44 iterations
+    number of Hessian multiplications 71
+    number of CG steps 17
+    number of expansion steps 26
+    number of proportioning steps 1
 r = ||A*x - b - lambda_lb|| = 0.00e+00    rO/||b|| = 0.00e+00
 r = ||min(x-lb,0)||      = 0.00e+00    r/||b|| = 0.00e+00
-r = ||min(lambda_lb,0)|| = 8.96e-05    r/||b|| = 6.97e-06
-r = |lambda_lb'*(lb-x)|  = 1.02e-07    r/||b|| = 7.91e-09
-r = ||A*x - b + (B'*lambda) - lambda_lb|| = 0.00e+00    rO/||b|| = 0.00e+00
-r = ||BE*x||             = 0.00e+00    r/||b|| = 0.00e+00
-r = ||min(x-lb,0)||      = 0.00e+00    r/||b|| = 0.00e+00
-r = ||min(lambda_lb,0)|| = 8.96e-05    r/||b|| = 6.97e-06
-r = |lambda_lb'*(lb-x)|  = 1.02e-07    r/||b|| = 7.91e-09
-r = ||A*x - b + B'*lambda|| = 1.97e-15    rO/||b|| = 6.50e-14
-r = ||max(BI*x-cI,0)||   = 8.96e-05    r/||b|| = 2.96e-03
+r = ||min(lambda_lb,0)|| = 8.92e-05    r/||b|| = 6.94e-06
+r = |lambda_lb'*(lb-x)|  = 1.03e-07    r/||b|| = 8.03e-09
+r = ||A*x - b + B'*lambda|| = 1.88e-15    rO/||b|| = 6.20e-14
+r = ||max(BI*x-cI,0)||   = 8.92e-05    r/||b|| = 2.94e-03
 r = ||min(lambda_I,0)||  = 0.00e+00    r/||b|| = 0.00e+00
-r = |lambda_I'*(BI*x-cI)|= 1.02e-07    r/||b|| = 3.36e-06
+r = |lambda_I'*(BI*x-cI)|= 1.03e-07    r/||b|| = 3.41e-06
