@@ -107,7 +107,7 @@ PetscErrorCode MatComputeNullSpaceMat(Mat K, PC pc, MatOrthType orthType, MatOrt
       mumps =(Mat_MUMPS*)F->data;
       TRY( PetscObjectReference((PetscObject)F) );
     } else {
-      if (pc) TRY( PetscPrintf(PetscObjectComm((PetscObject)K), "WARNING: Performing extra factorization with MUMPS Cholesky just for nullspace detection. Avoid this by setting MUMPS Cholesky as MATINV solver.\n") );
+      if (pc) TRY( PetscInfo(K, "WARNING: Performing extra factorization with MUMPS Cholesky just for nullspace detection. Avoid this by setting MUMPS Cholesky as MATINV solver.\n") );
       TRY( MatGetFactor(Kl,MATSOLVERMUMPS,MAT_FACTOR_CHOLESKY,&F) );
       TRY( MatMumpsSetIcntl(F,24,1) ); /* null pivot detection */
       TRY( MatMumpsSetCntl(F,3,null_pivot_threshold) ); /* null pivot threshold */
