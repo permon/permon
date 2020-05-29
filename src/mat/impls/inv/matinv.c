@@ -52,28 +52,18 @@ static PetscErrorCode MatInvGetRegularizationType_Inv(Mat imat,MatRegularization
 
 //TODO MOVE THIS TO permonmatnullspace.c
 //TODO Passing the PC is awkward. We will want to avoid that but it needs deeper refactoring.
-#undef __FUNCT__
-#define __FUNCT__ "MatComputeNullSpaceMat"
 #if defined(PETSC_HAVE_MUMPS)
-PetscErrorCode MatComputeNullSpaceMat(Mat K, PC pc, MatOrthType orthType, MatOrthForm orthForm, Mat *R_new)
+static PetscErrorCode MatComputeNullSpaceMat_Default(Mat Kl, PC pc, MatOrthType orthType, MatOrthForm orthForm, Mat *R_new)
 {
-  Mat Kl=NULL,R=NULL,Rl=NULL,F=NULL;
+  Mat R=NULL,Rl=NULL,F=NULL;
   PetscInt m,M,mm = 0,defect;
-  PetscBool flg,blockdiag = PETSC_FALSE;
+  PetscBool flg;
   MatSolverType type;
   Mat_MUMPS *mumps = NULL;
   PetscReal null_pivot_threshold = -1e-8;
   MPI_Comm blockComm;
 
-  PetscFunctionBeginI;
-  PetscValidHeaderSpecific(K,MAT_CLASSID,1);
-  if (pc) PetscValidHeaderSpecific(pc,PC_CLASSID,2);
-  TRY( PetscObjectTypeCompare((PetscObject)K,MATBLOCKDIAG,&blockdiag) );
-  if (blockdiag) {
-    TRY( MatGetDiagonalBlock(K,&Kl) );
-  } else {
-    Kl = K;
-  }
+  PetscFunctionBegin;
   TRY( PetscObjectGetComm((PetscObject)Kl,&blockComm) );
   TRY( MatGetLocalSize(Kl,&m,NULL) );
   TRY( MatGetSize(Kl,&M,NULL) );
@@ -107,7 +97,7 @@ PetscErrorCode MatComputeNullSpaceMat(Mat K, PC pc, MatOrthType orthType, MatOrt
       mumps =(Mat_MUMPS*)F->data;
       TRY( PetscObjectReference((PetscObject)F) );
     } else {
-      if (pc) TRY( PetscInfo(K, "WARNING: Performing extra factorization with MUMPS Cholesky just for nullspace detection. Avoid this by setting MUMPS Cholesky as MATINV solver.\n") );
+      if (pc) TRY( PetscInfo(Kl, "WARNING: Performing extra factorization with MUMPS Cholesky just for nullspace detection. Avoid this by setting MUMPS Cholesky as MATINV solver.\n") );
       TRY( MatGetFactor(Kl,MATSOLVERMUMPS,MAT_FACTOR_CHOLESKY,&F) );
       TRY( MatMumpsSetIcntl(F,24,1) ); /* null pivot detection */
       TRY( MatMumpsSetCntl(F,3,null_pivot_threshold) ); /* null pivot threshold */
@@ -155,12 +145,7 @@ PetscErrorCode MatComputeNullSpaceMat(Mat K, PC pc, MatOrthType orthType, MatOrt
   }
 
   //TODO return just NULL if defect=0 ?
-  if (blockdiag) {
-    TRY( MatCreateBlockDiag(PETSC_COMM_WORLD,Rl,&R) );
-    TRY( FllopPetscObjectInheritName((PetscObject)Rl,(PetscObject)R,"_loc") );
-    TRY( MatSetNullSpaceMat(Kl,Rl) );
-    TRY( MatDestroy(&Rl) );
-  } else if (defect && mumps->petsc_size > 1) {
+  if (defect && mumps->petsc_size > 1) {
     IS isol_is;
     /* redistribute to get conforming local size */
     TRY( MatCreateDensePermon(blockComm,m,PETSC_DECIDE,M,defect,NULL,&R) );
@@ -177,16 +162,37 @@ PetscErrorCode MatComputeNullSpaceMat(Mat K, PC pc, MatOrthType orthType, MatOrt
   TRY( PetscObjectSetName((PetscObject)*R_new,"R") );
   TRY( MatDestroy(&R) );
   TRY( MatDestroy(&F) );
-  PetscFunctionReturnI(0);
+  PetscFunctionReturn(0);
 }
 #else
-PetscErrorCode MatComputeNullSpaceMat(Mat K, PC pc, MatOrthType orthType, MatOrthForm orthForm, Mat *R_new)
+static PetscErrorCode MatComputeNullSpaceMat_Default(Mat K, PC pc, MatOrthType orthType, MatOrthForm orthForm, Mat *R_new)
 {
-  PetscFunctionBeginI;
-  FLLOP_SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"MUMPS library is currently needed for nullspace computation");
-  PetscFunctionReturnI(0);
+  PetscFunctionBegin;
+  FLLOP_SETERRQ(PetscObjectComm((PetscObject)K),PETSC_ERR_SUP,"MUMPS library is currently needed for nullspace computation");
+  PetscFunctionReturn(0);
 }
 #endif
+
+#undef __FUNCT__
+#define __FUNCT__ "MatComputeNullSpaceMat"
+PetscErrorCode MatComputeNullSpaceMat(Mat K, PC pc, MatOrthType orthType, MatOrthForm orthForm, Mat *R_new)
+{
+  PetscErrorCode (*func)(Mat,PC,MatOrthType,MatOrthForm,Mat*)=NULL;
+
+  PetscFunctionBeginI;
+  PetscValidHeaderSpecific(K,MAT_CLASSID,1);
+  if (pc) PetscValidHeaderSpecific(pc,PC_CLASSID,2);
+  PetscValidLogicalCollectiveEnum(K,orthType,3);
+  PetscValidLogicalCollectiveEnum(K,orthForm,4);
+  PetscValidPointer(R_new,5);
+  TRY( PetscObjectQueryFunction((PetscObject)K,"MatComputeNullSpaceMat_C",&func) );
+  if (func) {
+    TRY( (*func)(K,pc,orthType,orthForm,R_new) );
+  } else {
+    TRY( MatComputeNullSpaceMat_Default(K,pc,orthType,orthForm,R_new) );
+  }
+  PetscFunctionReturnI(0);
+}
 
 #undef __FUNCT__  
 #define __FUNCT__ "MatInvSetTolerances_Inv"
