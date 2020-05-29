@@ -105,6 +105,7 @@ PetscErrorCode MatComputeNullSpaceMat(Mat K, PC pc, MatOrthType orthType, MatOrt
       TRY( PCSetUp(pc) );
       TRY( PCFactorGetMatrix(pc,&F) );
       mumps =(Mat_MUMPS*)F->data;
+      TRY( PetscObjectReference((PetscObject)F) );
     } else {
       if (pc) TRY( PetscPrintf(PetscObjectComm((PetscObject)K), "WARNING: Performing extra factorization with MUMPS Cholesky just for nullspace detection. Avoid this by setting MUMPS Cholesky as MATINV solver.\n") );
       TRY( MatGetFactor(Kl,MATSOLVERMUMPS,MAT_FACTOR_CHOLESKY,&F) );
@@ -172,10 +173,10 @@ PetscErrorCode MatComputeNullSpaceMat(Mat K, PC pc, MatOrthType orthType, MatOrt
   }
   TRY( MatAssemblyBegin(R,MAT_FINAL_ASSEMBLY) );
   TRY( MatAssemblyEnd(R,MAT_FINAL_ASSEMBLY) );
-  //TODO mem leak?
-  TRY( MatOrthColumns(R, orthType, orthForm, &R, NULL) );
-  TRY( PetscObjectSetName((PetscObject)R,"R") );
-  *R_new = R;
+  TRY( MatOrthColumns(R, orthType, orthForm, R_new, NULL) );
+  TRY( PetscObjectSetName((PetscObject)*R_new,"R") );
+  TRY( MatDestroy(&R) );
+  TRY( MatDestroy(&F) );
   PetscFunctionReturnI(0);
 }
 #else
