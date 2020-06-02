@@ -43,28 +43,26 @@ PetscErrorCode MatCopyNullSpaceMat(Mat mat1, Mat mat2)
 
 PetscErrorCode MatCheckNullSpaceMat(Mat K,Mat R,PetscReal tol)
 {
-  Vec d,x,y;
-  PetscReal normd,normy;
+  Vec Rx,x,y;
+  PetscReal normy;
 
   PetscFunctionBegin;
-  if (tol == PETSC_DECIDE || tol == PETSC_DEFAULT) tol = PETSC_SMALL;
+  if (tol == PETSC_DECIDE || tol == PETSC_DEFAULT) tol = 1e2*PETSC_SQRT_MACHINE_EPSILON;
   PetscValidHeaderSpecific(K,MAT_CLASSID,1);
   PetscValidHeaderSpecific(R,MAT_CLASSID,2);
   PetscValidLogicalCollectiveReal(K,tol,3);
   if (K->cmap->N != R->rmap->N) SETERRQ2(PetscObjectComm((PetscObject)K),PETSC_ERR_ARG_SIZ,"non-conforming global size of K and R: %D != %D",K->cmap->N,R->rmap->N);
   if (K->cmap->n != R->rmap->n) SETERRQ2(PETSC_COMM_SELF,PETSC_ERR_ARG_SIZ,"non-conforming local size of K and R: %D != %D",K->cmap->n,R->rmap->n);
 
-  TRY( MatCreateVecs(K,&d,&y) );
-  TRY( MatCreateVecs(R,&x,NULL) );
-  TRY( MatGetDiagonal(K,d) );
-  TRY( VecNorm(d,NORM_2,&normd) );
-  TRY( VecSetRandom(x,NULL) );
-  TRY( MatMult(R,x,d) );
-  TRY( MatMult(K,d,y) );
+  TRY( MatCreateVecs(K,NULL,&y) );
+  TRY( MatCreateVecs(R,&x,&Rx) );
+  TRY( VecSet(x,1.0) );
+  TRY( MatMult(R,x,Rx) );
+  TRY( MatMult(K,Rx,y) );
   TRY( VecNorm(y,NORM_2,&normy) );
-  TRY( PetscInfo3(fllop,"||K*R*x|| = %.3e   ||diag(K)|| = %.3e    ||K*R*x|| / ||diag(K)|| = %.3e\n",normy,normd,normy/normd) );
-  FLLOP_ASSERT1(normy / normd < tol, "||K*R*x|| / ||diag(K)|| < %.1e", tol);
-  TRY( VecDestroy(&d) );
+  TRY( PetscInfo1(K,"||K*R*x|| = %.3e   [x is vector of all ones]\n",normy) );
+  if (normy > tol) SETERRQ2(PetscObjectComm((PetscObject)K), PETSC_ERR_ARG_WRONG, "R is unlikely to be nullspace of K, ||K*R*e|| = %.3e is greater than tolerance %.3e", normy, tol);
+  TRY( VecDestroy(&Rx) );
   TRY( VecDestroy(&x) );
   TRY( VecDestroy(&y) );
   PetscFunctionReturn(0);
