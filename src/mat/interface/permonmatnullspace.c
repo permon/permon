@@ -9,8 +9,11 @@ PetscErrorCode MatSetNullSpaceMat(Mat mat, Mat R)
   PetscValidHeaderSpecific(mat,MAT_CLASSID,1);
 #if defined(PETSC_USE_DEBUG)
   if (R) {
+    PetscBool flg;
+
     PetscValidHeaderSpecific(R,MAT_CLASSID,2);
-    TRY( MatCheckNullSpaceMat(mat, R, PETSC_DEFAULT) );
+    TRY( MatCheckNullSpaceMat(mat, R, PETSC_DEFAULT, &flg) );
+     if (!flg) SETERRQ(PetscObjectComm((PetscObject)mat), PETSC_ERR_ARG_WRONG, "R is unlikely to be nullspace of K. See -info output for details.");
   }
 #endif
   ierr = PetscObjectCompose((PetscObject)mat, "NullSpace_Mat", (PetscObject)R);CHKERRQ(ierr);
@@ -41,7 +44,7 @@ PetscErrorCode MatCopyNullSpaceMat(Mat mat1, Mat mat2)
   PetscFunctionReturn(0);
 }
 
-PetscErrorCode MatCheckNullSpaceMat(Mat K,Mat R,PetscReal tol)
+PetscErrorCode MatCheckNullSpaceMat(Mat K,Mat R,PetscReal tol,PetscBool *valid)
 {
   Vec Rx,x,y;
   PetscReal normy;
@@ -61,7 +64,8 @@ PetscErrorCode MatCheckNullSpaceMat(Mat K,Mat R,PetscReal tol)
   TRY( MatMult(K,Rx,y) );
   TRY( VecNorm(y,NORM_2,&normy) );
   TRY( PetscInfo1(K,"||K*R*x|| = %.3e   [x is vector of all ones]\n",normy) );
-  if (normy > tol) SETERRQ2(PetscObjectComm((PetscObject)K), PETSC_ERR_ARG_WRONG, "R is unlikely to be nullspace of K, ||K*R*e|| = %.3e is greater than tolerance %.3e", normy, tol);
+  *valid = (normy > tol) ? PETSC_FALSE : PETSC_TRUE;
+  if (!*valid) PetscInfo2(K, "R is unlikely to be nullspace of K, ||K*R*e|| = %.3e is greater than tolerance %.3e", normy, tol);
   TRY( VecDestroy(&Rx) );
   TRY( VecDestroy(&x) );
   TRY( VecDestroy(&y) );
