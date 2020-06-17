@@ -191,6 +191,14 @@ PetscErrorCode MatComputeNullSpaceMat(Mat K, PC pc, MatOrthType orthType, MatOrt
   } else {
     TRY( MatComputeNullSpaceMat_Default(K,pc,orthType,orthForm,R_new) );
   }
+#if defined(PETSC_USE_DEBUG)
+  if (*R_new) {
+    PetscBool flg;
+
+    TRY( MatCheckNullSpaceMat(K, *R_new, PETSC_DEFAULT, &flg) );
+     if (!flg) SETERRQ(PetscObjectComm((PetscObject)K), PETSC_ERR_PLIB, "Computed R is unlikely to be nullspace of K. See -info output for details.");
+  }
+#endif
   PetscFunctionReturnI(0);
 }
 
