@@ -50,7 +50,7 @@ PetscErrorCode MatCheckNullSpaceMat(Mat K,Mat R,PetscReal tol,PetscBool *valid)
   PetscReal normy;
 
   PetscFunctionBegin;
-  if (tol == PETSC_DECIDE || tol == PETSC_DEFAULT) tol = 1e2*PETSC_SQRT_MACHINE_EPSILON;
+  if (tol == PETSC_DECIDE || tol == PETSC_DEFAULT) tol = PETSC_SQRT_MACHINE_EPSILON;
   PetscValidHeaderSpecific(K,MAT_CLASSID,1);
   PetscValidHeaderSpecific(R,MAT_CLASSID,2);
   PetscValidLogicalCollectiveReal(K,tol,3);
