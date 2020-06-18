@@ -996,6 +996,7 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
     //TODO should the orthonormalization be specified from options?
     TRY( MatComputeNullSpaceMat(K,pc,MAT_ORTH_GS,MAT_ORTH_FORM_EXPLICIT,&R) );
     TRY( MatSetNullSpaceMat(K,R) );
+    TRY( PetscObjectDereference((PetscObject)R) );
   }
   TRY( MatInvSetRegularizationType(Kplus,regType) );
   TRY( MatSetFromOptions(Kplus) );
