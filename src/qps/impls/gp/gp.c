@@ -436,7 +436,7 @@ PetscErrorCode QPSSolve_GP(QPS qps)
     }
 
     /* test the convergence of algorithm */
-    TRY( (*qps->convergencetest)(qps,qp,qps->iteration,qps->rnorm,&qps->reason,qps->cnvctx) );
+    TRY( (*qps->convergencetest)(qps,&qps->reason) );
     if (qps->reason != KSP_CONVERGED_ITERATING) break;
 
     /* compute steplength for descent direction */
