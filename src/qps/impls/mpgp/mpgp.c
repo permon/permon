@@ -854,6 +854,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
   mpgp->expproject           = PETSC_TRUE;
   mpgp->resetalpha           = PETSC_FALSE;
 
+  mpgp->fallback              = 10*PETSC_MACHINE_EPSILON;
   mpgp->fallback              = PETSC_FALSE;
   mpgp->fallback2              = PETSC_FALSE;
 

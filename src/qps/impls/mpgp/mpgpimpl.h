@@ -35,6 +35,7 @@ typedef struct {
   PetscBool                  resetalpha;
   PetscBool                  fallback;
   PetscBool                  fallback2;
+  PetscReal                  fallback_tol;
 } QPS_MPGP;
 
 #endif
