@@ -702,7 +702,19 @@ static PetscErrorCode MatProductNumeric_BlockDiag_Extension(Mat C)
     break;
   default: SETERRQ(PetscObjectComm((PetscObject)C),PETSC_ERR_SUP,"MATPRODUCT type is not supported");
   }
+  C->product = NULL;
   TRY( MatHeaderReplace(C,&new) );
+  C->product = product;
+  C->ops->productnumeric = MatProductNumeric_BlockDiag_Extension;
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "MatProductSymbolic_BlockDiag_Extension"
+static PetscErrorCode MatProductSymbolic_BlockDiag_Extension(Mat C) {
+
+  PetscFunctionBegin;
+  C->ops->productnumeric  = MatProductNumeric_BlockDiag_Extension;
   PetscFunctionReturn(0);
 }
 
@@ -711,8 +723,7 @@ static PetscErrorCode MatProductNumeric_BlockDiag_Extension(Mat C)
 static PetscErrorCode MatProductSetFromOptions_BlockDiag_Extension(Mat C) {
 
   PetscFunctionBegin;
-  C->ops->productsymbolic = MatProductSymbolic_NOP;
-  C->ops->productnumeric  = MatProductNumeric_BlockDiag_Extension;
+  C->ops->productsymbolic = MatProductSymbolic_BlockDiag_Extension;
   PetscFunctionReturn(0);
 }
 
@@ -1055,7 +1066,19 @@ static PetscErrorCode MatProductNumeric_Extension(Mat C)
     break;
   default: SETERRQ(PetscObjectComm((PetscObject)C),PETSC_ERR_SUP,"MATPRODUCT type is not supported");
   }
+  C->product = NULL;
   TRY( MatHeaderReplace(C,&new) );
+  C->product = product;
+  C->ops->productnumeric = MatProductNumeric_Extension;
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "MatProductSymbolic_Extension"
+PetscErrorCode MatProductSymbolic_Extension(Mat C)
+{
+  PetscFunctionBegin;
+  C->ops->productnumeric  = MatProductNumeric_Extension;
   PetscFunctionReturn(0);
 }
 
@@ -1063,8 +1086,7 @@ static PetscErrorCode MatProductNumeric_Extension(Mat C)
 #define __FUNCT__ "MatProductSetFromOptions_Extension"
 static PetscErrorCode MatProductSetFromOptions_Extension(Mat C) {
   PetscFunctionBegin;
-  C->ops->productsymbolic = MatProductSymbolic_NOP;
-  C->ops->productnumeric  = MatProductNumeric_Extension;
+  C->ops->productsymbolic = MatProductSymbolic_Extension;
   PetscFunctionReturn(0);
 }
 

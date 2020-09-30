@@ -350,7 +350,19 @@ static PetscErrorCode MatProductNumeric_BlockDiag_AIJ(Mat C)
     break;
   default: SETERRQ(PetscObjectComm((PetscObject)C),PETSC_ERR_SUP,"MATPRODUCT type is not supported");
   }
+  C->product = NULL;
   TRY( MatHeaderReplace(C,&new) );
+  C->product = product;
+  C->ops->productnumeric = MatProductNumeric_BlockDiag_AIJ;
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "MatProductSymbolic_BlockDiag_AIJ"
+static PetscErrorCode MatProductSymbolic_BlockDiag_AIJ(Mat C)
+{
+  PetscFunctionBegin;
+  C->ops->productnumeric  = MatProductNumeric_BlockDiag_AIJ;
   PetscFunctionReturn(0);
 }
 
@@ -359,8 +371,7 @@ static PetscErrorCode MatProductNumeric_BlockDiag_AIJ(Mat C)
 static PetscErrorCode MatProductSetFromOptions_BlockDiag_AIJ(Mat C)
 {
   PetscFunctionBegin;
-  C->ops->productsymbolic = MatProductSymbolic_NOP;
-  C->ops->productnumeric  = MatProductNumeric_BlockDiag_AIJ;
+  C->ops->productsymbolic = MatProductSymbolic_BlockDiag_AIJ;
   PetscFunctionReturn(0);
 }
 
@@ -381,7 +392,19 @@ static PetscErrorCode MatProductNumeric_BlockDiag(Mat C)
     break;
   default: SETERRQ(PetscObjectComm((PetscObject)C),PETSC_ERR_SUP,"MATPRODUCT type is not supported");
   }
+  C->product = NULL;
   TRY( MatHeaderReplace(C,&new) );
+  C->product = product;
+  C->ops->productnumeric = MatProductNumeric_BlockDiag;
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "MatProductSymbolic_BlockDiag"
+static PetscErrorCode MatProductSymbolic_BlockDiag(Mat C)
+{
+  PetscFunctionBegin;
+  C->ops->productnumeric  = MatProductNumeric_BlockDiag;
   PetscFunctionReturn(0);
 }
 
@@ -390,8 +413,7 @@ static PetscErrorCode MatProductNumeric_BlockDiag(Mat C)
 static PetscErrorCode MatProductSetFromOptions_BlockDiag(Mat C)
 {
   PetscFunctionBegin;
-  C->ops->productsymbolic = MatProductSymbolic_NOP;
-  C->ops->productnumeric  = MatProductNumeric_BlockDiag;
+  C->ops->productsymbolic = MatProductSymbolic_BlockDiag;
   PetscFunctionReturn(0);
 }
 
