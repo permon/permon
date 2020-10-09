@@ -479,7 +479,19 @@ static PetscErrorCode MatProductNumeric_NestPermon(Mat C)
     break;
   default: SETERRQ(PetscObjectComm((PetscObject)C),PETSC_ERR_SUP,"MATPRODUCT type is not supported");
   }
+  C->product = NULL;
   TRY( MatHeaderReplace(C,&new) );
+  C->product = product;
+  C->ops->productnumeric = MatProductNumeric_NestPermon;
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "MatProductSymbolic_NestPermon"
+static PetscErrorCode MatProductSymbolic_NestPermon(Mat C)
+{
+  PetscFunctionBegin;
+  C->ops->productnumeric  = MatProductNumeric_NestPermon;
   PetscFunctionReturn(0);
 }
 
@@ -488,8 +500,7 @@ static PetscErrorCode MatProductNumeric_NestPermon(Mat C)
 static PetscErrorCode MatProductSetFromOptions_NestPermon(Mat C)
 {
   PetscFunctionBegin;
-  C->ops->productsymbolic = MatProductSymbolic_NOP;
-  C->ops->productnumeric  = MatProductNumeric_NestPermon;
+  C->ops->productsymbolic = MatProductSymbolic_NestPermon;
   PetscFunctionReturn(0);
 }
 

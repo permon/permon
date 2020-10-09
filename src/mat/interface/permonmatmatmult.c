@@ -263,10 +263,3 @@ PetscErrorCode MatTransposeMatMultByColumns(Mat A, Mat B, PetscBool filter, Mat 
   PetscFunctionReturnI(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatProductSymbolic_NOP"
-PetscErrorCode MatProductSymbolic_NOP(Mat C)
-{
-  return 0;
-}
-
