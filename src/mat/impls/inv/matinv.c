@@ -132,12 +132,16 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
     /* inject matrix array as sol_loc */
     PetscCall(MatDenseGetArray(Rl,(MumpsScalar**)&array));
     if (mumps->petsc_size > 1) {
+      /* TODO fix lhrs for this case */
       mumps->id.sol_loc = array;
       if (!mumps->myid) {
         /* Define dummy rhs on the host otherwise MUMPS fails with INFOG(1)=-22,INFOG(2)=7 */
         PetscCall(PetscMalloc1(M,&mumps->id.rhs));
       }
-    } else mumps->id.rhs = array;
+    } else {
+      mumps->id.rhs = array;
+      mumps->id.lrhs = M;
+    }
     /* mumps->id.nrhs is reset by MatMatSolve_MUMPS()/MatSolve_MUMPS() */
     mumps->id.nrhs = defect;
     mumps->id.lrhs = (mumps->petsc_size > 1) ? M : mm;
