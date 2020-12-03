@@ -135,12 +135,16 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
     /* inject matrix array as sol_loc */
     TRY( MatDenseGetArray(Rl,(MumpsScalar**)&array) );
     if (mumps->petsc_size > 1) {
+      /* TODO fix lhrs for this case */
       mumps->id.sol_loc = array;
       if (!mumps->myid) {
         /* Define dummy rhs on the host otherwise MUMPS fails with INFOG(1)=-22,INFOG(2)=7 */
         TRY( PetscMalloc1(M,&mumps->id.rhs) );
       }
-    } else mumps->id.rhs = array;
+    } else {
+      mumps->id.rhs = array;
+      mumps->id.lrhs = M;
+    }
     /* mumps->id.nrhs is reset by MatMatSolve_MUMPS()/MatSolve_MUMPS() */
     mumps->id.nrhs = defect;
     TRY( MatMumpsSetIcntl(F,25,-1) ); /* compute complete null space */
