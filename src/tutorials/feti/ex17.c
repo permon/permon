@@ -872,7 +872,7 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
     ierr     = DMDestroy(dmSplit);CHKERRQ(ierr);
     *dmSplit = sdm;
     DMLabel label;
-    ierr = DMGetLabel(dm,labelName,&label);CHKERRQ(ierr);
+    ierr = DMGetLabel(sdm,labelName,&label);CHKERRQ(ierr);
     ierr = DMLabelView(label, PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
   }
   PetscFunctionReturn(0);
@@ -928,10 +928,10 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
   PetscFunctionBeginUser;
   ierr = CreateBoundaryMesh(comm,user,&boundary);CHKERRQ(ierr);
   DMLabel label;
-  ierr = DMGetLabel(boundary,"marker",&label);CHKERRQ(ierr);
-  ierr = DMLabelView(label, PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+  //ierr = DMGetLabel(boundary,"marker",&label);CHKERRQ(ierr);
+  //ierr = DMLabelView(label, PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
   ierr = DMPlexGenerate(boundary, NULL, PETSC_TRUE, dm);CHKERRQ(ierr);
-  ierr = MarkFractures(*dm);CHKERRQ(ierr);
+  //ierr = MarkFractures(*dm);CHKERRQ(ierr);
   ierr = DMSetFromOptions(*dm);CHKERRQ(ierr);
   //ierr = DMViewFromOptions(*dm, NULL, "-dm_view");CHKERRQ(ierr);
   //ierr = DMPlexCreateBoxMesh(comm, user->dim, user->simplex, user->cells, NULL, NULL, NULL, PETSC_TRUE, dm);CHKERRQ(ierr);
@@ -951,6 +951,7 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
     ierr = DMCreateLabel(*dm,"Faces");CHKERRQ(ierr);
   printf("abc\n");
     if (is) {
+    ierr = ISView(is,PETSC_VIEWER_STDOUT_SELF);CHKERRQ(ierr);
   printf("abc2\n");
       PetscInt        d, f, Nf;
       const PetscInt *faces;
@@ -970,6 +971,7 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
         PetscInt    b,v;
         PetscScalar *coords = NULL;
         PetscInt    Nv;
+        PetscBool   marked = PETSC_FALSE;
         /* Get closure of the facet (vertices in 2D, edges in 3D) */
         ierr = DMPlexVecGetClosure(cdm, cs, coordinates, faces[f], &csize, &coords);CHKERRQ(ierr);
         for (i=0; i<csize; i++) {
@@ -987,6 +989,7 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
             /* assuming [0,1]^dim */
             if (PetscAbs(faceCoord - b) < PETSC_SMALL) {
               ierr = DMSetLabelValue(*dm, "Faces", faces[f], d*2+b+1);CHKERRQ(ierr);
+              marked = PETSC_TRUE;
               printf("%d %d %d\n", b, f,d*2+b+1);
             }
           }
@@ -1000,6 +1003,25 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
     DMLabelView(label,PETSC_VIEWER_STDOUT_WORLD);
     ierr = DMPlexLabelComplete(*dm, label);CHKERRQ(ierr);
     DMLabelView(label,PETSC_VIEWER_STDOUT_WORLD);
+    DM subdm;
+    DMLabel labelfrac,labelb;
+    ierr = DMGetLabel(*dm, "marker", &labelfrac);CHKERRQ(ierr);
+    DMLabelView(labelfrac,PETSC_VIEWER_STDOUT_WORLD);
+    ierr = DMPlexCreateSubmesh(*dm,labelfrac,9,PETSC_FALSE,&subdm);CHKERRQ(ierr);
+    ierr = DMGetLabel(subdm, "marker", &labelb);CHKERRQ(ierr);
+    ierr = DMView(subdm,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+    ierr = DMViewFromOptions(subdm, NULL, "-dmx_view");CHKERRQ(ierr);
+    DMLabelView(labelb,PETSC_VIEWER_STDOUT_WORLD);
+  
+
+    ierr = DMPlexLabelCohesiveComplete(*dm, labelfrac,NULL,PETSC_FALSE,boundary);CHKERRQ(ierr);
+    DMLabelView(labelfrac,PETSC_VIEWER_STDOUT_WORLD);
+    exit(0);
+    //DM dmsplit;
+    //DMLabel labelsplit;
+    //ierr = DMPlexConstructCohesiveCells(*dm,labelfrac,labelsplit,&dmsplit);CHKERRQ(ierr);
+    //ierr = DMGetStratumIS(*dm, "Faces", 1,  &is);CHKERRQ(ierr);
+    //if (is) ierr = ISView(is,PETSC_VIEWER_STDOUT_SELF);CHKERRQ(ierr);
   }
   ierr = DMHasLabel(*dm, "fracture", &flg);CHKERRQ(ierr);
   if (!flg) printf("------ccc\n");
@@ -1017,12 +1039,6 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
       *dm  = pdm;
     }
   }
-  ierr = DMHasLabel(*dm, "fracture", &flg);CHKERRQ(ierr);
-  if (!flg) printf("------ddd\n");
-  /* duplicate vertices on fracture boundaries */
-  ierr = SplitFaces(dm,"fracture",user);CHKERRQ(ierr);
-  ierr = DMHasLabel(*dm, "fracture", &flg);CHKERRQ(ierr);
-  if (!flg) printf("-----eee\n");
 
   /* Convert DM type */
   ierr = PetscStrcmp(user->dmType, DMPLEX, &flg);CHKERRQ(ierr);
@@ -1043,9 +1059,17 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
 
   ierr = PetscObjectSetName((PetscObject) *dm, "Mesh");CHKERRQ(ierr);
   ierr = DMSetApplicationContext(*dm, user);CHKERRQ(ierr);
-  ierr = DMSetFromOptions(*dm);CHKERRQ(ierr);
+  ierr = DMSetFromOptions(*dm);CHKERRQ(ierr); /* refine,... */
+  ierr = DMHasLabel(*dm, "fracture", &flg);CHKERRQ(ierr);
+  if (!flg) printf("------ddd\n");
+  /* duplicate vertices on fracture boundaries */
+  DMView(*dm,PETSC_VIEWER_STDOUT_WORLD);
   ierr = DMViewFromOptions(*dm, NULL, "-dm_view");CHKERRQ(ierr);
-  exit(0);
+  ierr = SplitFaces(dm,"fracture",user);CHKERRQ(ierr);
+  DMView(*dm,PETSC_VIEWER_STDOUT_WORLD);
+  ierr = DMHasLabel(*dm, "fracture", &flg);CHKERRQ(ierr);
+  if (!flg) printf("-----eee\n");
+  ierr = DMViewFromOptions(*dm, NULL, "-dms_view");CHKERRQ(ierr);
   PetscFunctionReturn(0);
 }
 
