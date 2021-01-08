@@ -34,6 +34,8 @@ typedef struct {
   SolutionType solType;     /* Type of exact solution */
   /* Solver definition */
   PetscBool    useNearNullspace; /* Use the rigid body modes as a near nullspace for AMG */
+  PetscReal *fracCoord;
+  PetscInt nFrac;
 } AppCtx;
 
 static PetscErrorCode zero(PetscInt dim, PetscReal time, const PetscReal x[], PetscInt Nc, PetscScalar *u, void *ctx)
@@ -528,15 +530,15 @@ static PetscErrorCode CreateCubeBoundary(DM dm, const PetscReal lower[], const P
   PetscFunctionReturn(0);
 }
 
-static PetscErrorCode CreateSquareBoundary(DM dm, const PetscReal lower[], const PetscReal upper[], const PetscInt edges[])
+static PetscErrorCode CreateSquareBoundary(DM dm, const PetscReal lower[], const PetscReal upper[], const PetscInt edges[],PetscReal fracCoord[],PetscInt nFracs)
 {
-  const PetscInt numVertices    = (edges[0]+1)*(edges[1]+1)+6;
-  const PetscInt numEdges       = edges[0]*(edges[1]+1) + (edges[0]+1)*edges[1]+3;
+  const PetscInt numVertices    = (edges[0]+1)*(edges[1]+1)+nFracs*2;
+  const PetscInt numEdges       = edges[0]*(edges[1]+1) + (edges[0]+1)*edges[1]+nFracs;
   const char     *bdname = "marker"; /* only "marker" vertices are copied by all generators */
   Vec            coordinates;
   PetscSection   coordSection;
   PetscScalar    *coords;
-  PetscInt       coordSize;
+  PetscInt       i,coordSize;
   PetscMPIInt    rank;
   PetscInt       v, vx, vy;
   PetscErrorCode ierr;
@@ -574,31 +576,22 @@ static PetscErrorCode CreateSquareBoundary(DM dm, const PetscReal lower[], const
         printf("edge %d, cone %d %d\n",edge,cone[0],cone[1]);
       }
     }
+    /* fractures */
 		{
       //ierr = DMCreateLabel(dm,bdname);CHKERRQ(ierr);
-      PetscInt edge   = numEdges-3;
-      PetscInt vertex = numEdges+numVertices-6;
-      PetscInt cone[2];
-
-      cone[0] = vertex; cone[1] = vertex+1;
-      ierr    = DMPlexSetCone(dm, edge, cone);CHKERRQ(ierr);
-      ierr = DMSetLabelValue(dm,bdname,cone[0],9);
-      ierr = DMSetLabelValue(dm,bdname,cone[1],9);
-      printf("edge %d, cone %d %d\n",edge,cone[0],cone[1]);
-      edge   = numEdges-2;
-      vertex = numEdges+numVertices-4;
-      cone[0] = vertex; cone[1] = vertex+1;
-      ierr    = DMPlexSetCone(dm, edge, cone);CHKERRQ(ierr);
-      ierr = DMSetLabelValue(dm,bdname,cone[0],9);
-      ierr = DMSetLabelValue(dm,bdname,cone[1],9);
-      printf("edge %d, cone %d %d\n",edge,cone[0],cone[1]);
-      edge   = numEdges-1;
-      vertex = numEdges+numVertices-2;
-      cone[0] = vertex; cone[1] = vertex+1;
-      ierr    = DMPlexSetCone(dm, edge, cone);CHKERRQ(ierr);
-      ierr = DMSetLabelValue(dm,bdname,cone[0],9);
-      ierr = DMSetLabelValue(dm,bdname,cone[1],9);
-      printf("edge %d, cone %d %d\n",edge,cone[0],cone[1]);
+      PetscInt edge,vertex,cone[2];
+      edge   = numEdges-nFracs;
+      vertex = numEdges+numVertices-nFracs*2;
+      
+      for (i=0; i<nFracs; i++) {
+        cone[0] = vertex; cone[1] = vertex+1;
+        ierr    = DMPlexSetCone(dm, edge, cone);CHKERRQ(ierr);
+        ierr = DMSetLabelValue(dm,bdname,cone[0],9);
+        ierr = DMSetLabelValue(dm,bdname,cone[1],9);
+        printf("frac edge %d, cone %d %d\n",edge,cone[0],cone[1]);
+        vertex += 2;
+        edge   += 1;
+      }
     }
   }
   ierr = DMPlexSymmetrize(dm);CHKERRQ(ierr);
@@ -628,19 +621,12 @@ static PetscErrorCode CreateSquareBoundary(DM dm, const PetscReal lower[], const
       printf("%d\n",(vy*(edges[0]+1)+vx)*2);
     }
   }
-  printf("%d\n",2*numVertices);
-  coords[2*numVertices-12] = .5;
-  coords[2*numVertices-11] = .5;
-  coords[2*numVertices-10] = .3;
-  coords[2*numVertices-9] = .2;
-  coords[2*numVertices-8] = .2;
-  coords[2*numVertices-7] = .3;
-  coords[2*numVertices-6] = .6;
-  coords[2*numVertices-5] = .2;
-  coords[2*numVertices-4] = .4;
-  coords[2*numVertices-3] = .2;
-  coords[2*numVertices-2] = .4;
-  coords[2*numVertices-1] = .6;
+  /* Fracture coordiantes */
+  for (i=0; i<nFracs*2; i++) {
+    coords[2*(numVertices-nFracs+i)] = fracCoord[2*i];
+    coords[2*(numVertices-nFracs+i)+1] = fracCoord[2*i+1];
+    printf("%d coords %d, %f %f\n",i,2*(numVertices-nFracs+i),fracCoord[2*i],fracCoord[2*i+1]);
+  }
   ierr = VecRestoreArray(coordinates, &coords);CHKERRQ(ierr);
   ierr = DMSetCoordinatesLocal(dm, coordinates);CHKERRQ(ierr);
   ierr = VecDestroy(&coordinates);CHKERRQ(ierr);
@@ -655,12 +641,27 @@ static PetscErrorCode CreateBoundaryMesh(MPI_Comm comm, AppCtx *user, DM *bounda
   PetscReal      upp[3] = {1, 1, 1};
 
   PetscFunctionBeginUser;
+  /* TODO: generating func */
+  user->nFrac = 3;
+  ierr = PetscMalloc1(4*user->nFrac,&user->fracCoord);CHKERRQ(ierr);
+  user->fracCoord[0] = .5;
+  user->fracCoord[1] = .5;
+  user->fracCoord[2] = .3;
+  user->fracCoord[3] = .2;
+  user->fracCoord[4] = .2;
+  user->fracCoord[5] = .3;
+  user->fracCoord[6] = .6;
+  user->fracCoord[7] = .2;
+  user->fracCoord[8] = .4;
+  user->fracCoord[9] = .2;
+  user->fracCoord[10] = .4;
+  user->fracCoord[11] = .6;
   ierr = DMCreate(comm,boundary);CHKERRQ(ierr);
   ierr = DMSetType(*boundary, DMPLEX);CHKERRQ(ierr);
   ierr = DMSetDimension(*boundary,user->dim-1);CHKERRQ(ierr);
   ierr = DMSetCoordinateDim(*boundary,user->dim);CHKERRQ(ierr);
 	switch (user->dim) {
-		case 2: ierr = CreateSquareBoundary(*boundary,low,upp,fac);CHKERRQ(ierr);break;
+		case 2: ierr = CreateSquareBoundary(*boundary,low,upp,fac,user->fracCoord,user->nFrac);CHKERRQ(ierr);break;
 		case 3: ierr = CreateCubeBoundary(*boundary,low,upp,fac);CHKERRQ(ierr);break;
 	}
 		ierr = DMViewFromOptions(*boundary, NULL, "-dm_boundary_view");CHKERRQ(ierr);
