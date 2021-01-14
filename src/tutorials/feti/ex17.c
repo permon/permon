@@ -586,8 +586,8 @@ static PetscErrorCode CreateSquareBoundary(DM dm, const PetscReal lower[], const
       for (i=0; i<nFracs; i++) {
         cone[0] = vertex; cone[1] = vertex+1;
         ierr    = DMPlexSetCone(dm, edge, cone);CHKERRQ(ierr);
-        ierr = DMSetLabelValue(dm,bdname,cone[0],9);
-        ierr = DMSetLabelValue(dm,bdname,cone[1],9);
+        //ierr = DMSetLabelValue(dm,bdname,cone[0],9);
+        //ierr = DMSetLabelValue(dm,bdname,cone[1],9);
         printf("frac edge %d, cone %d %d\n",edge,cone[0],cone[1]);
         vertex += 2;
         edge   += 1;
@@ -623,8 +623,8 @@ static PetscErrorCode CreateSquareBoundary(DM dm, const PetscReal lower[], const
   }
   /* Fracture coordiantes */
   for (i=0; i<nFracs*2; i++) {
-    coords[2*(numVertices-nFracs+i)] = fracCoord[2*i];
-    coords[2*(numVertices-nFracs+i)+1] = fracCoord[2*i+1];
+    coords[2*(numVertices-2*nFracs+i)] = fracCoord[2*i];
+    coords[2*(numVertices-2*nFracs+i)+1] = fracCoord[2*i+1];
     printf("%d coords %d, %f %f\n",i,2*(numVertices-nFracs+i),fracCoord[2*i],fracCoord[2*i+1]);
   }
   ierr = VecRestoreArray(coordinates, &coords);CHKERRQ(ierr);
@@ -636,26 +636,26 @@ static PetscErrorCode CreateSquareBoundary(DM dm, const PetscReal lower[], const
 static PetscErrorCode CreateBoundaryMesh(MPI_Comm comm, AppCtx *user, DM *boundary)
 {
   PetscErrorCode ierr;
-  PetscInt       fac[3] = {1, 1, 1};
+  PetscInt       fac[3] = {3, 3, 1};
   PetscReal      low[3] = {0, 0, 0};
   PetscReal      upp[3] = {1, 1, 1};
 
   PetscFunctionBeginUser;
   /* TODO: generating func */
-  user->nFrac = 3;
+  user->nFrac = 1;
   ierr = PetscMalloc1(4*user->nFrac,&user->fracCoord);CHKERRQ(ierr);
   user->fracCoord[0] = .5;
   user->fracCoord[1] = .5;
   user->fracCoord[2] = .3;
   user->fracCoord[3] = .2;
-  user->fracCoord[4] = .2;
-  user->fracCoord[5] = .3;
-  user->fracCoord[6] = .6;
-  user->fracCoord[7] = .2;
-  user->fracCoord[8] = .4;
-  user->fracCoord[9] = .2;
-  user->fracCoord[10] = .4;
-  user->fracCoord[11] = .6;
+  //user->fracCoord[4] = .2;
+  //user->fracCoord[5] = .3;
+  //user->fracCoord[6] = .6;
+  //user->fracCoord[7] = .2;
+  //user->fracCoord[8] = .4;
+  //user->fracCoord[9] = .2;
+  //user->fracCoord[10] = .4;
+  //user->fracCoord[11] = .6;
   ierr = DMCreate(comm,boundary);CHKERRQ(ierr);
   ierr = DMSetType(*boundary, DMPLEX);CHKERRQ(ierr);
   ierr = DMSetDimension(*boundary,user->dim-1);CHKERRQ(ierr);
@@ -879,39 +879,67 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
   PetscFunctionReturn(0);
 }
 
-static PetscErrorCode MarkFractures(DM dm)
+static PetscErrorCode MarkVertices2D(DM dm, PetscInt nFrac,const PetscReal coord[], PetscReal eps)
+{
+  PetscInt          c, cdim, i, j, o, p, vStart, vEnd;
+  Vec               allCoordsVec;
+  const PetscScalar *allCoords;
+  PetscReal         area;
+  PetscErrorCode    ierr;
+
+  PetscFunctionBegin;
+  if (eps < 0) eps = PETSC_SQRT_MACHINE_EPSILON;
+  ierr = DMGetCoordinateDim(dm, &cdim);CHKERRQ(ierr);
+  ierr = DMGetCoordinatesLocal(dm, &allCoordsVec);CHKERRQ(ierr);
+  VecView(allCoordsVec,PETSC_VIEWER_STDOUT_WORLD);
+  ierr = VecGetArrayRead(allCoordsVec, &allCoords);CHKERRQ(ierr);
+  ierr = DMPlexGetDepthStratum(dm, 0, &vStart, &vEnd);CHKERRQ(ierr);
+	
+	for (p = vStart,j=0; p < vEnd; p++,j+=cdim) {
+		for (i=0; i < nFrac*4; i+=4) {
+      area =  (coord[i]-coord[i+2])*(coord[i+3]-allCoords[j+1]); 
+      area -= (coord[i+1]-coord[i+3])*(coord[i+2]-allCoords[j]);
+      if (PetscAbsReal(area) <= eps) {
+        //printf("%d frac: %f %f, %d\n",i/4,allCoords[j],allCoords[j+1],p);
+        ierr = DMSetLabelValue(dm,"fracVert",p,i/4);
+      }
+    }
+  }
+  ierr = VecRestoreArrayRead(allCoordsVec, &allCoords);CHKERRQ(ierr);
+  PetscFunctionReturn(0);
+}
+
+
+static PetscErrorCode MarkFractures(DM dm,PetscInt nFrac)
 {
   const char     *bdname = "fracture";
-  IS             is;
-  const PetscInt       *points,*faces;
+  IS             is,isFace;
+  const PetscInt       *points,*pts,*faces;
   PetscInt       i,j,depth,nCovered,numPoints,pt[2];
   DMLabel        label;
   PetscErrorCode ierr;
 
   PetscFunctionBeginUser;
-  ierr = DMGetLabel(dm,"marker",&label);CHKERRQ(ierr);
+  ierr = DMGetLabel(dm,"fracVert",&label);CHKERRQ(ierr);
   ierr = DMLabelView(label, PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-
-  ierr = DMCreateLabel(dm,bdname);CHKERRQ(ierr);
-  ierr = DMCreateLabel(dm,bdname);CHKERRQ(ierr);
+  ierr = DMCreateLabel(dm, bdname);CHKERRQ(ierr);
   ierr = DMGetLabel(dm,bdname,&label);CHKERRQ(ierr);
 
-  ierr = DMGetStratumIS(dm,"marker",9,&is);CHKERRQ(ierr);
-  //ierr = DMGetStratumIS(dm,"marker",-1,&is);CHKERRQ(ierr);
-  ierr = ISView(is,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-  ierr = ISGetLocalSize(is,&numPoints);CHKERRQ(ierr);
-  ierr = ISGetIndices(is,&points);CHKERRQ(ierr);
-  //ierr = DMLabelInsertIS(label,is,1);CHKERRQ(ierr);
-
-  for (i=0; i<numPoints; i++) {
-    pt[0] = points[i];
-    for (j=0; j<numPoints; j++) {
-      pt[1] = points[j];
-      //ierr = DMPlexGetFullJoin(dm,2,pt,&nCovered,&faces);CHKERRQ(ierr);
-      ierr = DMPlexGetJoin(dm,2,pt,&nCovered,&faces);CHKERRQ(ierr);
-      if (nCovered) {
-      printf("covered %d:%d,%d\n",nCovered,points[i],points[j]);
-        ierr = DMSetLabelValue(dm,bdname,faces[0],1);CHKERRQ(ierr);
+  for (i=0; i<nFrac; i++) {
+    ierr = DMGetStratumIS(dm,"fracVert",i,&is);CHKERRQ(ierr);
+    ierr = ISView(is,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+    ierr = ISGetLocalSize(is,&numPoints);CHKERRQ(ierr);
+    ierr = ISGetIndices(is,&points);CHKERRQ(ierr);
+    for (i=0; i<numPoints; i++) {
+      pt[0] = points[i];
+      for (j=0; j<numPoints; j++) {
+        if (i==j) continue;
+        pt[1] = points[j];
+        ierr = DMPlexGetJoin(dm,2,pt,&nCovered,&faces);CHKERRQ(ierr);
+        if (nCovered==1) {
+          //printf("covered %d:%d,%d\n",nCovered,points[i],points[j]);
+          ierr = DMSetLabelValue(dm,bdname,faces[0],1);CHKERRQ(ierr);
+        }
       }
     }
   }
@@ -929,10 +957,10 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
   PetscFunctionBeginUser;
   ierr = CreateBoundaryMesh(comm,user,&boundary);CHKERRQ(ierr);
   DMLabel label;
-  //ierr = DMGetLabel(boundary,"marker",&label);CHKERRQ(ierr);
-  //ierr = DMLabelView(label, PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
   ierr = DMPlexGenerate(boundary, NULL, PETSC_TRUE, dm);CHKERRQ(ierr);
-  //ierr = MarkFractures(*dm);CHKERRQ(ierr);
+  ierr = DMViewFromOptions(*dm, NULL, "-dm_view");CHKERRQ(ierr);
+  ierr = MarkVertices2D(*dm,user->nFrac,user->fracCoord,PETSC_DEFAULT);CHKERRQ(ierr);
+  ierr = MarkFractures(*dm,user->nFrac);CHKERRQ(ierr);
   ierr = DMSetFromOptions(*dm);CHKERRQ(ierr);
   //ierr = DMViewFromOptions(*dm, NULL, "-dm_view");CHKERRQ(ierr);
   //ierr = DMPlexCreateBoxMesh(comm, user->dim, user->simplex, user->cells, NULL, NULL, NULL, PETSC_TRUE, dm);CHKERRQ(ierr);
@@ -950,10 +978,8 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
     ierr = DMPlexMarkBoundaryFaces(*dm, 1, label);CHKERRQ(ierr);
     ierr = DMGetStratumIS(*dm, "boundary", 1,  &is);CHKERRQ(ierr);
     ierr = DMCreateLabel(*dm,"Faces");CHKERRQ(ierr);
-  printf("abc\n");
     if (is) {
     ierr = ISView(is,PETSC_VIEWER_STDOUT_SELF);CHKERRQ(ierr);
-  printf("abc2\n");
       PetscInt        d, f, Nf;
       const PetscInt *faces;
       PetscInt        csize, i;
@@ -1004,28 +1030,26 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
     DMLabelView(label,PETSC_VIEWER_STDOUT_WORLD);
     ierr = DMPlexLabelComplete(*dm, label);CHKERRQ(ierr);
     DMLabelView(label,PETSC_VIEWER_STDOUT_WORLD);
-    DM subdm;
-    DMLabel labelfrac,labelb;
-    ierr = DMGetLabel(*dm, "marker", &labelfrac);CHKERRQ(ierr);
-    DMLabelView(labelfrac,PETSC_VIEWER_STDOUT_WORLD);
-    ierr = DMPlexCreateSubmesh(*dm,labelfrac,9,PETSC_FALSE,&subdm);CHKERRQ(ierr);
-    ierr = DMGetLabel(subdm, "marker", &labelb);CHKERRQ(ierr);
-    ierr = DMView(subdm,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-    ierr = DMViewFromOptions(subdm, NULL, "-dmx_view");CHKERRQ(ierr);
-    DMLabelView(labelb,PETSC_VIEWER_STDOUT_WORLD);
+    //DM subdm;
+    //DMLabel labelfrac,labelb;
+    //ierr = DMGetLabel(*dm, "marker", &labelfrac);CHKERRQ(ierr);
+    //DMLabelView(labelfrac,PETSC_VIEWER_STDOUT_WORLD);
+    //ierr = DMPlexCreateSubmesh(*dm,labelfrac,9,PETSC_FALSE,&subdm);CHKERRQ(ierr);
+    //ierr = DMGetLabel(subdm, "marker", &labelb);CHKERRQ(ierr);
+    //ierr = DMView(subdm,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+    //ierr = DMViewFromOptions(subdm, NULL, "-dmx_view");CHKERRQ(ierr);
+    //DMLabelView(labelb,PETSC_VIEWER_STDOUT_WORLD);
   
 
-    ierr = DMPlexLabelCohesiveComplete(*dm, labelfrac,NULL,PETSC_FALSE,boundary);CHKERRQ(ierr);
-    DMLabelView(labelfrac,PETSC_VIEWER_STDOUT_WORLD);
-    exit(0);
+    //ierr = DMPlexLabelCohesiveComplete(*dm, labelfrac,NULL,PETSC_FALSE,boundary);CHKERRQ(ierr);
+    //DMLabelView(labelfrac,PETSC_VIEWER_STDOUT_WORLD);
+    //exit(0);
     //DM dmsplit;
     //DMLabel labelsplit;
     //ierr = DMPlexConstructCohesiveCells(*dm,labelfrac,labelsplit,&dmsplit);CHKERRQ(ierr);
     //ierr = DMGetStratumIS(*dm, "Faces", 1,  &is);CHKERRQ(ierr);
     //if (is) ierr = ISView(is,PETSC_VIEWER_STDOUT_SELF);CHKERRQ(ierr);
   }
-  ierr = DMHasLabel(*dm, "fracture", &flg);CHKERRQ(ierr);
-  if (!flg) printf("------ccc\n");
 
   /* Partition */
   {
@@ -1061,15 +1085,16 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
   ierr = PetscObjectSetName((PetscObject) *dm, "Mesh");CHKERRQ(ierr);
   ierr = DMSetApplicationContext(*dm, user);CHKERRQ(ierr);
   ierr = DMSetFromOptions(*dm);CHKERRQ(ierr); /* refine,... */
-  ierr = DMHasLabel(*dm, "fracture", &flg);CHKERRQ(ierr);
-  if (!flg) printf("------ddd\n");
+  ierr = DMGetLabel(*dm,"fracVert",&label);CHKERRQ(ierr);
+  ierr = DMLabelView(label, PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+  ierr = DMGetLabel(*dm,"fracture",&label);CHKERRQ(ierr);
+  ierr = DMLabelView(label, PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+  //ierr = MarkFractures(*dm);CHKERRQ(ierr);
   /* duplicate vertices on fracture boundaries */
   DMView(*dm,PETSC_VIEWER_STDOUT_WORLD);
   ierr = DMViewFromOptions(*dm, NULL, "-dm_view");CHKERRQ(ierr);
   ierr = SplitFaces(dm,"fracture",user);CHKERRQ(ierr);
   DMView(*dm,PETSC_VIEWER_STDOUT_WORLD);
-  ierr = DMHasLabel(*dm, "fracture", &flg);CHKERRQ(ierr);
-  if (!flg) printf("-----eee\n");
   ierr = DMViewFromOptions(*dm, NULL, "-dms_view");CHKERRQ(ierr);
   PetscFunctionReturn(0);
 }
