@@ -28,6 +28,7 @@ typedef struct {
   PetscBool    simplex;     /* Simplicial mesh */
   PetscInt     cells[3];    /* The initial domain division */
   PetscInt     numSplitFaces;/*  */
+  PetscInt     numDupVertices;/*  */
   PetscBool    shear;       /* Shear the domain */
   PetscBool    solverksp;   /* Use KSP as solver */
   /* Problem definition */
@@ -684,13 +685,12 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
   PetscInt       dim, depth, maxConeSize, maxSupportSize, numLabels, numGhostCells;
   PetscInt       numFS, fs, pStart, pEnd, p, cEnd, cEndInterior, vStart, vEnd, v, fStart, fEnd, newf, d, l;
   PetscBool      hasLabel;
+  PetscInt depthShift[3]; /* fix for 3d*/
   PetscErrorCode ierr;
 
   PetscFunctionBeginUser;
   ierr = DMHasLabel(dm, labelName, &hasLabel);CHKERRQ(ierr);
-  printf("split\n");
   if (!hasLabel) PetscFunctionReturn(0);
-  printf("split\n");
   ierr = DMCreate(PetscObjectComm((PetscObject)dm), &sdm);CHKERRQ(ierr);
   ierr = DMSetType(sdm, DMPLEX);CHKERRQ(ierr);
   ierr = DMGetDimension(dm, &dim);CHKERRQ(ierr);
@@ -707,18 +707,21 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
     ierr = DMGetStratumSize(dm, labelName, ids[fs], &numBdFaces);CHKERRQ(ierr);
     user->numSplitFaces += numBdFaces;
   }
+  user->numDupVertices = 2*user->numSplitFaces -2*user->nFrac; //TODO fix for 3d, edpoints
   ierr  = DMPlexGetChart(dm, &pStart, &pEnd);CHKERRQ(ierr);
-  pEnd += user->numSplitFaces;
+  pEnd += user->numSplitFaces + user->numDupVertices;
   ierr  = DMPlexSetChart(sdm, pStart, pEnd);CHKERRQ(ierr);
-  ierr  = DMPlexGetGhostCellStratum(dm, &cEndInterior, NULL);CHKERRQ(ierr);
-  ierr  = DMPlexGetHeightStratum(dm, 0, NULL, &cEnd);CHKERRQ(ierr);
-  numGhostCells = cEnd - cEndInterior;
   /* Set cone and support sizes */
+  depthShift[0] = 0; /* vertices */
+  depthShift[1] = user->numDupVertices;
+  depthShift[2] = 0; /* cells */
+  // Inherit everything
   ierr = DMPlexGetDepth(dm, &depth);CHKERRQ(ierr);
   for (d = 0; d <= depth; ++d) {
     ierr = DMPlexGetDepthStratum(dm, d, &pStart, &pEnd);CHKERRQ(ierr);
+  printf("dep %d %d %d\n",depth,pStart,pEnd);
     for (p = pStart; p < pEnd; ++p) {
-      PetscInt newp = p;
+      PetscInt newp = p+depthShift[d];
       PetscInt size;
 
       ierr = DMPlexGetConeSize(dm, p, &size);CHKERRQ(ierr);
@@ -727,8 +730,10 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
       ierr = DMPlexSetSupportSize(sdm, newp, size);CHKERRQ(ierr);
     }
   }
+  // Connect new facets to a single cell
   ierr = DMPlexGetHeightStratum(dm, 1, &fStart, &fEnd);CHKERRQ(ierr);
-  for (fs = 0, newf = fEnd; fs < numFS; ++fs) {
+  newf = fEnd+depthShift[1]; /* TODO fix 3d */
+  for (fs = 0; fs < numFS; ++fs) {
     IS             faceIS;
     const PetscInt *faces;
     PetscInt       numFaces, f;
@@ -739,11 +744,12 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
     for (f = 0; f < numFaces; ++f, ++newf) {
       PetscInt size;
 
-      /* Right now I think that both faces should see both cells */
+      /* facets have the same amount of vertices */
       ierr = DMPlexGetConeSize(dm, faces[f], &size);CHKERRQ(ierr);
       ierr = DMPlexSetConeSize(sdm, newf, size);CHKERRQ(ierr);
+      /* but only a single cell (size should be eq 1) */
       ierr = DMPlexGetSupportSize(dm, faces[f], &size);CHKERRQ(ierr);
-      ierr = DMPlexSetSupportSize(sdm, newf, size);CHKERRQ(ierr);
+      ierr = DMPlexSetSupportSize(sdm, newf, size-1);CHKERRQ(ierr);
     }
     ierr = ISRestoreIndices(faceIS, &faces);CHKERRQ(ierr);
     ierr = ISDestroy(&faceIS);CHKERRQ(ierr);
@@ -752,23 +758,27 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
   /* Set cones and supports */
   ierr = DMPlexGetMaxSizes(dm, &maxConeSize, &maxSupportSize);CHKERRQ(ierr);
   ierr = PetscMalloc1(PetscMax(maxConeSize, maxSupportSize), &newpoints);CHKERRQ(ierr);
-  ierr = DMPlexGetChart(dm, &pStart, &pEnd);CHKERRQ(ierr);
-  for (p = pStart; p < pEnd; ++p) {
-    const PetscInt *points, *orientations;
-    PetscInt       size, i, newp = p;
+  for (d = 0; d <= depth; ++d) {
+    ierr = DMPlexGetDepthStratum(dm, d, &pStart, &pEnd);CHKERRQ(ierr);
+    for (p = pStart; p < pEnd; ++p) {
+      const PetscInt *points, *orientations;
+      PetscInt       size, i, newp = p+depthShift[d];
 
-    ierr = DMPlexGetConeSize(dm, p, &size);CHKERRQ(ierr);
-    ierr = DMPlexGetCone(dm, p, &points);CHKERRQ(ierr);
-    ierr = DMPlexGetConeOrientation(dm, p, &orientations);CHKERRQ(ierr);
-    for (i = 0; i < size; ++i) newpoints[i] = points[i];
-    ierr = DMPlexSetCone(sdm, newp, newpoints);CHKERRQ(ierr);
-    ierr = DMPlexSetConeOrientation(sdm, newp, orientations);CHKERRQ(ierr);
-    ierr = DMPlexGetSupportSize(dm, p, &size);CHKERRQ(ierr);
-    ierr = DMPlexGetSupport(dm, p, &points);CHKERRQ(ierr);
-    for (i = 0; i < size; ++i) newpoints[i] = points[i];
-    ierr = DMPlexSetSupport(sdm, newp, newpoints);CHKERRQ(ierr);
+      ierr = DMPlexGetConeSize(dm, p, &size);CHKERRQ(ierr);
+      ierr = DMPlexGetCone(dm, p, &points);CHKERRQ(ierr);
+      ierr = DMPlexGetConeOrientation(dm, p, &orientations);CHKERRQ(ierr);
+      for (i = 0; i < size; ++i) newpoints[i] = points[i];
+      printf("size %d %d\n",size,d);
+      ierr = DMPlexSetCone(sdm, newp, newpoints);CHKERRQ(ierr);
+      ierr = DMPlexSetConeOrientation(sdm, newp, orientations);CHKERRQ(ierr);
+      ierr = DMPlexGetSupportSize(dm, p, &size);CHKERRQ(ierr);
+      ierr = DMPlexGetSupport(dm, p, &points);CHKERRQ(ierr);
+      for (i = 0; i < size; ++i) newpoints[i] = points[i];
+      ierr = DMPlexSetSupport(sdm, newp, newpoints);CHKERRQ(ierr);
+    }
   }
   ierr = PetscFree(newpoints);CHKERRQ(ierr);
+  printf("ok\n");
   for (fs = 0, newf = fEnd; fs < numFS; ++fs) {
     IS             faceIS;
     const PetscInt *faces;
@@ -779,10 +789,12 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
     ierr = ISGetIndices(faceIS, &faces);CHKERRQ(ierr);
     for (f = 0; f < numFaces; ++f, ++newf) {
       const PetscInt *points;
+      PetscInt suppSize;
 
       ierr = DMPlexGetCone(dm, faces[f], &points);CHKERRQ(ierr);
       ierr = DMPlexSetCone(sdm, newf, points);CHKERRQ(ierr);
       ierr = DMPlexGetSupport(dm, faces[f], &points);CHKERRQ(ierr);
+      ierr = DMPlexGetSupportSize(dm, faces[f], &suppSize);CHKERRQ(ierr); /* should be 2 */
       ierr = DMPlexSetSupport(sdm, newf, points);CHKERRQ(ierr);
     }
     ierr = ISRestoreIndices(faceIS, &faces);CHKERRQ(ierr);
