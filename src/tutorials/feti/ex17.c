@@ -722,7 +722,8 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
     ierr = DMGetStratumSize(dm, labelName, ids[fs], &numBdFaces);CHKERRQ(ierr);
     user->numSplitFaces += numBdFaces;
   }
-  user->numDupVertices = 2*user->numSplitFaces -2*user->nFrac; //TODO fix for 3d, edpoints
+  user->numDupVertices = user->numSplitFaces +user->nFrac; //TODO fix for 3d, edpoints
+  printf("dup: %d %d\n",user->numSplitFaces,user->numDupVertices);
   ierr  = DMPlexGetChart(dm, &pStart, &pEnd);CHKERRQ(ierr);
   pEnd += user->numSplitFaces + user->numDupVertices;
   ierr  = DMPlexSetChart(sdm, pStart, pEnd);CHKERRQ(ierr);
@@ -767,6 +768,8 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
       /* but only a single cell (size should be eq 1) */
       ierr = DMPlexGetSupportSize(dm, faces[f], &size);CHKERRQ(ierr);
       ierr = DMPlexSetSupportSize(sdm, newf, size-1);CHKERRQ(ierr);
+      /* the old face support size is also 1 */
+      ierr = DMPlexSetSupportSize(sdm, faces[f]+depthShift[1], size-1);CHKERRQ(ierr);
       //ierr = DMPlexSetSupportSize(sdm, newf, size);CHKERRQ(ierr);
     }
     ierr = ISRestoreIndices(faceIS, &faces);CHKERRQ(ierr);
@@ -794,6 +797,7 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
       ierr = DMPlexGetSupport(dm, p, &points);CHKERRQ(ierr);
       for (i = 0; i < size; ++i) newpoints[i] = points[i];
       ierr = DMPlexSetSupport(sdm, newp, newpoints);CHKERRQ(ierr);
+      printf("%d o:%d n:%d\n",d,p,newp);
     }
   }
   ierr = PetscFree(newpoints);CHKERRQ(ierr);
@@ -853,6 +857,7 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
   }
   ierr = ISRestoreIndices(idIS, &ids);CHKERRQ(ierr);
   ierr = ISDestroy(&idIS);CHKERRQ(ierr);
+  //ierr = DMPlexSymmetrize(sdm);CHKERRQ(ierr);
   ierr = DMPlexStratify(sdm);CHKERRQ(ierr);
   /* Convert coordinates */
   ierr = DMPlexGetDepthStratum(dm, 0, &vStart, &vEnd);CHKERRQ(ierr);
