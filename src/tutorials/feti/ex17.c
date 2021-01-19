@@ -725,6 +725,7 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
       PetscInt size;
 
       ierr = DMPlexGetConeSize(dm, p, &size);CHKERRQ(ierr);
+//printf("%d,%d,%d\n",d,p,size);
       ierr = DMPlexSetConeSize(sdm, newp, size);CHKERRQ(ierr);
       ierr = DMPlexGetSupportSize(dm, p, &size);CHKERRQ(ierr);
       ierr = DMPlexSetSupportSize(sdm, newp, size);CHKERRQ(ierr);
@@ -750,6 +751,7 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
       /* but only a single cell (size should be eq 1) */
       ierr = DMPlexGetSupportSize(dm, faces[f], &size);CHKERRQ(ierr);
       ierr = DMPlexSetSupportSize(sdm, newf, size-1);CHKERRQ(ierr);
+      ierr = DMPlexSetSupportSize(sdm, newf, size);CHKERRQ(ierr);
     }
     ierr = ISRestoreIndices(faceIS, &faces);CHKERRQ(ierr);
     ierr = ISDestroy(&faceIS);CHKERRQ(ierr);
@@ -768,9 +770,10 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
       ierr = DMPlexGetCone(dm, p, &points);CHKERRQ(ierr);
       ierr = DMPlexGetConeOrientation(dm, p, &orientations);CHKERRQ(ierr);
       for (i = 0; i < size; ++i) newpoints[i] = points[i];
-      printf("size %d %d\n",size,d);
       ierr = DMPlexSetCone(sdm, newp, newpoints);CHKERRQ(ierr);
-      ierr = DMPlexSetConeOrientation(sdm, newp, orientations);CHKERRQ(ierr);
+      if (d != depth) { //cells don't have orientation? 3D?
+				ierr = DMPlexSetConeOrientation(sdm, newp, orientations);CHKERRQ(ierr);
+			}
       ierr = DMPlexGetSupportSize(dm, p, &size);CHKERRQ(ierr);
       ierr = DMPlexGetSupport(dm, p, &points);CHKERRQ(ierr);
       for (i = 0; i < size; ++i) newpoints[i] = points[i];
@@ -779,7 +782,8 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
   }
   ierr = PetscFree(newpoints);CHKERRQ(ierr);
   printf("ok\n");
-  for (fs = 0, newf = fEnd; fs < numFS; ++fs) {
+  newf = fEnd+depthShift[1]; /* TODO fix 3d */
+  for (fs = 0; fs < numFS; ++fs) {
     IS             faceIS;
     const PetscInt *faces;
     PetscInt       numFaces, f;
@@ -789,12 +793,13 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
     ierr = ISGetIndices(faceIS, &faces);CHKERRQ(ierr);
     for (f = 0; f < numFaces; ++f, ++newf) {
       const PetscInt *points;
-      PetscInt suppSize;
+      PetscInt size;
 
+      ierr = DMPlexGetConeSize(dm, faces[f], &size);CHKERRQ(ierr); /* should be 2 */
+      if (size != 2) continue; /* there are vertices for some reason */
       ierr = DMPlexGetCone(dm, faces[f], &points);CHKERRQ(ierr);
       ierr = DMPlexSetCone(sdm, newf, points);CHKERRQ(ierr);
       ierr = DMPlexGetSupport(dm, faces[f], &points);CHKERRQ(ierr);
-      ierr = DMPlexGetSupportSize(dm, faces[f], &suppSize);CHKERRQ(ierr); /* should be 2 */
       ierr = DMPlexSetSupport(sdm, newf, points);CHKERRQ(ierr);
     }
     ierr = ISRestoreIndices(faceIS, &faces);CHKERRQ(ierr);
@@ -949,7 +954,6 @@ static PetscErrorCode MarkFractures(DM dm,PetscInt nFrac)
         pt[1] = points[j];
         ierr = DMPlexGetJoin(dm,2,pt,&nCovered,&faces);CHKERRQ(ierr);
         if (nCovered==1) {
-          //printf("covered %d:%d,%d\n",nCovered,points[i],points[j]);
           ierr = DMSetLabelValue(dm,bdname,faces[0],1);CHKERRQ(ierr);
         }
       }
@@ -973,7 +977,7 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
   ierr = DMViewFromOptions(*dm, NULL, "-dm_view");CHKERRQ(ierr);
   ierr = MarkVertices2D(*dm,user->nFrac,user->fracCoord,PETSC_DEFAULT);CHKERRQ(ierr);
   ierr = MarkFractures(*dm,user->nFrac);CHKERRQ(ierr);
-  ierr = DMSetFromOptions(*dm);CHKERRQ(ierr);
+  //ierr = DMSetFromOptions(*dm);CHKERRQ(ierr);
   //ierr = DMViewFromOptions(*dm, NULL, "-dm_view");CHKERRQ(ierr);
   //ierr = DMPlexCreateBoxMesh(comm, user->dim, user->simplex, user->cells, NULL, NULL, NULL, PETSC_TRUE, dm);CHKERRQ(ierr);
   /* Mark boundary in sequence by their distinguishing component:
