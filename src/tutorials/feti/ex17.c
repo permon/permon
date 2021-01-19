@@ -669,6 +669,21 @@ static PetscErrorCode CreateBoundaryMesh(MPI_Comm comm, AppCtx *user, DM *bounda
   PetscFunctionReturn(0);
 }
 
+static PetscErrorCode findInt(PetscInt val,PetscInt size,PetscInt *arr,PetscInt *idx)
+{
+  PetscInt i;
+
+  PetscFunctionBeginUser;
+  *idx = -1;
+  for (i=0; i<size; i++) {
+    if (arr[i] == val) {
+      *idx = i;
+      break;
+    }
+  }
+  PetscFunctionReturn(0);
+}
+
 /* Right now, I have just added duplicate faces, which see both cells. We can
 - Add duplicate vertices and decouple the face cones
 - Disconnect faces from cells across the rotation gap
@@ -681,7 +696,7 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
   Vec            coordinates;
   IS             idIS;
   const PetscInt *ids;
-  PetscInt       *newpoints;
+  PetscInt       *newpoints,*oldpoints;
   PetscInt       dim, depth, maxConeSize, maxSupportSize, numLabels, numGhostCells;
   PetscInt       numFS, fs, pStart, pEnd, p, cEnd, cEndInterior, vStart, vEnd, v, fStart, fEnd, newf, d, l;
   PetscBool      hasLabel;
@@ -747,11 +762,12 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
 
       /* facets have the same amount of vertices */
       ierr = DMPlexGetConeSize(dm, faces[f], &size);CHKERRQ(ierr);
+      if (size != 2) continue; /* there are vertices for some reason */
       ierr = DMPlexSetConeSize(sdm, newf, size);CHKERRQ(ierr);
       /* but only a single cell (size should be eq 1) */
       ierr = DMPlexGetSupportSize(dm, faces[f], &size);CHKERRQ(ierr);
       ierr = DMPlexSetSupportSize(sdm, newf, size-1);CHKERRQ(ierr);
-      ierr = DMPlexSetSupportSize(sdm, newf, size);CHKERRQ(ierr);
+      //ierr = DMPlexSetSupportSize(sdm, newf, size);CHKERRQ(ierr);
     }
     ierr = ISRestoreIndices(faceIS, &faces);CHKERRQ(ierr);
     ierr = ISDestroy(&faceIS);CHKERRQ(ierr);
@@ -781,26 +797,56 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
     }
   }
   ierr = PetscFree(newpoints);CHKERRQ(ierr);
-  printf("ok\n");
   newf = fEnd+depthShift[1]; /* TODO fix 3d */
+  printf("%d %d\n",fEnd,depthShift[1]);
+  ierr = PetscMalloc2(user->numDupVertices,&newpoints,user->numDupVertices,&oldpoints);CHKERRQ(ierr);
+  for (fs = 0; fs < user->numDupVertices; fs++) {
+    newpoints[fs] = -1;
+    oldpoints[fs] = -1;
+  }
+  ierr = DMPlexGetDepthStratum(dm, 0,NULL, &vEnd);CHKERRQ(ierr);
+  PetscInt pts = 0;
   for (fs = 0; fs < numFS; ++fs) {
     IS             faceIS;
     const PetscInt *faces;
-    PetscInt       numFaces, f;
+    PetscInt       numFaces, f,i,j,idx;
 
     ierr = DMGetStratumIS(dm, labelName, ids[fs], &faceIS);CHKERRQ(ierr);
     ierr = ISGetLocalSize(faceIS, &numFaces);CHKERRQ(ierr);
     ierr = ISGetIndices(faceIS, &faces);CHKERRQ(ierr);
     for (f = 0; f < numFaces; ++f, ++newf) {
-      const PetscInt *points;
-      PetscInt size;
+      const PetscInt *points,*fpoints,*orientations;
+      PetscInt i,size,cone[2];
 
       ierr = DMPlexGetConeSize(dm, faces[f], &size);CHKERRQ(ierr); /* should be 2 */
       if (size != 2) continue; /* there are vertices for some reason */
       ierr = DMPlexGetCone(dm, faces[f], &points);CHKERRQ(ierr);
-      ierr = DMPlexSetCone(sdm, newf, points);CHKERRQ(ierr);
+      for (i=0; i<2; i++) {
+        ierr = findInt(points[i],pts,oldpoints,&idx);CHKERRQ(ierr);
+        if (idx > -1) {
+          cone[i] = newpoints[idx];
+        } else {
+          oldpoints[pts] = points[i];
+          newpoints[pts] = vEnd+pts;
+          cone[i] = newpoints[pts];
+          pts++;
+        }
+      }   
+      printf("face %d: %d %d -> %d: %d %d\n",faces[f],points[0],points[1],newf,cone[0],cone[1]);
+      ierr = DMPlexSetCone(sdm, newf, cone);CHKERRQ(ierr);
       ierr = DMPlexGetSupport(dm, faces[f], &points);CHKERRQ(ierr);
-      ierr = DMPlexSetSupport(sdm, newf, points);CHKERRQ(ierr);
+      /* use second face, user orientation to determine the face? */
+      ierr = DMPlexSetSupport(sdm, newf, &points[1]);CHKERRQ(ierr);
+      ierr = DMPlexGetCone(dm, points[1], &fpoints);CHKERRQ(ierr);
+      for (i=0; i<3; i++) {
+        ierr = DMPlexGetCone(dm, fpoints[i], &points);CHKERRQ(ierr);
+        for (j=0; j<2; j++) {
+          ierr = findInt(points[i],pts,oldpoints,&idx);CHKERRQ(ierr);
+          if (idx > -1) {
+            ierr = DMPlexInsertCone(sdm,fpoints[i],j,newpoints[idx]);CHKERRQ(ierr);
+          }
+        }
+      }
     }
     ierr = ISRestoreIndices(faceIS, &faces);CHKERRQ(ierr);
     ierr = ISDestroy(&faceIS);CHKERRQ(ierr);
