@@ -31,12 +31,15 @@ typedef struct {
   PetscInt     numDupVertices;/*  */
   PetscBool    shear;       /* Shear the domain */
   PetscBool    solverksp;   /* Use KSP as solver */
+  PetscBool    solverqps;    /* Use QPS as solver */
   /* Problem definition */
   SolutionType solType;     /* Type of exact solution */
   /* Solver definition */
   PetscBool    useNearNullspace; /* Use the rigid body modes as a near nullspace for AMG */
   PetscReal *fracCoord;
   PetscInt nFrac;
+  Mat Bineq;
+  Vec cineq;
 } AppCtx;
 
 static PetscErrorCode zero(PetscInt dim, PetscReal time, const PetscReal x[], PetscInt Nc, PetscScalar *u, void *ctx)
@@ -75,7 +78,7 @@ static void f0_push_u(PetscInt dim, PetscInt Nf, PetscInt NfAux,
 {
   PetscInt d;
   for (d = 0; d < dim; ++d) f0[d] = 0.0;
-  f0[dim-1] = 1.;
+  f0[dim-1] = -1.;
 }
 
 /*
@@ -345,6 +348,7 @@ static PetscErrorCode ProcessOptions(MPI_Comm comm, AppCtx *options)
   options->simplex          = PETSC_TRUE;
   options->shear            = PETSC_FALSE;
   options->solverksp        = PETSC_TRUE;
+  options->solverqps        = PETSC_TRUE;
   options->solType          = SOL_VLAP_QUADRATIC;
   options->useNearNullspace = PETSC_TRUE;
   ierr = PetscStrncpy(options->dmType, DMPLEX, 256);CHKERRQ(ierr);
@@ -355,6 +359,7 @@ static PetscErrorCode ProcessOptions(MPI_Comm comm, AppCtx *options)
   ierr = PetscOptionsBool("-simplex", "Simplicial (true) or tensor (false) mesh", "ex17.c", options->simplex, &options->simplex, NULL);CHKERRQ(ierr);
   ierr = PetscOptionsBool("-shear", "Shear the domain", "ex17.c", options->shear, &options->shear, NULL);CHKERRQ(ierr);
   ierr = PetscOptionsBool("-use_ksp", "Use KSP as solver", "ex17.c", options->solverksp, &options->solverksp, NULL);CHKERRQ(ierr);
+  ierr = PetscOptionsBool("-use_qps", "Use KSP as solver", "ex17.c", options->solverqps, &options->solverqps, NULL);CHKERRQ(ierr);
   sol  = options->solType;
   ierr = PetscOptionsEList("-sol_type", "Type of exact solution", "ex17.c", solutionTypes, NUM_SOLUTION_TYPES, solutionTypes[options->solType], &sol, NULL);CHKERRQ(ierr);
   options->solType = (SolutionType) sol;
@@ -690,8 +695,8 @@ static PetscErrorCode ViewClosure(DM dm, PetscInt p,PetscBool useCone)
   PetscErrorCode ierr;
 
   PetscFunctionBegin;
-  ierr = DMPlexGetTransitiveClosure(dm,p,useCone,&np,&points);CHKERRQ(ierr);
   printf("tc %d: ",p);
+  ierr = DMPlexGetTransitiveClosure(dm,p,useCone,&np,&points);CHKERRQ(ierr);
   for (i=0; i<2*np; i++) {
     printf("%d, ",points[i]);
   }
@@ -758,8 +763,8 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
 
       ierr = DMPlexGetConeSize(dm, p, &size);CHKERRQ(ierr);
       ierr = DMPlexSetConeSize(sdm, newp, size);CHKERRQ(ierr);
-      ierr = DMPlexGetSupportSize(dm, p, &size);CHKERRQ(ierr);
-      ierr = DMPlexSetSupportSize(sdm, newp, size);CHKERRQ(ierr);
+      //ierr = DMPlexGetSupportSize(dm, p, &size);CHKERRQ(ierr);
+      //ierr = DMPlexSetSupportSize(sdm, newp, size);CHKERRQ(ierr);
     }
   }
   // Connect new facets to a single cell
@@ -780,11 +785,11 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
       ierr = DMPlexGetConeSize(dm, faces[f], &size);CHKERRQ(ierr);
       if (size != 2) printf("errr\n");
       ierr = DMPlexSetConeSize(sdm, newf, size);CHKERRQ(ierr);
-      /* but only a single cell (size should be eq 1) */
-      ierr = DMPlexGetSupportSize(dm, faces[f], &size);CHKERRQ(ierr);
-      ierr = DMPlexSetSupportSize(sdm, newf, size-1);CHKERRQ(ierr);
-      /* the old face support size is also 1 */
-      ierr = DMPlexSetSupportSize(sdm, faces[f]+depthShift[1], size-1);CHKERRQ(ierr);
+      ///* but only a single cell (size should be eq 1) */
+      //ierr = DMPlexGetSupportSize(dm, faces[f], &size);CHKERRQ(ierr);
+      //ierr = DMPlexSetSupportSize(sdm, newf, size-1);CHKERRQ(ierr);
+      ///* the old face support size is also 1 */
+      //ierr = DMPlexSetSupportSize(sdm, faces[f]+depthShift[1], size-1);CHKERRQ(ierr);
     }
     ierr = ISRestoreIndices(faceIS, &faces);CHKERRQ(ierr);
     ierr = ISDestroy(&faceIS);CHKERRQ(ierr);
@@ -813,12 +818,12 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
       //if (d != depth) { //cells don't have orientation? 3D?
 			ierr = DMPlexSetConeOrientation(sdm, newp, orientations);CHKERRQ(ierr);
 			//}
-      ierr = DMPlexGetSupportSize(sdm, newp, &size);CHKERRQ(ierr);
-      ierr = DMPlexGetSupport(dm, p, &points);CHKERRQ(ierr);
-      for (i = 0; i < size; ++i) { 
-        newpoints[i] = points[i]+shiftu;
-      }
-      ierr = DMPlexSetSupport(sdm, newp, newpoints);CHKERRQ(ierr);
+      //ierr = DMPlexGetSupportSize(sdm, newp, &size);CHKERRQ(ierr);
+      //ierr = DMPlexGetSupport(dm, p, &points);CHKERRQ(ierr);
+      //for (i = 0; i < size; ++i) { 
+      //  newpoints[i] = points[i]+shiftu;
+      //}
+      //ierr = DMPlexSetSupport(sdm, newp, newpoints);CHKERRQ(ierr);
     }
   }
   ierr = PetscFree(newpoints);CHKERRQ(ierr);
@@ -830,11 +835,11 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
     oldpoints[fs] = -1;
   }
   ierr = DMPlexGetDepthStratum(dm, 0,NULL, &vEnd);CHKERRQ(ierr);
-  PetscInt pts = 0;
+  PetscInt pts = 0,pts2=0,idx,size;
   for (fs = 0; fs < numFS; ++fs) {
     IS             faceIS,endIS;
     const PetscInt *faces,*endpoints;
-    PetscInt       numFaces, f,i,j,idx;
+    PetscInt       numFaces, f,i,j;
 
     ierr = DMGetStratumIS(dm, labelName, ids[fs], &faceIS);CHKERRQ(ierr);
     ierr = DMGetStratumIS(dm, "fracEnd", ids[fs], &endIS);CHKERRQ(ierr);
@@ -843,7 +848,7 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
     ierr = ISGetIndices(endIS, &endpoints);CHKERRQ(ierr);
     for (f = 0; f < numFaces; ++f, ++newf) {
       const PetscInt *points,*fpoints,*orientations;
-      PetscInt i,size,cone[2],cell;
+      PetscInt i,cone[2],cell;
 
       ierr = DMPlexGetConeSize(dm, faces[f], &size);CHKERRQ(ierr); /* should be 2 */
       if (size != 2) continue; /* there are vertices for some reason */
@@ -851,14 +856,20 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
       ierr = DMPlexGetConeOrientation(dm, faces[f], &orientations);CHKERRQ(ierr);
       for (i=0; i<2; i++) {
         ierr = findInt(points[i],pts,oldpoints,&idx);CHKERRQ(ierr);
+        printf("%d,%d,%d\n",points[i],pts,idx);
         if (idx > -1) {
           cone[i] = newpoints[idx];
         } else {
           oldpoints[pts] = points[i];
-          newpoints[pts] = vEnd+pts;
+          newpoints[pts] = vEnd+pts2;
           /* do not duplicate endpoints */
-          if (points[i] == endpoints[0] || points[i] == endpoints[1]) newpoints[pts] = oldpoints[pts];
+          if (points[i] == endpoints[0] || points[i] == endpoints[1]) {
+            newpoints[pts] = oldpoints[pts];
+          } else { 
+            pts2++;
+          }
           cone[i] = newpoints[pts];
+          printf("%d->%d\n",oldpoints[pts],newpoints[pts]);
           pts++;
         }
       }   
@@ -869,14 +880,18 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
       ierr = DMGetLabelValue(dm,"fracCell",points[0],&idx);CHKERRQ(ierr);
       cell = points[1];
       if (idx == fs) {
-        ierr = DMPlexSetSupport(sdm, faces[f]+depthShift[1], &points[1]);CHKERRQ(ierr);
+        //ierr = DMPlexSetSupport(sdm, faces[f]+depthShift[1], &points[1]);CHKERRQ(ierr);
         cell = points[0];
       }
-      ierr = DMPlexSetSupport(sdm, newf, &cell);CHKERRQ(ierr);
+      //ierr = DMPlexSetSupport(sdm, newf, &cell);CHKERRQ(ierr);
       ierr = DMPlexGetCone(dm, cell, &fpoints);CHKERRQ(ierr);
       //ierr = DMPlexGetConeOrientation(dm, cell, &orientations);CHKERRQ(ierr);
       printf("c %d \n",cell);
       for (i=0; i<3; i++) {
+        if (fpoints[i] == faces[f]) {
+          ierr = DMPlexInsertCone(sdm,cell,i,newf);CHKERRQ(ierr);
+          continue;
+        }
         ierr = DMPlexGetCone(dm, fpoints[i], &points);CHKERRQ(ierr);
           printf("f %d (%d,%d)\n",fpoints[i],points[0],points[1]);
         for (j=0; j<2; j++) {
@@ -893,10 +908,23 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
   }
   ierr = ISRestoreIndices(idIS, &ids);CHKERRQ(ierr);
   ierr = ISDestroy(&idIS);CHKERRQ(ierr);
-  //ierr = DMPlexSymmetrize(sdm);CHKERRQ(ierr);
+  //ierr = DMPlexGetDepthStratum(dm, 2, &pStart, &pEnd);CHKERRQ(ierr);
+  //for (p = pStart; p < pEnd; ++p) {
+  //  PetscInt          i,j,*edges,*points;
+
+  //  printf("c %d: ",p);
+  //  ierr = DMPlexGetCone(sdm,p,&edges);CHKERRQ(ierr);
+  //  for (i=0; i<3; i++) {
+  //    ierr = DMPlexGetCone(sdm,edges[i],&points);CHKERRQ(ierr);
+  //    printf("(%d,%d) ",points[0]-pEnd,points[1]-pEnd);
+  //    }
+  //  printf("\n");
+  //}
+  ierr = DMPlexSymmetrize(sdm);CHKERRQ(ierr);
   ierr = DMPlexStratify(sdm);CHKERRQ(ierr);
+  ierr = DMView(sdm,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
   /* Convert coordinates */
-  ierr = DMPlexGetDepthStratum(dm, 0, &vStart, &vEnd);CHKERRQ(ierr);
+  ierr = DMPlexGetDepthStratum(sdm, 0, &vStart, &vEnd);CHKERRQ(ierr);
   ierr = DMGetCoordinateSection(dm, &coordSection);CHKERRQ(ierr);
   ierr = PetscSectionCreate(PetscObjectComm((PetscObject)dm), &newCoordSection);CHKERRQ(ierr);
   ierr = PetscSectionSetNumFields(newCoordSection, 1);CHKERRQ(ierr);
@@ -908,10 +936,47 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
   }
   ierr = PetscSectionSetUp(newCoordSection);CHKERRQ(ierr);
   ierr = DMSetCoordinateSection(sdm, PETSC_DETERMINE, newCoordSection);CHKERRQ(ierr);
-  ierr = PetscSectionDestroy(&newCoordSection);CHKERRQ(ierr); /* relinquish our reference */
+  //ierr = PetscSectionDestroy(&newCoordSection);CHKERRQ(ierr); /* relinquish our reference */
   ierr = DMGetCoordinatesLocal(dm, &coordinates);CHKERRQ(ierr);
-  ierr = DMSetCoordinatesLocal(sdm, coordinates);CHKERRQ(ierr);
-  /* Convert labels */
+  ierr = VecGetLocalSize(coordinates,&size);CHKERRQ(ierr);
+  Vec newCoordinates;
+  const PetscScalar *arr;
+  ierr = VecGetArrayRead(coordinates,&arr);CHKERRQ(ierr);
+  ierr = VecCreateSeq(PETSC_COMM_SELF,(vEnd-vStart)*dim,&newCoordinates);CHKERRQ(ierr);
+  for (v = 0; v < size; ++v) {
+    ierr = VecSetValue(newCoordinates,v,arr[v],INSERT_VALUES);CHKERRQ(ierr);
+  }
+  PetscInt i;
+  for (v = vStart+size/dim,i=size; v < vEnd;v++,i+=dim) {
+    ierr = findInt(v,pts,newpoints,&idx);CHKERRQ(ierr);
+    //printf("v %d %d %d\n",v,pts,idx);
+    ierr = VecSetValue(newCoordinates,i,arr[2*(oldpoints[idx]-vStart)],INSERT_VALUES);CHKERRQ(ierr);
+    ierr = VecSetValue(newCoordinates,i+1,arr[2*(oldpoints[idx]-vStart)+1],INSERT_VALUES);CHKERRQ(ierr);
+    //printf("i %d %f %f\n",i,arr[2*(oldpoints[idx]-vStart)],arr[2*(oldpoints[idx]-vStart)+1]);
+  }
+  VecView(coordinates,PETSC_VIEWER_STDOUT_WORLD);
+  VecView(newCoordinates,PETSC_VIEWER_STDOUT_WORLD);
+  ierr = DMSetCoordinatesLocal(sdm, newCoordinates);CHKERRQ(ierr);
+  /* Create ineq mat */
+  ierr = MatCreateAIJ(PetscObjectComm((PetscObject)sdm),PETSC_DECIDE,PETSC_DECIDE,user->numDupVertices*dim,(vEnd-vStart)*dim,2,NULL,2,NULL,&user->Bineq);CHKERRQ(ierr);
+  for (v = 0,l=0; v < pts; v++) {
+    PetscInt off1,off2;
+    if (oldpoints[v] == newpoints[v]) continue;
+    ierr = PetscSectionGetOffset(newCoordSection,oldpoints[v],&off1);CHKERRQ(ierr);
+    ierr = PetscSectionGetOffset(newCoordSection,newpoints[v],&off2);CHKERRQ(ierr);
+    for (i = 0; i < dim; i++) {
+      PetscScalar values[2] = {1.,-1.};
+      PetscInt idx[2] = {off1+i,off2+i};
+      ierr = MatSetValues(user->Bineq,1,&l,2,idx,values,INSERT_VALUES);CHKERRQ(ierr);
+      l++;
+    }
+  }
+  ierr = MatAssemblyBegin(user->Bineq,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+  ierr = MatAssemblyEnd(user->Bineq,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+  ierr = MatCreateVecs(user->Bineq,&user->cineq,NULL);CHKERRQ(ierr);
+  ierr = VecZeroEntries(user->cineq);CHKERRQ(ierr); /* TODO set aparature */
+  ierr = PetscSectionDestroy(&newCoordSection);CHKERRQ(ierr); /* relinquish our reference */
+  /* Copy labels */
   ierr = DMGetNumLabels(dm, &numLabels);CHKERRQ(ierr);
   for (l = 0; l < numLabels; ++l) {
     const char *lname;
@@ -936,7 +1001,10 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
       ierr = ISGetIndices(pointIS, &points);CHKERRQ(ierr);
       for (p = 0; p < numPoints; ++p) {
         PetscInt newpoint = points[p];
-
+        PetscInt depth;
+        ierr = DMPlexGetPointDepth(dm,newpoint,&depth);CHKERRQ(ierr);
+        newpoint += depthShift[depth];
+        /* TODO mark new points */
         ierr = DMSetLabelValue(sdm, lname, newpoint, ids[fs]);CHKERRQ(ierr);
       }
       ierr = ISRestoreIndices(pointIS, &points);CHKERRQ(ierr);
@@ -1098,6 +1166,11 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
   ierr = CreateBoundaryMesh(comm,user,&boundary);CHKERRQ(ierr);
   DMLabel label;
   ierr = DMPlexGenerate(boundary, NULL, PETSC_TRUE, dm);CHKERRQ(ierr);
+  ierr = DMView(*dm,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+  //DM dmint;
+  //ierr = DMPlexInterpolate(*dm,&dmint);CHKERRQ(ierr);
+  //ierr = DMView(dmint,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+  //exit(0);
   ierr = DMViewFromOptions(*dm, NULL, "-dm_view");CHKERRQ(ierr);
   ierr = MarkVertices2D(*dm,user->nFrac,user->fracCoord,PETSC_DEFAULT);CHKERRQ(ierr);
   ierr = MarkFractures(*dm,user->nFrac);CHKERRQ(ierr);
@@ -1430,6 +1503,7 @@ static PetscErrorCode ComputeRHS(DM dm,Vec F,void *ctx)
 
   PetscFunctionBeginUser;
   ierr = DMGetGlobalVector(dm,&X);CHKERRQ(ierr);
+
   ierr = DMGetLocalVector(dm,&Xloc);CHKERRQ(ierr);
   ierr = DMGetLocalVector(dm,&Floc);CHKERRQ(ierr);
 	ierr = VecZeroEntries(X);CHKERRQ(ierr);
@@ -1521,6 +1595,60 @@ static PetscErrorCode SolverKSP(DM dm,AppCtx *user,Vec u)
   PetscFunctionReturn(0);
 }
 
+static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
+{
+  Mat A,R;
+  Vec b,z;
+  QP  qp;
+  QPS qps;
+  PetscBool converged;
+  PetscInt n;
+  PetscErrorCode ierr;
+
+  PetscFunctionBeginUser;
+  ierr = DMCreateMatrix(dm,&A);CHKERRQ(ierr);
+  ierr = MatCreateVecs(A,&z,&b);CHKERRQ(ierr);
+  ierr = VecSet(z,0.0);CHKERRQ(ierr);
+
+  ierr = DMPlexSNESComputeJacobianFEM(dm,z,A,A,NULL);CHKERRQ(ierr);
+  ierr = ComputeRHS(dm,b,user);CHKERRQ(ierr);
+  //ierr = MatView(A,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+  //ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+
+  ierr = QPCreate(PETSC_COMM_WORLD,&qp);CHKERRQ(ierr);
+  ierr = QPSetOperator(qp,A);CHKERRQ(ierr);
+  ierr = QPSetRhs(qp,b);CHKERRQ(ierr);
+  ierr = VecView(b,PETSC_VIEWER_STDOUT_SELF);CHKERRQ(ierr);
+  ierr = QPSetInitialVector(qp,u);CHKERRQ(ierr);
+  if (user->Bineq) {
+    ierr = QPSetIneq(qp,user->Bineq,user->cineq);CHKERRQ(ierr);
+    ierr = MatGetSize(A,&n,NULL);CHKERRQ(ierr);
+    ierr = MatCreateAIJ(PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,n,0,0,NULL,0,NULL,&R);CHKERRQ(ierr);                   
+    printf("%d\n",n);
+    ierr = MatAssemblyBegin(R,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);                                                          
+    ierr = MatAssemblyEnd(R,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);    
+    ierr = QPSetOperatorNullSpace(qp,R);CHKERRQ(ierr);                                                                    
+    ierr = PetscOptionsInsertString(NULL,"-qpt_dualize_B_nest_extension 0 -qpt_dualize_G_explicit 0");CHKERRQ(ierr); /* workaround for empty nullspace */
+    ierr = QPTDualize(qp,MAT_INV_MONOLITHIC,MAT_REG_NONE);CHKERRQ(ierr);
+  }
+  ierr = QPSetFromOptions(qp);CHKERRQ(ierr);
+
+  ierr = QPSCreate(PetscObjectComm((PetscObject)qp),&qps);CHKERRQ(ierr);
+  ierr = QPSSetQP(qps,qp);CHKERRQ(ierr);
+  ierr = QPSSetFromOptions(qps);CHKERRQ(ierr);
+
+  ierr = QPSSolve(qps);CHKERRQ(ierr);                                                                                   
+  ierr = QPIsSolved(qp,&converged);CHKERRQ(ierr);                                                                       
+  if (!converged) PetscPrintf(PETSC_COMM_WORLD,"QPS did not converge!\n"); 
+
+  ierr = QPSDestroy(&qps);CHKERRQ(ierr);
+  ierr = QPDestroy(&qp);CHKERRQ(ierr);
+  ierr = MatDestroy(&A);CHKERRQ(ierr);
+  ierr = VecDestroy(&b);CHKERRQ(ierr);
+  ierr = VecDestroy(&z);CHKERRQ(ierr);
+  PetscFunctionReturn(0);
+}
+
 int main(int argc, char **argv)
 {
   DM             dm;   /* Problem specification */
@@ -1540,8 +1668,13 @@ int main(int argc, char **argv)
   ierr = VecSet(u, 0.0);CHKERRQ(ierr);
   ierr = PetscObjectSetName((PetscObject) u, "displacement");CHKERRQ(ierr);
   ierr = DMPlexSetSNESLocalFEM(dm, &user, &user, &user);CHKERRQ(ierr);
+  ISLocalToGlobalMapping ltogm;
+  DMGetLocalToGlobalMapping(dm,&ltogm);
+ISLocalToGlobalMappingViewFromOptions(ltogm,NULL,"-view_l2g");
   
-  if (user.solverksp) {
+  if (user.solverqps) {
+    ierr = SolverQPS(dm,&user,u);CHKERRQ(ierr);
+  } else if (user.solverksp) {
     ierr = SolverKSP(dm,&user,u);CHKERRQ(ierr);
   } else {
     ierr = SolverSNES(dm,u);CHKERRQ(ierr);
