@@ -37,6 +37,7 @@ typedef struct {
   /* Solver definition */
   PetscBool    useNearNullspace; /* Use the rigid body modes as a near nullspace for AMG */
   PetscReal *fracCoord;
+  PetscInt *oldpoints,*newpoints;
   PetscInt nFrac;
   Mat Bineq;
   Vec cineq;
@@ -79,6 +80,7 @@ static void f0_push_u(PetscInt dim, PetscInt Nf, PetscInt NfAux,
   PetscInt d;
   for (d = 0; d < dim; ++d) f0[d] = 0.0;
   f0[dim-1] = -1.;
+  //f0[dim-2] = 1.;
 }
 
 /*
@@ -830,7 +832,9 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
   newf = fEnd+depthShift[1]; /* TODO fix 3d */
   printf("%d %d\n",fEnd,depthShift[1]);
   ierr = PetscMalloc2(user->numDupVertices+2*user->nFrac,&newpoints,user->numDupVertices+2*user->nFrac,&oldpoints);CHKERRQ(ierr);
-  for (fs = 0; fs < user->numDupVertices; fs++) {
+  user->newpoints = newpoints;
+  user->oldpoints = oldpoints;
+  for (fs = 0; fs < user->numDupVertices+2*user->nFrac; fs++) {
     newpoints[fs] = -1;
     oldpoints[fs] = -1;
   }
@@ -957,24 +961,6 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
   VecView(coordinates,PETSC_VIEWER_STDOUT_WORLD);
   VecView(newCoordinates,PETSC_VIEWER_STDOUT_WORLD);
   ierr = DMSetCoordinatesLocal(sdm, newCoordinates);CHKERRQ(ierr);
-  /* Create ineq mat */
-  ierr = MatCreateAIJ(PetscObjectComm((PetscObject)sdm),PETSC_DECIDE,PETSC_DECIDE,user->numDupVertices*dim,(vEnd-vStart)*dim,2,NULL,2,NULL,&user->Bineq);CHKERRQ(ierr);
-  for (v = 0,l=0; v < pts; v++) {
-    PetscInt off1,off2;
-    if (oldpoints[v] == newpoints[v]) continue;
-    ierr = PetscSectionGetOffset(newCoordSection,oldpoints[v],&off1);CHKERRQ(ierr);
-    ierr = PetscSectionGetOffset(newCoordSection,newpoints[v],&off2);CHKERRQ(ierr);
-    for (i = 0; i < dim; i++) {
-      PetscScalar values[2] = {1.,-1.};
-      PetscInt idx[2] = {off1+i,off2+i};
-      ierr = MatSetValues(user->Bineq,1,&l,2,idx,values,INSERT_VALUES);CHKERRQ(ierr);
-      l++;
-    }
-  }
-  ierr = MatAssemblyBegin(user->Bineq,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  ierr = MatAssemblyEnd(user->Bineq,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  ierr = MatCreateVecs(user->Bineq,&user->cineq,NULL);CHKERRQ(ierr);
-  ierr = VecZeroEntries(user->cineq);CHKERRQ(ierr); /* TODO set aparature */
   ierr = PetscSectionDestroy(&newCoordSection);CHKERRQ(ierr); /* relinquish our reference */
   /* Copy labels */
   ierr = DMGetNumLabels(dm, &numLabels);CHKERRQ(ierr);
@@ -1308,7 +1294,6 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
   ierr = DMViewFromOptions(*dm, NULL, "-dm_view");CHKERRQ(ierr);
   ierr = ViewClosure(*dm,2,PETSC_TRUE);CHKERRQ(ierr);
   ierr = SplitFaces(dm,"fracture",user);CHKERRQ(ierr);
-  PetscInt *points;
   ierr = DMSetFromOptions(*dm);CHKERRQ(ierr); /* refine,... */
   DMView(*dm,PETSC_VIEWER_STDOUT_WORLD);
   ierr = DMViewFromOptions(*dm, NULL, "-dms_view");CHKERRQ(ierr);
@@ -1597,12 +1582,12 @@ static PetscErrorCode SolverKSP(DM dm,AppCtx *user,Vec u)
 
 static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
 {
-  Mat A,R;
-  Vec b,z;
+  Mat A,R,Bineq;
+  Vec b,cineq,z;
   QP  qp;
   QPS qps;
   PetscBool converged;
-  PetscInt n;
+  PetscInt i,j,l,n;
   PetscErrorCode ierr;
 
   PetscFunctionBeginUser;
@@ -1620,11 +1605,31 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
   ierr = QPSetRhs(qp,b);CHKERRQ(ierr);
   ierr = VecView(b,PETSC_VIEWER_STDOUT_SELF);CHKERRQ(ierr);
   ierr = QPSetInitialVector(qp,u);CHKERRQ(ierr);
-  if (user->Bineq) {
-    ierr = QPSetIneq(qp,user->Bineq,user->cineq);CHKERRQ(ierr);
+  if (user->numDupVertices) {
     ierr = MatGetSize(A,&n,NULL);CHKERRQ(ierr);
+    /* Create ineq mat */
+    ierr = MatCreateAIJ(PetscObjectComm((PetscObject)dm),PETSC_DECIDE,PETSC_DECIDE,user->numDupVertices*user->dim,n,2,NULL,2,NULL,&Bineq);CHKERRQ(ierr);CHKERRQ(ierr);
+    l = 0;
+    for (i=0; i<user->numDupVertices+2*user->nFrac; i++) {
+      PetscInt s1,s2,e1;
+      if (user->oldpoints[i] == user->newpoints[i]) continue;
+      ierr = DMPlexGetPointGlobal(dm,user->oldpoints[i],&s1,&e1);CHKERRQ(ierr);
+      ierr = DMPlexGetPointGlobal(dm,user->newpoints[i],&s2,NULL);CHKERRQ(ierr);
+      for (j = 0; j<e1-s1; j++) {
+        PetscScalar values[2] = {1.,-1.};
+        PetscInt idx[2] = {s1+j,s2+j};
+        ierr = MatSetValues(Bineq,1,&l,2,idx,values,INSERT_VALUES);CHKERRQ(ierr);
+        l++;
+      }
+    }
+    ierr = MatAssemblyBegin(Bineq,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+    ierr = MatAssemblyEnd(Bineq,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+    ierr = MatCreateVecs(Bineq,&cineq,NULL);CHKERRQ(ierr);
+    ierr = VecZeroEntries(cineq);CHKERRQ(ierr); /* TODO set aparature */
+    ierr = QPSetIneq(qp,Bineq,cineq);CHKERRQ(ierr);
+    
+    /* empty nullspace mat */
     ierr = MatCreateAIJ(PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,n,0,0,NULL,0,NULL,&R);CHKERRQ(ierr);                   
-    printf("%d\n",n);
     ierr = MatAssemblyBegin(R,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);                                                          
     ierr = MatAssemblyEnd(R,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);    
     ierr = QPSetOperatorNullSpace(qp,R);CHKERRQ(ierr);                                                                    
