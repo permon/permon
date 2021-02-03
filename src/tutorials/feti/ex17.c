@@ -79,8 +79,9 @@ static void f0_push_u(PetscInt dim, PetscInt Nf, PetscInt NfAux,
 {
   PetscInt d;
   for (d = 0; d < dim; ++d) f0[d] = 0.0;
-  f0[dim-1] = -1.;
-  //f0[dim-2] = 1.;
+  f0[dim-1] = 2.;
+  //f0[dim-2] = .5;
+  //f0[dim-2] = -2.;
 }
 
 /*
@@ -644,7 +645,7 @@ static PetscErrorCode CreateSquareBoundary(DM dm, const PetscReal lower[], const
 static PetscErrorCode CreateBoundaryMesh(MPI_Comm comm, AppCtx *user, DM *boundary)
 {
   PetscErrorCode ierr;
-  PetscInt       fac[3] = {3, 3, 1};
+  PetscInt       fac[3] = {1, 1, 1};
   PetscReal      low[3] = {0, 0, 0};
   PetscReal      upp[3] = {1, 1, 1};
 
@@ -652,10 +653,23 @@ static PetscErrorCode CreateBoundaryMesh(MPI_Comm comm, AppCtx *user, DM *bounda
   /* TODO: generating func */
   user->nFrac = 1;
   ierr = PetscMalloc1(4*user->nFrac,&user->fracCoord);CHKERRQ(ierr);
-  user->fracCoord[0] = .5;
-  user->fracCoord[1] = .5;
-  user->fracCoord[2] = .3;
-  user->fracCoord[3] = .2;
+  user->fracCoord[0] = .75;
+  user->fracCoord[1] = .75;
+  user->fracCoord[2] = .5;
+  user->fracCoord[3] = .75;
+  user->fracAperture[0] = .05;
+  //user->fracCoord[0] = .5;
+  //user->fracCoord[1] = .5;
+  //user->fracCoord[2] = .3;
+  //user->fracCoord[3] = .2;
+  //user->fracCoord[4] = .75;
+  //user->fracCoord[5] = .75;
+  //user->fracCoord[6] = .5;
+  //user->fracCoord[7] = .75;
+  //user->fracCoord[8] = .6;
+  //user->fracCoord[9] = .85;
+  //user->fracCoord[10] = .5;
+  //user->fracCoord[11] = .5;
   //user->fracCoord[4] = .2;
   //user->fracCoord[5] = .3;
   //user->fracCoord[6] = .6;
@@ -814,7 +828,7 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
       ierr = DMPlexGetConeOrientation(dm, p, &orientations);CHKERRQ(ierr);
       for (i = 0; i < size; ++i) {
         newpoints[i] = points[i]+shiftl;
-        printf("%d o:%d n:%d, (%d,%d)\n",d,p,newp,points[i],newpoints[i]);
+        //printf("%d o:%d n:%d, (%d,%d)\n",d,p,newp,points[i],newpoints[i]);
       }
       ierr = DMPlexSetCone(sdm, newp, newpoints);CHKERRQ(ierr);
       //if (d != depth) { //cells don't have orientation? 3D?
@@ -855,7 +869,7 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
       PetscInt i,cone[2],cell;
 
       ierr = DMPlexGetConeSize(dm, faces[f], &size);CHKERRQ(ierr); /* should be 2 */
-      if (size != 2) continue; /* there are vertices for some reason */
+      if (size != 2) printf("err\n");; /* there are vertices for some reason */
       ierr = DMPlexGetCone(dm, faces[f], &points);CHKERRQ(ierr);
       ierr = DMPlexGetConeOrientation(dm, faces[f], &orientations);CHKERRQ(ierr);
       for (i=0; i<2; i++) {
@@ -953,13 +967,13 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
   PetscInt i;
   for (v = vStart+size/dim,i=size; v < vEnd;v++,i+=dim) {
     ierr = findInt(v,pts,newpoints,&idx);CHKERRQ(ierr);
-    //printf("v %d %d %d\n",v,pts,idx);
+    printf("v %d %d %d\n",v,pts,idx);
     ierr = VecSetValue(newCoordinates,i,arr[2*(oldpoints[idx]-vStart)],INSERT_VALUES);CHKERRQ(ierr);
-    ierr = VecSetValue(newCoordinates,i+1,arr[2*(oldpoints[idx]-vStart)+1],INSERT_VALUES);CHKERRQ(ierr);
+    ierr = VecSetValue(newCoordinates,i+1,arr[2*(oldpoints[idx]-vStart)+1]-.05,INSERT_VALUES);CHKERRQ(ierr);
     //printf("i %d %f %f\n",i,arr[2*(oldpoints[idx]-vStart)],arr[2*(oldpoints[idx]-vStart)+1]);
   }
-  VecView(coordinates,PETSC_VIEWER_STDOUT_WORLD);
-  VecView(newCoordinates,PETSC_VIEWER_STDOUT_WORLD);
+  //VecView(coordinates,PETSC_VIEWER_STDOUT_WORLD);
+  //VecView(newCoordinates,PETSC_VIEWER_STDOUT_WORLD);
   ierr = DMSetCoordinatesLocal(sdm, newCoordinates);CHKERRQ(ierr);
   ierr = PetscSectionDestroy(&newCoordSection);CHKERRQ(ierr); /* relinquish our reference */
   /* Copy labels */
@@ -1041,6 +1055,7 @@ static PetscErrorCode MarkVertices2D(DM dm, PetscInt nFrac,const PetscReal coord
 {
   PetscInt          c, cdim, i, j,k, o, p, vStart, vEnd,val,size;
   Vec               allCoordsVec;
+  PetscScalar       min[2],max[2];
   const PetscScalar *allCoords;
   const PetscInt     *supp,*cone;
   PetscReal         area;
@@ -1050,19 +1065,24 @@ static PetscErrorCode MarkVertices2D(DM dm, PetscInt nFrac,const PetscReal coord
   if (eps < 0) eps = PETSC_SQRT_MACHINE_EPSILON;
   ierr = DMGetCoordinateDim(dm, &cdim);CHKERRQ(ierr);
   ierr = DMGetCoordinatesLocal(dm, &allCoordsVec);CHKERRQ(ierr);
-  VecView(allCoordsVec,PETSC_VIEWER_STDOUT_WORLD);
+  //VecView(allCoordsVec,PETSC_VIEWER_STDOUT_WORLD);
   ierr = VecGetArrayRead(allCoordsVec, &allCoords);CHKERRQ(ierr);
   ierr = DMPlexGetDepthStratum(dm, 0, &vStart, &vEnd);CHKERRQ(ierr);
-	
 	for (p = vStart,j=0; p < vEnd; p++,j+=cdim) { //for each vertex
 		for (i=0; i < nFrac*4; i+=4) { //for each fracture
-      area =  (coord[i]-coord[i+2])*(coord[i+3]-allCoords[j+1]); 
+      area  = (coord[i]-coord[i+2])*(coord[i+3]-allCoords[j+1]); 
       area -= (coord[i+1]-coord[i+3])*(coord[i+2]-allCoords[j]);
       if (PetscAbsReal(area) <= eps) {
-        //printf("%d frac: %f %f, %d\n",i/4,allCoords[j],allCoords[j+1],p);
+        /* check for straight line */
+        min[0] = PetscMin(coord[i],coord[i+2]);
+        min[1] = PetscMin(coord[i+1],coord[i+3]);
+        max[0] = PetscMax(coord[i],coord[i+2]);
+        max[1] = PetscMax(coord[i+1],coord[i+3]);
+        if (min[0] > allCoords[j] || min[1] > allCoords[j+1] || max[0] < allCoords[j] || max[1] < allCoords[j+1]) continue;
+        printf("%d frac: %f %f, %d\n",i/4,allCoords[j],allCoords[j+1],p);
         ierr = DMSetLabelValue(dm,"fracVert",p,i/4);
         /* mark fracture endpoints */
-        ierr = DMGetLabelValue(dm,"marker",p,&val);
+        ierr = DMGetLabelValue(dm,"marker",p,&val); /* check from coords? */
         if (val>-1) {
           ierr = DMSetLabelValue(dm,"fracEnd",p,i/4);
         }
@@ -1077,7 +1097,7 @@ static PetscErrorCode MarkVertices2D(DM dm, PetscInt nFrac,const PetscReal coord
           area -= (coord[i+1]-coord[i+3])*(coord[i+2]-allCoords[cdim*(val-vStart)]);
           if (area>0) {
             ierr = DMSetLabelValue(dm,"fracVertOrient",val,i/4);
-            //printf("+ %d: %d (%f,%f) \n",p-vStart,val-vStart,allCoords[(val-vStart)*cdim],allCoords[cdim*(val-vStart)+1]);
+            printf("+ %d: %d (%f,%f) \n",p-vStart,val-vStart,allCoords[(val-vStart)*cdim],allCoords[cdim*(val-vStart)+1]);
           }
         }
       }
@@ -1092,13 +1112,15 @@ static PetscErrorCode MarkFractures(DM dm,PetscInt nFrac)
 {
   const char     *bdname = "fracture";
   IS             is,isFace;
-  const PetscInt       *points,*pts,*faces,*faces2,*cells;
-  PetscInt       i,j,k,l,m,val,depth,nCovered,numPoints,pt[2],labv;
+  const PetscInt *points,*pts,*faces,*faces2,*cells,*orientPts;
+  PetscInt       i,j,k,l,m,n,val,depth,nCovered,numPoints,numOrientPts,pt[2],labv;
   DMLabel        label;
   PetscErrorCode ierr;
 
   PetscFunctionBeginUser;
   ierr = DMGetLabel(dm,"fracVert",&label);CHKERRQ(ierr);
+  ierr = DMLabelView(label, PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+  ierr = DMGetLabel(dm,"fracVertOrient",&label);CHKERRQ(ierr);
   ierr = DMLabelView(label, PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
   ierr = DMCreateLabel(dm, bdname);CHKERRQ(ierr);
   ierr = DMGetLabel(dm,bdname,&label);CHKERRQ(ierr);
@@ -1108,6 +1130,12 @@ static PetscErrorCode MarkFractures(DM dm,PetscInt nFrac)
     ierr = ISView(is,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
     ierr = ISGetLocalSize(is,&numPoints);CHKERRQ(ierr);
     ierr = ISGetIndices(is,&points);CHKERRQ(ierr);
+    ierr = ISDestroy(&is);CHKERRQ(ierr);
+    ierr = DMGetStratumIS(dm,"fracVertOrient",i,&is);CHKERRQ(ierr);
+    ierr = ISGetIndices(is,&orientPts);CHKERRQ(ierr);
+    ierr = ISGetLocalSize(is,&numOrientPts);CHKERRQ(ierr);
+    ierr = ISGetIndices(is,&orientPts);CHKERRQ(ierr);
+    ierr = ISDestroy(&is);CHKERRQ(ierr);
     for (j=0; j<numPoints; j++) {
       pt[0] = points[j];
       for (k=0; k<numPoints; k++) {
@@ -1116,19 +1144,29 @@ static PetscErrorCode MarkFractures(DM dm,PetscInt nFrac)
         ierr = DMPlexGetJoin(dm,2,pt,&nCovered,&faces);CHKERRQ(ierr);
         if (nCovered==1) {
           ierr = DMSetLabelValue(dm,bdname,faces[0],i);CHKERRQ(ierr);
-          /* mark adjacent + cells */
+          /* mark adjacent '+' cells */
           ierr = DMPlexGetSupport(dm,faces[0],&cells);CHKERRQ(ierr);
           for (l=0; l<2;l++) {
             ierr = DMPlexGetCone(dm,cells[l],&faces2);CHKERRQ(ierr);
             for (m=0; m<3; m++) {
               ierr = DMPlexGetCone(dm,faces2[m],&pts);CHKERRQ(ierr);
+              /* take vertex that is not in the fracture */
               val = pts[0];
-              if (val == pts[0]) val = pts[1];
-              ierr = DMGetLabelValue(dm,"fracVertOrient",val,&labv);CHKERRQ(ierr); /* TODO make sure that vertices on the fracture are not marked */
-              if (labv == i) {
-                ierr = DMSetLabelValue(dm,"fracCell",cells[l],i);CHKERRQ(ierr);
-                printf("cell %d, %d, %d,%d\n",cells[l],faces2[0],pts[0]-50,pts[1]-50);
-                break;
+              if (pt[0] == pts[0] || pt[1] == pts[0]) val = pts[1]; 
+              for (n=0; n<numPoints; n++) {
+                if (val == points[n]) {
+                  val = -1;
+                  break;
+                }
+              }
+              if (val < 0) continue; /* this face is makes part of the fracture */
+              for (n=0; n<numOrientPts; n++) {
+                if (orientPts[n] == val) {
+                  printf("val %d, pt %d %d\n",val,pt[0],pt[1]);
+                  ierr = DMSetLabelValue(dm,"fracCell",cells[l],i);CHKERRQ(ierr);
+                  printf("cell %d, %d, %d,%d\n",cells[l],faces2[0],pts[0],pts[1]);
+                  break;
+                }
               }
             }
           }
@@ -1152,14 +1190,12 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
   ierr = CreateBoundaryMesh(comm,user,&boundary);CHKERRQ(ierr);
   DMLabel label;
   ierr = DMPlexGenerate(boundary, NULL, PETSC_TRUE, dm);CHKERRQ(ierr);
-  ierr = DMView(*dm,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+  //ierr = DMView(*dm,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
   //DM dmint;
   //ierr = DMPlexInterpolate(*dm,&dmint);CHKERRQ(ierr);
   //ierr = DMView(dmint,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
   //exit(0);
   ierr = DMViewFromOptions(*dm, NULL, "-dm_view");CHKERRQ(ierr);
-  ierr = MarkVertices2D(*dm,user->nFrac,user->fracCoord,PETSC_DEFAULT);CHKERRQ(ierr);
-  ierr = MarkFractures(*dm,user->nFrac);CHKERRQ(ierr);
   //ierr = DMSetFromOptions(*dm);CHKERRQ(ierr);
   //ierr = DMViewFromOptions(*dm, NULL, "-dm_view");CHKERRQ(ierr);
   //ierr = DMPlexCreateBoxMesh(comm, user->dim, user->simplex, user->cells, NULL, NULL, NULL, PETSC_TRUE, dm);CHKERRQ(ierr);
@@ -1178,7 +1214,7 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
     ierr = DMGetStratumIS(*dm, "boundary", 1,  &is);CHKERRQ(ierr);
     ierr = DMCreateLabel(*dm,"Faces");CHKERRQ(ierr);
     if (is) {
-    ierr = ISView(is,PETSC_VIEWER_STDOUT_SELF);CHKERRQ(ierr);
+    //ierr = ISView(is,PETSC_VIEWER_STDOUT_SELF);CHKERRQ(ierr);
       PetscInt        d, f, Nf;
       const PetscInt *faces;
       PetscInt        csize, i;
@@ -1200,23 +1236,23 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
         PetscBool   marked = PETSC_FALSE;
         /* Get closure of the facet (vertices in 2D, edges in 3D) */
         ierr = DMPlexVecGetClosure(cdm, cs, coordinates, faces[f], &csize, &coords);CHKERRQ(ierr);
-        for (i=0; i<csize; i++) {
-          printf("%f, ", coords[i]);
-        }
-        printf("\n");
+        //for (i=0; i<csize; i++) {
+        //  printf("%f, ", coords[i]);
+        //}
+        //printf("\n");
         Nv   = csize/user->dim;
         /* Calculate mean coordinate vector: sum[xi,yi,zi]/dim */
         for (d = 0; d < user->dim; ++d) {
           faceCoord = 0.0;
           for (v = 0; v < Nv; ++v) faceCoord += PetscRealPart(coords[v*user->dim+d]);
           faceCoord /= Nv;
-          printf("%f\n", faceCoord);
+          //printf("%f\n", faceCoord);
           for (b = 0; b < 2; ++b) {
             /* assuming [0,1]^dim */
             if (PetscAbs(faceCoord - b) < PETSC_SMALL) {
               ierr = DMSetLabelValue(*dm, "Faces", faces[f], d*2+b+1);CHKERRQ(ierr);
               marked = PETSC_TRUE;
-              printf("%d %d %d\n", b, f,d*2+b+1);
+              //printf("%d %d %d\n", b, f,d*2+b+1);
             }
           }
         }
@@ -1226,9 +1262,9 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
     }
     ierr = ISDestroy(&is);CHKERRQ(ierr);
     ierr = DMGetLabel(*dm, "Faces", &label);CHKERRQ(ierr);
-    DMLabelView(label,PETSC_VIEWER_STDOUT_WORLD);
+    //DMLabelView(label,PETSC_VIEWER_STDOUT_WORLD);
     ierr = DMPlexLabelComplete(*dm, label);CHKERRQ(ierr);
-    DMLabelView(label,PETSC_VIEWER_STDOUT_WORLD);
+    //DMLabelView(label,PETSC_VIEWER_STDOUT_WORLD);
     //DM subdm;
     //DMLabel labelfrac,labelb;
     //ierr = DMGetLabel(*dm, "marker", &labelfrac);CHKERRQ(ierr);
@@ -1284,17 +1320,13 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
   ierr = PetscObjectSetName((PetscObject) *dm, "Mesh");CHKERRQ(ierr);
   ierr = DMSetApplicationContext(*dm, user);CHKERRQ(ierr);
   ierr = DMSetFromOptions(*dm);CHKERRQ(ierr); /* refine,... */
-  ierr = DMGetLabel(*dm,"fracVert",&label);CHKERRQ(ierr);
-  ierr = DMLabelView(label, PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-  ierr = DMGetLabel(*dm,"fracture",&label);CHKERRQ(ierr);
-  ierr = DMLabelView(label, PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-  //ierr = MarkFractures(*dm);CHKERRQ(ierr);
   /* duplicate vertices on fracture boundaries */
   DMView(*dm,PETSC_VIEWER_STDOUT_WORLD);
   ierr = DMViewFromOptions(*dm, NULL, "-dm_view");CHKERRQ(ierr);
-  ierr = ViewClosure(*dm,2,PETSC_TRUE);CHKERRQ(ierr);
+  ierr = MarkVertices2D(*dm,user->nFrac,user->fracCoord,PETSC_DEFAULT);CHKERRQ(ierr);
+  ierr = MarkFractures(*dm,user->nFrac);CHKERRQ(ierr);
   ierr = SplitFaces(dm,"fracture",user);CHKERRQ(ierr);
-  ierr = DMSetFromOptions(*dm);CHKERRQ(ierr); /* refine,... */
+  //ierr = DMSetFromOptions(*dm);CHKERRQ(ierr); /* refine,... */
   DMView(*dm,PETSC_VIEWER_STDOUT_WORLD);
   ierr = DMViewFromOptions(*dm, NULL, "-dms_view");CHKERRQ(ierr);
   PetscFunctionReturn(0);
@@ -1367,8 +1399,9 @@ static PetscErrorCode SetupPrimalProblem(DM dm, AppCtx *user)
 //  //if (user->solType == SOL_ELAS_AXIAL_DISP) {
     PetscInt cmp;
 
-    id   = dim == 3 ? 5 : 2;
-    //ierr = DMAddBoundary(dm,   DM_BC_NATURAL,   "right",  "marker", 0, 0, NULL, (void (*)(void)) zero, NULL, 1, &id, user);CHKERRQ(ierr);
+    //id   = dim == 3 ? 5 : 2;
+    id = 2;
+    ierr = DMAddBoundary(dm,   DM_BC_NATURAL,   "right",  "Faces", 0, 0, NULL, (void (*)(void)) cnst, NULL, 1, &id, user);CHKERRQ(ierr);
     id   = dim == 3 ? 6 : 4;
     id = 1;
     //cmp  = 0;
@@ -1603,7 +1636,7 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
   ierr = QPCreate(PETSC_COMM_WORLD,&qp);CHKERRQ(ierr);
   ierr = QPSetOperator(qp,A);CHKERRQ(ierr);
   ierr = QPSetRhs(qp,b);CHKERRQ(ierr);
-  ierr = VecView(b,PETSC_VIEWER_STDOUT_SELF);CHKERRQ(ierr);
+  //ierr = VecView(b,PETSC_VIEWER_STDOUT_SELF);CHKERRQ(ierr);
   ierr = QPSetInitialVector(qp,u);CHKERRQ(ierr);
   if (user->numDupVertices) {
     ierr = MatGetSize(A,&n,NULL);CHKERRQ(ierr);
@@ -1613,6 +1646,7 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
     for (i=0; i<user->numDupVertices+2*user->nFrac; i++) {
       PetscInt s1,s2,e1;
       if (user->oldpoints[i] == user->newpoints[i]) continue;
+      printf("bineq: %d %d\n",user->oldpoints[i],user->newpoints[i]);
       ierr = DMPlexGetPointGlobal(dm,user->oldpoints[i],&s1,&e1);CHKERRQ(ierr);
       ierr = DMPlexGetPointGlobal(dm,user->newpoints[i],&s2,NULL);CHKERRQ(ierr);
       for (j = 0; j<e1-s1; j++) {
@@ -1624,8 +1658,13 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
     }
     ierr = MatAssemblyBegin(Bineq,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
     ierr = MatAssemblyEnd(Bineq,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-    ierr = MatCreateVecs(Bineq,&cineq,NULL);CHKERRQ(ierr);
+  ierr = MatView(Bineq,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+    ierr = MatCreateVecs(Bineq,NULL,&cineq);CHKERRQ(ierr);
+  ierr = MatScale(Bineq,-1.);CHKERRQ(ierr);
     ierr = VecZeroEntries(cineq);CHKERRQ(ierr); /* TODO set aparature */
+    ierr = VecSetValue(cineq,1,0.05,INSERT_VALUES);CHKERRQ(ierr); /* TODO set aparature */
+    ierr = VecAssemblyBegin(cineq);CHKERRQ(ierr);
+    ierr = VecAssemblyEnd(cineq);CHKERRQ(ierr);
     ierr = QPSetIneq(qp,Bineq,cineq);CHKERRQ(ierr);
     
     /* empty nullspace mat */
@@ -1645,6 +1684,10 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
   ierr = QPSSolve(qps);CHKERRQ(ierr);                                                                                   
   ierr = QPIsSolved(qp,&converged);CHKERRQ(ierr);                                                                       
   if (!converged) PetscPrintf(PETSC_COMM_WORLD,"QPS did not converge!\n"); 
+
+  /* check the constraint */
+  ierr = MatMult(Bineq,u,cineq);CHKERRQ(ierr);
+  ierr = VecView(cineq,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
 
   ierr = QPSDestroy(&qps);CHKERRQ(ierr);
   ierr = QPDestroy(&qp);CHKERRQ(ierr);
