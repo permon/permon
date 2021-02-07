@@ -4,10 +4,10 @@
 
 int main(int argc,char **args)
 {
-  Mat            A,Ainv;
+  Mat            A,R;
   PetscInt       i,n = 5,row[2],col[2],rstart,rend;
   PetscReal      val[] = {1.0, -1.0, -1.0, 1.0};
-
+  PetscBool      flg;
   PetscErrorCode ierr;
 
   ierr = PermonInitialize(&argc,&args,(char *)0,(char *)0);if (ierr) return ierr;
@@ -29,17 +29,14 @@ int main(int argc,char **args)
   ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
   ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
 
-  ierr = MatCreateInv(A,MAT_INV_MONOLITHIC,&Ainv);CHKERRQ(ierr);
-  ierr = MatInvComputeNullSpace(Ainv);CHKERRQ(ierr);
-  /* nullspace is checked automatically in MatInvComputeNullSpace() in debug mode */
-  {
-    Mat R;
-    ierr = MatInvGetNullSpace(Ainv,&R);CHKERRQ(ierr);
-    ierr = MatCheckNullSpace(A,R,PETSC_SMALL);CHKERRQ(ierr);
-  }
+  ierr = MatComputeNullSpaceMat(A,NULL,MAT_ORTH_GS,MAT_ORTH_FORM_EXPLICIT,&R);CHKERRQ(ierr);
+  /* nullspace is checked automatically in MatSetNullSpaceMat() in debug mode */
+  ierr = MatSetNullSpaceMat(A,R);CHKERRQ(ierr);
+  ierr = MatCheckNullSpaceMat(A,R,PETSC_DEFAULT,&flg);CHKERRQ(ierr);
+  if (!flg) SETERRQ(PetscObjectComm((PetscObject)A), PETSC_ERR_ARG_WRONG, "R is unlikely to be nullspace of A");
 
   ierr = MatDestroy(&A);CHKERRQ(ierr);
-  ierr = MatDestroy(&Ainv);CHKERRQ(ierr);
+  ierr = MatDestroy(&R);CHKERRQ(ierr);
   ierr = PermonFinalize();
   return ierr;
 }

@@ -16,9 +16,8 @@ struct _p_QP {
   void             *changeListenerCtx;
   PetscErrorCode   (*changeListener)(QP);
 
-  /* Hessian matrix, Hessian symmetry flag, Hessian kernel, and right hand-side vector */
+  /* Hessian matrix, Hessian symmetry flag, and right hand-side vector */
   Mat              A;
-  Mat              R;
   Vec              b;
   PetscBool        b_plus;
 

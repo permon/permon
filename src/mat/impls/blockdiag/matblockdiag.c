@@ -697,6 +697,21 @@ static PetscErrorCode MatOrthColumns_BlockDiag(Mat A, MatOrthType type, MatOrthF
   PetscFunctionReturn(0);
 }
 
+static PetscErrorCode MatComputeNullSpaceMat_BlockDiag(Mat K, PC pc, MatOrthType orthType, MatOrthForm orthForm, Mat *R_new)
+{
+  Mat Kl,Rl;
+
+  PetscFunctionBegin;
+  TRY( MatGetDiagonalBlock(K,&Kl) );
+  TRY( MatComputeNullSpaceMat(Kl,pc,orthType,orthForm,&Rl) );
+  TRY( MatCreateBlockDiag(PetscObjectComm((PetscObject)K),Rl,R_new) );
+  TRY( MatSetNullSpaceMat(Kl,Rl) );
+  TRY( PetscObjectSetName((PetscObject)Rl,"R_loc") );
+  TRY( PetscObjectSetName((PetscObject)*R_new,"R") );
+  TRY( MatDestroy(&Rl) );
+  PetscFunctionReturn(0);
+}
+
 #undef __FUNCT__
 #define __FUNCT__ "MatCreate_BlockDiag"
 FLLOP_EXTERN PetscErrorCode MatCreate_BlockDiag(Mat B) {
@@ -745,6 +760,7 @@ FLLOP_EXTERN PetscErrorCode MatCreate_BlockDiag(Mat B) {
   TRY( PetscObjectComposeFunction((PetscObject)B,"MaProductSetFromOptions_blockdiag_mpiaij",MatProductSetFromOptions_BlockDiag_AIJ) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatConvert_blockdiag_aij_C",MatConvert_BlockDiag_AIJ) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"MatOrthColumns_C",MatOrthColumns_BlockDiag) );
+  TRY( PetscObjectComposeFunction((PetscObject)B,"MatComputeNullSpaceMat_C",MatComputeNullSpaceMat_BlockDiag) );
   TRY( PetscObjectComposeFunction((PetscObject)B,"PermonMatConvertBlocks_C",PermonMatConvertBlocks_BlockDiag) );
   PetscFunctionReturn(0);
 }

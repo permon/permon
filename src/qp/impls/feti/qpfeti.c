@@ -124,12 +124,13 @@ PetscErrorCode QPFetiSetDirichlet(QP qp, IS dbcis, QPFetiNumberingType numtype, 
 #define __FUNCT__ "QPFetiAssembleDirichlet_ModifyR_Private"
 static PetscErrorCode QPFetiAssembleDirichlet_ModifyR_Private(QP qp, IS dbcis)
 {
-  Mat R, R_loc;
+  Mat K, R, R_loc;
   PetscInt m, n_dbc_local;
   PetscMPIInt rank;
 
   PetscFunctionBegin;
-  TRY( QPGetOperatorNullSpace(qp, &R) );
+  TRY( QPGetOperator(qp, &K) );
+  TRY( MatGetNullSpaceMat(K, &R) );
   if (!R) PetscFunctionReturn(0);
 
   TRY( MatGetDiagonalBlock(R, &R_loc) );
@@ -146,7 +147,7 @@ static PetscErrorCode QPFetiAssembleDirichlet_ModifyR_Private(QP qp, IS dbcis)
   TRY( MatCreateBlockDiag(PetscObjectComm((PetscObject)R), R_loc, &R) );
   TRY( MatAssemblyBegin(R,MAT_FINAL_ASSEMBLY) );
   TRY( MatAssemblyEnd(R,MAT_FINAL_ASSEMBLY) );
-  TRY( QPSetOperatorNullSpace(qp, R) );
+  TRY( MatSetNullSpaceMat(K, R) );
   TRY( MatDestroy(&R_loc) );
   TRY( MatDestroy(&R) );
   PetscFunctionReturn(0);
