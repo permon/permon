@@ -151,6 +151,7 @@ FLLOP_EXTERN PetscErrorCode MatRedistributeRows(Mat mat_from,IS rowperm,PetscInt
 
 /* FETI UTILITIES */
 FLLOP_EXTERN PetscErrorCode MatRemoveGluingOfDirichletDofs(Mat Bgt, Vec cg, Mat Bdt, Mat *Bgt_new, Vec *cg_new, IS *is_new);
+FLLOP_EXTERN PetscErrorCode MatRemoveGluingOfDirichletDofs_old(Mat Bgt, Vec cg, Mat Bdt, Mat *Bgt_new, Vec *cg_new, IS *is_new);
 
 /*   ORTHONORMALIZATION   */
 typedef enum {MAT_ORTH_NONE=0, MAT_ORTH_GS, MAT_ORTH_GS_LINGEN, MAT_ORTH_CHOLESKY, MAT_ORTH_IMPLICIT, MAT_ORTH_INEXACT} MatOrthType;
