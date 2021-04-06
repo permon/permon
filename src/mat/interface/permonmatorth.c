@@ -294,7 +294,7 @@ static PetscErrorCode MatOrthColumns_GS(Mat A, MatOrthType type, MatOrthForm for
   PetscScalar    *dots;
   PetscInt       o_acc=0, o_max=0;
   PetscErrorCode (*f)(MPI_Comm,PetscInt,Vec[],Vec[],PetscScalar[],PetscInt*,PetscInt*);
-  PetscBool      computeS = (form==MAT_ORTH_FORM_IMPLICIT || S_new);
+  PetscBool      computeS = (PetscBool)(form==MAT_ORTH_FORM_IMPLICIT || S_new);
 
   PetscFunctionBeginI;
   TRY( PetscObjectGetComm((PetscObject)A,&comm) );

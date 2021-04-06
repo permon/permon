@@ -250,7 +250,7 @@ PetscErrorCode QPTEnforceEqByProjector(QP qp)
   TRY( PetscOptionsGetBool(NULL,NULL,"-qpt_project_pc_symmetric",&pc_symmetric,NULL) );
   TRY( PetscOptionsGetBool(NULL,NULL,"-qpt_project_inherit_box_multipliers",&inherit_box_multipliers,NULL) );
 
-  eqonly = !(qp->BI || qp->qpc);
+  eqonly = PetscNot(qp->BI || qp->qpc);
   if (eqonly) {
     TRY( PetscInfo(qp, "only lin. eq. con. were prescribed ==> they are now eliminated\n") );
     TRY( QPSetEq(  child, NULL, NULL) );

@@ -239,7 +239,7 @@ PetscErrorCode QPChainPostSolve(QP qp)
   }
 
   TRY( PetscOptionsGetViewer(comm,NULL,prefix,"-qp_chain_view_kkt",&v,&format,&view) );
-  view &= !PetscPreLoadingOn;
+  view = (PetscBool)(view && !PetscPreLoadingOn);
   if (view) {
     TRY( PetscObjectTypeCompare((PetscObject)v,PETSCVIEWERASCII,&flg) );
     if (!flg) FLLOP_SETERRQ1(comm,PETSC_ERR_SUP,"Viewer type %s not supported",((PetscObject)v)->type_name);

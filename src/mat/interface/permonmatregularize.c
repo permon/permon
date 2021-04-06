@@ -201,14 +201,15 @@ static PetscErrorCode MatRegularize_GetRegularization_Private(Mat K_loc, Mat R_l
 #undef __FUNCT__  
 #define __FUNCT__ "MatRegularize"
 PetscErrorCode MatRegularize(Mat K, Mat R, MatRegularizationType type, Mat *newKreg) {
-  static PetscBool  registered = PETSC_FALSE;
-  static PetscInt   regularized_id;
-  MPI_Comm          comm;
-  IS                pivots;
-  Mat               Q_loc, Kreg;
-  PetscScalar       rho;
-  Mat               K_loc, R_loc;
-  PetscBool         regularized = PETSC_FALSE;
+  static PetscBool      registered = PETSC_FALSE;
+  static PetscInt       regularized_id;
+  MPI_Comm              comm;
+  IS                    pivots;
+  Mat                   Q_loc, Kreg;
+  PetscScalar           rho;
+  Mat                   K_loc, R_loc;
+  PETSC_UNUSED PetscInt regularized_int;
+  PetscBool             regularized = PETSC_FALSE;
 
   FllopTracedFunctionBegin;
   PetscValidHeaderSpecific(K,MAT_CLASSID,1);
@@ -228,7 +229,7 @@ PetscErrorCode MatRegularize(Mat K, Mat R, MatRegularizationType type, Mat *newK
     TRY( PetscObjectComposedDataRegister(&regularized_id) );
   }
 
-  TRY( PetscObjectComposedDataGetInt((PetscObject)K,regularized_id,regularized,regularized) );
+  TRY( PetscObjectComposedDataGetInt((PetscObject)K,regularized_id,regularized_int,regularized) );
   if (regularized) {
     TRY( PetscInfo(K,"matrix marked as regularized, returning input matrix\n") );
     *newKreg = K;

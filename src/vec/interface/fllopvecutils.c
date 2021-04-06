@@ -307,7 +307,7 @@ PetscErrorCode VecIsValid(Vec vec,PetscBool *flg)
   PetscBool flg_;
   PetscFunctionBegin;
   TRY( VecIsInvalidated(vec,&flg_) );
-  *flg = !flg_;
+  *flg = PetscNot(flg_);
   PetscFunctionReturn(0);
 }
 

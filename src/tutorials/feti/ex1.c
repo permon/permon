@@ -89,7 +89,7 @@ int main(int argc,char **args)
     ierr = ISCreateGeneral(PETSC_COMM_WORLD,0,idx,PETSC_COPY_VALUES,&dirichletIS);CHKERRQ(ierr);
   }
   ierr = PetscOptionsGetBool(NULL,NULL,"-dir_in_hess",&dirInHess,NULL);CHKERRQ(ierr); 
-  ierr = KSPFETISetDirichlet(ksp,dirichletIS,FETI_GLOBAL_UNDECOMPOSED,!dirInHess);CHKERRQ(ierr);
+  ierr = KSPFETISetDirichlet(ksp,dirichletIS,FETI_GLOBAL_UNDECOMPOSED,PetscNot(dirInHess));CHKERRQ(ierr);
   /* Values of Dirichlet BC are passed in solution */
   //ierr = VecSet(solution,1.0);CHKERRQ(ierr); 
   //ierr = KSPSetInitialGuessNonzero);CHKERRQ(ierr);
