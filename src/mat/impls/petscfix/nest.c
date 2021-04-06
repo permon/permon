@@ -471,16 +471,16 @@ static PetscErrorCode MatProductNumeric_NestPermon(Mat C)
 {
   Mat_Product    *product = C->product;
   Mat            A=product->A,B=product->B;
-  Mat            new;
+  Mat            newmat;
 
   switch (product->type) {
   case MATPRODUCT_AB:
-    TRY( MatMatMult_NestPermon_NestPermon(A,B,product->fill,&new) );
+    TRY( MatMatMult_NestPermon_NestPermon(A,B,product->fill,&newmat) );
     break;
   default: SETERRQ(PetscObjectComm((PetscObject)C),PETSC_ERR_SUP,"MATPRODUCT type is not supported");
   }
   C->product = NULL;
-  TRY( MatHeaderReplace(C,&new) );
+  TRY( MatHeaderReplace(C,&newmat) );
   C->product = product;
   C->ops->productnumeric = MatProductNumeric_NestPermon;
   PetscFunctionReturn(0);

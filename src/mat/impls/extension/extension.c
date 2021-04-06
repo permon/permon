@@ -686,7 +686,7 @@ static PetscErrorCode MatProductNumeric_BlockDiag_Extension(Mat C)
 {
   Mat_Product    *product = C->product;
   Mat            A=product->A,B=product->B;
-  Mat            new;
+  Mat            newmat;
   PetscBool      flg = PETSC_FALSE;
 
   switch (product->type) {
@@ -695,15 +695,15 @@ static PetscErrorCode MatProductNumeric_BlockDiag_Extension(Mat C)
     TRY( PetscOptionsBool("-MatTrMatMult_2extension","MatTransposeMatMult_BlockDiag_Extension_2extension","Mat type of resulting matrix will be extension",flg,&flg,NULL) );
     _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
     if (flg){
-      TRY( MatTransposeMatMult_BlockDiag_Extension_2extension(A, B, MAT_INITIAL_MATRIX, product->fill, &new) );
+      TRY( MatTransposeMatMult_BlockDiag_Extension_2extension(A, B, MAT_INITIAL_MATRIX, product->fill, &newmat) );
     }else{
-      TRY( MatTransposeMatMult_BlockDiag_Extension_2MPIAIJ(A, B, MAT_INITIAL_MATRIX, product->fill, &new) );
+      TRY( MatTransposeMatMult_BlockDiag_Extension_2MPIAIJ(A, B, MAT_INITIAL_MATRIX, product->fill, &newmat) );
     }
     break;
   default: SETERRQ(PetscObjectComm((PetscObject)C),PETSC_ERR_SUP,"MATPRODUCT type is not supported");
   }
   C->product = NULL;
-  TRY( MatHeaderReplace(C,&new) );
+  TRY( MatHeaderReplace(C,&newmat) );
   C->product = product;
   C->ops->productnumeric = MatProductNumeric_BlockDiag_Extension;
   PetscFunctionReturn(0);
@@ -1049,7 +1049,7 @@ static PetscErrorCode MatProductNumeric_Extension(Mat C)
 {
   Mat_Product *product = C->product;
   Mat         A=product->A,B=product->B;
-  Mat         new;
+  Mat         newmat;
   PetscInt    mattype = 0; /* make aij default type */
   const char  *allowedMats[3] = {"aij","baij","sbaij"};
 
@@ -1062,12 +1062,12 @@ static PetscErrorCode MatProductNumeric_Extension(Mat C)
     _fllop_ierr = PetscObjectOptionsBegin((PetscObject)C);CHKERRQ(_fllop_ierr);
     TRY( PetscOptionsEList("-MatMatMultExt_mattype","MatMatMultExt_mattype","Set type of resulting matrix when assembling from extension type",allowedMats,3,MATAIJ,&mattype,NULL) );
     _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
-    TRY( MatMatTransposeMult_Extension_Extension_same(A,B,MAT_INITIAL_MATRIX,product->fill,mattype,&new) );
+    TRY( MatMatTransposeMult_Extension_Extension_same(A,B,MAT_INITIAL_MATRIX,product->fill,mattype,&newmat) );
     break;
   default: SETERRQ(PetscObjectComm((PetscObject)C),PETSC_ERR_SUP,"MATPRODUCT type is not supported");
   }
   C->product = NULL;
-  TRY( MatHeaderReplace(C,&new) );
+  TRY( MatHeaderReplace(C,&newmat) );
   C->product = product;
   C->ops->productnumeric = MatProductNumeric_Extension;
   PetscFunctionReturn(0);
