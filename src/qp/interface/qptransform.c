@@ -743,7 +743,7 @@ static PetscErrorCode QPTDualizeView_Private(QP qp, QP child)
   QPTDualizeView_Private_SetName(lb,    "lb");
 
   if (FllopObjectInfoEnabled && !PetscPreLoadingOn) {
-    TRY( PetscPrintf(comm, "*** "__FUNCT__":\n") );
+    TRY( PetscPrintf(comm, "*** %s:\n",__FUNCT__) );
     if (K)      TRY( MatPrintInfo(K) );
     if (Kreg)   TRY( MatPrintInfo(Kreg) );
     if (Kplus)  TRY( MatPrintInfo(Kplus) );

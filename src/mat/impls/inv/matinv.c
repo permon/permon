@@ -836,7 +836,7 @@ PetscErrorCode MatView_Inv(Mat imat, PetscViewer viewer)
   TRY( MPI_Comm_rank(comm, &rank) );
   TRY( MPI_Comm_size(comm, &size) );
   TRY( PetscObjectTypeCompare((PetscObject)viewer,PETSCVIEWERASCII,&iascii) );
-  if (!iascii) FLLOP_SETERRQ1(comm,PETSC_ERR_SUP,"Viewer type %s not supported for matrix type "MATINV, ((PetscObject)viewer)->type);
+  if (!iascii) FLLOP_SETERRQ2(comm,PETSC_ERR_SUP,"Viewer type %s not supported for matrix type %s",((PetscObject)viewer)->type,((PetscObject)imat)->type_name);
   TRY( PetscViewerGetFormat(viewer,&format) );
 
   if (format == PETSC_VIEWER_DEFAULT) {

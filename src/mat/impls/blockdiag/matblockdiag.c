@@ -545,7 +545,7 @@ PetscErrorCode MatView_BlockDiag(Mat mat,PetscViewer viewer)
   PetscFunctionBegin;
   TRY( PetscObjectGetComm((PetscObject)mat,&comm) );
   TRY( PetscObjectTypeCompare((PetscObject)viewer,PETSCVIEWERASCII,&iascii) );
-  if (!iascii) FLLOP_SETERRQ1(comm,PETSC_ERR_SUP,"Viewer type %s not supported for matrix type "MATBLOCKDIAG, ((PetscObject)viewer)->type);
+  if (!iascii) FLLOP_SETERRQ2(comm,PETSC_ERR_SUP,"Viewer type %s not supported for matrix type %s",((PetscObject)viewer)->type,((PetscObject)mat)->type_name);
   TRY( PetscViewerGetFormat(viewer,&format) );
 
   if (format == PETSC_VIEWER_DEFAULT) {
@@ -600,7 +600,7 @@ PetscErrorCode MatAssemblyEnd_BlockDiag(Mat mat, MatAssemblyType type)
 PetscErrorCode MatSetLocalToGlobalMapping_BlockDiag(Mat x,ISLocalToGlobalMapping rmapping,ISLocalToGlobalMapping cmapping)
 {
   PetscFunctionBegin;
-  FLLOP_SETERRQ(PetscObjectComm((PetscObject)x),PETSC_ERR_SUP,"custom LocalToGlobalMapping not allowed for matrix of type "MATBLOCKDIAG);
+  FLLOP_SETERRQ1(PetscObjectComm((PetscObject)x),PETSC_ERR_SUP,"custom LocalToGlobalMapping not allowed for matrix of type %s",((PetscObject)x)->type_name);
   PetscFunctionReturn(0);
 }
 
