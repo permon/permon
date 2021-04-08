@@ -339,19 +339,19 @@ static PetscErrorCode MatProductNumeric_BlockDiag_AIJ(Mat C)
 {
   Mat_Product    *product = C->product;
   Mat            A=product->A,B=product->B;
-  Mat            new;
+  Mat            newmat;
 
   switch (product->type) {
   case MATPRODUCT_AB:
-    TRY( MatMatMult_BlockDiag_AIJ(A,B,product->fill,&new) );
+    TRY( MatMatMult_BlockDiag_AIJ(A,B,product->fill,&newmat) );
     break;
   case MATPRODUCT_AtB:
-    TRY( MatTransposeMatMult_BlockDiag_AIJ(A,B,product->fill,&new) );
+    TRY( MatTransposeMatMult_BlockDiag_AIJ(A,B,product->fill,&newmat) );
     break;
   default: SETERRQ(PetscObjectComm((PetscObject)C),PETSC_ERR_SUP,"MATPRODUCT type is not supported");
   }
   C->product = NULL;
-  TRY( MatHeaderReplace(C,&new) );
+  TRY( MatHeaderReplace(C,&newmat) );
   C->product = product;
   C->ops->productnumeric = MatProductNumeric_BlockDiag_AIJ;
   PetscFunctionReturn(0);
@@ -381,19 +381,19 @@ static PetscErrorCode MatProductNumeric_BlockDiag(Mat C)
 {
   Mat_Product    *product = C->product;
   Mat            A=product->A,B=product->B;
-  Mat            new;
+  Mat            newmat;
 
   switch (product->type) {
   case MATPRODUCT_AB:
-    TRY( MatMatMult_BlockDiag_BlockDiag(A,B,product->fill,&new) );
+    TRY( MatMatMult_BlockDiag_BlockDiag(A,B,product->fill,&newmat) );
     break;
   case MATPRODUCT_AtB:
-    TRY( MatTransposeMatMult_BlockDiag_BlockDiag(A,B,product->fill,&new) );
+    TRY( MatTransposeMatMult_BlockDiag_BlockDiag(A,B,product->fill,&newmat) );
     break;
   default: SETERRQ(PetscObjectComm((PetscObject)C),PETSC_ERR_SUP,"MATPRODUCT type is not supported");
   }
   C->product = NULL;
-  TRY( MatHeaderReplace(C,&new) );
+  TRY( MatHeaderReplace(C,&newmat) );
   C->product = product;
   C->ops->productnumeric = MatProductNumeric_BlockDiag;
   PetscFunctionReturn(0);
@@ -545,7 +545,7 @@ PetscErrorCode MatView_BlockDiag(Mat mat,PetscViewer viewer)
   PetscFunctionBegin;
   TRY( PetscObjectGetComm((PetscObject)mat,&comm) );
   TRY( PetscObjectTypeCompare((PetscObject)viewer,PETSCVIEWERASCII,&iascii) );
-  if (!iascii) FLLOP_SETERRQ1(comm,PETSC_ERR_SUP,"Viewer type %s not supported for matrix type "MATBLOCKDIAG, ((PetscObject)viewer)->type);
+  if (!iascii) FLLOP_SETERRQ2(comm,PETSC_ERR_SUP,"Viewer type %s not supported for matrix type %s",((PetscObject)viewer)->type,((PetscObject)mat)->type_name);
   TRY( PetscViewerGetFormat(viewer,&format) );
 
   if (format == PETSC_VIEWER_DEFAULT) {
@@ -600,7 +600,7 @@ PetscErrorCode MatAssemblyEnd_BlockDiag(Mat mat, MatAssemblyType type)
 PetscErrorCode MatSetLocalToGlobalMapping_BlockDiag(Mat x,ISLocalToGlobalMapping rmapping,ISLocalToGlobalMapping cmapping)
 {
   PetscFunctionBegin;
-  FLLOP_SETERRQ(PetscObjectComm((PetscObject)x),PETSC_ERR_SUP,"custom LocalToGlobalMapping not allowed for matrix of type "MATBLOCKDIAG);
+  FLLOP_SETERRQ1(PetscObjectComm((PetscObject)x),PETSC_ERR_SUP,"custom LocalToGlobalMapping not allowed for matrix of type %s",((PetscObject)x)->type_name);
   PetscFunctionReturn(0);
 }
 

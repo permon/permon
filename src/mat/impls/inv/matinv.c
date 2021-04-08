@@ -836,7 +836,7 @@ PetscErrorCode MatView_Inv(Mat imat, PetscViewer viewer)
   TRY( MPI_Comm_rank(comm, &rank) );
   TRY( MPI_Comm_size(comm, &size) );
   TRY( PetscObjectTypeCompare((PetscObject)viewer,PETSCVIEWERASCII,&iascii) );
-  if (!iascii) FLLOP_SETERRQ1(comm,PETSC_ERR_SUP,"Viewer type %s not supported for matrix type "MATINV, ((PetscObject)viewer)->type);
+  if (!iascii) FLLOP_SETERRQ2(comm,PETSC_ERR_SUP,"Viewer type %s not supported for matrix type %s",((PetscObject)viewer)->type,((PetscObject)imat)->type_name);
   TRY( PetscViewerGetFormat(viewer,&format) );
 
   if (format == PETSC_VIEWER_DEFAULT) {
@@ -863,10 +863,10 @@ PetscErrorCode MatView_Inv(Mat imat, PetscViewer viewer)
         TRY( KSPGetPC(inv->ksp, &pc) );
         red = (PC_Redundant*)pc->data;
         TRY( PetscViewerASCIIPrintf(viewer,"Redundant preconditioner: First (color=0) of %D nested KSPs follows\n",red->nsubcomm) );
-        show = !red->psubcomm->color;
+        show = PetscNot(red->psubcomm->color);
       } else {                /* inv->ksp is PCBJACOBI */
         TRY( PetscViewerASCIIPrintf(viewer,"Block Jacobi preconditioner: First (rank=0) of %D nested diagonal block KSPs follows\n",size) );
-        show = !rank;
+        show = PetscNot(rank);
       }
       TRY( PetscViewerASCIIPushTab(viewer) );
       TRY( PetscObjectGetComm((PetscObject)inv->innerksp, &subcomm) );

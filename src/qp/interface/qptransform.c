@@ -250,7 +250,7 @@ PetscErrorCode QPTEnforceEqByProjector(QP qp)
   TRY( PetscOptionsGetBool(NULL,NULL,"-qpt_project_pc_symmetric",&pc_symmetric,NULL) );
   TRY( PetscOptionsGetBool(NULL,NULL,"-qpt_project_inherit_box_multipliers",&inherit_box_multipliers,NULL) );
 
-  eqonly = !(qp->BI || qp->qpc);
+  eqonly = PetscNot(qp->BI || qp->qpc);
   if (eqonly) {
     TRY( PetscInfo(qp, "only lin. eq. con. were prescribed ==> they are now eliminated\n") );
     TRY( QPSetEq(  child, NULL, NULL) );
@@ -743,7 +743,7 @@ static PetscErrorCode QPTDualizeView_Private(QP qp, QP child)
   QPTDualizeView_Private_SetName(lb,    "lb");
 
   if (FllopObjectInfoEnabled && !PetscPreLoadingOn) {
-    TRY( PetscPrintf(comm, "*** "__FUNCT__":\n") );
+    TRY( PetscPrintf(comm, "*** %s:\n",__FUNCT__) );
     if (K)      TRY( MatPrintInfo(K) );
     if (Kreg)   TRY( MatPrintInfo(Kreg) );
     if (Kplus)  TRY( MatPrintInfo(Kplus) );
@@ -1334,7 +1334,6 @@ PetscErrorCode QPTRemoveGluingOfDirichletDofs(QP qp)
   flg = PETSC_FALSE;
   TRY( PetscOptionsGetBool(NULL,NULL,"-qpt_remove_gluing_dirichlet_old",&flg,NULL) );
   if (flg) {
-    FLLOP_EXTERN PetscErrorCode MatRemoveGluingOfDirichletDofs_old(Mat,Vec,Mat,Mat*,Vec*,IS*);
     TRY( MatRemoveGluingOfDirichletDofs_old(Bgt,NULL,Bdt,&Bgt_new,NULL,&is) );
   } else {
     TRY( MatRemoveGluingOfDirichletDofs(Bgt,NULL,Bdt,&Bgt_new,NULL,&is) );
