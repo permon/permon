@@ -566,16 +566,11 @@ static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
       inv->innerksp = *kspp;
     } else {
       char stri[1024];
-      TRY( PetscSNPrintf(stri, sizeof(stri), "-%smat_inv_redundant_pc_type none",prefix) );
+      TRY( PetscSNPrintf(stri, sizeof(stri), "-%smat_inv_psubcomm_type %s",prefix,PetscSubcommTypes[inv->psubcommType]) );
       TRY( PetscOptionsInsertString(NULL,stri) );
-      //petsc bug start https://bitbucket.org/petsc/petsc/branch/hzhang/fix-pcredundant#diff
-      TRY( PetscSNPrintf(stri, sizeof(stri), "-psubcomm_type %s", PetscSubcommTypes[inv->psubcommType]) );
-      TRY( PetscOptionsInsertString(NULL,stri) );
-      TRY( PCSetFromOptions(pc) );
-      //bug end
       TRY( PCSetType(pc, PCREDUNDANT) );
       TRY( PCRedundantSetNumber(pc, inv->redundancy) );
-      TRY( PCSetUp(pc) );//not necessary after fix, see above
+      TRY( PCSetFromOptions(pc) );
       TRY( PCRedundantGetKSP(pc, &inv->innerksp) );
     }
   } else {

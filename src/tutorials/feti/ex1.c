@@ -124,5 +124,9 @@ int main(int argc,char **args)
     test:
       suffix: 2
       args: -dir_in_hess
+    test:
+      suffix: 3
+      output_file: output/ex1_1.out
+      args: -dual_qppf_redundancy 2
 TEST*/
 
