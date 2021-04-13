@@ -55,6 +55,7 @@ static PetscErrorCode MatInvGetRegularizationType_Inv(Mat imat,MatRegularization
 #if defined(PETSC_HAVE_MUMPS)
 static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
 {
+  Mat_Inv *inv = (Mat_Inv*)imat->data;
   Mat Kl=NULL,R=NULL,Rl=NULL,F=NULL;
   KSP ksp;
   PC pc;
@@ -100,7 +101,11 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
     if (flg) {
       /* If MUMPS Cholesky is used, avoid doubled factorization. */
       char opts[128];
-      TRY( PetscSNPrintf(opts,sizeof(opts),"-%smat_mumps_icntl_24 1 -%smat_mumps_cntl_3 %e",((PetscObject)pc)->prefix,((PetscObject)pc)->prefix,null_pivot_threshold) );
+      if (inv->type == MAT_INV_BLOCKDIAG) {
+        TRY( PetscSNPrintf(opts,sizeof(opts),"-%ssub_mat_mumps_icntl_24 1 -%ssub_mat_mumps_cntl_3 %e",((PetscObject)pc)->prefix,((PetscObject)pc)->prefix,null_pivot_threshold) );
+      } else {
+        TRY( PetscSNPrintf(opts,sizeof(opts),"-%smat_mumps_icntl_24 1 -%smat_mumps_cntl_3 %e",((PetscObject)pc)->prefix,((PetscObject)pc)->prefix,null_pivot_threshold) );
+      }
       TRY( PetscOptionsInsertString(NULL,opts) );
       TRY( PCSetFromOptions(pc) );
       TRY( PCSetUp(pc) );
@@ -546,33 +551,33 @@ static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
     }
   }
 
-  if (inv->type == MAT_INV_BLOCKDIAG) {
-    KSP *kspp;
-    TRY( KSPSetType(inv->ksp, KSPPREONLY) );
-    TRY( KSPGetPC(inv->ksp, &pc) );
-    TRY( PCSetType(pc, PCBJACOBI) );
-    TRY( PCSetUp(pc) );
-    TRY( PCBJacobiGetSubKSP(pc, PETSC_IGNORE, PETSC_IGNORE, &kspp) );
-    inv->innerksp = *kspp;
-  } else if (inv->redundancy) {
+  if (inv->type == MAT_INV_BLOCKDIAG || inv->redundancy) {
     const char *prefix;
-    char stri[1024];
     TRY( KSPSetType(inv->ksp, KSPPREONLY) );
     TRY( KSPGetPC(inv->ksp, &pc) );
     TRY( MatGetOptionsPrefix(imat,&prefix) );
     TRY( PCSetOptionsPrefix(pc,prefix) );
     TRY( PCAppendOptionsPrefix(pc,"mat_inv_") );
-    TRY( PetscSNPrintf(stri, sizeof(stri), "-%smat_inv_redundant_pc_type none",prefix) );
-    TRY( PetscOptionsInsertString(NULL,stri) );
-    //petsc bug start https://bitbucket.org/petsc/petsc/branch/hzhang/fix-pcredundant#diff
-    TRY( PetscSNPrintf(stri, sizeof(stri), "-psubcomm_type %s", PetscSubcommTypes[inv->psubcommType]) );
-    TRY( PetscOptionsInsertString(NULL,stri) );
-    TRY( PCSetFromOptions(pc) );
-    //bug end
-    TRY( PCSetType(pc, PCREDUNDANT) );
-    TRY( PCRedundantSetNumber(pc, inv->redundancy) );
-    TRY( PCSetUp(pc) );//not necessary after fix, see above
-    TRY( PCRedundantGetKSP(pc, &inv->innerksp) );
+    if (inv->type == MAT_INV_BLOCKDIAG) {
+      KSP *kspp;
+      TRY( PCSetType(pc, PCBJACOBI) );
+      TRY( PCSetUp(pc) );
+      TRY( PCBJacobiGetSubKSP(pc, PETSC_IGNORE, PETSC_IGNORE, &kspp) );
+      inv->innerksp = *kspp;
+    } else {
+      char stri[1024];
+      TRY( PetscSNPrintf(stri, sizeof(stri), "-%smat_inv_redundant_pc_type none",prefix) );
+      TRY( PetscOptionsInsertString(NULL,stri) );
+      //petsc bug start https://bitbucket.org/petsc/petsc/branch/hzhang/fix-pcredundant#diff
+      TRY( PetscSNPrintf(stri, sizeof(stri), "-psubcomm_type %s", PetscSubcommTypes[inv->psubcommType]) );
+      TRY( PetscOptionsInsertString(NULL,stri) );
+      TRY( PCSetFromOptions(pc) );
+      //bug end
+      TRY( PCSetType(pc, PCREDUNDANT) );
+      TRY( PCRedundantSetNumber(pc, inv->redundancy) );
+      TRY( PCSetUp(pc) );//not necessary after fix, see above
+      TRY( PCRedundantGetKSP(pc, &inv->innerksp) );
+    }
   } else {
     inv->innerksp = inv->ksp;
   }
