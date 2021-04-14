@@ -10,7 +10,7 @@ permon-all: permon_chk_all
 	+@if test -s ${PERMON_ERRLOG}; then \
            printf ${PETSC_TEXT_HILIGHT}"*******************************ERROR************************************\n" 2>&1 | tee -a ${PERMON_LOG}; \
            echo "  Error during compile, check ${PERMON_LOG}" 2>&1 | tee -a ${PERMON_LOG}; \
-           echo "  Send all contents of ./${PETSC_ARCH}/lib/permon/conf to vaclav.hapla@vsb.cz" 2>&1 | tee -a ${PERMON_LOG};\
+           echo "  Send all contents of ./${PETSC_ARCH}/lib/permon/conf to permon@vsb.cz" 2>&1 | tee -a ${PERMON_LOG};\
            printf "************************************************************************"${PETSC_TEXT_NORMAL}"\n" 2>&1 | tee -a ${PERMON_LOG}; \
 					 exit 1; \
 	 else \
