@@ -27,8 +27,8 @@ static PetscErrorCode FllopMatGetLocalMat_Gluing(Mat A,Mat *Aloc)
   for (i=0; i<n_col; i++) {
     rootdata[i]=start_col + i;
   }
-  TRY(PetscSFBcastBegin(data->SF, MPIU_INT, rootdata, leafdata));
-  TRY(PetscSFBcastEnd(data->SF, MPIU_INT, rootdata, leafdata));
+  TRY(PetscSFBcastBegin(data->SF, MPIU_INT, rootdata, leafdata, MPI_REPLACE));
+  TRY(PetscSFBcastEnd(data->SF, MPIU_INT, rootdata, leafdata, MPI_REPLACE));
 
   TRY( PetscLayoutCreate(PETSC_COMM_SELF, &links) );
   TRY( PetscLayoutSetBlockSize(links, 1) );
@@ -65,11 +65,11 @@ PetscErrorCode MatMult_Gluing(Mat mat, Vec right, Vec left)
   TRY( VecGetOwnershipRange(left, &start,NULL));
   TRY( PetscMalloc(data->n_leaves*sizeof(PetscScalar), &lambda_onleaves) );
 
-  TRY( PetscSFBcastBegin(data->SF, MPIU_SCALAR, lambda_root, lambda_onleaves) );
+  TRY( PetscSFBcastBegin(data->SF, MPIU_SCALAR, lambda_root, lambda_onleaves, MPI_REPLACE) );
   TRY( PetscMalloc(data->n_leaves*sizeof(PetscInt), &idxX) );
   TRY( PetscMalloc(data->n_leaves*sizeof(PetscScalar), &x_onleaves) );
   TRY( VecZeroEntries(left) );
-  TRY( PetscSFBcastEnd(data->SF, MPIU_SCALAR, lambda_root, lambda_onleaves) );
+  TRY( PetscSFBcastEnd(data->SF, MPIU_SCALAR, lambda_root, lambda_onleaves, MPI_REPLACE) );
   TRY( VecRestoreArray(right,  &lambda_root));
 
   for (i=0; i<data->n_leaves; i++) {
@@ -104,11 +104,11 @@ PetscErrorCode MatMultAdd_Gluing(Mat mat, Vec right, Vec add, Vec left) {
   TRY( VecGetOwnershipRange(left, &start,NULL));    
   TRY( PetscMalloc(data->n_leaves*sizeof(PetscScalar), &lambda_onleaves) );
   
-  TRY( PetscSFBcastBegin(data->SF, MPIU_SCALAR, lambda_root, lambda_onleaves) );
+  TRY( PetscSFBcastBegin(data->SF, MPIU_SCALAR, lambda_root, lambda_onleaves, MPI_REPLACE) );
   TRY( PetscMalloc(data->n_leaves*sizeof(PetscInt), &idxX) );
   TRY( PetscMalloc(data->n_leaves*sizeof(PetscScalar), &x_onleaves) );
   TRY( VecZeroEntries(left) );
-  TRY( PetscSFBcastEnd(data->SF, MPIU_SCALAR, lambda_root, lambda_onleaves) );
+  TRY( PetscSFBcastEnd(data->SF, MPIU_SCALAR, lambda_root, lambda_onleaves, MPI_REPLACE) );
   TRY( VecRestoreArray(right,  &lambda_root));
   
   for (i=0; i<data->n_leaves; i++) {

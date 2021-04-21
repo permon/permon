@@ -525,7 +525,7 @@ PetscErrorCode QPFetiGetBgtSF(MPI_Comm comm, IS i2g, PetscInt Nu, IS i2l, PetscI
   }
   TRY( PetscSFComputeDegreeEnd(SF1, &root_degree_onroots_SF1) );
 
-  TRY( PetscSFBcastBegin(SF1, MPIU_INT, root_degree_onroots_SF1, root_degree_onleaves_SF1) );
+  TRY( PetscSFBcastBegin(SF1, MPIU_INT, root_degree_onroots_SF1, root_degree_onleaves_SF1, MPI_REPLACE) );
   // work between communication  
   // scatter - how much i will sent? 
   for (i=0, data_scat_size=0; i<nroots_SF1; i++) {
@@ -573,7 +573,7 @@ PetscErrorCode QPFetiGetBgtSF(MPI_Comm comm, IS i2g, PetscInt Nu, IS i2l, PetscI
       }
     }
   }
-  TRY( PetscSFBcastEnd(SF1, MPIU_INT, root_degree_onroots_SF1, root_degree_onleaves_SF1) );
+  TRY( PetscSFBcastEnd(SF1, MPIU_INT, root_degree_onroots_SF1, root_degree_onleaves_SF1, MPI_REPLACE) );
   // scatter itself /STEP 3/
   TRY( PetscSFScatterBegin(SF1, MPIU_INT, future_leavesSF2_onroots, future_leavesSF2_onleaves) );
   // work between communication
@@ -755,7 +755,7 @@ PetscErrorCode QPFetiGetBgtSF(MPI_Comm comm, IS i2g, PetscInt Nu, IS i2l, PetscI
   }
   TRY( PetscSFReduceEnd(link_SF, MPIU_INT, max_rank_onleaves_linkSF, max_rank_onroot_linkSF, MPIU_MAX) );
 
-  TRY( PetscSFBcastBegin(link_SF, MPIU_INT, max_rank_onroot_linkSF, max_rank_onleaves_linkSF) );
+  TRY( PetscSFBcastBegin(link_SF, MPIU_INT, max_rank_onroot_linkSF, max_rank_onleaves_linkSF, MPI_REPLACE) );
   // work between communication  
   // get preallocation pattern 
   for (i=0; i<nleaves_SF2; i++) {
@@ -769,7 +769,7 @@ PetscErrorCode QPFetiGetBgtSF(MPI_Comm comm, IS i2g, PetscInt Nu, IS i2l, PetscI
   }
   TRY( PetscMalloc1(nleaves_SF2, &values) );
 
-  TRY( PetscSFBcastEnd(link_SF, MPIU_INT, max_rank_onroot_linkSF, max_rank_onleaves_linkSF) );
+  TRY( PetscSFBcastEnd(link_SF, MPIU_INT, max_rank_onroot_linkSF, max_rank_onleaves_linkSF, MPI_REPLACE) );
 
   PetscBool flg_SCALE_ON=PETSC_TRUE;
   TRY( PetscOptionsGetBool(NULL,NULL,"-SCALE_ON",&flg_SCALE_ON,NULL) );
@@ -788,8 +788,8 @@ PetscErrorCode QPFetiGetBgtSF(MPI_Comm comm, IS i2g, PetscInt Nu, IS i2l, PetscI
 
     TRY( PetscSFReduceBegin(link_SF, MPIU_INT, rank_onleaves_linkSF, rank_onroot_linkSF, MPIU_MIN) );
     TRY( PetscSFReduceEnd(link_SF, MPIU_INT, rank_onleaves_linkSF, rank_onroot_linkSF, MPIU_MIN) );
-    TRY( PetscSFBcastBegin(link_SF, MPIU_INT, rank_onroot_linkSF, rank_onleaves_linkSF) );
-    TRY( PetscSFBcastEnd(link_SF, MPIU_INT, rank_onroot_linkSF, rank_onleaves_linkSF) );
+    TRY( PetscSFBcastBegin(link_SF, MPIU_INT, rank_onroot_linkSF, rank_onleaves_linkSF, MPI_REPLACE) );
+    TRY( PetscSFBcastEnd(link_SF, MPIU_INT, rank_onroot_linkSF, rank_onleaves_linkSF, MPI_REPLACE) );
     TRY( PetscMemcpy(&rank_onleaves_linkSF[nleaves_SF2],max_rank_onleaves_linkSF,nleaves_SF2*sizeof(PetscInt)) );
     n = 2*nleaves_SF2;
     TRY( PetscSortRemoveDupsInt(&n,rank_onleaves_linkSF) );
