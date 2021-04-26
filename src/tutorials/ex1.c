@@ -163,6 +163,22 @@ int main(int argc,char **args)
     test:
       nsize: 3
   testset:
+    filter: grep -e CONVERGED -e number -e "r ="
+    args: -n 100 -qps_view_convergence -qp_chain_view_kkt
+    nsize: 2
+    test:
+      suffix: opt
+      args: -qps_mpgp_expansion_type gf -qps_mpgp_expansion_length_type opt
+    test:
+      suffix: optapprox
+      args: -qps_mpgp_expansion_type g -qps_mpgp_expansion_length_type optapprox
+    test:
+      suffix: bb
+      args: -qps_mpgp_expansion_type gfgr -qps_mpgp_expansion_length_type bb
+    test:
+      suffix: projcg
+      args: -qps_mpgp_expansion_type projcg
+  testset:
     filter: grep -e CONVERGED -e "function/" -e Objective -e "r ="
     args: -n 100 -qps_view_convergence -qp_chain_view_kkt -qps_type tao -qps_tao_type blmvm
     test:
