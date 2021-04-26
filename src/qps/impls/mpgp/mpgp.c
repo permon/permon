@@ -2,7 +2,7 @@
 #include <../src/qps/impls/mpgp/mpgpimpl.h>
 
 const char *const QPSMPGPExpansionTypes[] = {"std","projcg","gf","g","gfgr","ggr","QPSMPGPExpansionType","QPS_MPGP_EXPANSION_",0};
-const char *const QPSMPGPExpansionLengthTypes[] = {"fixed","opt","optapprox","bb","bb2","QPSMPGPExpansionLengthType","QPS_MPGP_EXPANSION_LENGTH_",0};
+const char *const QPSMPGPExpansionLengthTypes[] = {"fixed","opt","optapprox","bb","QPSMPGPExpansionLengthType","QPS_MPGP_EXPANSION_LENGTH_",0};
 
 /*
   WORK VECTORS:
@@ -253,7 +253,7 @@ static PetscErrorCode MPGPExpansionLength(QPS qps)
       TRY( MatMult(A,mpgp->explengthvec,vecs[1]) );
       mpgp->nmv++;
       TRY( VecMDot(mpgp->explengthvec,2,vecs,dots) );
-      if (dots[1] == .0 && mpgp->resetalpha) {  /* TODO && flg? ,dots[1] is tiny? */
+      if (dots[1] == .0 && mpgp->resetalpha) {  /* TODO dots[1] is tiny? */
         mpgp->alpha = mpgp->alpha/mpgp->maxeig;
       } else {
         mpgp->alpha = mpgp->alpha_user*dots[0]/dots[1];
@@ -271,9 +271,9 @@ static PetscErrorCode MPGPExpansionLength(QPS qps)
       vecs[0] = mpgp->explengthvecold;
       vecs[1] = mpgp->xold;
       TRY( VecAYPX(vecs[0],-1.0,mpgp->explengthvec) ); /* s_k = x_k - x_{k-1} */
-      TRY( VecAYPX(vecs[1],-1.0,x) ); /* y+k = d_k - d_{k-1} */ 
+      TRY( VecAYPX(vecs[1],-1.0,x) ); /* y+k = d_k - d_{k-1} */
       TRY( VecMDot(vecs[0],2,vecs,dots) );
-      if (dots[1] == .0 && mpgp->resetalpha) {  /* TODO && flg? ,dots[1] is tiny? can be skipped?*/
+      if (dots[1] == .0 && mpgp->resetalpha) {  /* TODO dots[1] is tiny? can be skipped?*/
         mpgp->alpha = mpgp->alpha/mpgp->maxeig;
       } else {
         mpgp->alpha = mpgp->alpha_user*dots[0]/dots[1];
@@ -580,10 +580,9 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
         nmv++;                                    /* matrix multiplication counter */
         TRY( VecAXPY(g, -1.0, b) );               /* g=g-b           */
 
-        QPComputeObjectiveFromGradient(qp,oldx,oldg,&oldf);
-        QPComputeObjectiveFromGradient(qp,x,g,&f);
+        TRY( QPComputeObjectiveFromGradient(qp, oldx, oldg, &oldf) );
+        TRY( QPComputeObjectiveFromGradient(qp, x, g, &f) );
         if (f>oldf) {
-          PetscPrintf(PETSC_COMM_WORLD,"f =%g > oldf = %g\n",(double)f,(double)oldf);
           nfinc++;
           if (mpgp->fallback2) {
             TRY( MPGPGrads(qps, x, g) );              /* grad. splitting  gP,gf,gc */
@@ -598,14 +597,13 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
 
           if (mpgp->fallback){
             nfall++;
-            //PetscPrintf(PETSC_COMM_WORLD,"fallback\n");
             mpgp->currentStepType = 'f';
-            VecCopy(oldx,x);
-            VecCopy(oldg,g);
+            TRY( VecCopy(oldx, x) );
+            TRY( VecCopy(oldg, g) );
             if (mpgp->fallback2) {
               TRY( MPGPGrads(qps, oldx, oldg) );              /* grad. splitting  gP,gf,gc */
             }
-            MPGPExpansion_Std(qps,afeas,acg);
+            TRY( MPGPExpansion_Std(qps, afeas, acg) );
             TRY( QPCProject(qpc, x, x) );             /* project x to feas.set */
             TRY( MatMult(A, x, g) );                  /* g=A*x */
             nmv++;                                    /* matrix multiplication counter */
@@ -741,8 +739,8 @@ PetscErrorCode QPSSetFromOptions_MPGP(PetscOptionItems *PetscOptionsObject,QPS q
   TRY( PetscOptionsEnum("-qps_mpgp_expansion_type","Set expansion step type","",QPSMPGPExpansionTypes,(PetscEnum)mpgp->exptype,(PetscEnum*)&mpgp->exptype,NULL) );
   TRY( PetscOptionsEnum("-qps_mpgp_expansion_length_type","Set expansion step length type","",QPSMPGPExpansionLengthTypes,(PetscEnum)mpgp->explengthtype,(PetscEnum*)&mpgp->explengthtype,NULL) );
   TRY( PetscOptionsBool("-qps_mpgp_alpha_reset","If alpha=Nan reset to initial value, otherwise keep last alpaha","QPSMPGPSetAlpha",(PetscBool) mpgp->resetalpha,&mpgp->resetalpha,NULL) );
-  TRY( PetscOptionsBool("-qps_mpgp_fallback","","",(PetscBool) mpgp->fallback,&mpgp->fallback,NULL) );
-  TRY( PetscOptionsBool("-qps_mpgp_fallback2","","",(PetscBool) mpgp->fallback2,&mpgp->fallback2,NULL) );
+  TRY( PetscOptionsBool("-qps_mpgp_fallback","Throw away expansion step if cost function increased and do a std expansion step.","",(PetscBool) mpgp->fallback,&mpgp->fallback,NULL) );
+  TRY( PetscOptionsBool("-qps_mpgp_fallback2","Same as fallback which is done only if the next step is proportioning","",(PetscBool) mpgp->fallback2,&mpgp->fallback2,NULL) );
   if (mpgp->fallback2) mpgp->fallback = PETSC_FALSE;
   TRY( PetscOptionsTail() );
   PetscFunctionReturn(0);
@@ -763,11 +761,59 @@ PetscErrorCode QPSViewConvergence_MPGP(QPS qps, PetscViewer v)
     TRY( PetscViewerASCIIPrintf(v,"number of CG steps %d\n",mpgp->ncg) );
     TRY( PetscViewerASCIIPrintf(v,"number of expansion steps %d\n",mpgp->nexp) );
     TRY( PetscViewerASCIIPrintf(v,"number of proportioning steps %d\n",mpgp->nprop) );
-    TRY( PetscViewerASCIIPrintf(v,"number of cost function value increases: %d\n",mpgp->nfinc) );
-    TRY( PetscViewerASCIIPrintf(v,"number of fallbacks: %d\n",mpgp->nfall) );
+    if (mpgp->fallback || mpgp->fallback2) {
+      TRY( PetscViewerASCIIPrintf(v,"number of cost function value increases: %d\n",mpgp->nfinc) );
+      TRY( PetscViewerASCIIPrintf(v,"number of fallbacks: %d\n",mpgp->nfall) );
+    }
   }
   PetscFunctionReturn(0);
 }
+
+/*MC
+   QPSMPGP - Modified proportioning with (reduced) gradient projections type algorithm
+
+   This method does three types of steps, unconstrained minimization if feasible, expansion step to expand the active set, and proportioning step to reduce the active set.
+
+   Options Database Keys:
++  -qps_mpgp_alpha_direct - true sets expansion step length value directly, false (default) multiplier (typical between (0,2]) for step length equal to reciprocal of maximal eigenvalue
+.  -qps_mpgp_alpha - fixed step length value for expansion, default: 2.0
+.  -qps_mpgp_gamma - proportionality constant
+.  -qps_mpgp_maxeig - approximate maximum eigenvalue of the Hessian (automatically computed by default)
+.  -qps_mpgp_maxeig_tol - relative tolerance for power method to find approximate maximum eigenvalue of the Hessian
+.  -qps_mpgp_maxeig_iter - number of iterations of power method to find an approximate maximum eigenvalue of the Hessian
+.  -qps_mpgp_btol - boundary overshoot tolerance, default: 10*PETSC_MACHINE_EPSILON"
+.  -qps_mpgp_bound_chop_tol - sets boundary to 0 for |boundary|<tol, default: 0
+.  -qps_mpgp_expansion_type - set expansion step type, default: "std"
+.  -qps_mpgp_expansion_length_type - set expansion step length type, default: "fixed"
+.  -qps_mpgp_alpha_reset - if alpha=Nan reset to initial value, otherwise keep last alpaha, default: true
+.  -qps_mpgp_fallback - throw away expansion step if cost function increased and do a std expansion step, default false
+-  -qps_mpgp_fallback2 - same as fallback which is done only if the next step is proportioning
+
+   Available expansion types:
++  "std" - standard expansion
+.  "projcg" - unconstrained CG step projected back to feasible set
+.  "gf" - free gradient for both step length computation and expansion direction
+.  "g" - normal gradient for both step length computation and expansion direction
+.  "gfgr" - expansion in free gradient direction, steplength using reduced gradient
+-  "ggr" - expansion in normal gradient direction, steplength using reduced gradient
+
+   Available step lengths types:
++  "fixed" - standard fixed step length
+-  "opt" - optimal step length
+-  "optapprox" - (usually poor) approximation of optimal step length
+.  "bb" - Barzilai-Borwein step length
+   Level: intermediate
+
+   Reference:
+   . J. Kružík, D. Horák, M. Čermák, L. Pospíšil, M. Pecha, "Active set expansion strategies in MPRGP algorithm", Advances in Engineering Software, Volume 149, 2020.
+
+.seealso:  QPSCreate(), QPSSetType(), QPSType (for list of available types), QPS,
+           QPSMPGPSetAlpha(), QPSMPGPGetAlpha(), QPSMPGPSetGamma(), QPSMPGPGetGamma(),
+           QPSMPGPGetOperatorMaxEigenvalue(), QPSMPGPSetOperatorMaxEigenvalue(),
+           QPSMPGPUpdateMaxEigenvalue(), QPSMPGPSetOperatorMaxEigenvalueTolerance(),
+           QPSMPGPGetOperatorMaxEigenvalueTolerance(), QPSMPGPGetOperatorMaxEigenvalueIterations(),
+           QPSMPGPSetOperatorMaxEigenvalueIterations(), QPSMPGPGetCurrentStepType()
+M*/
 #undef __FUNCT__
 #define __FUNCT__ "QPSCreate_MPGP"
 FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
