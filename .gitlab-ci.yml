@@ -33,13 +33,13 @@ variables:
       # Skip if the docs-only label is attached to a merge request
       - $CI_MERGE_REQUEST_LABELS =~ /(^|,)docs-only($|,)/
 
-check-ci-settings:
-  extends: .test-basic
-  stage: .pre
-  tags:
-    - check-ci-settings
-  script:
-    - lib/permon/bin/check-ci-settings.sh
+        #check-ci-settings:
+        #  extends: .test-basic
+        #  stage: .pre
+        #  tags:
+        #    - check-ci-settings
+        #  script:
+        #    - lib/permon/bin/check-ci-settings.sh
 #
 #  This provides the basic order of operations and options template for cloud based stage 1 tests.
 #  Not all test-short need to follow this template but most will.
