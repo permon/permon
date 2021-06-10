@@ -361,10 +361,16 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
 
   PetscFunctionBegin;
   /* set the number of working vectors */
-  if (mpgp->explengthtype != QPS_MPGP_EXPANSION_LENGTH_BB) {
-    TRY( QPSSetWorkVecs(qps,7) );
+  if (mpgp->fallback || mpgp->fallback2) {
+    if (mpgp->explengthtype != QPS_MPGP_EXPANSION_LENGTH_BB) {
+      TRY( QPSSetWorkVecs(qps,9) );
+    } else {
+      TRY( QPSSetWorkVecs(qps,10) );
+    }
+  } else if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
+      TRY( QPSSetWorkVecs(qps,9) );
   } else {
-    TRY( QPSSetWorkVecs(qps,11) );
+    TRY( QPSSetWorkVecs(qps,7) );
   }
 
   TRY( QPGetBox(qps->solQP,NULL,&lb,&ub) );
@@ -447,12 +453,14 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   Vec               g;                  /* ... gradient                         */
   Vec               p;                  /* ... conjugate gradient               */
   Vec               Ap;                 /* ... multiplicated vector             */
+  Vec               gold;               /* ... old gradient for fallback        */
 
   PetscReal         gamma2;             /* ... algorithm constants              */
   PetscReal         acg;                /* ... conjugate gradient step-size     */
   PetscReal         bcg;                /* ... cg ortogonalization parameter    */
   PetscReal         afeas;              /* ... maximum feasible step-size       */
-  PetscReal         pAp, gcTgc, gfTgf;  /* ... results of dot products    */
+  PetscReal         pAp, gcTgc, gfTgf;  /* ... results of dot products          */
+  PetscReal         f,fold;             /* ... cost function value              */
 
   PetscInt          nmv=0;              /* ... matrix-vector mult. counter      */
   PetscInt          ncg=0;              /* ... cg step counter                  */
@@ -473,14 +481,15 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   p                 = qps->work[4];
   Ap                = qps->work[5];
 
-  PetscReal f,oldf;
-  Vec oldx,oldg;
-  VecDuplicate(g,&oldx);
-  VecDuplicate(g,&oldg);
-
   if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
     mpgp->explengthvecold = qps->work[7];
     mpgp->xold            = qps->work[8];
+    if (mpgp->fallback || mpgp->fallback2) {
+      gold                = qps->work[9];
+    }
+  } else if (mpgp->fallback || mpgp->fallback2) {
+      mpgp->xold            = qps->work[7];
+      gold                  = qps->work[8];
   }
 
   /* set constants of algorithm */
@@ -563,56 +572,60 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
         mpgp->currentStepType = 'e';
 
         /* save old direction vec for BB expansion step length */
-        if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
+        if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB || mpgp->fallback || mpgp->fallback2) {
           TRY( VecCopy(x,mpgp->xold) );
-          TRY( VecCopy(mpgp->explengthvec,mpgp->explengthvecold) );
+          if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
+            TRY( VecCopy(mpgp->explengthvec,mpgp->explengthvecold) );
+          }
         }
 
-        VecCopy(x,oldx);
-        mpgp->expansion(qps,afeas,acg);
+        TRY( mpgp->expansion(qps,afeas,acg) );
         if (mpgp->expproject) {
           TRY( QPCProject(qpc, x, x) );             /* project x to feas.set */
         }
 
         /* compute new gradient */
-        VecCopy(g,oldg);
+        if (mpgp->fallback || mpgp->fallback2) {
+          TRY( VecCopy(g,gold) );
+        }
         TRY( MatMult(A, x, g) );                  /* g=A*x */
         nmv++;                                    /* matrix multiplication counter */
         TRY( VecAXPY(g, -1.0, b) );               /* g=g-b           */
 
-        TRY( QPComputeObjectiveFromGradient(qp, oldx, oldg, &oldf) );
-        TRY( QPComputeObjectiveFromGradient(qp, x, g, &f) );
-        if (f>oldf) {
-          nfinc++;
-          if (mpgp->fallback2) {
-            TRY( MPGPGrads(qps, x, g) );              /* grad. splitting  gP,gf,gc */
-            TRY( VecDot(gc, gc, &gcTgc) );               /* gcTgc=gc'*gc   */
-            TRY( VecDot(gf, gf, &gfTgf) );               /* gfTgf=gr'*gf   */
-            if (gcTgc <= gamma2*gfTgf) {                   /* u is proportional */
-              mpgp->fallback = PETSC_FALSE;
-            } else {
-              mpgp->fallback = PETSC_TRUE;
-            }
-          }
-
-          if (mpgp->fallback){
-            nfall++;
-            mpgp->currentStepType = 'f';
-            TRY( VecCopy(oldx, x) );
-            TRY( VecCopy(oldg, g) );
+        if (mpgp->fallback || mpgp->fallback2) {
+          TRY( QPComputeObjectiveFromGradient(qp, mpgp->xold, gold, &fold) );
+          TRY( QPComputeObjectiveFromGradient(qp, x, g, &f) );
+          if (f>fold) {
+            nfinc++;
             if (mpgp->fallback2) {
-              TRY( MPGPGrads(qps, oldx, oldg) );              /* grad. splitting  gP,gf,gc */
+              TRY( MPGPGrads(qps, x, g) );              /* grad. splitting  gP,gf,gc */
+              TRY( VecDot(gc, gc, &gcTgc) );               /* gcTgc=gc'*gc   */
+              TRY( VecDot(gf, gf, &gfTgf) );               /* gfTgf=gr'*gf   */
+              if (gcTgc <= gamma2*gfTgf) {                   /* u is proportional */
+                mpgp->fallback = PETSC_FALSE;
+              } else {
+                mpgp->fallback = PETSC_TRUE;
+              }
             }
-            TRY( MPGPExpansion_Std(qps, afeas, acg) );
-            TRY( QPCProject(qpc, x, x) );             /* project x to feas.set */
-            TRY( MatMult(A, x, g) );                  /* g=A*x */
-            nmv++;                                    /* matrix multiplication counter */
-            TRY( VecAXPY(g, -1.0, b) );               /* g=g-b           */
+
+            if (mpgp->fallback){
+              nfall++;
+              mpgp->currentStepType = 'f';
+              TRY( VecCopy(mpgp->xold, x) );
+              TRY( VecCopy(gold, g) );
+              if (mpgp->fallback2) {
+                TRY( MPGPGrads(qps, mpgp->xold, gold) );              /* grad. splitting  gP,gf,gc */
+              }
+              TRY( MPGPExpansion_Std(qps, afeas, acg) );
+              TRY( QPCProject(qpc, x, x) );             /* project x to feas.set */
+              TRY( MatMult(A, x, g) );                  /* g=A*x */
+              nmv++;                                    /* matrix multiplication counter */
+              TRY( VecAXPY(g, -1.0, b) );               /* g=g-b           */
+            }
           }
         }
 
         TRY( MPGPGrads(qps, x, g) );              /* grad. splitting  gP,gf,gc */
-
         /* restart CG method */
         TRY( VecCopy(gf, p) );                    /* p=gf           */
       }
