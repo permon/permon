@@ -79,6 +79,7 @@ FLLOP_EXTERN PetscErrorCode QPSGetMonitorContext(QPS,void **);
 FLLOP_EXTERN PetscErrorCode QPSGetResidualHistory(QPS,PetscReal*[],PetscInt *);
 FLLOP_EXTERN PetscErrorCode QPSSetResidualHistory(QPS,PetscReal[],PetscInt,PetscBool );
 FLLOP_EXTERN PetscErrorCode QPSMonitorDefault(QPS qps,PetscInt n,PetscReal rnorm,void *dummy);
+FLLOP_EXTERN PetscErrorCode QPSMonitorCostFunction(QPS qps,PetscInt n,PetscReal rnorm,void *dummy);
 
 /* *** type-specific stuff *** */
 /* KSP */
@@ -93,6 +94,11 @@ FLLOP_EXTERN PetscErrorCode QPSTaoGetType(QPS qps,TaoType *type);
 FLLOP_EXTERN PetscErrorCode QPSTaoGetTao(QPS qps,Tao *tao);
 
 /* MPGP */
+typedef enum {QPS_MPGP_EXPANSION_STD,QPS_MPGP_EXPANSION_PROJCG,QPS_MPGP_EXPANSION_GF,QPS_MPGP_EXPANSION_G,QPS_MPGP_EXPANSION_GFGR,QPS_MPGP_EXPANSION_GGR} QPSMPGPExpansionType;
+FLLOP_EXTERN const char *const QPSMPGPExpansionTypes[];
+typedef enum {QPS_MPGP_EXPANSION_LENGTH_FIXED,QPS_MPGP_EXPANSION_LENGTH_OPT,QPS_MPGP_EXPANSION_LENGTH_OPTAPPROX,QPS_MPGP_EXPANSION_LENGTH_BB} QPSMPGPExpansionLengthType;
+FLLOP_EXTERN const char *const QPSMPGPExpansionLengthTypes[];
+
 FLLOP_EXTERN PetscErrorCode QPSMPGPGetCurrentStepType(QPS qps,char *stepType);
 FLLOP_EXTERN PetscErrorCode QPSMPGPSetAlpha(QPS qps,PetscReal alpha,QPSScalarArgType argtype);
 FLLOP_EXTERN PetscErrorCode QPSMPGPGetAlpha(QPS qps,PetscReal *alpha,QPSScalarArgType *argtype);
