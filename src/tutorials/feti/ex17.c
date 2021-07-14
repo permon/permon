@@ -539,10 +539,11 @@ static PetscErrorCode CreateCubeBoundary(DM dm, const PetscReal lower[], const P
   PetscFunctionReturn(0);
 }
 
-static PetscErrorCode CreateSquareBoundary(DM dm, const PetscReal lower[], const PetscReal upper[], const PetscInt edges[],PetscReal fracCoord[],PetscInt nFracs)
+static PetscErrorCode CreateBoundaryMesh(MPI_Comm comm, AppCtx *user, DM *boundary)
 {
-  const PetscInt numVertices    = (edges[0]+1)*(edges[1]+1)+nFracs*2;
-  const PetscInt numEdges       = edges[0]*(edges[1]+1) + (edges[0]+1)*edges[1]+nFracs;
+  DM dm;
+  const PetscInt numVertices    = 6;
+  const PetscInt numEdges       = 6;
   const char     *bdname = "marker"; /* only "marker" vertices are copied by all generators */
   Vec            coordinates;
   PetscSection   coordSection;
@@ -553,54 +554,27 @@ static PetscErrorCode CreateSquareBoundary(DM dm, const PetscReal lower[], const
   PetscErrorCode ierr;
 
   PetscFunctionBegin;
-  ierr = MPI_Comm_rank(PetscObjectComm((PetscObject)dm), &rank);CHKERRQ(ierr);
+  ierr = DMCreate(comm,&dm);CHKERRQ(ierr);                                 
+  ierr = DMSetType(dm, DMPLEX);CHKERRQ(ierr);                            
+  ierr = DMSetDimension(dm,user->dim-1);CHKERRQ(ierr);                   
+  ierr = DMSetCoordinateDim(dm,user->dim);CHKERRQ(ierr);
+  ierr = MPI_Comm_rank(comm, &rank);CHKERRQ(ierr);
   if (!rank) {
-        printf("edges %d %d\n",edges[0],edges[1]);
-    PetscInt e, ex, ey;
+    PetscInt e;
+    PetscInt vertex,cone[2];
 
     ierr = DMPlexSetChart(dm, 0, numEdges+numVertices);CHKERRQ(ierr);
     for (e = 0; e < numEdges; ++e) {
       ierr = DMPlexSetConeSize(dm, e, 2);CHKERRQ(ierr);
     }
     ierr = DMSetUp(dm);CHKERRQ(ierr); /* Allocate space for cones */
-    for (vx = 0; vx <= edges[0]; vx++) {
-      for (ey = 0; ey < edges[1]; ey++) {
-        PetscInt edge   = vx*edges[1] + ey + edges[0]*(edges[1]+1);
-        PetscInt vertex = ey*(edges[0]+1) + vx + numEdges;
-        PetscInt cone[2];
-
-        cone[0] = vertex; cone[1] = vertex+edges[0]+1;
-        ierr    = DMPlexSetCone(dm, edge, cone);CHKERRQ(ierr);
-        printf("edge %d, cone %d %d\n",edge,cone[0],cone[1]);
-      }
-    }
-    for (vy = 0; vy <= edges[1]; vy++) {
-      for (ex = 0; ex < edges[0]; ex++) {
-        PetscInt edge   = vy*edges[0]     + ex;
-        PetscInt vertex = vy*(edges[0]+1) + ex + numEdges;
-        PetscInt cone[2];
-
-        cone[0] = vertex; cone[1] = vertex+1;
-        ierr    = DMPlexSetCone(dm, edge, cone);CHKERRQ(ierr);
-        printf("edge %d, cone %d %d\n",edge,cone[0],cone[1]);
-      }
-    }
-    /* fractures */
-		{
-      //ierr = DMCreateLabel(dm,bdname);CHKERRQ(ierr);
-      PetscInt edge,vertex,cone[2];
-      edge   = numEdges-nFracs;
-      vertex = numEdges+numVertices-nFracs*2;
-      
-      for (i=0; i<nFracs; i++) {
-        cone[0] = vertex; cone[1] = vertex+1;
-        ierr    = DMPlexSetCone(dm, edge, cone);CHKERRQ(ierr);
-        ierr = DMSetLabelValue(dm,bdname,cone[0],9);
-        ierr = DMSetLabelValue(dm,bdname,cone[1],9);
-        printf("frac edge %d, cone %d %d\n",edge,cone[0],cone[1]);
-        vertex += 2;
-        edge   += 1;
-      }
+    vertex = numEdges;
+    for (e = 0; e < numEdges; ++e) {
+      cone[0] = vertex; cone[1] = vertex+1;
+      if (cone[1] == numVertices+numEdges) cone[1] = numEdges;
+      printf("e %d, c: %d %d\n",e,cone[0],cone[1]);
+      ierr    = DMPlexSetCone(dm, e, cone);CHKERRQ(ierr);
+      vertex += 1;
     }
   }
   ierr = DMPlexSymmetrize(dm);CHKERRQ(ierr);
@@ -623,70 +597,30 @@ static PetscErrorCode CreateSquareBoundary(DM dm, const PetscReal lower[], const
   ierr = VecSetBlockSize(coordinates, 2);CHKERRQ(ierr);
   ierr = VecSetType(coordinates,VECSTANDARD);CHKERRQ(ierr);
   ierr = VecGetArray(coordinates, &coords);CHKERRQ(ierr);
-  for (vy = 0; vy <= edges[1]; ++vy) {
-    for (vx = 0; vx <= edges[0]; ++vx) {
-      coords[(vy*(edges[0]+1)+vx)*2+0] = lower[0] + ((upper[0] - lower[0])/edges[0])*vx;
-      coords[(vy*(edges[0]+1)+vx)*2+1] = lower[1] + ((upper[1] - lower[1])/edges[1])*vy;
-      printf("%d\n",(vy*(edges[0]+1)+vx)*2);
-    }
-  }
-  /* Fracture coordiantes */
-  for (i=0; i<nFracs*2; i++) {
-    coords[2*(numVertices-2*nFracs+i)] = fracCoord[2*i];
-    coords[2*(numVertices-2*nFracs+i)+1] = fracCoord[2*i+1];
-    printf("%d coords %d, %f %f\n",i,2*(numVertices-nFracs+i),fracCoord[2*i],fracCoord[2*i+1]);
-  }
+
+  coords[0] = 0.;
+  coords[1] = 0.;
+
+  coords[2] = 30.;
+  coords[3] = 0.;
+
+  coords[4] = 30.;
+  coords[5] = 10.;
+
+  coords[6] = 20.;
+  coords[7] = 10.;
+
+  coords[8] = 10.;
+  coords[9] = 15.;
+
+  coords[10] = 0.;
+  coords[11] = 15.;
+
   ierr = VecRestoreArray(coordinates, &coords);CHKERRQ(ierr);
   ierr = DMSetCoordinatesLocal(dm, coordinates);CHKERRQ(ierr);
   ierr = VecDestroy(&coordinates);CHKERRQ(ierr);
-  PetscFunctionReturn(0);
-}
-
-static PetscErrorCode CreateBoundaryMesh(MPI_Comm comm, AppCtx *user, DM *boundary)
-{
-  PetscErrorCode ierr;
-  PetscInt       fac[3] = {1, 1, 1};
-  PetscReal      low[3] = {0, 0, 0};
-  PetscReal      upp[3] = {1, 1, 1};
-
-  PetscFunctionBeginUser;
-  /* TODO: generating func */
-  user->nFrac = 1;
-  ierr = PetscMalloc1(4*user->nFrac,&user->fracCoord);CHKERRQ(ierr);
-  user->fracCoord[0] = .75;
-  user->fracCoord[1] = .75;
-  user->fracCoord[2] = .5;
-  user->fracCoord[3] = .75;
-  user->fracAperture[0] = .05;
-  //user->fracCoord[0] = .5;
-  //user->fracCoord[1] = .5;
-  //user->fracCoord[2] = .3;
-  //user->fracCoord[3] = .2;
-  //user->fracCoord[4] = .75;
-  //user->fracCoord[5] = .75;
-  //user->fracCoord[6] = .5;
-  //user->fracCoord[7] = .75;
-  //user->fracCoord[8] = .6;
-  //user->fracCoord[9] = .85;
-  //user->fracCoord[10] = .5;
-  //user->fracCoord[11] = .5;
-  //user->fracCoord[4] = .2;
-  //user->fracCoord[5] = .3;
-  //user->fracCoord[6] = .6;
-  //user->fracCoord[7] = .2;
-  //user->fracCoord[8] = .4;
-  //user->fracCoord[9] = .2;
-  //user->fracCoord[10] = .4;
-  //user->fracCoord[11] = .6;
-  ierr = DMCreate(comm,boundary);CHKERRQ(ierr);
-  ierr = DMSetType(*boundary, DMPLEX);CHKERRQ(ierr);
-  ierr = DMSetDimension(*boundary,user->dim-1);CHKERRQ(ierr);
-  ierr = DMSetCoordinateDim(*boundary,user->dim);CHKERRQ(ierr);
-	switch (user->dim) {
-		case 2: ierr = CreateSquareBoundary(*boundary,low,upp,fac,user->fracCoord,user->nFrac);CHKERRQ(ierr);break;
-		case 3: ierr = CreateCubeBoundary(*boundary,low,upp,fac);CHKERRQ(ierr);break;
-	}
-		ierr = DMViewFromOptions(*boundary, NULL, "-dm_boundary_view");CHKERRQ(ierr);
+	ierr = DMViewFromOptions(dm, NULL, "-dm_boundary_view");CHKERRQ(ierr);
+  *boundary = dm;
   PetscFunctionReturn(0);
 }
 
@@ -1030,8 +964,8 @@ static PetscErrorCode SplitFaces(DM *dmSplit, const char labelName[], AppCtx *us
     if (numRoots >= 0) {
       ierr = PetscMalloc2(numRoots,&newLocation,pEnd-pStart,&newRemoteLocation);CHKERRQ(ierr);
       for (l=0; l<numRoots; l++) newLocation[l] = l; /* + (l >= cEnd ? numGhostCells : 0); */
-      ierr = PetscSFBcastBegin(sfPoint, MPIU_INT, newLocation, newRemoteLocation);CHKERRQ(ierr);
-      ierr = PetscSFBcastEnd(sfPoint, MPIU_INT, newLocation, newRemoteLocation);CHKERRQ(ierr);
+      ierr = PetscSFBcastBegin(sfPoint, MPIU_INT, newLocation, newRemoteLocation,MPI_REPLACE);CHKERRQ(ierr);
+      ierr = PetscSFBcastEnd(sfPoint, MPIU_INT, newLocation, newRemoteLocation,MPI_REPLACE);CHKERRQ(ierr);
       ierr = PetscMalloc1(numLeaves,    &glocalPoints);CHKERRQ(ierr);
       ierr = PetscMalloc1(numLeaves, &gremotePoints);CHKERRQ(ierr);
       for (l = 0; l < numLeaves; ++l) {
