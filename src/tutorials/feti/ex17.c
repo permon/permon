@@ -39,8 +39,15 @@ typedef struct {
   PetscReal *fracCoord;
   PetscInt *oldpoints,*newpoints;
   PetscInt nFrac;
+  PetscInt n;
+  PetscInt x_n;
+  PetscInt y_n;
+  PetscReal *x;
+  PetscReal *y;
+  PetscReal *xPoints;
   Mat Bineq;
   Vec cineq;
+  PetscSubcomm psubcomm;
 } AppCtx;
 
 static PetscErrorCode zero(PetscInt dim, PetscReal time, const PetscReal x[], PetscInt Nc, PetscScalar *u, void *ctx)
@@ -341,6 +348,7 @@ static void g3_elas_uu(PetscInt dim, PetscInt Nf, PetscInt NfAux,
 static PetscErrorCode ProcessOptions(MPI_Comm comm, AppCtx *options)
 {
   PetscInt       n = 3, sol;
+  PetscBool      flg;
   PetscErrorCode ierr;
 
   PetscFunctionBeginUser;
@@ -354,6 +362,8 @@ static PetscErrorCode ProcessOptions(MPI_Comm comm, AppCtx *options)
   options->solverqps        = PETSC_TRUE;
   options->solType          = SOL_VLAP_QUADRATIC;
   options->useNearNullspace = PETSC_TRUE;
+  options->n                = 10;
+  options->x_n              = 3;
   ierr = PetscStrncpy(options->dmType, DMPLEX, 256);CHKERRQ(ierr);
 
   ierr = PetscOptionsBegin(comm, "", "Linear Elasticity Problem Options", "DMPLEX");CHKERRQ(ierr);
@@ -368,6 +378,12 @@ static PetscErrorCode ProcessOptions(MPI_Comm comm, AppCtx *options)
   options->solType = (SolutionType) sol;
   ierr = PetscOptionsBool("-near_nullspace", "Use the rigid body modes as an AMG near nullspace", "ex17.c", options->useNearNullspace, &options->useNearNullspace, NULL);CHKERRQ(ierr);
   ierr = PetscOptionsFList("-dm_type", "Convert DMPlex to another format", "ex17.c", DMList, options->dmType, options->dmType, 256, NULL);CHKERRQ(ierr);
+  ierr = PetscMalloc1(options->x_n,&options->x);CHKERRQ(ierr);
+  ierr = PetscMalloc1(options->x_n,&options->y);CHKERRQ(ierr);
+  ierr = PetscOptionsRealArray("-x", "x coords to fit the slope separation interface", "ex17.c", options->x, &options->x_n, NULL);CHKERRQ(ierr);
+  ierr = PetscOptionsRealArray("-y", "y coords to fit the slope separation interface", "ex17.c", options->y, &options->x_n, &flg);CHKERRQ(ierr);
+  if (!flg) options->x_n = 0;
+  ierr = PetscOptionsInt("-n", "number of points on slope separation interface in initial mesh", "ex17.c", options->n, &options->n, NULL);CHKERRQ(ierr);
   ierr = PetscOptionsEnd();
   PetscFunctionReturn(0);
 }
@@ -539,46 +555,181 @@ static PetscErrorCode CreateCubeBoundary(DM dm, const PetscReal lower[], const P
   PetscFunctionReturn(0);
 }
 
-static PetscErrorCode CreateBoundaryMesh(MPI_Comm comm, AppCtx *user, DM *boundary)
+static PetscReal EvalParabolaArcLength(PetscReal a,PetscReal b,PetscReal c,PetscReal val)
+{ 
+  PetscReal aux  = 2.*a*val+b;
+  PetscReal aux2 = sqrt(aux*aux+1.);
+  return (aux2*aux + log(aux2 +aux))/(4.*a);
+}
+
+/* y = ax^2 +bx +c, coeff = [c,b,a] */
+static PetscErrorCode ParabolaArcLength(Vec coeff,PetscReal start, PetscReal end,PetscReal *l)
 {
-  DM dm;
-  const PetscInt numVertices    = 6;
-  const PetscInt numEdges       = 6;
-  const char     *bdname = "marker"; /* only "marker" vertices are copied by all generators */
-  Vec            coordinates;
-  PetscSection   coordSection;
-  PetscScalar    *coords;
-  PetscInt       i,coordSize;
-  PetscMPIInt    rank;
-  PetscInt       v, vx, vy;
+  PetscScalar *arr;
   PetscErrorCode ierr;
 
   PetscFunctionBegin;
-  ierr = DMCreate(comm,&dm);CHKERRQ(ierr);                                 
+  ierr = VecGetArrayRead(coeff,&arr);CHKERRQ(ierr);
+  *l = EvalParabolaArcLength(arr[2],arr[1],arr[0],end)-EvalParabolaArcLength(arr[2],arr[1],arr[0],start);
+  ierr = VecRestoreArrayRead(coeff,&arr);CHKERRQ(ierr);
+  PetscFunctionReturn(0);
+}
+
+static PetscReal EvalParabolaArea(PetscReal a,PetscReal b,PetscReal c,PetscReal val)
+{ 
+  PetscReal aux = val*val;
+  return (aux*val*a/3. + .5*b*aux + c*val);
+}
+
+/* y = ax^2 +bx +c, coeff = [c,b,a] */
+static PetscErrorCode ParabolaArea(Vec coeff,PetscReal start, PetscReal end,PetscReal *a)
+{
+  PetscScalar *arr;
+  PetscErrorCode ierr;
+
+  PetscFunctionBegin;
+  ierr = VecGetArrayRead(coeff,&arr);CHKERRQ(ierr);
+  *a = EvalParabolaArea(arr[2],arr[1],arr[0],end)-EvalParabolaArea(arr[2],arr[1],arr[0],start);
+  ierr = VecRestoreArrayRead(coeff,&arr);CHKERRQ(ierr);
+  PetscFunctionReturn(0);
+}
+
+/* y = ax^2 +bx +c, coeff = [c,b,a] */
+static PetscErrorCode ParabolaEqPoints(Vec coeff,PetscReal start,PetscReal end,PetscInt n,PetscReal **a)
+{
+  PetscScalar    *arr;
+  PetscReal      *pts;
+  PetscReal      x,l,l1,l2,aux;
+  PetscInt       i,k;
+  PetscErrorCode ierr;
+
+  PetscFunctionBegin;
+  ierr = PetscMalloc1(n,&pts);CHKERRQ(ierr);
+  ierr = ParabolaArcLength(coeff,start,end,&l);
+  ierr = VecGetArrayRead(coeff,&arr);CHKERRQ(ierr);
+  x = start+(end-start)/(n-1.);
+  for (i=1; i<n-1; i++) {
+    l2 = l*i/(n-1);
+    for (k=0; k<=5; k++) {
+      ierr = ParabolaArcLength(coeff,start,x,&l1);
+      aux = 2.*arr[2]*x+arr[1];
+      x = x - (l1-l2)/sqrt(1.+aux*aux);
+    }
+    pts[i] = x;
+  }
+  ierr = VecRestoreArrayRead(coeff,&arr);CHKERRQ(ierr);
+  *a = pts;
+  PetscFunctionReturn(0);
+}
+
+static PetscErrorCode CreateBoundaryMesh(MPI_Comm comm, AppCtx *user, DM *boundary)
+{
+  DM dm;
+  PetscInt numVertices    = 6;
+  PetscInt numEdges       = 6;
+  const char     *bdname = "marker"; /* only "marker" vertices are copied by all generators */
+  Vec            x,b,coordinates;
+  PetscSection   coordSection;
+  PetscScalar    *coords;
+  PetscReal      ifLength;
+  PetscInt       i,j,coordSize;
+  PetscMPIInt    rank,size,sizeL,sizeU;
+  MPI_Comm       subcomm;
+  PetscInt       v, vx, vy;
+  KSP ksp;
+  PC pc;
+  Mat A; 
+  PetscScalar *data;
+  PetscReal S=375.,Saux,Sl,Su;
+
+  PetscErrorCode ierr;
+
+  PetscFunctionBegin;
+  ierr = MPI_Comm_rank(comm,&rank);CHKERRQ(ierr);
+  ierr = MPI_Comm_size(comm,&size);CHKERRQ(ierr);
+  if (user->x_n) {
+    if (size == 1) SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Need at least two ranks for FETI");
+    /* compute interface function using quadratic least squares fit */
+    ierr = PetscMalloc1(3*user->x_n,&data);CHKERRQ(ierr);
+    for (i=0; i<user->x_n; i++) {
+      data[i] = 1.;
+    }
+    for (j=1; j<3; j++) {
+      for (i=0; i<user->x_n; i++) {
+        data[j*user->x_n+i] = data[(j-1)*user->x_n+i]*user->x[i];
+      }
+    }
+    ierr = MatCreateSeqDense(PETSC_COMM_SELF,user->x_n,3,data,&A);CHKERRQ(ierr);
+    ierr = MatCreateVecs(A,&x,&b);CHKERRQ(ierr);
+    ierr = VecPlaceArray(b,user->y);CHKERRQ(ierr);
+    ierr = KSPCreate(PETSC_COMM_SELF,&ksp);CHKERRQ(ierr);
+    ierr = KSPSetType(ksp,KSPLSQR);CHKERRQ(ierr);
+    ierr = KSPGetPC(ksp,&pc);CHKERRQ(ierr);
+    ierr = PCSetType(pc,PCNONE);CHKERRQ(ierr);
+    ierr = KSPSetOperators(ksp,A,A);CHKERRQ(ierr);
+    ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
+    ierr = KSPSetUp(ksp);CHKERRQ(ierr);
+    ierr = KSPSolve(ksp,b,x);CHKERRQ(ierr);
+    /* interface length */
+    ierr = ParabolaArcLength(x,user->x[0],user->x[user->x_n-1],&ifLength);CHKERRQ(ierr);
+    /* eq points */
+    ierr = ParabolaEqPoints(x,user->x[0],user->x[user->x_n-1],user->n,&user->xPoints);CHKERRQ(ierr);
+    /* domains area */
+    ierr = ParabolaArea(x,user->x[0],user->x[user->x_n-1],&Saux);CHKERRQ(ierr);
+    Su = S;
+    if (user->y[0] != 15.) {
+      SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Not implemented computation for given area");
+    }
+    if (user->y[user->x_n-1] != 10.) {
+      SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Not implemented computation for given area");
+    }
+    Su = Su -Saux -15.*user->x[0] -10*(30-user->x[user->x_n-1]);
+    /* domain ranks */
+    Sl = S-Su;
+    sizeU = size*Su/S;
+    sizeL = size-sizeU;
+    ierr = PetscSubcommCreate(comm,&user->psubcomm);CHKERRQ(ierr);
+    ierr = PetscSubcommSetTypeGeneral(user->psubcomm,rank<sizeL ? 0:1,rank<sizeL ? rank:sizeL-rank);CHKERRQ(ierr);
+    ierr = PetscSubcommGetChild(user->psubcomm,&subcomm);CHKERRQ(ierr);
+    ierr = DMCreate(subcomm,&dm);CHKERRQ(ierr);                                 
+  } else {
+    ierr = DMCreate(comm,&dm);CHKERRQ(ierr);                                 
+  }
+
   ierr = DMSetType(dm, DMPLEX);CHKERRQ(ierr);                            
   ierr = DMSetDimension(dm,user->dim-1);CHKERRQ(ierr);                   
   ierr = DMSetCoordinateDim(dm,user->dim);CHKERRQ(ierr);
-  ierr = MPI_Comm_rank(comm, &rank);CHKERRQ(ierr);
-  if (!rank) {
-    PetscInt e;
-    PetscInt vertex,cone[2];
+  if (!user->x_n) {
+    if (!rank) {
+      PetscInt e;
+      PetscInt vertex,cone[2];
 
-    ierr = DMPlexSetChart(dm, 0, numEdges+numVertices);CHKERRQ(ierr);
-    for (e = 0; e < numEdges; ++e) {
-      ierr = DMPlexSetConeSize(dm, e, 2);CHKERRQ(ierr);
+      ierr = DMPlexSetChart(dm, 0, numEdges+numVertices);CHKERRQ(ierr);
+      for (e = 0; e < numEdges; ++e) {
+        ierr = DMPlexSetConeSize(dm, e, 2);CHKERRQ(ierr);
+      }
+      ierr = DMSetUp(dm);CHKERRQ(ierr); /* Allocate space for cones */
+      vertex = numEdges;
+      for (e = 0; e < numEdges; ++e) {
+        cone[0] = vertex; cone[1] = vertex+1;
+        if (cone[1] == numVertices+numEdges) cone[1] = numEdges;
+        printf("e %d, c: %d %d\n",e,cone[0],cone[1]);
+        ierr    = DMPlexSetCone(dm, e, cone);CHKERRQ(ierr);
+        vertex += 1;
+      }
     }
-    ierr = DMSetUp(dm);CHKERRQ(ierr); /* Allocate space for cones */
-    vertex = numEdges;
-    for (e = 0; e < numEdges; ++e) {
-      cone[0] = vertex; cone[1] = vertex+1;
-      if (cone[1] == numVertices+numEdges) cone[1] = numEdges;
-      printf("e %d, c: %d %d\n",e,cone[0],cone[1]);
-      ierr    = DMPlexSetCone(dm, e, cone);CHKERRQ(ierr);
-      vertex += 1;
-    }
-  }
+  } else {
+    /* 
+    if (!rank) {
+      PetscInt e;
+      PetscInt vertex,cone[2];
+
+      ierr = DMPlexSetChart(dm, 0, numEdges+numVertices);CHKERRQ(ierr);
+
+    
   ierr = DMPlexSymmetrize(dm);CHKERRQ(ierr);
   ierr = DMPlexStratify(dm);CHKERRQ(ierr);
+  exit(0);
   /* Build coordinates */
   ierr = DMSetCoordinateDim(dm, 2);CHKERRQ(ierr);
   ierr = DMGetCoordinateSection(dm, &coordSection);CHKERRQ(ierr);
