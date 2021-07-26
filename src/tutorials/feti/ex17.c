@@ -719,13 +719,44 @@ static PetscErrorCode CreateBoundaryMesh(MPI_Comm comm, AppCtx *user, DM *bounda
       }
     }
   } else {
-    /* 
+    PetscInt e;
+    PetscInt vertex,cone[2];
+    PetscReal edgeLength = ifLength/(double)user->n;
+    /* lower domain */
     if (!rank) {
-      PetscInt e;
-      PetscInt vertex,cone[2];
-
+      /* doesn't handle all configs */
+      numVertices = floor(30./edgeLength) +2*floor(10./edgeLength) +floor(user->x[0]/edgeLength) +floor(15./edgeLength)-6;
+      numEdges = numVertices-1;
       ierr = DMPlexSetChart(dm, 0, numEdges+numVertices);CHKERRQ(ierr);
-
+      for (e = 0; e < numEdges; ++e) {
+        ierr = DMPlexSetConeSize(dm, e, 2);CHKERRQ(ierr);
+      }
+      ierr = DMSetUp(dm);CHKERRQ(ierr); /* Allocate space for cones */
+      vertex = numEdges;
+      for (e = 0; e < numEdges; ++e) {
+        cone[0] = vertex; cone[1] = vertex+1;
+        if (cone[1] == numVertices+numEdges) cone[1] = numEdges;
+        ierr    = DMPlexSetCone(dm, e, cone);CHKERRQ(ierr);
+        vertex += 1;
+      }
+      /* upper domain */
+    } else if (rank==sizeL) {
+      numVertices = floor(11.18/edgeLength) +floor(10.-(user->x[0])/edgeLength) +floor(user->x[0]/edgeLength)-3;
+      numEdges = numVertices-1;
+      ierr = DMPlexSetChart(dm, 0, numEdges+numVertices);CHKERRQ(ierr);
+      for (e = 0; e < numEdges; ++e) {
+        ierr = DMPlexSetConeSize(dm, e, 2);CHKERRQ(ierr);
+      }
+      ierr = DMSetUp(dm);CHKERRQ(ierr); /* Allocate space for cones */
+      vertex = numEdges;
+      for (e = 0; e < numEdges; ++e) {
+        cone[0] = vertex; cone[1] = vertex+1;
+        if (cone[1] == numVertices+numEdges) cone[1] = numEdges;
+        ierr    = DMPlexSetCone(dm, e, cone);CHKERRQ(ierr);
+        vertex += 1;
+      }
+    }
+  }
     
   ierr = DMPlexSymmetrize(dm);CHKERRQ(ierr);
   ierr = DMPlexStratify(dm);CHKERRQ(ierr);
