@@ -48,6 +48,7 @@ typedef struct {
   Mat Bineq;
   Vec cineq;
   PetscSubcomm psubcomm;
+  PetscMPIInt sizeL;
 } AppCtx;
 
 static PetscErrorCode zero(PetscInt dim, PetscReal time, const PetscReal x[], PetscInt Nc, PetscScalar *u, void *ctx)
@@ -555,6 +556,19 @@ static PetscErrorCode CreateCubeBoundary(DM dm, const PetscReal lower[], const P
   PetscFunctionReturn(0);
 }
 
+/* y = ax^2 +bx +c, coeff = [c,b,a] */
+static PetscErrorCode ParabolaEval(Vec coeff,PetscReal x,PetscReal *y)
+{
+  PetscScalar *arr;
+  PetscErrorCode ierr;
+
+  PetscFunctionBegin;
+  ierr = VecGetArrayRead(coeff,&arr);CHKERRQ(ierr);
+  *y = arr[2]*x*x +arr[1]*x +arr[0];
+  ierr = VecRestoreArrayRead(coeff,&arr);CHKERRQ(ierr);
+  PetscFunctionReturn(0);
+}
+
 static PetscReal EvalParabolaArcLength(PetscReal a,PetscReal b,PetscReal c,PetscReal val)
 { 
   PetscReal aux  = 2.*a*val+b;
@@ -617,6 +631,8 @@ static PetscErrorCode ParabolaEqPoints(Vec coeff,PetscReal start,PetscReal end,P
     }
     pts[i] = x;
   }
+  pts[0] = start;
+  pts[i] = end;
   ierr = VecRestoreArrayRead(coeff,&arr);CHKERRQ(ierr);
   *a = pts;
   PetscFunctionReturn(0);
@@ -625,8 +641,8 @@ static PetscErrorCode ParabolaEqPoints(Vec coeff,PetscReal start,PetscReal end,P
 static PetscErrorCode CreateBoundaryMesh(MPI_Comm comm, AppCtx *user, DM *boundary)
 {
   DM dm;
-  PetscInt numVertices    = 6;
-  PetscInt numEdges       = 6;
+  PetscInt numVertices    = 0;
+  PetscInt numEdges       = 0;
   const char     *bdname = "marker"; /* only "marker" vertices are copied by all generators */
   Vec            x,b,coordinates;
   PetscSection   coordSection;
@@ -641,6 +657,8 @@ static PetscErrorCode CreateBoundaryMesh(MPI_Comm comm, AppCtx *user, DM *bounda
   Mat A; 
   PetscScalar *data;
   PetscReal S=375.,Saux,Sl,Su;
+  PetscReal y;
+  PetscInt vert,vertB,vertR,vertLu,vertL,vertU,vertUl;
 
   PetscErrorCode ierr;
 
@@ -686,8 +704,9 @@ static PetscErrorCode CreateBoundaryMesh(MPI_Comm comm, AppCtx *user, DM *bounda
     Su = Su -Saux -15.*user->x[0] -10*(30-user->x[user->x_n-1]);
     /* domain ranks */
     Sl = S-Su;
-    sizeU = size*Su/S;
+    sizeU = PetscMax(1,size*Su/S);
     sizeL = size-sizeU;
+    user->sizeL = sizeL;
     ierr = PetscSubcommCreate(comm,&user->psubcomm);CHKERRQ(ierr);
     ierr = PetscSubcommSetTypeGeneral(user->psubcomm,rank<sizeL ? 0:1,rank<sizeL ? rank:sizeL-rank);CHKERRQ(ierr);
     ierr = PetscSubcommGetChild(user->psubcomm,&subcomm);CHKERRQ(ierr);
@@ -725,8 +744,13 @@ static PetscErrorCode CreateBoundaryMesh(MPI_Comm comm, AppCtx *user, DM *bounda
     /* lower domain */
     if (!rank) {
       /* doesn't handle all configs */
-      numVertices = floor(30./edgeLength) +2*floor(10./edgeLength) +floor(user->x[0]/edgeLength) +floor(15./edgeLength)-6;
-      numEdges = numVertices-1;
+      vertB  = floor(30./edgeLength);
+      vertR  = PetscMax(floor(10./edgeLength),2); /*right and upper right*/
+      vertLu = PetscMax(floor(user->x[0]/edgeLength),2);
+      vertL  = PetscMax(floor(15./edgeLength),2);
+
+      numVertices = vertB +2*vertR +vertLu +vertL +user->n -6;
+      numEdges = numVertices;
       ierr = DMPlexSetChart(dm, 0, numEdges+numVertices);CHKERRQ(ierr);
       for (e = 0; e < numEdges; ++e) {
         ierr = DMPlexSetConeSize(dm, e, 2);CHKERRQ(ierr);
@@ -740,9 +764,11 @@ static PetscErrorCode CreateBoundaryMesh(MPI_Comm comm, AppCtx *user, DM *bounda
         vertex += 1;
       }
       /* upper domain */
-    } else if (rank==sizeL) {
-      numVertices = floor(11.18/edgeLength) +floor(10.-(user->x[0])/edgeLength) +floor(user->x[0]/edgeLength)-3;
-      numEdges = numVertices-1;
+    } else if (rank == sizeL) {
+      vertU  = PetscMax(floor(11.18/edgeLength),2);
+      vertUl  = PetscMax(floor((10.-(user->x[0]))/edgeLength),2);
+      numVertices = vertU +vertUl +user->n -3;
+      numEdges = numVertices;
       ierr = DMPlexSetChart(dm, 0, numEdges+numVertices);CHKERRQ(ierr);
       for (e = 0; e < numEdges; ++e) {
         ierr = DMPlexSetConeSize(dm, e, 2);CHKERRQ(ierr);
@@ -760,7 +786,6 @@ static PetscErrorCode CreateBoundaryMesh(MPI_Comm comm, AppCtx *user, DM *bounda
     
   ierr = DMPlexSymmetrize(dm);CHKERRQ(ierr);
   ierr = DMPlexStratify(dm);CHKERRQ(ierr);
-  exit(0);
   /* Build coordinates */
   ierr = DMSetCoordinateDim(dm, 2);CHKERRQ(ierr);
   ierr = DMGetCoordinateSection(dm, &coordSection);CHKERRQ(ierr);
@@ -780,28 +805,111 @@ static PetscErrorCode CreateBoundaryMesh(MPI_Comm comm, AppCtx *user, DM *bounda
   ierr = VecSetType(coordinates,VECSTANDARD);CHKERRQ(ierr);
   ierr = VecGetArray(coordinates, &coords);CHKERRQ(ierr);
 
-  coords[0] = 0.;
-  coords[1] = 0.;
+  if (!user->x_n) {
+    coords[0] = 0.;
+    coords[1] = 0.;
 
-  coords[2] = 30.;
-  coords[3] = 0.;
+    coords[2] = 30.;
+    coords[3] = 0.;
 
-  coords[4] = 30.;
-  coords[5] = 10.;
+    coords[4] = 30.;
+    coords[5] = 10.;
 
-  coords[6] = 20.;
-  coords[7] = 10.;
+    coords[6] = 20.;
+    coords[7] = 10.;
 
-  coords[8] = 10.;
-  coords[9] = 15.;
+    coords[8] = 10.;
+    coords[9] = 15.;
 
-  coords[10] = 0.;
-  coords[11] = 15.;
+    coords[10] = 0.;
+    coords[11] = 15.;
+  } else {
+    if (!rank) {
+      PetscReal len = 30./(vertB-1);
+      vert = 2*vertB-2;
+      j = 0;
+      for (i=0; i<vert; i+=2) {
+        coords[i] = j*len;
+        coords[i+1] = 0.;
+        j++;
+      }
+
+      len = 10./(vertR-1);
+      vert += 2*vertR-2;
+      j = 0;
+      for (; i<vert; i+=2) {
+        coords[i] = 30.;
+        coords[i+1] = j*len;
+        j++;
+      }
+      
+      vert += 2*vertR-2;
+      j = 0;
+      for (; i<vert; i+=2) {
+        coords[i] = 30.-j*len;
+        coords[i+1] = 10.;
+        j++;
+      }
+
+      vert += 2*user->n -2;
+      j = user->n-1;
+      for (; i<vert; i+=2) {
+        coords[i] = user->xPoints[j];
+        ierr = ParabolaEval(x,user->xPoints[j],&y);CHKERRQ(ierr);
+        coords[i+1] = y;
+        j--;
+      }
+
+      len = user->x[0]/(vertLu-1);
+      vert += 2*vertLu-2;
+      j = 0;
+      for (; i<vert; i+=2) {
+        coords[i] = user->x[0]-j*len;
+        coords[i+1] = 15.;
+        j++;
+      }
+
+      len = 15./(vertL-1);
+      vert += 2*vertL-2;
+      j = 0;
+      for (; i<vert; i+=2) {
+        coords[i] = 0.;
+        coords[i+1] = 15-j*len;
+        j++;
+      }
+    } else if (rank==sizeL) {
+      PetscReal len = 11.88/(vertU-1);
+      vert = 2*user->n -2;
+      j = 0;
+      for (i=0; i<vert; i+=2) {
+        coords[i] = user->xPoints[j];
+        ierr = ParabolaEval(x,user->xPoints[j],&y);CHKERRQ(ierr);
+        coords[i+1] = y;
+        j++;
+      }
+      vert += 2*vertU-2;
+      j = 0;
+      PetscReal isq = 1./PetscSqrtReal(5);
+      for (; i<vert; i+=2) {
+        coords[i] = 20.-j*len*2.*isq;
+        coords[i+1] = 10. +j*len*isq;
+        j++;
+      }
+      len = 4.5/(vertUl-1);
+      vert += 2*vertUl-2;
+      j = 0;
+      for (; i<vert; i+=2) {
+        coords[i] = 10.-j*len;
+        coords[i+1] = 15.;
+        j++;
+      }
+    }
+  }
 
   ierr = VecRestoreArray(coordinates, &coords);CHKERRQ(ierr);
   ierr = DMSetCoordinatesLocal(dm, coordinates);CHKERRQ(ierr);
   ierr = VecDestroy(&coordinates);CHKERRQ(ierr);
-	ierr = DMViewFromOptions(dm, NULL, "-dm_boundary_view");CHKERRQ(ierr);
+	if(rank==sizeL)ierr = DMViewFromOptions(dm, NULL, "-dm_boundary_view");CHKERRQ(ierr);
   *boundary = dm;
   PetscFunctionReturn(0);
 }
@@ -1300,6 +1408,7 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
 {
   PetscBool      flg;
   DM             boundary;
+  PetscMPIInt    rank;
 
   PetscErrorCode ierr;
   PetscFunctionBeginUser;
@@ -1310,8 +1419,9 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
   //DM dmint;
   //ierr = DMPlexInterpolate(*dm,&dmint);CHKERRQ(ierr);
   //ierr = DMView(dmint,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-  //exit(0);
-  ierr = DMViewFromOptions(*dm, NULL, "-dm_view");CHKERRQ(ierr);
+  ierr = MPI_Comm_rank(comm,&rank);CHKERRQ(ierr);
+  if (rank<user->sizeL) ierr = DMViewFromOptions(*dm, NULL, "-dm_view");CHKERRQ(ierr);
+  exit(0);
   //ierr = DMSetFromOptions(*dm);CHKERRQ(ierr);
   //ierr = DMViewFromOptions(*dm, NULL, "-dm_view");CHKERRQ(ierr);
   //ierr = DMPlexCreateBoxMesh(comm, user->dim, user->simplex, user->cells, NULL, NULL, NULL, PETSC_TRUE, dm);CHKERRQ(ierr);
