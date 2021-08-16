@@ -817,6 +817,7 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
   PetscErrorCode ierr;
 
   PetscFunctionBeginUser;
+  ierr = DMSetMatType(dm,MATIS);CHKERRQ(ierr);
   ierr = DMCreateMatrix(dm,&A);CHKERRQ(ierr);
   ierr = MatCreateVecs(A,&z,&b);CHKERRQ(ierr);
   ierr = VecSet(z,0.0);CHKERRQ(ierr);
@@ -826,7 +827,7 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
   //ierr = MatView(A,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
   //ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
 
-  ierr = QPCreate(PETSC_COMM_WORLD,&qp);CHKERRQ(ierr);
+  ierr = QPCreate(PetscObjectComm((PetscObject)dm),&qp);CHKERRQ(ierr);
   ierr = QPSetOperator(qp,A);CHKERRQ(ierr);
   ierr = QPSetRhs(qp,b);CHKERRQ(ierr);
   //ierr = VecView(b,PETSC_VIEWER_STDOUT_SELF);CHKERRQ(ierr);
@@ -861,10 +862,10 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
     ierr = QPSetIneq(qp,Bineq,cineq);CHKERRQ(ierr);
     
     /* empty nullspace mat */
-    ierr = MatCreateAIJ(PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,n,0,0,NULL,0,NULL,&R);CHKERRQ(ierr);                   
-    ierr = MatAssemblyBegin(R,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);                                                          
-    ierr = MatAssemblyEnd(R,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);    
-    ierr = QPSetOperatorNullSpace(qp,R);CHKERRQ(ierr);                                                                    
+    //ierr = MatCreateAIJ(PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,n,0,0,NULL,0,NULL,&R);CHKERRQ(ierr);                   
+    //ierr = MatAssemblyBegin(R,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);                                                          
+    //ierr = MatAssemblyEnd(R,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);    
+    //ierr = QPSetOperatorNullSpace(qp,R);CHKERRQ(ierr);                                                                    
     ierr = PetscOptionsInsertString(NULL,"-qpt_dualize_B_nest_extension 0 -qpt_dualize_G_explicit 0");CHKERRQ(ierr); /* workaround for empty nullspace */
     ierr = QPTDualize(qp,MAT_INV_MONOLITHIC,MAT_REG_NONE);CHKERRQ(ierr);
   }
