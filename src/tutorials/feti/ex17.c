@@ -42,6 +42,7 @@ typedef struct {
   PetscInt n;
   PetscInt x_n;
   PetscInt y_n;
+  Vec       coeff;
   PetscReal *x;
   PetscReal *y;
   PetscReal *xPoints;
@@ -688,6 +689,7 @@ static PetscErrorCode CreateBoundaryMesh(MPI_Comm comm, AppCtx *user, DM *bounda
     ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
     ierr = KSPSetUp(ksp);CHKERRQ(ierr);
     ierr = KSPSolve(ksp,b,x);CHKERRQ(ierr);
+    user->coeff = x;
     /* interface length */
     ierr = ParabolaArcLength(x,user->x[0],user->x[user->x_n-1],&ifLength);CHKERRQ(ierr);
     /* eq points */
@@ -1409,20 +1411,28 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
   PetscBool      flg;
   DM             boundary;
   PetscMPIInt    rank;
+  DMLabel        label;
 
   PetscErrorCode ierr;
+
   PetscFunctionBeginUser;
+  ierr = MPI_Comm_rank(comm,&rank);CHKERRQ(ierr);
   ierr = CreateBoundaryMesh(comm,user,&boundary);CHKERRQ(ierr);
-  DMLabel label;
+  ierr = DMPlexTriangleSetOptions(boundary,"pqezQ a1");CHKERRQ(ierr);
   ierr = DMPlexGenerate(boundary, NULL, PETSC_TRUE, dm);CHKERRQ(ierr);
   //ierr = DMView(*dm,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
   //DM dmint;
   //ierr = DMPlexInterpolate(*dm,&dmint);CHKERRQ(ierr);
   //ierr = DMView(dmint,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-  ierr = MPI_Comm_rank(comm,&rank);CHKERRQ(ierr);
-  if (rank<user->sizeL) ierr = DMViewFromOptions(*dm, NULL, "-dm_view");CHKERRQ(ierr);
-  exit(0);
-  //ierr = DMSetFromOptions(*dm);CHKERRQ(ierr);
+  if (rank<user->sizeL) {
+    ierr = DMViewFromOptions(*dm, NULL, "-dml_view");CHKERRQ(ierr);
+  }
+  if (rank>=user->sizeL) ierr = DMViewFromOptions(*dm, NULL, "-dmu_view");CHKERRQ(ierr);
+  ierr = DMSetFromOptions(*dm);CHKERRQ(ierr);
+  if (rank<user->sizeL) {
+    ierr = DMViewFromOptions(*dm, NULL, "-dmls_view");CHKERRQ(ierr);
+  }
+  if (rank>=user->sizeL) ierr = DMViewFromOptions(*dm, NULL, "-dmus_view");CHKERRQ(ierr);
   //ierr = DMViewFromOptions(*dm, NULL, "-dm_view");CHKERRQ(ierr);
   //ierr = DMPlexCreateBoxMesh(comm, user->dim, user->simplex, user->cells, NULL, NULL, NULL, PETSC_TRUE, dm);CHKERRQ(ierr);
   /* Mark boundary in sequence by their distinguishing component:
@@ -1453,44 +1463,38 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
       ierr = DMGetCoordinatesLocal(*dm, &coordinates);CHKERRQ(ierr);
       ierr = DMGetCoordinateDM(*dm, &cdm);CHKERRQ(ierr);
       ierr = DMGetLocalSection(cdm, &cs);CHKERRQ(ierr);
-      /* Check for each boundary facet if any component of its centroid is either 0.0 or 1.0 */
+      /* Check for each boundary facet if both endpoints are on the interface */
       for (f = 0; f < Nf; ++f) {
-        PetscReal   faceCoord;
+        PetscReal   tol = 10*PETSC_MACHINE_EPSILON;
+        PetscReal   y1,y2;
         PetscInt    b,v;
         PetscScalar *coords = NULL;
         PetscInt    Nv;
-        PetscBool   marked = PETSC_FALSE;
         /* Get closure of the facet (vertices in 2D, edges in 3D) */
         ierr = DMPlexVecGetClosure(cdm, cs, coordinates, faces[f], &csize, &coords);CHKERRQ(ierr);
-        //for (i=0; i<csize; i++) {
-        //  printf("%f, ", coords[i]);
-        //}
-        //printf("\n");
-        Nv   = csize/user->dim;
-        /* Calculate mean coordinate vector: sum[xi,yi,zi]/dim */
-        for (d = 0; d < user->dim; ++d) {
-          faceCoord = 0.0;
-          for (v = 0; v < Nv; ++v) faceCoord += PetscRealPart(coords[v*user->dim+d]);
-          faceCoord /= Nv;
-          //printf("%f\n", faceCoord);
-          for (b = 0; b < 2; ++b) {
-            /* assuming [0,1]^dim */
-            if (PetscAbs(faceCoord - b) < PETSC_SMALL) {
-              ierr = DMSetLabelValue(*dm, "Faces", faces[f], d*2+b+1);CHKERRQ(ierr);
-              marked = PETSC_TRUE;
-              //printf("%d %d %d\n", b, f,d*2+b+1);
-            }
-          }
+        ierr = ParabolaEval(user->coeff,coords[0],&y1);CHKERRQ(ierr);
+        ierr = ParabolaEval(user->coeff,coords[2],&y2);CHKERRQ(ierr);
+        if (PetscAbsReal(coords[1] - y1) < tol && PetscAbsReal(coords[3] - y2) < tol) {
+          ierr = DMSetLabelValue(*dm,"Faces",faces[f],9);CHKERRQ(ierr);
         }
+
+        if (PetscAbsReal(coords[0] - 0.) < tol && PetscAbsReal(coords[2] - .0) < tol) {
+          ierr = DMSetLabelValue(*dm,"Faces",faces[f],1);CHKERRQ(ierr);
+        }
+          
         ierr = DMPlexVecRestoreClosure(cdm, cs, coordinates, faces[f], &csize, &coords);CHKERRQ(ierr);
       }
       ierr = ISRestoreIndices(is, &faces);CHKERRQ(ierr);
     }
     ierr = ISDestroy(&is);CHKERRQ(ierr);
-    ierr = DMGetLabel(*dm, "Faces", &label);CHKERRQ(ierr);
+    //if (rank<user->sizeL) {
+    //ierr = DMGetLabel(*dm, "Faces", &label);CHKERRQ(ierr);
+    //DMLabelView(label,PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)*dm)));
+    ////ierr = DMPlexLabelComplete(*dm, label);CHKERRQ(ierr);
+    //DMLabelView(label,PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)*dm)));
     //DMLabelView(label,PETSC_VIEWER_STDOUT_WORLD);
-    ierr = DMPlexLabelComplete(*dm, label);CHKERRQ(ierr);
-    //DMLabelView(label,PETSC_VIEWER_STDOUT_WORLD);
+    //}
+  //MPI_Barrier(PETSC_COMM_WORLD);exit(0);
     //DM subdm;
     //DMLabel labelfrac,labelb;
     //ierr = DMGetLabel(*dm, "marker", &labelfrac);CHKERRQ(ierr);
@@ -1569,134 +1573,12 @@ static PetscErrorCode SetupPrimalProblem(DM dm, AppCtx *user)
   PetscFunctionBeginUser;
   ierr = DMGetDS(dm, &prob);CHKERRQ(ierr);
   ierr = PetscDSGetSpatialDimension(prob, &dim);CHKERRQ(ierr);
-  switch (user->solType) {
-  case SOL_VLAP_QUADRATIC:
-    ierr = PetscDSSetResidual(prob, 0, f0_vlap_quadratic_u, f1_vlap_u);CHKERRQ(ierr);
-    ierr = PetscDSSetJacobian(prob, 0, 0, NULL, NULL, NULL, g3_vlap_uu);CHKERRQ(ierr);
-    switch (dim) {
-    case 2: exact = quadratic_2d_u;break;
-    case 3: exact = quadratic_3d_u;break;
-    default: SETERRQ1(PetscObjectComm((PetscObject) prob), PETSC_ERR_ARG_WRONG, "Invalid dimension: %D", dim);
-    }
-    break;
-  case SOL_ELAS_QUADRATIC:
-    ierr = PetscDSSetResidual(prob, 0, f0_elas_quadratic_u, f1_elas_u);CHKERRQ(ierr);
-    ierr = PetscDSSetJacobian(prob, 0, 0, NULL, NULL, NULL, g3_elas_uu);CHKERRQ(ierr);
-    switch (dim) {
-    case 2: exact = quadratic_2d_u;break;
-    case 3: exact = quadratic_3d_u;break;
-    default: SETERRQ1(PetscObjectComm((PetscObject) prob), PETSC_ERR_ARG_WRONG, "Invalid dimension: %D", dim);
-    }
-    break;
-  case SOL_VLAP_TRIG:
-    ierr = PetscDSSetResidual(prob, 0, f0_vlap_trig_u, f1_vlap_u);CHKERRQ(ierr);
-    ierr = PetscDSSetJacobian(prob, 0, 0, NULL, NULL, NULL, g3_vlap_uu);CHKERRQ(ierr);
-    switch (dim) {
-    case 2: exact = trig_2d_u;break;
-    case 3: exact = trig_3d_u;break;
-    default: SETERRQ1(PetscObjectComm((PetscObject) prob), PETSC_ERR_ARG_WRONG, "Invalid dimension: %D", dim);
-    }
-    break;
-  case SOL_ELAS_TRIG:
-    ierr = PetscDSSetResidual(prob, 0, f0_elas_trig_u, f1_elas_u);CHKERRQ(ierr);
-    ierr = PetscDSSetJacobian(prob, 0, 0, NULL, NULL, NULL, g3_elas_uu);CHKERRQ(ierr);
-    switch (dim) {
-    case 2: exact = trig_2d_u;break;
-    case 3: exact = trig_3d_u;break;
-    default: SETERRQ1(PetscObjectComm((PetscObject) prob), PETSC_ERR_ARG_WRONG, "Invalid dimension: %D", dim);
-    }
-    break;
-  case SOL_ELAS_AXIAL_DISP:
-    ierr = PetscDSSetResidual(prob, 0, NULL, f1_elas_u);CHKERRQ(ierr);
-    ierr = PetscDSSetBdResidual(prob, 0, f0_elas_axial_disp_bd_u, NULL);CHKERRQ(ierr);
-    ierr = PetscDSSetJacobian(prob, 0, 0, NULL, NULL, NULL, g3_elas_uu);CHKERRQ(ierr);
-    exact = axial_disp_u;
-    break;
-  case SOL_ELAS_UNIFORM_STRAIN:
-   //ierr = PetscDSSetResidual(prob, 0, NULL, f1_elas_u);CHKERRQ(ierr);
-  //ierr = PetscDSSetResidual(prob, 0, f0_push_u, f1_elas_u);CHKERRQ(ierr);
-    ierr = PetscDSSetResidual(prob, 0, f0_push_u, NULL);CHKERRQ(ierr);
-    ierr = PetscDSSetJacobian(prob, 0, 0, NULL, NULL, NULL, g3_elas_uu);CHKERRQ(ierr);
-    exact = uniform_strain_u;
-    break;
-  default: SETERRQ2(PetscObjectComm((PetscObject) prob), PETSC_ERR_ARG_WRONG, "Invalid solution type: %s (%D)", solutionTypes[PetscMin(user->solType, NUM_SOLUTION_TYPES)], user->solType);
-  }
-  ierr = PetscDSSetExactSolution(prob, 0, exact, user);CHKERRQ(ierr);
-//  //if (user->solType == SOL_ELAS_AXIAL_DISP) {
-    PetscInt cmp;
-
-    //id   = dim == 3 ? 5 : 2;
-    id = 2;
-    ierr = DMAddBoundary(dm,   DM_BC_NATURAL,   "right",  "Faces", 0, 0, NULL, (void (*)(void)) cnst, NULL, 1, &id, user);CHKERRQ(ierr);
-    id   = dim == 3 ? 6 : 4;
-    id = 1;
-    //cmp  = 0;
-    ierr = DMAddBoundary(dm,   DM_BC_ESSENTIAL, "left",   "Faces", 0, 0, NULL, (void (*)(void)) zero, NULL, 1, &id, user);CHKERRQ(ierr);
-    DMLabel label;
-    ierr = DMGetLabel(dm, "marker", &label);CHKERRQ(ierr);
-    //ierr = DMPlexLabelComplete(*dm, label);CHKERRQ(ierr);
-    DMLabelView(label,PETSC_VIEWER_STDOUT_WORLD);
-    ierr = DMGetLabel(dm, "Faces", &label);CHKERRQ(ierr);
-    //ierr = DMPlexLabelComplete(*dm, label);CHKERRQ(ierr);
-    DMLabelView(label,PETSC_VIEWER_STDOUT_WORLD);
-    //cmp  = dim == 3 ? 2 : 1;
-    id = 3;
-    ierr = DMAddBoundary(dm,   DM_BC_ESSENTIAL, "bottom", "Faces", 0, 0, NULL, (void (*)(void)) zero, NULL, 1, &id, user);CHKERRQ(ierr);
-    if (dim == 3) {
-      cmp  = 1;
-    id   = dim == 3 ? 5 : 3;
-      //ierr = DMAddBoundary(dm, DM_BC_ESSENTIAL, "front",  "marker", 0, 1, &cmp, (void (*)(void)) zero, NULL, 1, &id, user);CHKERRQ(ierr);
-      }
-  //  ierr = DMAddBoundary(dm,   DM_BC_NATURAL, "bottom", "marker", 0, 1, &cmp, (void (*)(void)) zero, NULL, 1, &id, user);CHKERRQ(ierr);
-    //if (dim == 3) {
-    //  cmp  = 1;
-    //  id   = 3;
-   //   ierr = DMAddBoundary(dm, DM_BC_NATURAL, "front",  "marker", 0, 1, &cmp, (void (*)(void)) zero, NULL, 1, &id, user);CHKERRQ(ierr);
-//    }
-//  //} else {
- // ierr = DMAddBoundary(dm, DM_BC_ESSENTIAL, "wall", "marker", 0, 0, &cmp, (void (*)(void)) exact, NULL, 1, &id, user);CHKERRQ(ierr);
-  //ierr = DMAddBoundary(dm, DM_BC_ESSENTIAL, "wall", "marker", 0, 0, NULL, (void (*)(void)) zero, NULL, 1, &id, user);CHKERRQ(ierr);
-   // PetscInt cmp;
-
-   // id   = dim == 3 ? 5 : 2;
-   // ierr = DMAddBoundary(dm,   DM_BC_ESSENTIAL,   "right",  "marker", 0, 0, NULL, (void (*)(void)) cnst, NULL, 1, &id, user);CHKERRQ(ierr);
-  //id   = dim == 3 ? 6 : 4;
-  //cmp  = 0;
-  //ierr = DMAddBoundary(dm,   DM_BC_ESSENTIAL, "left",   "marker", 0, 1, &cmp, (void (*)(void)) cnst, NULL, 1, &id, user);CHKERRQ(ierr);
-  //  cmp  = dim == 3 ? 2 : 1;
-  //  id   = dim == 3 ? 1 : 1;
-  //  ierr = DMAddBoundary(dm,   DM_BC_NATURAL, "bottom", "marker", 0, 1, &cmp, (void (*)(void)) cnst, NULL, 1, &id, user);CHKERRQ(ierr);
-  //  if (dim == 3) {
-  //    cmp  = 1;
-  //    id   = 3;
-  //    ierr = DMAddBoundary(dm, DM_BC_NATURAL, "front",  "marker", 0, 1, &cmp, (void (*)(void)) cnst, NULL, 1, &id, user);CHKERRQ(ierr);
-  //}
-//PetscSection section;
-//DMLabel label;
-//PetscInt       n, k, p, d;
-//  PetscInt       dof, off, num_bc_dofs;
-//  IS             is;
-//const PetscInt* points;
-//PetscInt* bc_indices;
-//  ierr = DMGetLocalSection(dm, &section);CHKERRQ(ierr);
-//  ierr = DMGetLabel(dm, "marker", &label);CHKERRQ(ierr);
-//  ierr = DMLabelGetStratumSize(label, 1, &n);CHKERRQ(ierr);
-//  ierr = DMLabelGetStratumIS(label, 1, &is);CHKERRQ(ierr);
-//  ierr = ISGetIndices(is, &points);CHKERRQ(ierr);
-//  num_bc_dofs = 0;
-//  for (p = 0; p < n; ++p) {
-//    ierr = PetscSectionGetDof(section, points[p], &dof);CHKERRQ(ierr);
-//    num_bc_dofs += dof;
-//  }
-//  ierr = PetscMalloc1(num_bc_dofs, &bc_indices);CHKERRQ(ierr);
-//  for (p = 0, k = 0; p < n; ++p) {
-//    ierr = PetscSectionGetDof(section, points[p], &dof);CHKERRQ(ierr);
-//    ierr = PetscSectionGetOffset(section, points[p], &off);CHKERRQ(ierr);
-//    for (d = 0; d < dof; ++d) bc_indices[k++] = off+d;
-//		printf("off+d: %d\n",off+d);
-//  }
-//  ierr = ISRestoreIndices(is, &points);CHKERRQ(ierr);
-//  ierr = ISDestroy(&is);CHKERRQ(ierr);
+  ierr = PetscDSSetResidual(prob, 0, f0_push_u, NULL);CHKERRQ(ierr);
+  ierr = PetscDSSetJacobian(prob, 0, 0, NULL, NULL, NULL, g3_elas_uu);CHKERRQ(ierr);
+    //exact = uniform_strain_u;
+  //ierr = PetscDSSetExactSolution(prob, 0, exact, user);CHKERRQ(ierr);
+  id = 1;
+  ierr = DMAddBoundary(dm,   DM_BC_ESSENTIAL, "bottom", "Faces", 0, 0, NULL, (void (*)(void)) zero, NULL, 1, &id, user);CHKERRQ(ierr);
   PetscFunctionReturn(0);
 }
 
