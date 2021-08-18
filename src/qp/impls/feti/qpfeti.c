@@ -328,6 +328,7 @@ PetscErrorCode QPFetiSetUp(QP qp)
   PetscInt nlocaldofs;
   FetiGluingType type = FETI_GLUING_FULL;
   PetscBool exclude_dir = PETSC_FALSE;
+  PetscMPIInt size;
 
   FllopTracedFunctionBegin;
   PetscCall(QPFetiGetCtx(qp,&ctx));
@@ -340,6 +341,7 @@ PetscErrorCode QPFetiSetUp(QP qp)
 
   FllopTraceBegin;
   PetscCall(PetscObjectGetComm((PetscObject)qp,&comm));
+  PetscCall(MPI_Comm_size(comm,&size));
   PetscCall(PetscLogEventBegin(QP_Feti_SetUp,qp,0,0,0));
 
   PERMON_ASSERT(qp->A,"Operator must be specified");
@@ -350,15 +352,16 @@ PetscErrorCode QPFetiSetUp(QP qp)
   PetscCall(PetscPrintf(comm, "============\n FETI gluing type: %s\n excluding Dirichlet DOFs? %d\n",FetiGluingTypes[type],exclude_dir));
   PetscCall(QPFetiAssembleDirichlet(qp));
   
-  if (!ctx->l2g) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_WRONGSTATE,"L2G mapping must be set first - call QPFetiSetLocalToGlobalMapping before QPFetiSetUp");
-  if (!ctx->i2g) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_WRONGSTATE,"I2G mapping must be set first - call QPFetiSetInterfaceToGlobalMapping before QPFetiSetUp");
-  PetscCall(QPFetiAssembleGluing(qp, type, exclude_dir, &Bg));
-  PetscCall(PetscPrintf(comm, "============\n"));
+  if (size > 1) {
+    if (!ctx->l2g) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_WRONGSTATE,"L2G mapping must be set first - call QPFetiSetLocalToGlobalMapping before QPFetiSetUp");
+    if (!ctx->i2g) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_WRONGSTATE,"I2G mapping must be set first - call QPFetiSetInterfaceToGlobalMapping before QPFetiSetUp");
+    PetscCall(QPFetiAssembleGluing(qp, type, exclude_dir, &Bg));
+    PetscCall(PetscPrintf(comm, "============\n"));
 
-  PetscCall(PetscObjectSetName((PetscObject)Bg,"Bg"));
-  PetscCall(QPAddEq(qp,Bg,NULL));
-  PetscCall(MatDestroy(&Bg));
-
+    PetscCall(PetscObjectSetName((PetscObject)Bg,"Bg"));
+    PetscCall(QPAddEq(qp,Bg,NULL));
+    PetscCall(MatDestroy(&Bg));
+  }
   if (!qp->BE) printf("child (BE) is needed for dualization\n");
   ctx->setupcalled = PETSC_TRUE;
   PetscCall(PetscLogEventEnd  (QP_Feti_SetUp,qp,0,0,0));

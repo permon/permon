@@ -2078,7 +2078,7 @@ PetscErrorCode QPTMatISToBlockDiag(QP qp)
   PetscCall(ISCreateGeneral(PetscObjectComm((PetscObject)qp),n,idx_l2g,PETSC_COPY_VALUES,&l2g));
   PetscCall(ISLocalToGlobalMappingRestoreIndices(mapping,&idx_l2g));
   PetscCall(QPFetiSetLocalToGlobalMapping(child,l2g));
-  PetscCall(ISOnComm(is_B_global,PETSC_COMM_WORLD,PETSC_COPY_VALUES,&i2g));
+  PetscCall(ISOnComm(is_B_global,PetscObjectComm((PetscObject)child),PETSC_COPY_VALUES,&i2g));
   PetscCall(ISSort(i2g));
   PetscCall(QPFetiSetInterfaceToGlobalMapping(child,i2g));
 

@@ -1,3 +1,4 @@
+#include "petscvec.h"
 static char help[] = "Linear elasticity in 2d and 3d with finite elements.\n\
 We solve the elasticity problem in a rectangular\n\
 domain, using a parallel unstructured mesh (DMPLEX) to discretize it.\n\
@@ -619,6 +620,7 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
   }
 
   /* Partition */
+  if (rank<user->sizeL) ierr = DMViewFromOptions(*dm, NULL, "-dma_view");CHKERRQ(ierr);
   {
     DM               pdm = NULL;
     PetscPartitioner part;
@@ -627,6 +629,9 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
     ierr = PetscPartitionerSetFromOptions(part);CHKERRQ(ierr);
     ierr = DMPlexDistribute(*dm, 0, NULL, &pdm);CHKERRQ(ierr);
     if (pdm) {
+    printf("aaaa\n");
+ if (rank<user->sizeL) ierr = DMViewFromOptions(pdm, NULL, "-dmdist_view");CHKERRQ(ierr);
+    printf("bbbb\n");
       ierr = DMDestroy(dm);CHKERRQ(ierr);
       *dm  = pdm;
     }
@@ -791,7 +796,7 @@ static PetscErrorCode SolverKSP(DM dm,AppCtx *user,Vec u)
 
   ierr = DMPlexSNESComputeJacobianFEM(dm,z,A,A,NULL);CHKERRQ(ierr);
   ierr = ComputeRHS(dm,b,user);CHKERRQ(ierr);
-  //ierr = MatView(A,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+  ierr = MatView(A,PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)A)));CHKERRQ(ierr);
   //ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
 
   ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);CHKERRQ(ierr);
@@ -808,34 +813,92 @@ static PetscErrorCode SolverKSP(DM dm,AppCtx *user,Vec u)
 
 static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
 {
-  Mat A,R,Bineq;
-  Vec b,cineq,z;
-  QP  qp;
+  Mat A,Aloc,B,Be,Beloc,R,Bif;
+  Mat **Be_arr;
+  Vec b,bglob,uglob,ce,cineq,z;
+  QP  qp,qpm;
   QPS qps;
   PetscBool converged;
-  PetscInt i,j,l,n;
+  PetscInt i,j,l,n,m,M,ncols,*scols,shift;
+  const PetscInt *cols;
+  PetscScalar *varr,*uarr;
+  const PetscScalar *vals;
+  PetscMPIInt rank;
   PetscErrorCode ierr;
 
   PetscFunctionBeginUser;
+  ierr = MPI_Comm_rank(PETSC_COMM_WORLD,&rank);CHKERRQ(ierr);
   ierr = DMSetMatType(dm,MATIS);CHKERRQ(ierr);
   ierr = DMCreateMatrix(dm,&A);CHKERRQ(ierr);
   ierr = MatCreateVecs(A,&z,&b);CHKERRQ(ierr);
   ierr = VecSet(z,0.0);CHKERRQ(ierr);
 
   ierr = DMPlexSNESComputeJacobianFEM(dm,z,A,A,NULL);CHKERRQ(ierr);
+  //ierr = MatView(A,PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)A)));CHKERRQ(ierr);
   ierr = ComputeRHS(dm,b,user);CHKERRQ(ierr);
   //ierr = MatView(A,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-  //ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+  //ierr = VecView(b,PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)A)));CHKERRQ(ierr);
 
-  ierr = QPCreate(PetscObjectComm((PetscObject)dm),&qp);CHKERRQ(ierr);
-  ierr = QPSetOperator(qp,A);CHKERRQ(ierr);
-  ierr = QPSetRhs(qp,b);CHKERRQ(ierr);
+  ierr = QPCreate(PETSC_COMM_WORLD,&qp);CHKERRQ(ierr);
+  ierr = QPCreate(PetscObjectComm((PetscObject)dm),&qpm);CHKERRQ(ierr);
+  ierr = QPSetOperator(qpm,A);CHKERRQ(ierr);
+  ierr = QPSetRhs(qpm,b);CHKERRQ(ierr);
   //ierr = VecView(b,PETSC_VIEWER_STDOUT_SELF);CHKERRQ(ierr);
-  ierr = QPSetInitialVector(qp,u);CHKERRQ(ierr);
-  if (user->numDupVertices) {
-    ierr = MatGetSize(A,&n,NULL);CHKERRQ(ierr);
+  ierr = QPSetInitialVector(qpm,u);CHKERRQ(ierr);
+  ierr = QPTMatISToBlockDiag(qpm);CHKERRQ(ierr);
+  ierr = QPGetChild(qpm,&qpm);CHKERRQ(ierr);
+  ierr = QPFetiSetUp(qpm);CHKERRQ(ierr);
+  ierr = MatDestroy(&A);CHKERRQ(ierr);
+  ierr = QPGetOperator(qpm,&A);CHKERRQ(ierr);
+  ierr = MatGetDiagonalBlock(A,&Aloc);CHKERRQ(ierr);
+  ierr = MatGetSize(A,&shift,NULL);CHKERRQ(ierr);
+  ierr = MatDestroy(&A);CHKERRQ(ierr);
+
+  ierr = MPI_Bcast((PetscMPIInt*) &shift,1,MPIU_INT,0,PETSC_COMM_WORLD);CHKERRQ(ierr);
+  if (rank < user->sizeL) shift = 0;
+  ierr = MatCreateBlockDiag(PETSC_COMM_WORLD,Aloc,&A);CHKERRQ(ierr);
+  ierr = QPSetOperator(qp,A);CHKERRQ(ierr);
+  ierr = MatGetSize(A,&n,NULL);CHKERRQ(ierr);
+
+  ierr = VecDestroy(&b);CHKERRQ(ierr);
+  ierr = QPGetRhs(qpm,&b);CHKERRQ(ierr);
+  ierr = VecGetLocalSize(b,&m);CHKERRQ(ierr);
+  ierr = VecGetArray(b,&varr);CHKERRQ(ierr);
+  ierr = VecCreateMPIWithArray(PETSC_COMM_WORLD,1,m,n,varr,&bglob);CHKERRQ(ierr);
+  ierr = QPSetRhs(qp,bglob);CHKERRQ(ierr);
+
+  ierr = VecDestroy(&u);CHKERRQ(ierr);
+  ierr = QPGetSolutionVector(qpm,&u);CHKERRQ(ierr);
+  ierr = VecGetLocalSize(u,&m);CHKERRQ(ierr);
+  ierr = VecGetArray(u,&uarr);CHKERRQ(ierr);
+  ierr = VecCreateMPIWithArray(PETSC_COMM_WORLD,1,m,n,uarr,&uglob);CHKERRQ(ierr);
+  ierr = QPSetInitialVector(qp,uglob);CHKERRQ(ierr);
+
+  ierr = QPGetEq(qpm,&Be,&ce);CHKERRQ(ierr);
+  if (Be) {
+    ierr = MatNestGetSubMats(Be,&M,NULL,&Be_arr);CHKERRQ(ierr);
+    /* TODO fix for TFETI (M>1) */
+    ierr = MatTransposeGetMat(*Be_arr[0],&Beloc);CHKERRQ(ierr);
+    ierr = MatGetSize(Beloc,&m,NULL);CHKERRQ(ierr);
+    ierr = MatCreateAIJ(PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,m,n,2,NULL,2,NULL,&B);CHKERRQ(ierr);
+    for (i=0; i<m; i++) {
+      ierr = MatGetRow(Beloc,i,&ncols,&cols,&vals);CHKERRQ(ierr);
+      ierr = PetscMalloc1(ncols,&scols);CHKERRQ(ierr);
+      for (j=0; j<ncols; j++) scols[j] = cols[j] + shift;
+      ierr = MatSetValues(B,1,&i,ncols,scols,vals,INSERT_VALUES);CHKERRQ(ierr);
+      ierr = MatRestoreRow(Beloc,i,&ncols,&cols,&vals);CHKERRQ(ierr);
+      ierr = PetscFree(scols);CHKERRQ(ierr);
+    }
+    ierr = MatAssemblyBegin(B,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+    ierr = MatAssemblyEnd(B,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+    ierr = QPAddEq(qp,B,NULL);CHKERRQ(ierr);
+  }
+
+
+  MPI_Barrier(PETSC_COMM_WORLD);exit(0);
+  if (user->n) {
     /* Create ineq mat */
-    ierr = MatCreateAIJ(PetscObjectComm((PetscObject)dm),PETSC_DECIDE,PETSC_DECIDE,user->numDupVertices*user->dim,n,2,NULL,2,NULL,&Bineq);CHKERRQ(ierr);CHKERRQ(ierr);
+    ierr = MatCreateAIJ(PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,user->n*user->dim,n,4,NULL,4,NULL,&Bif);CHKERRQ(ierr);CHKERRQ(ierr);
     l = 0;
     for (i=0; i<user->numDupVertices+2*user->nFrac; i++) {
       PetscInt s1,s2,e1;
@@ -846,20 +909,20 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
       for (j = 0; j<e1-s1; j++) {
         PetscScalar values[2] = {1.,-1.};
         PetscInt idx[2] = {s1+j,s2+j};
-        ierr = MatSetValues(Bineq,1,&l,2,idx,values,INSERT_VALUES);CHKERRQ(ierr);
+        ierr = MatSetValues(Bif,1,&l,2,idx,values,INSERT_VALUES);CHKERRQ(ierr);
         l++;
       }
     }
-    ierr = MatAssemblyBegin(Bineq,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-    ierr = MatAssemblyEnd(Bineq,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  ierr = MatView(Bineq,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-    ierr = MatCreateVecs(Bineq,NULL,&cineq);CHKERRQ(ierr);
-  ierr = MatScale(Bineq,-1.);CHKERRQ(ierr);
+    ierr = MatAssemblyBegin(Bif,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+    ierr = MatAssemblyEnd(Bif,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+  ierr = MatView(Bif,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+    ierr = MatCreateVecs(Bif,NULL,&cineq);CHKERRQ(ierr);
+  ierr = MatScale(Bif,-1.);CHKERRQ(ierr);
     ierr = VecZeroEntries(cineq);CHKERRQ(ierr); /* TODO set aparature */
     ierr = VecSetValue(cineq,1,0.05,INSERT_VALUES);CHKERRQ(ierr); /* TODO set aparature */
     ierr = VecAssemblyBegin(cineq);CHKERRQ(ierr);
     ierr = VecAssemblyEnd(cineq);CHKERRQ(ierr);
-    ierr = QPSetIneq(qp,Bineq,cineq);CHKERRQ(ierr);
+    ierr = QPSetIneq(qp,Bif,cineq);CHKERRQ(ierr);
     
     /* empty nullspace mat */
     //ierr = MatCreateAIJ(PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,n,0,0,NULL,0,NULL,&R);CHKERRQ(ierr);                   
@@ -880,7 +943,7 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
   if (!converged) PetscPrintf(PETSC_COMM_WORLD,"QPS did not converge!\n"); 
 
   /* check the constraint */
-  ierr = MatMult(Bineq,u,cineq);CHKERRQ(ierr);
+  ierr = MatMult(Bif,u,cineq);CHKERRQ(ierr);
   ierr = VecView(cineq,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
 
   ierr = QPSDestroy(&qps);CHKERRQ(ierr);
