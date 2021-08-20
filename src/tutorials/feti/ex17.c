@@ -1,3 +1,5 @@
+#include "permonmat.h"
+#include "permonqp.h"
 #include "petscsys.h"
 #include "petscvec.h"
 static char help[] = "Linear elasticity in 2d and 3d with finite elements.\n\
@@ -10,7 +12,8 @@ and eventually adaptivity.\n\n\n";
   adapted from PETSc snes/tutorials/ex17.c
 */
 /*
-* mpir -n 6 ./ex17 -displacement_petscspace_degree 1 -dm_refine 3 -ksp_monitor -dm_view hdf5:sol.h5 -displacement_view hdf5:sol.h5::append -sol_type elas_uniform_strain -ksp_type cg -ksp_converged_reason -pc_type none -dim 2 -ksp_type feti -dm_mat_type is -qp_chain_view_kkt -log_view       -petscpartitioner_type parmetis -petscpartitioner_view_graph -options_left*/
+* mpir -n 4 ./ex17 -x 5.5,17.,20. -y 15.,9.,10. -ksp_rtol 1e-8 -n 10 -dm_boundary_view vtk:mesh.vtk -dml_view vtk:m.vtk -dmu_view vtk:mu.vtk -dmus_view vtk:mus.vtk -dmls_view vtk:mls.vtk -qps_view -displacement_petscspace_degree 1 -qpt_dualize_G_explicit 1 -qps_view_convergence -qp_chain_view_kkt
+*/
 
 #include <petscdmplex.h>
 #include <petscsnes.h>
@@ -846,8 +849,8 @@ static PetscErrorCode SolverKSP(DM dm,AppCtx *user,Vec u)
 
 static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
 {
-  Mat A,Aloc,B,Be,Beloc,R,Bif;
-  Mat **Be_arr;
+  Mat A,Aloc,B,Be,Beloc,R,Bif,H,Hg,K;
+  Mat **Be_arr,mats[4],mts[2];
   Vec b,bglob,uglob,ce,cineq,z;
   QP  qp,qpm;
   QPS qps;
@@ -925,7 +928,7 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
   IS  ris,cis;
   if (Be) {
     ierr = MatExtensionGetRowISLocal(Beloc,&ris);CHKERRQ(ierr);
-    ierr = MatExtensionGetColumnIS(Beloc,&cis);CHKERRQ(ierr);
+    ierr = MatExtensionGetColumnIS(Beloc,&cis);CHKERRQ(ierr); /* TODO shift ris! */
     ierr = MatExtensionGetCondensed(Beloc,&Bcond);CHKERRQ(ierr);
     //for (i=0; i<m; i++) {
     //  ierr = MatGetRow(Beloc,i,&ncols,&cols,&vals);CHKERRQ(ierr);
@@ -946,7 +949,8 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
   //ierr = MatAssemblyBegin(B,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
   //ierr = MatAssemblyEnd(B,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
   ierr = QPAddEq(qp,Bt,NULL);CHKERRQ(ierr);
-
+  PetscInt mm;
+  ierr = MatGetLocalSize(Bt,&mm,NULL);CHKERRQ(ierr);
 
   ierr = MPI_Bcast(user->ifcoordsx,user->n,MPIU_REAL,0,PetscObjectComm((PetscObject)qpm));CHKERRQ(ierr);
   ierr = MPI_Bcast(user->ifcoordsy,user->n,MPIU_REAL,0,PetscObjectComm((PetscObject)qpm));CHKERRQ(ierr);
@@ -957,13 +961,23 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
     coords[2*i+1] = user->ifcoordsy[i+1];
   }
   ierr = DMPlexFindVertices(dm,user->n-2,coords,10.*PETSC_MACHINE_EPSILON,lpoints);CHKERRQ(ierr);
-  /* Create ineq mat */
+  /* Create eq mat */
   ierr = MatCreateAIJ(PETSC_COMM_WORLD,PETSC_DECIDE,N,(user->n-2)*user->dim,n,4,NULL,4,NULL,&Bif);CHKERRQ(ierr);CHKERRQ(ierr);
+  ierr = MatCreateAIJ(PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,(user->n-2)*user->dim,(user->n-2)*user->dim,1,NULL,0,NULL,&H);CHKERRQ(ierr);CHKERRQ(ierr);
     for (i=1; i<user->n-1; i++) {
       PetscInt s1,e1;
       PetscReal x1,y1,x2,y2,nrm,tmp;
       if (lpoints[i-1] >= 0) {
         ierr = DMPlexGetPointGlobal(dm,lpoints[i-1],&s1,&e1);CHKERRQ(ierr);
+        x1 = user->ifcoordsx[i-1]+user->ifcoordsx[i];
+        y1 = user->ifcoordsy[i-1]+user->ifcoordsy[i];
+        x2 = user->ifcoordsx[i+1]+user->ifcoordsx[i];
+        y2 = user->ifcoordsy[i+1]+user->ifcoordsy[i];
+        nrm = PetscSqrtReal(.25*(x1-x2)*(x1-x2)+.25*(y1-y2)*(y1-y2));
+        nrm *= 6.; //kPa
+        l = 2*(i-1);
+        ierr = MatSetValues(H,1,&l,1,&l,&nrm,INSERT_VALUES);CHKERRQ(ierr);
+
         x1 = user->ifcoordsx[i-1] - user->ifcoordsx[i];
         y1 = user->ifcoordsy[i-1] - user->ifcoordsy[i];
         nrm = PetscSqrtReal(x1*x1 +y1*y1);
@@ -983,7 +997,6 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
         }
         idx[0] = s1+shift;
         idx[1] = s1+1+shift;
-        l = 2*(i-1);
         ierr = MatSetValues(Bif,1,&l,2,idx,values,INSERT_VALUES);CHKERRQ(ierr);
         l++;
         tmp = values[1];
@@ -992,9 +1005,10 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
         ierr = MatSetValues(Bif,1,&l,2,idx,values,INSERT_VALUES);CHKERRQ(ierr);
       }
     }
-  
   ierr = MatAssemblyBegin(Bif,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
   ierr = MatAssemblyEnd(Bif,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+  ierr = MatAssemblyBegin(H,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+  ierr = MatAssemblyEnd(H,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
   ierr = MatDestroy(&Bt);CHKERRQ(ierr);
   ierr = MatTranspose(Bif,MAT_INITIAL_MATRIX,&Bt);CHKERRQ(ierr);
   ierr = MatConvert(Bt,MATEXTENSION,MAT_INPLACE_MATRIX,&Bt);CHKERRQ(ierr);
@@ -1006,6 +1020,15 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
   Mat Bs;
   ierr = MatComputeOperator(B,MATMPIAIJ,&Bs);CHKERRQ(ierr);
   ierr = MatView(B,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+
+  ierr = MatCreateAIJ(PETSC_COMM_WORLD,mm,mm,PETSC_DECIDE,PETSC_DECIDE,0,NULL,0,NULL,&mats[0]);CHKERRQ(ierr);
+  ierr = MatAssemblyBegin(mats[0],MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+  ierr = MatAssemblyEnd(mats[0],MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+  
+  mats[1] = NULL;
+  mats[2] = NULL;
+  mats[3] = H;
+  ierr = MatCreateNest(PETSC_COMM_WORLD,2,NULL,2,NULL,mats,&Hg);CHKERRQ(ierr);
     
     /* empty nullspace mat */
     //ierr = MatCreateAIJ(PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,n,0,0,NULL,0,NULL,&R);CHKERRQ(ierr);                   
@@ -1013,17 +1036,38 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
     //ierr = MatAssemblyEnd(R,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);    
     //ierr = QPSetOperatorNullSpace(qp,R);CHKERRQ(ierr);                                                                    
     //ierr = PetscOptionsInsertString(NULL,"-feti -qpt_dualize_B_nest_extension 0 -qpt_dualize_G_explicit 0");CHKERRQ(ierr); /* workaround for empty nullspace */
-    ierr = PetscOptionsInsertString(NULL,"-feti");CHKERRQ(ierr); /* workaround for empty nullspace */
-  ierr = QPTFromOptions(qp);CHKERRQ(ierr);
+   // ierr = PetscOptionsInsertString(NULL,"-feti");CHKERRQ(ierr); /* workaround for empty nullspace */
+  //ierr = QPTFromOptions(qp);CHKERRQ(ierr);
   //ierr = QPSetFromOptions(qp);CHKERRQ(ierr);
+  ierr = QPTDualize(qp,MAT_INV_BLOCKDIAG,MAT_REG_EXPLICIT);CHKERRQ(ierr);
+  ierr = QPChainGetLast(qp,&qp);CHKERRQ(ierr);
+  ierr = MatDestroy(&A);CHKERRQ(ierr);
+  ierr = QPGetOperator(qp,&A);CHKERRQ(ierr);
+  ierr = MatView(Hg,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+  mts[0] = A;
+  mts[1] = Hg;
+  ierr = MatCreateComposite(PETSC_COMM_WORLD,2,mts,&K);CHKERRQ(ierr);
+  ierr = QPSetOperator(qp,K);CHKERRQ(ierr);
+  ierr = QPTEnforceEqByProjector(qp);CHKERRQ(ierr);
+  ierr = QPView(qp,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+
 
   ierr = QPSCreate(PetscObjectComm((PetscObject)qp),&qps);CHKERRQ(ierr);
   ierr = QPSSetQP(qps,qp);CHKERRQ(ierr);
   ierr = QPSSetFromOptions(qps);CHKERRQ(ierr);
 
-  ierr = QPSSolve(qps);CHKERRQ(ierr);                                                                                   
+  ierr = QPSSolve(qps);CHKERRQ(ierr);
+  ierr = QPSetOperator(qp,A);CHKERRQ(ierr);
+  ierr = QPSPostSolve(qps);CHKERRQ(ierr);
   ierr = QPIsSolved(qp,&converged);CHKERRQ(ierr);                                                                       
   if (!converged) PetscPrintf(PETSC_COMM_WORLD,"QPS did not converge!\n"); 
+  ierr = QPView(qpm,PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)qpm)));CHKERRQ(ierr);
+  ierr = MatDestroy(&A);CHKERRQ(ierr);
+  ierr = QPGetOperator(qpm,&A);CHKERRQ(ierr);
+  printf("comms %d", PetscObjectComm((PetscObject)qpm)==PetscObjectComm((PetscObject)A));
+  ierr = QPChainPostSolve(qpm);CHKERRQ(ierr);
+  ierr = QPGetParent(qpm,&qpm);CHKERRQ(ierr);
+  ierr = QPGetSolutionVector(qpm,&u);CHKERRQ(ierr);
 
   /* check the constraint */
 
