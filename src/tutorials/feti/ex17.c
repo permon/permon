@@ -81,7 +81,7 @@ static void f0_push_u(PetscInt dim, PetscInt Nf, PetscInt NfAux,
 {
   PetscInt d;
   for (d = 0; d < dim; ++d) f0[d] = 0.0;
-  f0[dim-1] = 2.;
+  f0[dim-1] = 1800.*9.81*0.333333;
   //f0[dim-2] = .5;
   //f0[dim-2] = -2.;
 }
@@ -104,9 +104,11 @@ static void f1_elas_u(PetscInt dim, PetscInt Nf, PetscInt NfAux,
                       const PetscInt aOff[], const PetscInt aOff_x[], const PetscScalar a[], const PetscScalar a_t[], const PetscScalar a_x[],
                       PetscReal t, const PetscReal x[], PetscInt numConstants, const PetscScalar constants[], PetscScalar f1[])
 {
+  const PetscReal nu     = 0.4; /* shear */
+  const PetscReal E      = 40000000.; /* Young */
   const PetscInt  Nc     = dim;
-  const PetscReal mu     = 1.0;
-  const PetscReal lambda = 1.0;
+  const PetscReal mu     = .5*E/(1.+nu);
+  const PetscReal lambda = E*nu/((1.+nu)*(1.-2.*nu));
   PetscInt        c, d;
 
   for (c = 0; c < Nc; ++c) {
@@ -128,9 +130,11 @@ static void g3_elas_uu(PetscInt dim, PetscInt Nf, PetscInt NfAux,
                        const PetscInt aOff[], const PetscInt aOff_x[], const PetscScalar a[], const PetscScalar a_t[], const PetscScalar a_x[],
                        PetscReal t, PetscReal u_tShift, const PetscReal x[], PetscInt numConstants, const PetscScalar constants[], PetscScalar g3[])
 {
+  const PetscReal nu     = 0.4; /* shear */
+  const PetscReal E      = 40000000.; /* Young */
   const PetscInt  Nc     = dim;
-  const PetscReal mu     = 1.0;
-  const PetscReal lambda = 1.0;
+  const PetscReal mu     = .5*E/(1.+nu);
+  const PetscReal lambda = E*nu/((1.+nu)*(1.-2.*nu));
   PetscInt        c, d;
   for (c = 0; c < Nc; ++c) {
     for (d = 0; d < dim; ++d) {
@@ -636,7 +640,7 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
           }
          }
 
-        if (PetscAbsReal(coords[0] - 0.) < tol && PetscAbsReal(coords[2] - .0) < tol) {
+        if (PetscAbsReal(coords[1] - 0.) < tol && PetscAbsReal(coords[3] - .0) < tol) {
           ierr = DMSetLabelValue(*dm,"Faces",faces[f],1);CHKERRQ(ierr);
         }
           
@@ -869,6 +873,7 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
   ierr = MPI_Comm_rank(PETSC_COMM_WORLD,&rank);CHKERRQ(ierr);
   ierr = DMSetMatType(dm,MATIS);CHKERRQ(ierr);
   ierr = DMCreateMatrix(dm,&A);CHKERRQ(ierr);
+  printf("1comms %d\n", PetscObjectComm((PetscObject)dm)==PetscObjectComm((PetscObject)A));
   ierr = MatCreateVecs(A,&z,&b);CHKERRQ(ierr);
   ierr = VecSet(z,0.0);CHKERRQ(ierr);
 
@@ -881,17 +886,16 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
   ierr = QPCreate(PETSC_COMM_WORLD,&qp);CHKERRQ(ierr);
   ierr = QPCreate(PetscObjectComm((PetscObject)dm),&qpm);CHKERRQ(ierr);
   ierr = QPSetOperator(qpm,A);CHKERRQ(ierr);
+  ierr = MatDestroy(&A);CHKERRQ(ierr);
   ierr = QPSetRhs(qpm,b);CHKERRQ(ierr);
   //ierr = VecView(b,PETSC_VIEWER_STDOUT_SELF);CHKERRQ(ierr);
   ierr = QPSetInitialVector(qpm,u);CHKERRQ(ierr);
   ierr = QPTMatISToBlockDiag(qpm);CHKERRQ(ierr);
   ierr = QPGetChild(qpm,&qpm);CHKERRQ(ierr);
   ierr = QPFetiSetUp(qpm);CHKERRQ(ierr);
-  ierr = MatDestroy(&A);CHKERRQ(ierr);
   ierr = QPGetOperator(qpm,&A);CHKERRQ(ierr);
   ierr = MatGetDiagonalBlock(A,&Aloc);CHKERRQ(ierr);
   ierr = MatGetSize(A,&shift,NULL);CHKERRQ(ierr);
-  ierr = MatDestroy(&A);CHKERRQ(ierr);
 
   ierr = MPI_Bcast((PetscMPIInt*) &shift,1,MPIU_INT,0,PETSC_COMM_WORLD);CHKERRQ(ierr);
   if (rank < user->sizeL) shift = 0;
@@ -974,7 +978,8 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
         x2 = user->ifcoordsx[i+1]+user->ifcoordsx[i];
         y2 = user->ifcoordsy[i+1]+user->ifcoordsy[i];
         nrm = PetscSqrtReal(.25*(x1-x2)*(x1-x2)+.25*(y1-y2)*(y1-y2));
-        nrm *= 6.; //kPa
+        nrm *= 6000.; //Pa
+        //nrm *= 0.;
         l = 2*(i-1);
         ierr = MatSetValues(H,1,&l,1,&l,&nrm,INSERT_VALUES);CHKERRQ(ierr);
 
@@ -1030,15 +1035,6 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
   mats[3] = H;
   ierr = MatCreateNest(PETSC_COMM_WORLD,2,NULL,2,NULL,mats,&Hg);CHKERRQ(ierr);
     
-    /* empty nullspace mat */
-    //ierr = MatCreateAIJ(PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,n,0,0,NULL,0,NULL,&R);CHKERRQ(ierr);                   
-    //ierr = MatAssemblyBegin(R,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);                                                          
-    //ierr = MatAssemblyEnd(R,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);    
-    //ierr = QPSetOperatorNullSpace(qp,R);CHKERRQ(ierr);                                                                    
-    //ierr = PetscOptionsInsertString(NULL,"-feti -qpt_dualize_B_nest_extension 0 -qpt_dualize_G_explicit 0");CHKERRQ(ierr); /* workaround for empty nullspace */
-   // ierr = PetscOptionsInsertString(NULL,"-feti");CHKERRQ(ierr); /* workaround for empty nullspace */
-  //ierr = QPTFromOptions(qp);CHKERRQ(ierr);
-  //ierr = QPSetFromOptions(qp);CHKERRQ(ierr);
   ierr = QPTDualize(qp,MAT_INV_BLOCKDIAG,MAT_REG_EXPLICIT);CHKERRQ(ierr);
   ierr = QPChainGetLast(qp,&qp);CHKERRQ(ierr);
   ierr = MatDestroy(&A);CHKERRQ(ierr);
@@ -1061,13 +1057,21 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
   ierr = QPSPostSolve(qps);CHKERRQ(ierr);
   ierr = QPIsSolved(qp,&converged);CHKERRQ(ierr);                                                                       
   if (!converged) PetscPrintf(PETSC_COMM_WORLD,"QPS did not converge!\n"); 
-  ierr = QPView(qpm,PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)qpm)));CHKERRQ(ierr);
-  ierr = MatDestroy(&A);CHKERRQ(ierr);
   ierr = QPGetOperator(qpm,&A);CHKERRQ(ierr);
-  printf("comms %d", PetscObjectComm((PetscObject)qpm)==PetscObjectComm((PetscObject)A));
   ierr = QPChainPostSolve(qpm);CHKERRQ(ierr);
   ierr = QPGetParent(qpm,&qpm);CHKERRQ(ierr);
   ierr = QPGetSolutionVector(qpm,&u);CHKERRQ(ierr);
+
+  PetscViewer       viewer;                                                     
+  PetscViewerFormat format; 
+  if (rank<user->sizeL) {
+    ierr = PetscOptionsGetViewer(PetscObjectComm((PetscObject)u),NULL,NULL, "-dl", &viewer, &format, NULL);CHKERRQ(ierr);
+  }
+  if (rank>=user->sizeL) {
+    ierr = PetscOptionsGetViewer(PetscObjectComm((PetscObject)u),NULL,NULL, "-du", &viewer, &format, NULL);CHKERRQ(ierr);
+  }
+  ierr = VecView(u,viewer);CHKERRQ(ierr);
+  ierr = PetscViewerDestroy(&viewer);CHKERRQ(ierr); 
 
   /* check the constraint */
 
