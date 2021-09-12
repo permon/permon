@@ -58,6 +58,7 @@ typedef struct {
   Vec cineq;
   PetscSubcomm psubcomm;
   PetscMPIInt sizeL;
+  PetscReal edgeLength;
 } AppCtx;
 
 static PetscErrorCode zero(PetscInt dim, PetscReal time, const PetscReal x[], PetscInt Nc, PetscScalar *u, void *ctx)
@@ -374,13 +375,18 @@ static PetscErrorCode CreateBoundaryMesh(MPI_Comm comm, AppCtx *user, DM *bounda
     PetscInt e;
     PetscInt vertex,cone[2];
     PetscReal edgeLength = ifLength/(double)user->n;
+    user->edgeLength = edgeLength;
     /* lower domain */
     if (!rank) {
       /* doesn't handle all configs */
       vertB  = floor(30./edgeLength);
+      vertB  = 2;
       vertR  = PetscMax(floor(10./edgeLength),2); /*right and upper right*/
+      vertR  = 2;
       vertLu = PetscMax(floor(user->x[0]/edgeLength),2);
+      vertLu = 2;
       vertL  = PetscMax(floor(15./edgeLength),2);
+      vertL  = 2;
 
       numVertices = vertB +2*vertR +vertLu +vertL +user->n -6;
       numEdges = numVertices;
@@ -399,7 +405,9 @@ static PetscErrorCode CreateBoundaryMesh(MPI_Comm comm, AppCtx *user, DM *bounda
       /* upper domain */
     } else if (rank == sizeL) {
       vertU  = PetscMax(floor(11.18/edgeLength),2);
+      vertU  = 2;
       vertUl  = PetscMax(floor((10.-(user->x[0]))/edgeLength),2);
+      vertUl = 2;
       numVertices = vertU +vertUl +user->n -3;
       numEdges = numVertices;
       ierr = DMPlexSetChart(dm, 0, numEdges+numVertices);CHKERRQ(ierr);
@@ -555,12 +563,15 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
   DMLabel        label;
   PetscInt       *srtidx;
   PetscReal      *tmpy;
+  char           triangleOpts[50];
   PetscErrorCode ierr;
 
   PetscFunctionBeginUser;
   ierr = MPI_Comm_rank(comm,&rank);CHKERRQ(ierr);
   ierr = CreateBoundaryMesh(comm,user,&boundary);CHKERRQ(ierr);
-  //ierr = DMPlexTriangleSetOptions(boundary,"pqezQ a1");CHKERRQ(ierr);
+  sprintf(triangleOpts,"pqezQ a%f",user->edgeLength*user->edgeLength);
+  printf(triangleOpts);
+  ierr = DMPlexTriangleSetOptions(boundary,triangleOpts);CHKERRQ(ierr);
   ierr = DMPlexGenerate(boundary, NULL, PETSC_TRUE, dm);CHKERRQ(ierr);
   //ierr = DMView(*dm,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
   //DM dmint;
@@ -669,9 +680,7 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
     ierr = PetscPartitionerSetFromOptions(part);CHKERRQ(ierr);
     ierr = DMPlexDistribute(*dm, 0, NULL, &pdm);CHKERRQ(ierr);
     if (pdm) {
-    printf("aaaa\n");
  if (rank<user->sizeL) ierr = DMViewFromOptions(pdm, NULL, "-dmdist_view");CHKERRQ(ierr);
-    printf("bbbb\n");
       ierr = DMDestroy(dm);CHKERRQ(ierr);
       *dm  = pdm;
     }
@@ -873,7 +882,6 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
   ierr = MPI_Comm_rank(PETSC_COMM_WORLD,&rank);CHKERRQ(ierr);
   ierr = DMSetMatType(dm,MATIS);CHKERRQ(ierr);
   ierr = DMCreateMatrix(dm,&A);CHKERRQ(ierr);
-  printf("1comms %d\n", PetscObjectComm((PetscObject)dm)==PetscObjectComm((PetscObject)A));
   ierr = MatCreateVecs(A,&z,&b);CHKERRQ(ierr);
   ierr = VecSet(z,0.0);CHKERRQ(ierr);
 
@@ -920,7 +928,6 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
   ierr = QPGetEq(qpm,&Be,&ce);CHKERRQ(ierr);
   if (Be) {
     ierr = MatNestGetSubMats(Be,&M,NULL,&Be_arr);CHKERRQ(ierr);
-    ierr = MatView(Be,PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)qpm)));CHKERRQ(ierr);
     /* TODO fix for TFETI (M>1) */
     ierr = MatTransposeGetMat(*Be_arr[0],&Beloc);CHKERRQ(ierr);
     ierr = MatGetSize(Beloc,NULL,&m);CHKERRQ(ierr);
@@ -960,7 +967,7 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
   ierr = MPI_Bcast(user->ifcoordsy,user->n,MPIU_REAL,0,PetscObjectComm((PetscObject)qpm));CHKERRQ(ierr);
   ierr = PetscMalloc1(2*user->n-4,&coords);CHKERRQ(ierr);
   ierr = PetscMalloc1(user->n-2,&lpoints);CHKERRQ(ierr);
-  for (i=0;i<user->n-1;i++) {
+  for (i=0;i<user->n-2;i++) {
     coords[2*i] = user->ifcoordsx[i+1];
     coords[2*i+1] = user->ifcoordsy[i+1];
   }
@@ -1022,9 +1029,8 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
   ierr = QPAddEq(qp,B,NULL);CHKERRQ(ierr);
   ierr = MatDestroy(&B);CHKERRQ(ierr);
   ierr = QPGetEq(qp,&B,NULL);CHKERRQ(ierr);
-  Mat Bs;
-  ierr = MatComputeOperator(B,MATMPIAIJ,&Bs);CHKERRQ(ierr);
-  ierr = MatView(B,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+  ierr = MatGetSize(B,&m,&n);CHKERRQ(ierr);
+  ierr = PetscPrintf(PETSC_COMM_WORLD,"Primal %d Dual %d\n",n,m);CHKERRQ(ierr);
 
   ierr = MatCreateAIJ(PETSC_COMM_WORLD,mm,mm,PETSC_DECIDE,PETSC_DECIDE,0,NULL,0,NULL,&mats[0]);CHKERRQ(ierr);
   ierr = MatAssemblyBegin(mats[0],MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
@@ -1039,13 +1045,11 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
   ierr = QPChainGetLast(qp,&qp);CHKERRQ(ierr);
   ierr = MatDestroy(&A);CHKERRQ(ierr);
   ierr = QPGetOperator(qp,&A);CHKERRQ(ierr);
-  ierr = MatView(Hg,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
   mts[0] = A;
   mts[1] = Hg;
   ierr = MatCreateComposite(PETSC_COMM_WORLD,2,mts,&K);CHKERRQ(ierr);
   ierr = QPSetOperator(qp,K);CHKERRQ(ierr);
   ierr = QPTEnforceEqByProjector(qp);CHKERRQ(ierr);
-  ierr = QPView(qp,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
 
 
   ierr = QPSCreate(PetscObjectComm((PetscObject)qp),&qps);CHKERRQ(ierr);
@@ -1102,9 +1106,6 @@ int main(int argc, char **argv)
   ierr = VecSet(u, 0.0);CHKERRQ(ierr);
   ierr = PetscObjectSetName((PetscObject) u, "displacement");CHKERRQ(ierr);
   ierr = DMPlexSetSNESLocalFEM(dm, &user, &user, &user);CHKERRQ(ierr);
-  ISLocalToGlobalMapping ltogm;
-  DMGetLocalToGlobalMapping(dm,&ltogm);
-ISLocalToGlobalMappingViewFromOptions(ltogm,NULL,"-view_l2g");
   
   if (user.solverqps) {
     ierr = SolverQPS(dm,&user,u);CHKERRQ(ierr);
@@ -1114,10 +1115,10 @@ ISLocalToGlobalMappingViewFromOptions(ltogm,NULL,"-view_l2g");
     ierr = SolverSNES(dm,u);CHKERRQ(ierr);
   }
 
-  ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-  ierr = PetscOptionsGetViewer(PetscObjectComm((PetscObject)u),NULL,NULL, "-displacement_view", &viewer, &format, NULL);CHKERRQ(ierr);
-  ierr = VecView(u,viewer);CHKERRQ(ierr);
-  ierr = PetscViewerDestroy(&viewer);CHKERRQ(ierr); 
+  //ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+  //ierr = PetscOptionsGetViewer(PetscObjectComm((PetscObject)u),NULL,NULL, "-displacement_view", &viewer, &format, NULL);CHKERRQ(ierr);
+  //ierr = VecView(u,viewer);CHKERRQ(ierr);
+  //ierr = PetscViewerDestroy(&viewer);CHKERRQ(ierr); 
   /* Cleanup */
   ierr = VecDestroy(&u);CHKERRQ(ierr);
   ierr = DMDestroy(&dm);CHKERRQ(ierr);
