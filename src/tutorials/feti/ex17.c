@@ -203,7 +203,7 @@ static PetscErrorCode ParabolaEval(Vec coeff,PetscReal x,PetscReal *y)
 }
 
 static PetscReal EvalParabolaArcLength(PetscReal a,PetscReal b,PetscReal c,PetscReal val)
-{ 
+{
   PetscReal aux  = 2.*a*val+b;
   PetscReal aux2 = sqrt(aux*aux+1.);
   return (aux2*aux + log(aux2 +aux))/(4.*a);
@@ -223,7 +223,7 @@ static PetscErrorCode ParabolaArcLength(Vec coeff,PetscReal start, PetscReal end
 }
 
 static PetscReal EvalParabolaArea(PetscReal a,PetscReal b,PetscReal c,PetscReal val)
-{ 
+{
   PetscReal aux = val*val;
   return (aux*val*a/3. + .5*b*aux + c*val);
 }
@@ -287,7 +287,7 @@ static PetscErrorCode CreateBoundaryMesh(MPI_Comm comm, AppCtx *user, DM *bounda
   PetscInt       v, vx, vy;
   KSP ksp;
   PC pc;
-  Mat A; 
+  Mat A;
   PetscScalar *data;
   PetscReal S=375.,Saux,Sl,Su;
   PetscReal y;
@@ -342,15 +342,15 @@ static PetscErrorCode CreateBoundaryMesh(MPI_Comm comm, AppCtx *user, DM *bounda
     sizeL = size-sizeU;
     user->sizeL = sizeL;
     ierr = PetscSubcommCreate(comm,&user->psubcomm);CHKERRQ(ierr);
-    ierr = PetscSubcommSetTypeGeneral(user->psubcomm,rank<sizeL ? 0:1,rank<sizeL ? rank:sizeL-rank);CHKERRQ(ierr);
+    ierr = PetscSubcommSetTypeGeneral(user->psubcomm,rank<sizeL ? 0:1,rank<sizeL ? rank:rank-sizeL);CHKERRQ(ierr);
     ierr = PetscSubcommGetChild(user->psubcomm,&subcomm);CHKERRQ(ierr);
-    ierr = DMCreate(subcomm,&dm);CHKERRQ(ierr);                                 
+    ierr = DMCreate(subcomm,&dm);CHKERRQ(ierr);
   } else {
-    ierr = DMCreate(comm,&dm);CHKERRQ(ierr);                                 
+    ierr = DMCreate(comm,&dm);CHKERRQ(ierr);
   }
 
-  ierr = DMSetType(dm, DMPLEX);CHKERRQ(ierr);                            
-  ierr = DMSetDimension(dm,user->dim-1);CHKERRQ(ierr);                   
+  ierr = DMSetType(dm, DMPLEX);CHKERRQ(ierr);
+  ierr = DMSetDimension(dm,user->dim-1);CHKERRQ(ierr);
   ierr = DMSetCoordinateDim(dm,user->dim);CHKERRQ(ierr);
   if (!user->x_n) {
     if (!rank) {
@@ -424,7 +424,7 @@ static PetscErrorCode CreateBoundaryMesh(MPI_Comm comm, AppCtx *user, DM *bounda
       }
     }
   }
-    
+
   ierr = DMPlexSymmetrize(dm);CHKERRQ(ierr);
   ierr = DMPlexStratify(dm);CHKERRQ(ierr);
   /* Build coordinates */
@@ -483,7 +483,7 @@ static PetscErrorCode CreateBoundaryMesh(MPI_Comm comm, AppCtx *user, DM *bounda
         coords[i+1] = j*len;
         j++;
       }
-      
+
       vert += 2*vertR-2;
       j = 0;
       for (; i<vert; i+=2) {
@@ -550,7 +550,7 @@ static PetscErrorCode CreateBoundaryMesh(MPI_Comm comm, AppCtx *user, DM *bounda
   ierr = VecRestoreArray(coordinates, &coords);CHKERRQ(ierr);
   ierr = DMSetCoordinatesLocal(dm, coordinates);CHKERRQ(ierr);
   ierr = VecDestroy(&coordinates);CHKERRQ(ierr);
-	if(rank==sizeL)ierr = DMViewFromOptions(dm, NULL, "-dm_boundary_view");CHKERRQ(ierr);
+  if(rank>=sizeL)ierr = DMViewFromOptions(dm, NULL, "-dm_boundary_view");CHKERRQ(ierr);
   *boundary = dm;
   PetscFunctionReturn(0);
 }
@@ -570,9 +570,9 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
   ierr = MPI_Comm_rank(comm,&rank);CHKERRQ(ierr);
   ierr = CreateBoundaryMesh(comm,user,&boundary);CHKERRQ(ierr);
   sprintf(triangleOpts,"pqezQ a%f",user->edgeLength*user->edgeLength);
-  printf(triangleOpts);
   ierr = DMPlexTriangleSetOptions(boundary,triangleOpts);CHKERRQ(ierr);
   ierr = DMPlexGenerate(boundary, NULL, PETSC_TRUE, dm);CHKERRQ(ierr);
+  ierr = DMDestroy(&boundary);CHKERRQ(ierr);
   //ierr = DMView(*dm,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
   //DM dmint;
   //ierr = DMPlexInterpolate(*dm,&dmint);CHKERRQ(ierr);
@@ -580,7 +580,9 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
   if (rank<user->sizeL) {
     ierr = DMViewFromOptions(*dm, NULL, "-dml_view");CHKERRQ(ierr);
   }
-  if (rank>=user->sizeL) ierr = DMViewFromOptions(*dm, NULL, "-dmu_view");CHKERRQ(ierr);
+  if (rank>=user->sizeL) {
+    ierr = DMViewFromOptions(*dm, NULL, "-dmu_view");CHKERRQ(ierr);
+  }
   ierr = DMSetFromOptions(*dm);CHKERRQ(ierr);
   if (rank<user->sizeL) {
     ierr = DMViewFromOptions(*dm, NULL, "-dmls_view");CHKERRQ(ierr);
@@ -619,7 +621,6 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
       ierr = DMGetCoordinateDM(*dm, &cdm);CHKERRQ(ierr);
       ierr = DMGetLocalSection(cdm, &cs);CHKERRQ(ierr);
       ierr = PetscMalloc1(user->n,&tmpy);CHKERRQ(ierr);
-      printf("%d\n",user->n);
       /* Check for each boundary facet if both endpoints are on the interface */
       PetscInt l=0;
       for (f = 0; f < Nf; ++f) {
@@ -635,7 +636,7 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
         if (PetscAbsReal(coords[1] - y1) < tol && PetscAbsReal(coords[3] - y2) < tol) {
           ierr = DMSetLabelValue(*dm,"Faces",faces[f],9);CHKERRQ(ierr);
           ierr = DMPlexGetCone(*dm,faces[f],&points);CHKERRQ(ierr);
-          
+
           for (i=0; i<2;i++) {
             add = PETSC_TRUE;
             for (j=0;j<k;j++) {
@@ -654,7 +655,7 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
         if (PetscAbsReal(coords[1] - 0.) < tol && PetscAbsReal(coords[3] - .0) < tol) {
           ierr = DMSetLabelValue(*dm,"Faces",faces[f],1);CHKERRQ(ierr);
         }
-          
+
         ierr = DMPlexVecRestoreClosure(cdm, cs, coordinates, faces[f], &csize, &coords);CHKERRQ(ierr);
       }
       ierr = ISRestoreIndices(is, &faces);CHKERRQ(ierr);
@@ -788,7 +789,7 @@ static PetscErrorCode ComputeRHS(DM dm,Vec F,void *ctx)
 
   ierr = DMGetLocalVector(dm,&Xloc);CHKERRQ(ierr);
   ierr = DMGetLocalVector(dm,&Floc);CHKERRQ(ierr);
-	ierr = VecZeroEntries(X);CHKERRQ(ierr);
+  ierr = VecZeroEntries(X);CHKERRQ(ierr);
   ierr = VecZeroEntries(Xloc);CHKERRQ(ierr);
   ierr = VecZeroEntries(Floc);CHKERRQ(ierr);
   /* Non-conforming routines needs boundary values before G2L */
@@ -798,8 +799,8 @@ static PetscErrorCode ComputeRHS(DM dm,Vec F,void *ctx)
   /* Need to reset boundary values if we transformed */
   ierr = DMHasBasisTransform(dm, &transform);CHKERRQ(ierr);
   if (transform) {
-		ierr = DMPlexSNESComputeBoundaryFEM(dm,Xloc,ctx);CHKERRQ(ierr);
-	}
+    ierr = DMPlexSNESComputeBoundaryFEM(dm,Xloc,ctx);CHKERRQ(ierr);
+  }
   CHKMEMQ;
   ierr = DMPlexSNESComputeResidualFEM(dm,Xloc,Floc,ctx);CHKERRQ(ierr);
   CHKMEMQ;
@@ -980,41 +981,44 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
       PetscReal x1,y1,x2,y2,nrm,tmp;
       if (lpoints[i-1] >= 0) {
         ierr = DMPlexGetPointGlobal(dm,lpoints[i-1],&s1,&e1);CHKERRQ(ierr);
-        x1 = user->ifcoordsx[i-1]+user->ifcoordsx[i];
-        y1 = user->ifcoordsy[i-1]+user->ifcoordsy[i];
-        x2 = user->ifcoordsx[i+1]+user->ifcoordsx[i];
-        y2 = user->ifcoordsy[i+1]+user->ifcoordsy[i];
-        nrm = PetscSqrtReal(.25*(x1-x2)*(x1-x2)+.25*(y1-y2)*(y1-y2));
-        nrm *= 6000.; //Pa
-        //nrm *= 0.;
-        l = 2*(i-1);
-        ierr = MatSetValues(H,1,&l,1,&l,&nrm,INSERT_VALUES);CHKERRQ(ierr);
+        if (s1>=0) {
+          x1 = user->ifcoordsx[i-1]+user->ifcoordsx[i];
+          y1 = user->ifcoordsy[i-1]+user->ifcoordsy[i];
+          x2 = user->ifcoordsx[i+1]+user->ifcoordsx[i];
+          y2 = user->ifcoordsy[i+1]+user->ifcoordsy[i];
+          nrm = PetscSqrtReal(.25*(x1-x2)*(x1-x2)+.25*(y1-y2)*(y1-y2));
+          nrm *= 6000.; //Pa
+          //nrm *= 0.;
+          l = 2*(i-1);
+          //printf("%d %d %d %d,(%f, %f)\n",rank,l,s1,lpoints[i-1],user->ifcoordsx[i],user->ifcoordsy[i]);
+          ierr = MatSetValues(H,1,&l,1,&l,&nrm,INSERT_VALUES);CHKERRQ(ierr);
 
-        x1 = user->ifcoordsx[i-1] - user->ifcoordsx[i];
-        y1 = user->ifcoordsy[i-1] - user->ifcoordsy[i];
-        nrm = PetscSqrtReal(x1*x1 +y1*y1);
-        x1 = x1/nrm;
-        y1 = y1/nrm;
-        x2 = user->ifcoordsx[i] - user->ifcoordsx[i+1];
-        y2 = user->ifcoordsy[i] - user->ifcoordsy[i+1];
-        nrm = PetscSqrtReal(x2*x2 +y2*y2);
-        x2 = x2/nrm;
-        y2 = y2/nrm;
-        if (rank<user->sizeL) {
-          values[0] = .5*(x1+x2);
-          values[1] = .5*(y1+y2);
-        } else {
-          values[0] = -.5*(x1+x2);
-          values[1] = -.5*(y1+y2);
+          x1 = user->ifcoordsx[i-1] - user->ifcoordsx[i];
+          y1 = user->ifcoordsy[i-1] - user->ifcoordsy[i];
+          nrm = PetscSqrtReal(x1*x1 +y1*y1);
+          x1 = x1/nrm;
+          y1 = y1/nrm;
+          x2 = user->ifcoordsx[i] - user->ifcoordsx[i+1];
+          y2 = user->ifcoordsy[i] - user->ifcoordsy[i+1];
+          nrm = PetscSqrtReal(x2*x2 +y2*y2);
+          x2 = x2/nrm;
+          y2 = y2/nrm;
+          if (rank<user->sizeL) {
+            values[0] = .5*(x1+x2);
+            values[1] = .5*(y1+y2);
+          } else {
+            values[0] = -.5*(x1+x2);
+            values[1] = -.5*(y1+y2);
+          }
+          idx[0] = s1+shift;
+          idx[1] = s1+1+shift;
+          ierr = MatSetValues(Bif,1,&l,2,idx,values,INSERT_VALUES);CHKERRQ(ierr);
+          l++;
+          tmp = values[1];
+          values[1] = values[0];
+          values[0] = -tmp;
+          ierr = MatSetValues(Bif,1,&l,2,idx,values,INSERT_VALUES);CHKERRQ(ierr);
         }
-        idx[0] = s1+shift;
-        idx[1] = s1+1+shift;
-        ierr = MatSetValues(Bif,1,&l,2,idx,values,INSERT_VALUES);CHKERRQ(ierr);
-        l++;
-        tmp = values[1];
-        values[1] = values[0];
-        values[0] = -tmp;
-        ierr = MatSetValues(Bif,1,&l,2,idx,values,INSERT_VALUES);CHKERRQ(ierr);
       }
     }
   ierr = MatAssemblyBegin(Bif,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
@@ -1030,17 +1034,17 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
   ierr = MatDestroy(&B);CHKERRQ(ierr);
   ierr = QPGetEq(qp,&B,NULL);CHKERRQ(ierr);
   ierr = MatGetSize(B,&m,&n);CHKERRQ(ierr);
-  ierr = PetscPrintf(PETSC_COMM_WORLD,"Primal %d Dual %d\n",n,m);CHKERRQ(ierr);
+  ierr = PetscPrintf(PETSC_COMM_WORLD,"SizeL %d Primal %d Dual %d\n",user->sizeL,n,m);CHKERRQ(ierr);
 
   ierr = MatCreateAIJ(PETSC_COMM_WORLD,mm,mm,PETSC_DECIDE,PETSC_DECIDE,0,NULL,0,NULL,&mats[0]);CHKERRQ(ierr);
   ierr = MatAssemblyBegin(mats[0],MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
   ierr = MatAssemblyEnd(mats[0],MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  
+
   mats[1] = NULL;
   mats[2] = NULL;
   mats[3] = H;
   ierr = MatCreateNest(PETSC_COMM_WORLD,2,NULL,2,NULL,mats,&Hg);CHKERRQ(ierr);
-    
+
   ierr = QPTDualize(qp,MAT_INV_BLOCKDIAG,MAT_REG_EXPLICIT);CHKERRQ(ierr);
   ierr = QPChainGetLast(qp,&qp);CHKERRQ(ierr);
   ierr = MatDestroy(&A);CHKERRQ(ierr);
@@ -1059,31 +1063,31 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
   ierr = QPSSolve(qps);CHKERRQ(ierr);
   ierr = QPSetOperator(qp,A);CHKERRQ(ierr);
   ierr = QPSPostSolve(qps);CHKERRQ(ierr);
-  ierr = QPIsSolved(qp,&converged);CHKERRQ(ierr);                                                                       
-  if (!converged) PetscPrintf(PETSC_COMM_WORLD,"QPS did not converge!\n"); 
+  ierr = QPIsSolved(qp,&converged);CHKERRQ(ierr);
+  if (!converged) PetscPrintf(PETSC_COMM_WORLD,"QPS did not converge!\n");
   ierr = QPGetOperator(qpm,&A);CHKERRQ(ierr);
   ierr = QPChainPostSolve(qpm);CHKERRQ(ierr);
   ierr = QPGetParent(qpm,&qpm);CHKERRQ(ierr);
   ierr = QPGetSolutionVector(qpm,&u);CHKERRQ(ierr);
 
-  PetscViewer       viewer;                                                     
-  PetscViewerFormat format; 
+  PetscViewer       viewer=NULL;
+  PetscViewerFormat format;
   if (rank<user->sizeL) {
     ierr = PetscOptionsGetViewer(PetscObjectComm((PetscObject)u),NULL,NULL, "-dl", &viewer, &format, NULL);CHKERRQ(ierr);
   }
   if (rank>=user->sizeL) {
     ierr = PetscOptionsGetViewer(PetscObjectComm((PetscObject)u),NULL,NULL, "-du", &viewer, &format, NULL);CHKERRQ(ierr);
   }
-  ierr = VecView(u,viewer);CHKERRQ(ierr);
-  ierr = PetscViewerDestroy(&viewer);CHKERRQ(ierr); 
+  if (viewer) {
+    ierr = VecView(u,viewer);CHKERRQ(ierr);
+    ierr = PetscViewerDestroy(&viewer);CHKERRQ(ierr);
+  }
 
   /* check the constraint */
 
   ierr = QPSDestroy(&qps);CHKERRQ(ierr);
   ierr = QPDestroy(&qp);CHKERRQ(ierr);
-  ierr = MatDestroy(&A);CHKERRQ(ierr);
-  ierr = VecDestroy(&b);CHKERRQ(ierr);
-  ierr = VecDestroy(&z);CHKERRQ(ierr);
+  ierr = QPDestroy(&qpm);CHKERRQ(ierr);
   PetscFunctionReturn(0);
 }
 
@@ -1092,8 +1096,8 @@ int main(int argc, char **argv)
   DM             dm;   /* Problem specification */
   Vec            u;    /* Solutions */
   AppCtx         user; /* User-defined work context */
-  PetscViewer       viewer;                                                     
-  PetscViewerFormat format; 
+  PetscViewer       viewer;
+  PetscViewerFormat format;
   PetscErrorCode ierr;
 
   /* Init PERMON */
@@ -1106,7 +1110,7 @@ int main(int argc, char **argv)
   ierr = VecSet(u, 0.0);CHKERRQ(ierr);
   ierr = PetscObjectSetName((PetscObject) u, "displacement");CHKERRQ(ierr);
   ierr = DMPlexSetSNESLocalFEM(dm, &user, &user, &user);CHKERRQ(ierr);
-  
+
   if (user.solverqps) {
     ierr = SolverQPS(dm,&user,u);CHKERRQ(ierr);
   } else if (user.solverksp) {
@@ -1118,9 +1122,9 @@ int main(int argc, char **argv)
   //ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
   //ierr = PetscOptionsGetViewer(PetscObjectComm((PetscObject)u),NULL,NULL, "-displacement_view", &viewer, &format, NULL);CHKERRQ(ierr);
   //ierr = VecView(u,viewer);CHKERRQ(ierr);
-  //ierr = PetscViewerDestroy(&viewer);CHKERRQ(ierr); 
+  //ierr = PetscViewerDestroy(&viewer);CHKERRQ(ierr);
   /* Cleanup */
-  ierr = VecDestroy(&u);CHKERRQ(ierr);
+  //ierr = VecDestroy(&u);CHKERRQ(ierr);
   ierr = DMDestroy(&dm);CHKERRQ(ierr);
   ierr = PermonFinalize();
   return ierr;
