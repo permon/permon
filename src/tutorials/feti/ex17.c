@@ -905,6 +905,22 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
   ierr = QPGetOperator(qpm,&A);CHKERRQ(ierr);
   ierr = MatGetDiagonalBlock(A,&Aloc);CHKERRQ(ierr);
   ierr = MatGetSize(A,&shift,NULL);CHKERRQ(ierr);
+  
+  //PetscInt size;
+  //ierr = MPI_Comm_size(MPI_COMM_WORLD, &size);
+  //char            file[PETSC_MAX_PATH_LEN];
+  //PetscViewer     fd;
+  //sprintf(file,"slope%d_s%d_%d.bin",user->n,size,rank);
+  //PetscViewerBinaryOpen(PETSC_COMM_SELF,file,FILE_MODE_WRITE,&fd);
+  //for (i=0; i<size; i++) {
+  //  if (i==rank) {
+  //    ierr = MatViewFromOptions(Aloc, NULL, "-a_view");CHKERRQ(ierr);
+  //    ierr = MatView(Aloc,fd);CHKERRQ(ierr);
+  //  }
+  //  ierr = MPI_Barrier(PETSC_COMM_WORLD);CHKERRQ(ierr);
+  //}
+  //PetscViewerDestroy(&fd);
+
 
   ierr = MPI_Bcast((PetscMPIInt*) &shift,1,MPIU_INT,0,PETSC_COMM_WORLD);CHKERRQ(ierr);
   if (rank < user->sizeL) shift = 0;
@@ -1070,6 +1086,11 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
   ierr = QPGetParent(qpm,&qpm);CHKERRQ(ierr);
   ierr = QPGetSolutionVector(qpm,&u);CHKERRQ(ierr);
 
+  Vec proc;
+  ierr = VecDuplicate(u,&proc);CHKERRQ(ierr);
+  ierr = PetscObjectSetName((PetscObject)proc,"ProcessId");CHKERRQ(ierr);
+  ierr = VecSet(proc,1.);CHKERRQ(ierr);
+  ierr = VecScale(proc,rank);CHKERRQ(ierr);
   PetscViewer       viewer=NULL;
   PetscViewerFormat format;
   if (rank<user->sizeL) {
@@ -1080,6 +1101,7 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
   }
   if (viewer) {
     ierr = VecView(u,viewer);CHKERRQ(ierr);
+    ierr = VecView(proc,viewer);CHKERRQ(ierr);
     ierr = PetscViewerDestroy(&viewer);CHKERRQ(ierr);
   }
 
