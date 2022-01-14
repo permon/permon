@@ -258,16 +258,18 @@ PetscErrorCode VecCheckSameLayoutVec(Vec v1, Vec v2)
 PetscErrorCode VecInvalidate(Vec vec)
 {
   PetscContainer container;
-  StateContainer sc;
+  PetscObjectState *state,vecstate;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(vec,VEC_CLASSID,1);
   TRY( VecSetInf(vec) );
 
   TRY( PetscContainerCreate(PetscObjectComm((PetscObject)vec),&container) );
-  TRY( PetscNew(&sc) );
-  TRY( PetscObjectStateGet((PetscObject)vec,&sc->state) );
-  TRY( PetscContainerSetPointer(container,(void*)sc) );
+  TRY( PetscObjectStateGet((PetscObject)vec,&vecstate) );
+  TRY( PetscNew(&state) );
+  *state = vecstate;
+  TRY( PetscContainerSetPointer(container,(void*)state) );
+  TRY( PetscContainerSetUserDestroy(container,PetscContainerUserDestroyDefault) );
   TRY( PetscObjectCompose((PetscObject)vec,"VecInvalidState",(PetscObject)container) );
   TRY( PetscContainerDestroy(&container) );
   PetscFunctionReturn(0);
@@ -278,8 +280,7 @@ PetscErrorCode VecInvalidate(Vec vec)
 PetscErrorCode VecIsInvalidated(Vec vec,PetscBool *flg)
 {
   PetscContainer container;
-  StateContainer sc;
-  PetscObjectState state;
+  PetscObjectState *state,vecstate;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(vec,VEC_CLASSID,1);
@@ -289,9 +290,9 @@ PetscErrorCode VecIsInvalidated(Vec vec,PetscBool *flg)
     *flg = PETSC_FALSE;
     PetscFunctionReturn(0);
   }
-  TRY( PetscContainerGetPointer(container,(void**)&sc) );
-  TRY( PetscObjectStateGet((PetscObject)vec,&state) );
-  if (state > sc->state) {
+  TRY( PetscContainerGetPointer(container,(void*)&state) );
+  TRY( PetscObjectStateGet((PetscObject)vec,&vecstate) );
+  if (vecstate > *state) {
     *flg = PETSC_FALSE;
     TRY( PetscObjectCompose((PetscObject)vec,"VecInvalidState",NULL) );
   } else {
