@@ -255,6 +255,21 @@ PetscErrorCode VecCheckSameLayoutVec(Vec v1, Vec v2)
 
 #undef __FUNCT__
 #define __FUNCT__ "VecInvalidate"
+/*@
+   VecInvalidate - Mark vector invalid and set entries to Inf
+
+   Logically Collective on Vec
+
+   Input Parameters:
+.  vec - vector to mark
+
+  Level: Advanced
+
+  Notes:
+   Vector becomes valid whenever it is changed (PetscObjectState increased).
+
+.seealso VecIsInvalidated()
+@*/
 PetscErrorCode VecInvalidate(Vec vec)
 {
   PetscContainer container;
@@ -277,6 +292,21 @@ PetscErrorCode VecInvalidate(Vec vec)
 
 #undef __FUNCT__
 #define __FUNCT__ "VecIsInvalidated"
+/*@
+   VecIsInvalidated - Check if vector is invalid
+
+   Not Collective
+
+   Input Parameters:
+.  vec - vector to mark
+
+   Output Parameters:
+.  flg - false if vec is valid
+
+  Level: Advanced
+
+.seealso VecInvalidate()
+@*/
 PetscErrorCode VecIsInvalidated(Vec vec,PetscBool *flg)
 {
   PetscContainer container;
