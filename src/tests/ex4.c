@@ -19,8 +19,8 @@ int main(int argc,char **args)
   ierr = VecIsInvalidated(v,&flg);CHKERRQ(ierr);
   if (flg) SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_PLIB,"Vec is invalid");
   ierr = VecInvalidate(v);CHKERRQ(ierr);
-  ierr = VecIsValid(v,&flg);CHKERRQ(ierr);
-  if (flg) SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_PLIB,"Vec is valid");
+  ierr = VecIsInvalidated(v,&flg);CHKERRQ(ierr);
+  if (!flg) SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_PLIB,"Vec is valid");
   ierr = VecView(v,NULL);CHKERRQ(ierr);
   ierr = VecSet(v,1.);CHKERRQ(ierr);
   ierr = VecIsInvalidated(v,&flg);CHKERRQ(ierr);
