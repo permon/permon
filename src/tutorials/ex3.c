@@ -1,12 +1,14 @@
 
-static char help[] = "Solves a tridiagonal system with lower bound specified as a linear inequality constraint.\n\
+static char help[] = "Solves a tridiagonal system with lower bound specified as a linear inequality constraint. Uses dualization.\n\
 Solves finite difference discretization of:\n\
 -u''(x) = -15,  x in [0,1]\n\
 u(0) = u(1) = 0\n\
 s.t. u(x) >= sin(4*pi*x -pi/6)/2 -2\n\
 Based on ex1.\n\
 Input parameters include:\n\
-  -n <mesh_n> : number of mesh points\n";
+  -n <mesh_n>   : number of mesh points\n\
+  -spd          : mark Hessian SPD\n\
+  -empty_nullsp : pass empty nullspace to QP\n";
 
 /*
 * Include "permonqps.h" so that we can use QPS solvers.  Note that this file
@@ -30,16 +32,18 @@ PetscReal fobst(PetscInt i,PetscInt n) {
 int main(int argc,char **args)
 {
   Vec            b,c,x;
-  Mat            A,B,R;
+  Mat            A,B,R=NULL;
   QP             qp;
   QPS            qps;
   PetscInt       i,n = 10,col[3],rstart,rend;
   PetscReal      h,value[3];
-  PetscBool      converged;
+  PetscBool      converged,spd,empty_nullsp;
   PetscErrorCode ierr;
 
   ierr = PermonInitialize(&argc,&args,(char *)0,help);if (ierr) return ierr;
   ierr = PetscOptionsGetInt(NULL,NULL,"-n",&n,NULL);CHKERRQ(ierr);
+  ierr = PetscOptionsGetBool(NULL,NULL,"-empty_nullsp",&empty_nullsp,NULL);CHKERRQ(ierr);
+  ierr = PetscOptionsGetBool(NULL,NULL,"-spd",&spd,NULL);CHKERRQ(ierr);
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   * Setup matrices and vectors
@@ -86,10 +90,16 @@ int main(int argc,char **args)
   ierr = MatAssemblyEnd(B,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
   ierr = MatShift(B,1.0);CHKERRQ(ierr);
 
-  /* Empty null space matrix for dualization */
-  ierr = MatCreateAIJ(PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,n,0,0,NULL,0,NULL,&R);CHKERRQ(ierr);
-  ierr = MatAssemblyBegin(R,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  ierr = MatAssemblyEnd(R,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+  if (empty_nullsp) {
+    /* NOT RECOMMENDED: Empty null space matrix for dualization */
+    ierr = MatCreateAIJ(PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,n,0,0,NULL,0,NULL,&R);CHKERRQ(ierr);
+    ierr = MatAssemblyBegin(R,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+    ierr = MatAssemblyEnd(R,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+  }
+  if (spd) {
+    /* RECOMMENDED: Mark Hessian SPD - will skip nullspace computation in QPTDualize */
+    ierr = MatSetOption(A,MAT_SPD,PETSC_TRUE);CHKERRQ(ierr);
+  }
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   * Setup QP: argmin 1/2 x'Ax -x'b s.t. c <= I*x
@@ -107,9 +117,10 @@ int main(int argc,char **args)
   ierr = VecScale(c,-1.0);CHKERRQ(ierr);
   ierr = MatScale(B,-1.0);CHKERRQ(ierr);
   ierr = QPSetIneq(qp,B,c);CHKERRQ(ierr);
+  if (empty_nullsp) {
+    ierr = QPSetOperatorNullSpace(qp,R);CHKERRQ(ierr);
+  }
   /* Dualize QP */
-  ierr = QPSetOperatorNullSpace(qp,R);CHKERRQ(ierr);
-  ierr = PetscOptionsInsertString(NULL,"-qpt_dualize_B_nest_extension 0 -qpt_dualize_G_explicit 0");CHKERRQ(ierr); /* workaround for empty nullspace */
   ierr = QPTDualize(qp,MAT_INV_MONOLITHIC,MAT_REG_NONE);CHKERRQ(ierr);
   /* Set runtime options, e.g
   *   -qp_chain_view_kkt */
@@ -155,7 +166,14 @@ int main(int argc,char **args)
     suffix: 1
     requires: mumps
     filter: grep -e CONVERGED -e number -e "r ="
-    args: -n 100 -qps_view_convergence -qp_chain_view_kkt
+    args: -n 100 -qps_view_convergence -qp_chain_view_kkt -spd {{0 1}}
+    test:
+      nsize: 2
+  testset:
+    suffix: nullspace
+    requires: mumps
+    filter: grep -e CONVERGED -e number -e "r ="
+    args: -n 100 -qps_view_convergence -qp_chain_view_kkt -empty_nullsp
     test:
     test:
       nsize: 3
