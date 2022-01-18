@@ -63,7 +63,22 @@ PetscErrorCode MatDestroy_Timer(Mat W) {
 
 #undef __FUNCT__
 #define __FUNCT__ "MatCreateTimer"
-PetscErrorCode MatCreateTimer(Mat A, Mat *W_inout) {
+/*@
+   MatCreateTimer - Creates a matrix that behaves like original but logs all MatMult operations
+
+   Collective
+
+   Input Parameters:
+.  A - original matrix
+
+   Output Parameters:
+.  B - matrix A that logs MatMult operations 
+
+   Level: developer
+
+.seealso MatTimerSetOperation(), MatTimerGetMat()
+@*/
+PetscErrorCode MatCreateTimer(Mat A, Mat *B) {
     Mat_Timer *ctx;
     Mat W;
     
@@ -81,7 +96,7 @@ PetscErrorCode MatCreateTimer(Mat A, Mat *W_inout) {
     TRY( MatTimerSetOperation(W,MATOP_MULT_TRANSPOSE,"MatMultTr",(void(*)(void))MatMultTranspose_Timer) );
     TRY( MatTimerSetOperation(W,MATOP_MULT_TRANSPOSE_ADD,"MatMultTrAdd",(void(*)(void))MatMultTransposeAdd_Timer) );
     
-    *W_inout = W;
+    *B = W;
     PetscFunctionReturn(0);
 }
 
