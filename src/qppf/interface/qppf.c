@@ -247,14 +247,16 @@ static PetscErrorCode QPPFSetUpGGt_Private(QPPF cp, Mat *newGGt)
     //TODO if GGt fill > 0.3, use PETSC_FALSE (dense result)
     TRY( PermonMatMatMult(cp->G,cp->Gt,MAT_INITIAL_MATRIX,cp->GGt_relative_fill,&GGt) );
   } else {
-    Mat GGt_arr[2];
+    Mat GGt_arr[3];
 
     TRY( MatCreateTimer(cp->G,&GGt_arr[1]) );
     TRY( MatCreateTimer(cp->Gt,&GGt_arr[0]) );
 
     TRY( MatCreateProd(comm, 2, GGt_arr, &GGt) );
     TRY( PetscObjectSetName((PetscObject)GGt,"GGt") );
-    TRY( MatCreateTimer(GGt,&GGt) );
+    TRY( MatCreateTimer(GGt,&GGt_arr[2]) );
+    TRY( MatDestroy(&GGt) );
+    GGt = GGt_arr[2];
 
     TRY( PetscObjectCompose((PetscObject)GGt,"Gt",(PetscObject)cp->Gt) );
     TRY( PetscObjectCompose((PetscObject)GGt,"G",(PetscObject)cp->G) );

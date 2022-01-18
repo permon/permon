@@ -81,10 +81,6 @@ PetscErrorCode MatCreateTimer(Mat A, Mat *W_inout) {
     TRY( MatTimerSetOperation(W,MATOP_MULT_TRANSPOSE,"MatMultTr",(void(*)(void))MatMultTranspose_Timer) );
     TRY( MatTimerSetOperation(W,MATOP_MULT_TRANSPOSE_ADD,"MatMultTrAdd",(void(*)(void))MatMultTransposeAdd_Timer) );
     
-    if (*W_inout == A) {
-      /* the original object will be replaced by the wrapper */
-      TRY( MatDestroy(W_inout) );
-    }
     *W_inout = W;
     PetscFunctionReturn(0);
 }

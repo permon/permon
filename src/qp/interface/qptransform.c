@@ -848,7 +848,7 @@ static PetscErrorCode MatTransposeMatMult_R_Bt(Mat R, Mat Bt, Mat *G_new)
 
   if (!G_explicit) {
     //NOTE doesn't work with redundant GGt_inv & redundancy of R is problematic due to its structure
-    Mat G_arr[2];
+    Mat G_arr[3];
     Mat Rt;
 
     TRY( PermonMatTranspose(R,MAT_TRANSPOSE_CHEAPEST,&Rt) );
@@ -857,12 +857,16 @@ static PetscErrorCode MatTransposeMatMult_R_Bt(Mat R, Mat Bt, Mat *G_new)
     TRY( MatCreateTimer(Bt,&G_arr[0]) );
     
     TRY( MatCreateProd(PetscObjectComm((PetscObject)Bt), 2, G_arr, &G) );
-    TRY( MatCreateTimer(G,&G) );
-    
+    TRY( MatCreateTimer(G,&G_arr[2]) );
+    TRY( MatDestroy(&G) );
+    G = G_arr[2];
+
     TRY( PetscObjectCompose((PetscObject)G,"Bt",(PetscObject)Bt) );
     TRY( PetscObjectCompose((PetscObject)G,"R",(PetscObject)R) );
     TRY( PetscObjectSetName((PetscObject)G,"G") );
 
+    TRY( MatDestroy(&G_arr[1]) );
+    TRY( MatDestroy(&G_arr[0]) );
     TRY( MatDestroy(&Rt) );
     *G_new = G;
     PetscFunctionReturn(0);
@@ -1098,7 +1102,7 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
 
   /* F = B*Kplus*Bt (implicitly) */
   {
-    Mat F_arr[3];
+    Mat F_arr[4];
     
     TRY( MatCreateTimer(B,&F_arr[2]) );
     TRY( MatCreateTimer(Kplus,&F_arr[1]) );
@@ -1106,7 +1110,9 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
   
     TRY( MatCreateProd(comm, 3, F_arr, &F) );
     TRY( PetscObjectSetName((PetscObject) F, "F") );
-    TRY( MatCreateTimer(F,&F) );
+    TRY( MatCreateTimer(F,&F_arr[3]) );
+    TRY( MatDestroy(&F) );
+    F = F_arr[3];
     
     TRY( PetscObjectCompose((PetscObject)F,"B",(PetscObject)B) );
     TRY( PetscObjectCompose((PetscObject)F,"K",(PetscObject)K) );
