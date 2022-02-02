@@ -249,7 +249,7 @@ PetscErrorCode QPViewKKT(QP qp,PetscViewer v)
   PetscReal   normb=0.0,norm=0.0,dot=0.0;
   Vec         x,b,cE,cI,r,o,t;
   Mat         A,BE,BI;
-  PetscBool   flg=PETSC_FALSE,compare_lambda_E=PETSC_FALSE,avail=PETSC_TRUE;
+  PetscBool   flg=PETSC_FALSE,compare_lambda_E=PETSC_FALSE,notavail;
   MPI_Comm    comm;
   char        *kkt_name;
 
@@ -288,9 +288,9 @@ PetscErrorCode QPViewKKT(QP qp,PetscViewer v)
   
   TRY( VecDuplicate(b, &r) );
   TRY( QPComputeLagrangianGradient(qp,x,r,&kkt_name) );
-  TRY( VecIsValid(r,&avail) );
+  TRY( VecIsInvalidated(r,&notavail) );
 
-  if (avail) {
+  if (!notavail) {
     if (compare_lambda_E) {
       TRY( QPCompareEqMultiplierWithLeastSquare(qp,&norm) );
       TRY( PetscViewerASCIIPrintf(v,"||BE'*lambda_E - BE'*lambda_E_LS|| = %.4e\n",norm) );
@@ -842,7 +842,7 @@ PetscErrorCode QPComputeMissingBoxMultipliers(QP qp)
   Vec llb,lub;
   IS  is;
   Vec r = qp->xwork;
-  PetscBool flg=PETSC_TRUE,flg2=PETSC_TRUE;
+  PetscBool flg=PETSC_FALSE,flg2=PETSC_FALSE;
   QP qp_E;
   QPC qpc;
 
@@ -855,13 +855,13 @@ PetscErrorCode QPComputeMissingBoxMultipliers(QP qp)
   if (qpc) TRY( QPCBoxGetMultipliers(qpc,&llb,&lub) );
 
   if (lb) {
-    TRY( VecIsValid(llb,&flg) );
+    TRY( VecIsInvalidated(llb,&flg) );
   }
   if (ub) {
-    TRY( VecIsValid(lub,&flg2) );
+    TRY( VecIsInvalidated(lub,&flg2) );
   }
   if (!lb && !ub) PetscFunctionReturn(0);
-  if (flg && flg2) PetscFunctionReturn(0);
+  if (!flg && !flg2) PetscFunctionReturn(0);
 
   /* currently cannot handle this situation, leave multipliers untouched */
   if (qp->BI) PetscFunctionReturn(0);

@@ -255,19 +255,36 @@ PetscErrorCode VecCheckSameLayoutVec(Vec v1, Vec v2)
 
 #undef __FUNCT__
 #define __FUNCT__ "VecInvalidate"
+/*@
+   VecInvalidate - Mark vector invalid and set entries to Inf
+
+   Logically Collective on Vec
+
+   Input Parameters:
+.  vec - vector to mark
+
+  Level: Advanced
+
+  Notes:
+   Vector becomes valid whenever it is changed (PetscObjectState increased).
+
+.seealso VecIsInvalidated()
+@*/
 PetscErrorCode VecInvalidate(Vec vec)
 {
   PetscContainer container;
-  StateContainer sc;
+  PetscObjectState *state,vecstate;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(vec,VEC_CLASSID,1);
   TRY( VecSetInf(vec) );
 
   TRY( PetscContainerCreate(PetscObjectComm((PetscObject)vec),&container) );
-  TRY( PetscNew(&sc) );
-  TRY( PetscObjectStateGet((PetscObject)vec,&sc->state) );
-  TRY( PetscContainerSetPointer(container,(void*)sc) );
+  TRY( PetscObjectStateGet((PetscObject)vec,&vecstate) );
+  TRY( PetscNew(&state) );
+  *state = vecstate;
+  TRY( PetscContainerSetPointer(container,(void*)state) );
+  TRY( PetscContainerSetUserDestroy(container,PetscContainerUserDestroyDefault) );
   TRY( PetscObjectCompose((PetscObject)vec,"VecInvalidState",(PetscObject)container) );
   TRY( PetscContainerDestroy(&container) );
   PetscFunctionReturn(0);
@@ -275,11 +292,25 @@ PetscErrorCode VecInvalidate(Vec vec)
 
 #undef __FUNCT__
 #define __FUNCT__ "VecIsInvalidated"
+/*@
+   VecIsInvalidated - Check if vector is invalid
+
+   Not Collective
+
+   Input Parameters:
+.  vec - vector to mark
+
+   Output Parameters:
+.  flg - false if vec is valid
+
+  Level: Advanced
+
+.seealso VecInvalidate()
+@*/
 PetscErrorCode VecIsInvalidated(Vec vec,PetscBool *flg)
 {
   PetscContainer container;
-  StateContainer sc;
-  PetscObjectState state;
+  PetscObjectState *state,vecstate;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(vec,VEC_CLASSID,1);
@@ -289,25 +320,14 @@ PetscErrorCode VecIsInvalidated(Vec vec,PetscBool *flg)
     *flg = PETSC_FALSE;
     PetscFunctionReturn(0);
   }
-  TRY( PetscContainerGetPointer(container,(void**)&sc) );
-  TRY( PetscObjectStateGet((PetscObject)vec,&state) );
-  if (state > sc->state) {
+  TRY( PetscContainerGetPointer(container,(void*)&state) );
+  TRY( PetscObjectStateGet((PetscObject)vec,&vecstate) );
+  if (vecstate > *state) {
     *flg = PETSC_FALSE;
     TRY( PetscObjectCompose((PetscObject)vec,"VecInvalidState",NULL) );
   } else {
     *flg = PETSC_TRUE;
   }
-  PetscFunctionReturn(0);
-}
-
-#undef __FUNCT__
-#define __FUNCT__ "VecIsValid"
-PetscErrorCode VecIsValid(Vec vec,PetscBool *flg)
-{
-  PetscBool flg_;
-  PetscFunctionBegin;
-  TRY( VecIsInvalidated(vec,&flg_) );
-  *flg = PetscNot(flg_);
   PetscFunctionReturn(0);
 }
 
