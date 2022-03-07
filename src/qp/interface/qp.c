@@ -301,6 +301,7 @@ PetscErrorCode QPViewKKT(QP qp,PetscViewer v)
     TRY( PetscViewerASCIIPrintf(v,"r = ||%s|| not available\n",kkt_name) );
   }
   TRY( VecDestroy(&r) );
+  TRY( PetscFree(kkt_name) );
 
   if (BE) {
     if (BE->ops->mult) {
@@ -677,7 +678,7 @@ PetscErrorCode QPCompute_BEt_lambda(QP qp,Vec *BEt_lambda)
 #define __FUNCT__ "QPComputeLagrangianGradient"
 PetscErrorCode QPComputeLagrangianGradient(QP qp, Vec x, Vec r, char *kkt_name_[])
 {
-  Vec         b,cE,cI,Bt_lambda=NULL,BEt_lambda=NULL;
+  Vec         b,cE,cI,Bt_lambda=NULL;
   Mat         A,BE,BI;
   PetscBool   flg=PETSC_FALSE,avail=PETSC_TRUE;
   char        kkt_name[256]="A*x - b";
@@ -723,7 +724,6 @@ PetscErrorCode QPComputeLagrangianGradient(QP qp, Vec x, Vec r, char *kkt_name_[
     if (!flg) {
       TRY( VecCopy(qp->Bt_lambda,Bt_lambda) );                                  /* Bt_lambda = (B'*lambda) */
       if (kkt_name_) TRY( PetscStrcat(kkt_name," + (B'*lambda)") );
-      if (!qp->BI) TRY( PetscObjectReference((PetscObject)(BEt_lambda = Bt_lambda)) );
       goto endif;
     }
 
@@ -731,7 +731,6 @@ PetscErrorCode QPComputeLagrangianGradient(QP qp, Vec x, Vec r, char *kkt_name_[
     if (!flg && qp->B->ops->multtranspose) {
       TRY( MatMultTranspose(qp->B, qp->lambda, Bt_lambda) );                    /* Bt_lambda = B'*lambda */
       if (kkt_name_) TRY( PetscStrcat(kkt_name," + B'*lambda") );
-      if (!qp->BI) TRY( PetscObjectReference((PetscObject)(BEt_lambda = Bt_lambda)) );
       goto endif;
     }
 
@@ -758,8 +757,6 @@ PetscErrorCode QPComputeLagrangianGradient(QP qp, Vec x, Vec r, char *kkt_name_[
         goto endif;
       }
       TRY( MatMultTransposeAdd(BI, qp->lambda_I, Bt_lambda, Bt_lambda) );       /* Bt_lambda = Bt_lambda + BI'*lambda_I */
-    } else {
-      TRY( PetscObjectReference((PetscObject)(BEt_lambda = Bt_lambda)) );
     }
   }
   endif:
