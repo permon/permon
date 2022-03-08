@@ -2,7 +2,7 @@
 #include <permon/private/permonpcimpl.h>
 #include <petscmat.h>
 
-const char *PCDualTypes[]={"none","lumped","PCDualType","PC_DUAL_",0};
+const char *PCDualTypes[]={"none","lumped","dirichlet","dirichlet_diag","lumped_full","PCDualType","PC_DUAL_",0};
 
 PetscLogEvent PC_Dual_Apply, PC_Dual_MatMultSchur;
 
@@ -93,7 +93,11 @@ static PetscErrorCode PCSetUp_Dual(PC pc)
 {
   PC_Dual *ctx = (PC_Dual*)pc->data;
   Mat F = pc->mat;
-  Mat Bt, K;
+  Mat Bt, Kplus, K, K_loc;
+  Mat C_bb_loc;
+  IS iis, bis;   /* local indices of internal dofs and boundary dofs, respectively */
+  MPI_Comm comm;
+  PetscBool flg=PETSC_FALSE;
 
   PetscFunctionBegin;
   TRY( PetscInfo1(pc,"using PCDualType %s\n",PCDualTypes[ctx->pcdualtype]) );
@@ -107,14 +111,101 @@ static PetscErrorCode PCSetUp_Dual(PC pc)
 
   TRY( PetscObjectQuery((PetscObject)F,"Bt",(PetscObject*)&Bt) );
   TRY( PetscObjectQuery((PetscObject)F,"K",(PetscObject*)&K) );
+  TRY( PetscObjectQuery((PetscObject)F,"Kplus",(PetscObject*)&Kplus) );
+  TRY( MatGetDiagonalBlock(K,&K_loc) );
 
-  if (ctx->pcdualtype == PC_DUAL_LUMPED) {
+  if (ctx->pcdualtype == PC_DUAL_LUMPED_FULL) {
     ctx->At = Bt;
     TRY( PetscObjectReference((PetscObject)Bt) );
     ctx->C_bb = K;
     TRY( PetscObjectReference((PetscObject)K) );
     TRY( MatCreateVecs(ctx->C_bb,&ctx->xwork,&ctx->ywork) );
+    PetscFunctionReturn(0);
   }
+  TRY( MatExtensionCreateCondensedRows(Bt, &ctx->At) );
+  TRY( MatExtensionGetRowISLocal(Bt,&bis) );
+  
+  switch (ctx->pcdualtype) {
+  
+    case PC_DUAL_LUMPED:
+    {
+      /* lumped preconditioner with restriction */
+      TRY( MatCreateSubMatrix(K_loc,bis,bis,MAT_INITIAL_MATRIX,&C_bb_loc) );
+    }
+    break;
+
+    case PC_DUAL_DIRICHLET:
+    {
+      /* Dirichlet preconditioner */
+      Mat K_loc_aij;
+      KSP ksp;
+      PC  pc_inner;
+      PetscInt m;
+
+      TRY( MatGetSize(K_loc,&m,NULL) );
+      TRY( ISComplement(bis,0,m,&iis) );
+      TRY( MatConvert(K_loc,MATAIJ,MAT_INITIAL_MATRIX,&K_loc_aij) );
+      TRY( MatGetSchurComplement(K_loc_aij,iis,iis,bis,bis,MAT_INITIAL_MATRIX,&C_bb_loc,MAT_SCHUR_COMPLEMENT_AINV_DIAG,MAT_IGNORE_MATRIX,NULL) );
+
+      if (FllopObjectInfoEnabled) {
+        Mat A;
+        TRY( MatSchurComplementGetSubMatrices(C_bb_loc,&A,NULL,NULL,NULL,NULL) );
+        TRY( PetscObjectSetName((PetscObject)A,"pcdual_schur_A00") );
+        TRY( MatPrintInfo(A) );
+      }
+
+      /* set Schur inner KSP properties */
+      TRY( MatSchurComplementGetKSP(C_bb_loc,&ksp) );
+      TRY( KSPSetType(ksp,KSPPREONLY) );
+      TRY( KSPGetPC(ksp,&pc_inner) );
+      TRY( PCSetType(pc_inner,PCCHOLESKY) );
+      TRY( FllopPetscObjectInheritPrefix((PetscObject)ksp,(PetscObject)pc,"pcdual_schur_") );
+      TRY( FllopPetscObjectInheritPrefix((PetscObject)pc_inner,(PetscObject)pc,"pcdual_schur_") );
+      if (pc->setfromoptionscalled) TRY( KSPSetFromOptions(ksp) );
+      TRY( KSPSetUp(ksp) );
+
+      TRY( MatDestroy(&K_loc_aij) );
+      TRY( ISDestroy(&iis) );
+    }
+    break;
+
+    case PC_DUAL_DIRICHLET_DIAG:
+    {
+      /* Dirichlet preconditioner */
+      Mat K_loc_aij;
+      Mat S;
+      PetscInt m;
+
+      TRY( MatGetSize(K_loc,&m,NULL) );
+      TRY( ISComplement(bis,0,m,&iis) );
+      TRY( MatConvert(K_loc,MATAIJ,MAT_INITIAL_MATRIX,&K_loc_aij) );
+
+      //TODO fix MatGetSchurComplement_Basic in PETSc so that creating S is not needed
+      TRY( MatGetSchurComplement(K_loc_aij,iis,iis,bis,bis,MAT_INITIAL_MATRIX,&S,MAT_SCHUR_COMPLEMENT_AINV_DIAG,MAT_INITIAL_MATRIX,&C_bb_loc) );
+      TRY( MatDestroy(&S) );
+      TRY( MatDestroy(&K_loc_aij) );
+      TRY( ISDestroy(&iis) );
+    }
+    break;
+      
+    default:
+      FLLOP_SETERRQ1(comm,PETSC_ERR_ARG_OUTOFRANGE,"unknown PCDualType: %d",ctx->pcdualtype);
+  }
+  
+  TRY( PetscOptionsGetBool(NULL,NULL,"-dual_pc_explicit_schur",&flg,NULL) );
+  if (flg) {
+    Mat mat;
+    TRY( MatComputeOperator(C_bb_loc,NULL,&mat) );
+    TRY( MatDestroy(&C_bb_loc) );
+    C_bb_loc = mat;
+  }
+
+  /* C_bb = blkdiag(C_bb_loc) */
+  TRY( MatCreateBlockDiag(comm,C_bb_loc,&ctx->C_bb) );
+  
+  TRY( MatCreateVecs(ctx->C_bb,&ctx->xwork,&ctx->ywork) );
+
+  TRY( MatDestroy(&C_bb_loc) );
   PetscFunctionReturn(0);
 }
 
