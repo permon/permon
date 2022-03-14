@@ -96,8 +96,7 @@ static PetscErrorCode PCSetUp_Dual(PC pc)
   Mat Bt, Kplus, K, K_loc;
   Mat C_bb_loc;
   IS iis, bis;   /* local indices of internal dofs and boundary dofs, respectively */
-  MPI_Comm comm;
-  PetscBool flg=PETSC_FALSE;
+  PetscBool flg;
 
   PetscFunctionBegin;
   TRY( PetscInfo1(pc,"using PCDualType %s\n",PCDualTypes[ctx->pcdualtype]) );
@@ -122,11 +121,21 @@ static PetscErrorCode PCSetUp_Dual(PC pc)
     TRY( MatCreateVecs(ctx->C_bb,&ctx->xwork,&ctx->ywork) );
     PetscFunctionReturn(0);
   }
-  TRY( MatExtensionCreateCondensedRows(Bt, &ctx->At) );
+  /* convert to extension */
+  TRY( PetscObjectTypeCompareAny((PetscObject)Bt,&flg,MATNEST,MATNESTPERMON) );
+  if (flg) {
+    TRY(  MatNestGetSubMat(Bt,0,0,&Bt) ); /* assuming gluing mat on 0,0 */
+  }
+  TRY( PetscObjectTypeCompare((PetscObject)Bt,MATEXTENSION,&flg) );
+  if (!flg) {
+    TRY( MatConvert(Bt,MATEXTENSION,MAT_INPLACE_MATRIX,&Bt) ); /* this changes Bt in F as well */
+  }
+
+  /* obtain interface indices and Bt restriction */
+  TRY( MatExtensionCreateCondensedRows(Bt,&ctx->At,NULL) );
   TRY( MatExtensionGetRowISLocal(Bt,&bis) );
-  
+
   switch (ctx->pcdualtype) {
-  
     case PC_DUAL_LUMPED:
     {
       /* lumped preconditioner with restriction */
@@ -154,6 +163,7 @@ static PetscErrorCode PCSetUp_Dual(PC pc)
         TRY( MatPrintInfo(A) );
       }
 
+      /* TODO use MUMPS Schur complement capability */
       /* set Schur inner KSP properties */
       TRY( MatSchurComplementGetKSP(C_bb_loc,&ksp) );
       TRY( KSPSetType(ksp,KSPPREONLY) );
@@ -180,7 +190,6 @@ static PetscErrorCode PCSetUp_Dual(PC pc)
       TRY( ISComplement(bis,0,m,&iis) );
       TRY( MatConvert(K_loc,MATAIJ,MAT_INITIAL_MATRIX,&K_loc_aij) );
 
-      //TODO fix MatGetSchurComplement_Basic in PETSc so that creating S is not needed
       TRY( MatGetSchurComplement(K_loc_aij,iis,iis,bis,bis,MAT_INITIAL_MATRIX,&S,MAT_SCHUR_COMPLEMENT_AINV_DIAG,MAT_INITIAL_MATRIX,&C_bb_loc) );
       TRY( MatDestroy(&S) );
       TRY( MatDestroy(&K_loc_aij) );
@@ -189,9 +198,10 @@ static PetscErrorCode PCSetUp_Dual(PC pc)
     break;
       
     default:
-      FLLOP_SETERRQ1(comm,PETSC_ERR_ARG_OUTOFRANGE,"unknown PCDualType: %d",ctx->pcdualtype);
+      FLLOP_SETERRQ1(PetscObjectComm((PetscObject)pc),PETSC_ERR_ARG_OUTOFRANGE,"unknown PCDualType: %d",ctx->pcdualtype);
   }
   
+  flg = PETSC_FALSE;
   TRY( PetscOptionsGetBool(NULL,NULL,"-dual_pc_explicit_schur",&flg,NULL) );
   if (flg) {
     Mat mat;
@@ -201,7 +211,7 @@ static PetscErrorCode PCSetUp_Dual(PC pc)
   }
 
   /* C_bb = blkdiag(C_bb_loc) */
-  TRY( MatCreateBlockDiag(comm,C_bb_loc,&ctx->C_bb) );
+  TRY( MatCreateBlockDiag(PetscObjectComm((PetscObject)pc),C_bb_loc,&ctx->C_bb) );
   
   TRY( MatCreateVecs(ctx->C_bb,&ctx->xwork,&ctx->ywork) );
 
