@@ -449,7 +449,6 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   Vec               gP;                 /* ... projected gradient               */
   Vec               gc;                 /* ... chopped gradient                 */
   Vec               gf;                 /* ... free gradient                    */
-  Vec               gr;                 /* ... reduced free gradient            */
   Vec               g;                  /* ... gradient                         */
   Vec               p;                  /* ... conjugate gradient               */
   Vec               Ap;                 /* ... multiplicated vector             */
@@ -473,7 +472,6 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   PetscFunctionBegin;
   /* set working vectors */
   gP                = qps->work[0];
-  gr                = qps->work[6];
   gf                = qps->work[1];
   gc                = qps->work[2];
 
@@ -522,7 +520,9 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
 
     /* compute dot products to control the proportionality */
     TRY( VecDot(gc, gc, &gcTgc) );               /* gcTgc=gc'*gc   */
-    //TRY( VecDot(gr, gf, &gfTgf) );               /* gfTgf=gr'*gf   */
+    /* NOTE: using gf'*gf for proportiong rule instead of gr'*gf
+    *  which can lead to more agressive proportioning as
+    *  sqrt(g_reduced^T * g_free) <= ||g_free||                    */
     TRY( VecDot(gf, gf, &gfTgf) );               /* gfTgf=gr'*gf   */
 
     /* compute norm of gf, gc from computed dot products */
