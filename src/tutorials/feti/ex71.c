@@ -410,9 +410,9 @@ int main(int argc,char **args)
     test:
       nsize: 6
       suffix: 1
-      args: -pde_type Poisson -dim 3 -feti_gluing_type {{nonred full orth}separate output}
+      args: -pde_type Poisson -cells 7,8,9 -dim 3 -feti_gluing_type {{nonred full orth}separate output}
     test:
       nsize: 7
       suffix: 2
-      args: -pde_type Elasticity -cells 7,8,9 -dim 3 -qps_rtol 1e-6 -dual_pc_dual_type {{none lumped}separate output}
+      args: -pde_type Elasticity -dim 3 -qps_rtol 1e-6 -dual_pc_dual_type {{none lumped}separate output}
  TEST*/
