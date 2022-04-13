@@ -130,7 +130,7 @@ static PetscErrorCode MatRegularize_GetRegularization_Private(Mat K_loc, Mat R_l
   TRY( ISGetSize(pivots, &npivots) );
 
   if (npivots) {
-    Mat RI, RIt, RItRI, invRItRI, RI_invRItRI, Q_loc_condensed_filtered;
+    Mat RI, RIt, RItRI, iRItRI, invRItRI, RI_invRItRI, Q_loc_condensed_filtered;
     IS R_all_cols;
 
     /* R_all_cols = 0:1:defect_loc-1 */
@@ -144,9 +144,9 @@ static PetscErrorCode MatRegularize_GetRegularization_Private(Mat K_loc, Mat R_l
     TRY( MatMatMult(RIt, RI, MAT_INITIAL_MATRIX, 1.0, &RItRI) );
   
     TRY( MatCreateInv(RItRI, MAT_INV_MONOLITHIC, &invRItRI) );
-    TRY( MatInvExplicitly(invRItRI, PETSC_FALSE, MAT_REUSE_MATRIX, &RItRI) );
+    TRY( MatInvExplicitly(invRItRI, PETSC_FALSE, MAT_INITIAL_MATRIX, &iRItRI) );
     TRY( MatDestroy(&invRItRI) );
-    invRItRI = RItRI;
+    invRItRI = iRItRI;
 
     TRY( MatMatMult(RI, invRItRI, MAT_INITIAL_MATRIX, 1.0, &RI_invRItRI) );
     TRY( MatMatMult(RI_invRItRI, RIt, MAT_INITIAL_MATRIX, 1.0, &Q_loc_condensed) );
