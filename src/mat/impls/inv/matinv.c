@@ -143,6 +143,8 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
     } else mumps->id.rhs = array;
     /* mumps->id.nrhs is reset by MatMatSolve_MUMPS()/MatSolve_MUMPS() */
     mumps->id.nrhs = defect;
+    mumps->id.lrhs = (mumps->petsc_size > 1) ? M : mm;
+    mumps->id.lrhs_loc = mm;
     TRY( MatMumpsSetIcntl(F,25,-1) ); /* compute complete null space */
     mumps->id.job = JOB_SOLVE;
     PetscMUMPS_c(&mumps->id);
