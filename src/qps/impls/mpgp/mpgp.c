@@ -733,7 +733,7 @@ PetscErrorCode QPSSetFromOptions_MPGP(PetscOptionItems *PetscOptionsObject,QPS q
   PetscInt maxeig_iter;
 
   PetscFunctionBegin;
-  TRY( PetscOptionsHead(PetscOptionsObject,"QPS MPGP options") );
+  PetscOptionsHead(PetscOptionsObject,"QPS MPGP options");
 
   alpha_direct = PETSC_FALSE;
   TRY( PetscOptionsBool("-qps_mpgp_alpha_direct","","QPSMPGPSetAlpha",(PetscBool) mpgp->alpha_type,&alpha_direct,&flg1) );
@@ -755,7 +755,7 @@ PetscErrorCode QPSSetFromOptions_MPGP(PetscOptionItems *PetscOptionsObject,QPS q
   TRY( PetscOptionsBool("-qps_mpgp_fallback","Throw away expansion step if cost function increased and do a std expansion step.","",(PetscBool) mpgp->fallback,&mpgp->fallback,NULL) );
   TRY( PetscOptionsBool("-qps_mpgp_fallback2","Same as fallback which is done only if the next step is proportioning","",(PetscBool) mpgp->fallback2,&mpgp->fallback2,NULL) );
   if (mpgp->fallback2) mpgp->fallback = PETSC_FALSE;
-  TRY( PetscOptionsTail() );
+  PetscOptionsTail();
   PetscFunctionReturn(0);
 }
 

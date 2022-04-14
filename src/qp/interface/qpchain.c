@@ -162,8 +162,7 @@ PetscErrorCode QPChainSetFromOptions(QP qp)
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  _fllop_ierr = PetscOptionsBegin(PetscObjectComm((PetscObject)qp),NULL,"QP chain options","QP");CHKERRQ(_fllop_ierr);
-  /* options processed elsewhere */
+  PetscOptionsBegin(PetscObjectComm((PetscObject)qp),NULL,"QP chain options","QP");  /* options processed elsewhere */
   TRY( PetscOptionsName("-qp_chain_view","print the info about all QPs in the chain at the end of a QPSSolve call","QPChainView",&flg) );
   TRY( PetscOptionsName("-qp_chain_view_kkt","print detailed post-solve KKT satisfaction information","QPChainViewKKT",&flg) );
   TRY( PetscOptionsName("-qp_chain_view_qppf","print info about QPPF instances in the QP chain","QPChainViewQPPF",&flg) );
@@ -172,7 +171,7 @@ PetscErrorCode QPChainSetFromOptions(QP qp)
     TRY( QPSetFromOptions(qp) );
     TRY( QPGetChild(qp,&qp) );
   } while (qp);
-  _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
+  PetscOptionsEnd();
   PetscFunctionReturn(0);
 }
 

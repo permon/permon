@@ -177,7 +177,7 @@ PetscErrorCode QPPFSetFromOptions(QPPF cp)
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(cp, QPPF_CLASSID, 1);
-  _fllop_ierr = PetscObjectOptionsBegin((PetscObject) cp);CHKERRQ(_fllop_ierr);
+  PetscObjectOptionsBegin((PetscObject) cp);
 
   TRY( PetscOptionsBool("-qppf_explicit", "", "QPPFSetExplicitInv", cp->explicitInv, &flg, &set) );
   if (set) TRY( QPPFSetExplicitInv(cp, flg) );
@@ -186,7 +186,7 @@ PetscErrorCode QPPFSetFromOptions(QPPF cp)
   if (set) TRY( QPPFSetRedundancy(cp, nred) );
   
   cp->setfromoptionscalled++;
-  _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
+  PetscOptionsEnd();
   PetscFunctionReturn(0);
 }
 
@@ -200,9 +200,9 @@ static PetscErrorCode QPPFSetUpGt_Private(QPPF cp, Mat *newGt)
 
   PetscFunctionBeginI;
   ttype = cp->G_has_orthonormal_rows_explicitly ? MAT_TRANSPOSE_CHEAPEST : MAT_TRANSPOSE_EXPLICIT;
-  _fllop_ierr = PetscObjectOptionsBegin((PetscObject)cp);CHKERRQ(_fllop_ierr);
+  PetscObjectOptionsBegin((PetscObject)cp);
   TRY( PetscOptionsBool("-MatTrMatMult_2extension","MatTransposeMatMult_BlockDiag_Extension_2extension","Mat type of resulting matrix will be extension",flg,&flg,NULL) );
-  _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
+  PetscOptionsEnd();
   if (flg) {
     ttype = MAT_TRANSPOSE_CHEAPEST;
   }
@@ -235,13 +235,13 @@ static PetscErrorCode QPPFSetUpGGt_Private(QPPF cp, Mat *newGGt)
 
   TRY( PetscLogEventBegin(QPPF_SetUp_GGt,cp,0,0,0) );
   
-  _fllop_ierr = PetscObjectOptionsBegin((PetscObject)cp);CHKERRQ(_fllop_ierr);
+  PetscObjectOptionsBegin((PetscObject)cp);
   //TODO DIRTY
   TRY( PetscOptionsGetBool(NULL,NULL,"-qpt_dualize_explicit_G",&GGt_explicit,NULL) );
   if (GGt_explicit) {//implicit G -> implicit GGt
     TRY( PetscOptionsGetBool(((PetscObject)cp)->options,NULL,"-qppf_explicit_GGt",&GGt_explicit,NULL) );
   }
-  _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
+  PetscOptionsEnd();
 
   if (GGt_explicit) {
     //TODO if GGt fill > 0.3, use PETSC_FALSE (dense result)

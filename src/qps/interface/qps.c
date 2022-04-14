@@ -873,7 +873,7 @@ PetscErrorCode QPSSetFromOptions(QPS qps)
   
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  _fllop_ierr = PetscObjectOptionsBegin((PetscObject)qps);CHKERRQ(_fllop_ierr);
+  PetscObjectOptionsBegin((PetscObject)qps);
   TRY( PetscOptionsFList("-qps_type","QP solution method","QPSSetType",QPSList,(char*)(((PetscObject)qps)->type_name),type,256,&flg) );
   if (flg) TRY( QPSSetType(qps,type) );
   TRY( QPSSetDefaultTypeIfNotSpecified(qps) );
@@ -904,7 +904,7 @@ PetscErrorCode QPSSetFromOptions(QPS qps)
     TRY( (*qps->ops->setfromoptions)(PetscOptionsObject,qps) );
   }
   if (qps->topQP) TRY( QPChainSetFromOptions(qps->topQP) );
-  _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
+  PetscOptionsEnd();
   PetscFunctionReturn(0);
 }
 

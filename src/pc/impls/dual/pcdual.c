@@ -165,9 +165,9 @@ PetscErrorCode PCSetFromOptions_Dual(PetscOptionItems *PetscOptionsObject,PC pc)
   PC_Dual         *ctx = (PC_Dual*)pc->data;
 
   PetscFunctionBegin;
-  TRY( PetscOptionsHead(PetscOptionsObject,"PCDUAL options") );
+  PetscOptionsHead(PetscOptionsObject,"PCDUAL options");
   TRY( PetscOptionsEnum("-pc_dual_type", "PCDUAL type", "PCDualSetType", PCDualTypes, (PetscEnum)ctx->pcdualtype, (PetscEnum*)&ctx->pcdualtype, NULL) );
-  TRY( PetscOptionsTail() );
+  PetscOptionsTail();
   ctx->setfromoptionscalled = PETSC_TRUE;
   PetscFunctionReturn(0);
 }

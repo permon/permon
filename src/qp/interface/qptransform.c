@@ -1458,9 +1458,9 @@ PetscErrorCode QPTScale(QP qp)
   PetscFunctionBeginI;
   TRY( QPChainGetLast(qp,&qp) );
 
-  _fllop_ierr = PetscObjectOptionsBegin((PetscObject)qp);CHKERRQ(_fllop_ierr);
+  PetscObjectOptionsBegin((PetscObject)qp);
   TRY( PetscOptionsBool("-qp_E_remove_gluing_of_dirichlet","remove gluing of DOFs on Dirichlet boundary","QPTRemoveGluingOfDirichletDofs",remove_gluing_of_dirichlet,&remove_gluing_of_dirichlet,NULL) );
-  _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
+  PetscOptionsEnd();
   TRY( PetscInfo1(qp, "-qp_E_remove_gluing_of_dirichlet %d\n",remove_gluing_of_dirichlet) );
   if (remove_gluing_of_dirichlet) {
     TRY( QPTRemoveGluingOfDirichletDofs(qp) );
@@ -1471,7 +1471,7 @@ PetscErrorCode QPTScale(QP qp)
       QP_DUPLICATE_COPY_POINTERS, &qp, &child, &comm) );
   TRY( PetscNew(&ctx) );
 
-  _fllop_ierr = PetscObjectOptionsBegin((PetscObject)qp);CHKERRQ(_fllop_ierr);
+  PetscObjectOptionsBegin((PetscObject)qp);
   A = qp->A;
   b = qp->b;
   d = NULL;
@@ -1559,7 +1559,7 @@ PetscErrorCode QPTScale(QP qp)
     }
   }
 
-  _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
+  PetscOptionsEnd();
   child->postSolveCtx = ctx;
   PetscFunctionReturnI(0);
 }
@@ -2116,11 +2116,11 @@ PetscErrorCode QPTAllInOne(QP qp,MatInvType invType,PetscBool dual,PetscBool pro
   regularize_e = regularize ? MAT_REG_EXPLICIT : MAT_REG_NONE;
 
   TRY( PetscLogEventBegin(QPT_AllInOne,qp,0,0,0) );
-  _fllop_ierr = PetscObjectOptionsBegin((PetscObject)qp);CHKERRQ(_fllop_ierr);
+  PetscObjectOptionsBegin((PetscObject)qp);
   TRY( PetscOptionsBool("-qp_I_freeze","perform QPTFreezeIneq","QPTFreezeIneq",freeze,&freeze,NULL) );
   TRY( PetscOptionsBoolGroupBegin("-qp_O_normalize","perform QPTNormalizeObjective","QPTNormalizeObjective",&normalize) );
   TRY( PetscOptionsBoolGroupEnd("-qp_O_normalize_hessian","perform QPTNormalizeHessian","QPTNormalizeHessian",&normalize_hessian) );
-  _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
+  PetscOptionsEnd();
 
   //TODO do this until QPTFromOptions supports chain updates
   TRY( QPRemoveChild(qp) );
@@ -2147,10 +2147,10 @@ PetscErrorCode QPTAllInOne(QP qp,MatInvType invType,PetscBool dual,PetscBool pro
     normalize = PETSC_FALSE;
     normalize_hessian = PETSC_FALSE;
     TRY( QPChainGetLast(qp,&last) );
-    _fllop_ierr = PetscObjectOptionsBegin((PetscObject)last);CHKERRQ(_fllop_ierr);
+    PetscObjectOptionsBegin((PetscObject)last);
     TRY( PetscOptionsBoolGroupBegin("-qp_O_normalize","perform QPTNormalizeObjective","QPTNormalizeObjective",&normalize) );
     TRY( PetscOptionsBoolGroupEnd("-qp_O_normalize_hessian","perform QPTNormalizeHessian","QPTNormalizeHessian",&normalize_hessian) );
-    _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
+    PetscOptionsEnd();
     if (normalize) {
       TRY( QPTNormalizeObjective(qp) );
     } else if (normalize_hessian) {
@@ -2174,7 +2174,7 @@ PetscErrorCode QPTFromOptions(QP qp)
   PetscBool regularize=PETSC_TRUE;
 
   PetscFunctionBegin;
-  _fllop_ierr = PetscOptionsBegin(PetscObjectComm((PetscObject)qp),NULL,"QP transforms options","QP");CHKERRQ(_fllop_ierr);
+  PetscOptionsBegin(PetscObjectComm((PetscObject)qp),NULL,"QP transforms options","QP");
   {
     TRY( PetscOptionsBool("-feti","perform FETI DDM combination of transforms","QPTAllInOne",feti,&feti,NULL) );
     if (feti) {
@@ -2192,7 +2192,7 @@ PetscErrorCode QPTFromOptions(QP qp)
       invType = MAT_INV_BLOCKDIAG;
     }
   }
-  _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
+  PetscOptionsEnd();
   TRY( QPTAllInOne(qp, invType, dual, project, penalty, penalty_direct, regularize) );
   PetscFunctionReturn(0);
 }

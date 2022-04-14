@@ -107,7 +107,7 @@ static PetscErrorCode ProcessOptions(MPI_Comm comm, AppCtx *options)
   options->per[1]    = PETSC_FALSE;
   options->per[2]    = PETSC_FALSE;
 
-  ierr = PetscOptionsBegin(comm,NULL,"Problem Options",NULL);CHKERRQ(ierr);
+  PetscOptionsBegin(comm,NULL,"Problem Options",NULL);
   pde  = options->pde;
   ierr = PetscOptionsEList("-pde_type","The PDE type",__FILE__,pdeTypes,2,pdeTypes[options->pde],&pde,NULL);CHKERRQ(ierr);
   options->pde = (PDEType)pde;
@@ -117,7 +117,7 @@ static PetscErrorCode ProcessOptions(MPI_Comm comm, AppCtx *options)
   ierr = PetscOptionsBool("-use_global","Test MatSetValues",__FILE__,options->useglobal,&options->useglobal,NULL);CHKERRQ(ierr);
   ierr = PetscOptionsBool("-dirichlet","Use dirichlet BC",__FILE__,options->dirbc,&options->dirbc,NULL);CHKERRQ(ierr);
   ierr = PetscOptionsBool("-test_assembly","Test MATIS assembly",__FILE__,options->test,&options->test,NULL);CHKERRQ(ierr);
-  ierr = PetscOptionsEnd();
+  PetscOptionsEnd();
 
   for (n=options->dim;n<3;n++) options->cells[n] = 0;
   if (options->per[0]) options->dirbc = PETSC_FALSE;

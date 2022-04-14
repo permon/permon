@@ -1076,7 +1076,7 @@ PetscErrorCode  PermonMatSetFromOptions(Mat B)
   PetscFunctionBeginI;
   PetscValidHeaderSpecific(B,MAT_CLASSID,1);
 
-  ierr = PetscObjectOptionsBegin((PetscObject)B);CHKERRQ(ierr);
+  PetscObjectOptionsBegin((PetscObject)B);
 
   if (B->rmap->bs < 0) {
     PetscInt newbs = -1;
@@ -1115,7 +1115,7 @@ PetscErrorCode  PermonMatSetFromOptions(Mat B)
 
   /* process any options handlers added with PetscObjectAddOptionsHandler() */
   ierr = PetscObjectProcessOptionsHandlers(PetscOptionsObject,(PetscObject)B);CHKERRQ(ierr);
-  ierr = PetscOptionsEnd();CHKERRQ(ierr);
+  PetscOptionsEnd();
   PetscFunctionReturnI(0);
 }
 

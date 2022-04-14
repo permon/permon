@@ -811,14 +811,14 @@ PetscErrorCode MatSetFromOptions_Inv(PetscOptionItems *PetscOptionsObject,Mat im
   
   PetscFunctionBegin;
   inv = (Mat_Inv*) imat->data;
-  TRY( PetscOptionsHead(PetscOptionsObject,"Mat Inv options") );
+  PetscOptionsHead(PetscOptionsObject,"Mat Inv options");
   
   TRY( PetscOptionsEnum("-mat_inv_psubcomm_type", "subcommunicator type", "", PetscSubcommTypes, (PetscEnum) inv->psubcommType, (PetscEnum*)&psubcommType, &set) );
   if (set) MatInvSetPsubcommType(imat, psubcommType);
 
   inv->setfromoptionscalled = PETSC_TRUE;
 
-  TRY( PetscOptionsTail() );
+  PetscOptionsTail();
   PetscFunctionReturn(0);
 }
 

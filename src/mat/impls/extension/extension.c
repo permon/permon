@@ -691,9 +691,9 @@ static PetscErrorCode MatProductNumeric_BlockDiag_Extension(Mat C)
 
   switch (product->type) {
   case MATPRODUCT_AtB:
-    _fllop_ierr = PetscObjectOptionsBegin((PetscObject)C);CHKERRQ(_fllop_ierr);
+    PetscObjectOptionsBegin((PetscObject)C);
     TRY( PetscOptionsBool("-MatTrMatMult_2extension","MatTransposeMatMult_BlockDiag_Extension_2extension","Mat type of resulting matrix will be extension",flg,&flg,NULL) );
-    _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
+    PetscOptionsEnd();
     if (flg){
       TRY( MatTransposeMatMult_BlockDiag_Extension_2extension(A, B, MAT_INITIAL_MATRIX, product->fill, &newmat) );
     }else{
@@ -1059,9 +1059,9 @@ static PetscErrorCode MatProductNumeric_Extension(Mat C)
     if (A != B) {
       FLLOP_SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_WRONG,"implemented only for A=B");
     }
-    _fllop_ierr = PetscObjectOptionsBegin((PetscObject)C);CHKERRQ(_fllop_ierr);
+    PetscObjectOptionsBegin((PetscObject)C);
     TRY( PetscOptionsEList("-MatMatMultExt_mattype","MatMatMultExt_mattype","Set type of resulting matrix when assembling from extension type",allowedMats,3,MATAIJ,&mattype,NULL) );
-    _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
+    PetscOptionsEnd();
     TRY( MatMatTransposeMult_Extension_Extension_same(A,B,MAT_INITIAL_MATRIX,product->fill,mattype,&newmat) );
     break;
   default: SETERRQ(PetscObjectComm((PetscObject)C),PETSC_ERR_SUP,"MATPRODUCT type is not supported");

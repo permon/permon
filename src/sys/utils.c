@@ -174,7 +174,7 @@ PetscErrorCode FllopSetFromOptions()
   
   PetscFunctionBegin;
   logname[0] = 0;
-  ierr = PetscOptionsBegin(PETSC_COMM_WORLD, NULL, "FLLOP options", NULL);CHKERRQ(ierr);
+  PetscOptionsBegin(PETSC_COMM_WORLD, NULL, "FLLOP options", NULL);
   {
     flg = PETSC_FALSE;
     ierr = PetscOptionsBool("-fllop_object_info", "print one-line info messages about matrices and vectors", NULL, PETSC_FALSE, &flg, NULL);CHKERRQ(ierr);
@@ -190,7 +190,7 @@ PetscErrorCode FllopSetFromOptions()
     ierr = PetscOptionsString("-fllop_info",      "enable info messages only from FLLOP",                    NULL, NULL, logname, 256, &fllop_info);CHKERRQ(ierr);
 #endif     
   }
-  ierr = PetscOptionsEnd();CHKERRQ(ierr);
+  PetscOptionsEnd();
 
 #if defined (PETSC_USE_INFO)
   {

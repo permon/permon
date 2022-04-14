@@ -2475,7 +2475,7 @@ static PetscErrorCode QPSetFromOptions_Private(QP qp)
   PetscFunctionBegin;
   if (!qp->setfromoptionscalled) PetscFunctionReturn(0);
 
-  _fllop_ierr = PetscObjectOptionsBegin((PetscObject)qp);CHKERRQ(_fllop_ierr);
+  PetscObjectOptionsBegin((PetscObject)qp);
   if (!qp->pc) TRY( QPGetPC(qp,&qp->pc) );
 
   if (qp->pf) {
@@ -2488,7 +2488,7 @@ static PetscErrorCode QPSetFromOptions_Private(QP qp)
   }
   TRY( PCSetFromOptions(qp->pc) );
 
-  _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
+  PetscOptionsEnd();
   PetscFunctionReturn(0);
 }
 
@@ -2520,14 +2520,14 @@ PetscErrorCode QPSetFromOptions(QP qp)
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  _fllop_ierr = PetscObjectOptionsBegin((PetscObject)qp);CHKERRQ(_fllop_ierr);
+  PetscObjectOptionsBegin((PetscObject)qp);
 
   /* options processed elsewhere */
   TRY( PetscOptionsName("-qp_view","print the QP info at the end of a QPSSolve call","QPView",&flg) );
 
   /* process any options handlers added with PetscObjectAddOptionsHandler() */
   TRY( PetscObjectProcessOptionsHandlers(PetscOptionsObject,(PetscObject)qp) );
-  _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
+  PetscOptionsEnd();
   qp->setfromoptionscalled++;
   PetscFunctionReturn(0);
 }
