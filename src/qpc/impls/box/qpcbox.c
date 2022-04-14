@@ -511,7 +511,7 @@ PetscErrorCode QPCBoxSet(QPC qpc,Vec lb, Vec ub)
   }
 #endif
 
-  TRY( PetscUseMethod(qpc,"QPCBoxSet_Box_C",(QPC,Vec,Vec),(qpc,lb,ub)) );
+  PetscUseMethod(qpc,"QPCBoxSet_Box_C",(QPC,Vec,Vec),(qpc,lb,ub));
   PetscFunctionReturn(0);
 }
 
@@ -524,7 +524,7 @@ PetscErrorCode QPCBoxGet(QPC qpc,Vec *lb, Vec *ub)
   if (lb) PetscValidPointer(lb,2);
   if (ub) PetscValidPointer(ub,3);
 
-  TRY( PetscUseMethod(qpc,"QPCBoxGet_Box_C",(QPC,Vec*,Vec*),(qpc,lb,ub)) );
+  PetscUseMethod(qpc,"QPCBoxGet_Box_C",(QPC,Vec*,Vec*),(qpc,lb,ub));
   PetscFunctionReturn(0);
 }
 
@@ -537,7 +537,7 @@ PetscErrorCode QPCBoxGetMultipliers(QPC qpc,Vec *llb,Vec *lub)
   if (llb) PetscValidPointer(llb,2);
   if (lub) PetscValidPointer(lub,3);
 
-  TRY( PetscUseMethod(qpc,"QPCBoxGetMultipliers_Box_C",(QPC,Vec*,Vec*),(qpc,llb,lub)) );
+  PetscUseMethod(qpc,"QPCBoxGetMultipliers_Box_C",(QPC,Vec*,Vec*),(qpc,llb,lub));
   PetscFunctionReturn(0);
 }
 

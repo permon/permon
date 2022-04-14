@@ -28,7 +28,7 @@ PetscErrorCode MatExtensionGetColumnIS(Mat TA,IS *cis)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(TA,MAT_CLASSID,1);
   PetscValidPointer(cis,2);
-  TRY( PetscUseMethod(TA,"MatExtensionGetColumnIS_Extension_C",(Mat,IS*),(TA,cis)) );
+  PetscUseMethod(TA,"MatExtensionGetColumnIS_Extension_C",(Mat,IS*),(TA,cis));
   PetscFunctionReturn(0);
 }
 
@@ -52,7 +52,7 @@ PetscErrorCode MatExtensionSetColumnIS(Mat TA,IS cis)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(TA,MAT_CLASSID,1);
   if (cis) PetscValidHeaderSpecific(cis,IS_CLASSID,2);
-  TRY( PetscTryMethod(TA,"MatExtensionSetColumnIS_Extension_C",(Mat,IS),(TA,cis)) );
+  PetscTryMethod(TA,"MatExtensionSetColumnIS_Extension_C",(Mat,IS),(TA,cis));
   PetscFunctionReturn(0);
 }
 
@@ -74,7 +74,7 @@ PetscErrorCode MatExtensionGetRowIS(Mat TA,IS *ris)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(TA,MAT_CLASSID,1);
   PetscValidPointer(ris,2);
-  TRY( PetscUseMethod(TA,"MatExtensionGetRowIS_Extension_C",(Mat,IS*),(TA,ris)) );
+  PetscUseMethod(TA,"MatExtensionGetRowIS_Extension_C",(Mat,IS*),(TA,ris));
   PetscFunctionReturn(0);
 }
 
@@ -96,7 +96,7 @@ PetscErrorCode MatExtensionGetRowISLocal(Mat TA,IS *ris)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(TA,MAT_CLASSID,1);
   PetscValidPointer(ris,2);
-  TRY( PetscUseMethod(TA,"MatExtensionGetRowISLocal_Extension_C",(Mat,IS*),(TA,ris)) );
+  PetscUseMethod(TA,"MatExtensionGetRowISLocal_Extension_C",(Mat,IS*),(TA,ris));
   PetscFunctionReturn(0);
 }
 
@@ -126,7 +126,7 @@ PetscErrorCode MatExtensionSetRowIS(Mat TA,IS ris,PetscBool rows_use_global_numb
   PetscValidHeaderSpecific(TA,MAT_CLASSID,1);
   if (ris) PetscValidHeaderSpecific(ris,IS_CLASSID,2);
   PetscValidLogicalCollectiveBool(TA,rows_use_global_numbering,3);
-  TRY( PetscTryMethod(TA,"MatExtensionSetRowIS_Extension_C",(Mat,IS,PetscBool),(TA,ris,rows_use_global_numbering)) );
+  PetscTryMethod(TA,"MatExtensionSetRowIS_Extension_C",(Mat,IS,PetscBool),(TA,ris,rows_use_global_numbering));
   PetscFunctionReturn(0);
 }
 
@@ -148,7 +148,7 @@ PetscErrorCode MatExtensionGetCondensed(Mat TA,Mat *A)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(TA,MAT_CLASSID,1);
   PetscValidPointer(A,2);
-  TRY( PetscUseMethod(TA,"MatExtensionGetCondensed_Extension_C",(Mat,Mat*),(TA,A)) );
+  PetscUseMethod(TA,"MatExtensionGetCondensed_Extension_C",(Mat,Mat*),(TA,A));
   PetscFunctionReturn(0);
 }
 
@@ -172,7 +172,7 @@ PetscErrorCode MatExtensionCreateCondensedRows(Mat TA,Mat *A,IS *ris_local)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(TA,MAT_CLASSID,1);
   PetscValidPointer(A,2);
-  TRY( PetscUseMethod(TA,"MatExtensionCreateCondensedRows_Extension_C",(Mat,Mat*,IS*),(TA,A,ris_local)) );
+  PetscUseMethod(TA,"MatExtensionCreateCondensedRows_Extension_C",(Mat,Mat*,IS*),(TA,A,ris_local));
   PetscFunctionReturn(0);
 }
 
@@ -198,7 +198,7 @@ PetscErrorCode MatExtensionCreateLocalMat(Mat TA,Mat *local)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(TA,MAT_CLASSID,1);
   PetscValidPointer(local,2);
-  TRY( PetscUseMethod(TA,"MatExtensionCreateLocalMat_Extension_C",(Mat,Mat*),(TA,local)) );
+  PetscUseMethod(TA,"MatExtensionCreateLocalMat_Extension_C",(Mat,Mat*),(TA,local));
   PetscFunctionReturn(0);
 }
 
@@ -225,7 +225,7 @@ PetscErrorCode MatExtensionSetCondensed(Mat TA,Mat A)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(TA,MAT_CLASSID,1);
   PetscValidHeaderSpecific(A,MAT_CLASSID,2);
-  TRY( PetscTryMethod(TA,"MatExtensionSetCondensed_Extension_C",(Mat,Mat),(TA,A)) );
+  PetscTryMethod(TA,"MatExtensionSetCondensed_Extension_C",(Mat,Mat),(TA,A));
   PetscFunctionReturn(0);
 }
 
@@ -276,7 +276,7 @@ PetscErrorCode MatExtensionSetUp(Mat TA)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(TA,MAT_CLASSID,1);
-  TRY( PetscTryMethod(TA,"MatExtensionSetUp_Extension_C",(Mat),(TA)) );
+  PetscTryMethod(TA,"MatExtensionSetUp_Extension_C",(Mat),(TA));
   PetscFunctionReturn(0);
 }
 

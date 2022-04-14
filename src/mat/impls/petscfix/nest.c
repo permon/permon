@@ -398,7 +398,7 @@ PetscErrorCode MatNestPermonGetColumnISs(Mat A,IS **is_new)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
   PetscValidPointer(is_new,2);
-  TRY( PetscUseMethod(A,"MatNestPermonGetColumnISs_NestPermon_C",(Mat,IS**),(A,is_new)) );
+  PetscUseMethod(A,"MatNestPermonGetColumnISs_NestPermon_C",(Mat,IS**),(A,is_new));
   PetscFunctionReturn(0);
 }
 

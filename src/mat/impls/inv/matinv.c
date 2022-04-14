@@ -1027,7 +1027,7 @@ PetscErrorCode MatInvExplicitly(Mat imat, PetscBool transpose, MatReuse scall, M
   PetscValidLogicalCollectiveBool(imat,transpose,2);
   PetscValidLogicalCollectiveEnum(imat,scall,3);
   PetscValidPointer(imat_explicit,4);
-  TRY( PetscUseMethod(imat,"MatInvExplicitly_Inv_C",(Mat,PetscBool,MatReuse,Mat*),(imat,transpose,scall,imat_explicit)) );
+  PetscUseMethod(imat,"MatInvExplicitly_Inv_C",(Mat,PetscBool,MatReuse,Mat*),(imat,transpose,scall,imat_explicit));
   PetscFunctionReturn(0);
 }
 
@@ -1037,7 +1037,7 @@ PetscErrorCode MatInvReset(Mat imat)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
-  TRY( PetscTryMethod(imat,"MatInvReset_Inv_C",(Mat),(imat)) );
+  PetscTryMethod(imat,"MatInvReset_Inv_C",(Mat),(imat));
   PetscFunctionReturn(0);
 }
 
@@ -1047,7 +1047,7 @@ PetscErrorCode MatInvSetUp(Mat imat)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
-  TRY( PetscTryMethod(imat,"MatInvSetUp_Inv_C",(Mat),(imat)) );
+  PetscTryMethod(imat,"MatInvSetUp_Inv_C",(Mat),(imat));
   PetscFunctionReturn(0);
 }
 
@@ -1057,7 +1057,7 @@ PetscErrorCode MatInvCreateInnerObjects(Mat imat)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
-  TRY( PetscTryMethod(imat,"MatInvCreateInnerObjects_Inv_C",(Mat),(imat)) );
+  PetscTryMethod(imat,"MatInvCreateInnerObjects_Inv_C",(Mat),(imat));
   PetscFunctionReturn(0);
 }
 
@@ -1068,7 +1068,7 @@ PetscErrorCode MatInvSetRegularizationType(Mat imat,MatRegularizationType type)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
   PetscValidLogicalCollectiveEnum(imat,type,2);
-  TRY( PetscTryMethod(imat,"MatInvSetRegularizationType_Inv_C",(Mat,MatRegularizationType),(imat,type)) );
+  PetscTryMethod(imat,"MatInvSetRegularizationType_Inv_C",(Mat,MatRegularizationType),(imat,type));
   PetscFunctionReturn(0);
 }
 
@@ -1079,7 +1079,7 @@ PetscErrorCode MatInvGetRegularizationType(Mat imat,MatRegularizationType *type)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
   PetscValidPointer(type,2);
-  TRY( PetscUseMethod(imat,"MatInvGetRegularizationType_Inv_C",(Mat,MatRegularizationType*),(imat,type)) );
+  PetscUseMethod(imat,"MatInvGetRegularizationType_Inv_C",(Mat,MatRegularizationType*),(imat,type));
   PetscFunctionReturn(0);
 }
 
@@ -1089,7 +1089,7 @@ PetscErrorCode MatInvComputeNullSpace(Mat imat)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
-  TRY( PetscTryMethod(imat,"MatInvComputeNullSpace_Inv_C",(Mat),(imat)) );
+  PetscTryMethod(imat,"MatInvComputeNullSpace_Inv_C",(Mat),(imat));
   PetscFunctionReturn(0);
 }
 
@@ -1100,7 +1100,7 @@ PetscErrorCode MatInvSetNullSpace(Mat imat,Mat R)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
   if (R) PetscValidHeaderSpecific(R,MAT_CLASSID,2);
-  TRY( PetscTryMethod(imat,"MatInvSetNullSpace_Inv_C",(Mat,Mat),(imat,R)) );
+  PetscTryMethod(imat,"MatInvSetNullSpace_Inv_C",(Mat,Mat),(imat,R));
   PetscFunctionReturn(0);
 }
 
@@ -1111,7 +1111,7 @@ PetscErrorCode MatInvGetNullSpace(Mat imat,Mat *R)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
   PetscValidPointer(R,2);
-  TRY( PetscUseMethod(imat,"MatInvGetNullSpace_Inv_C",(Mat,Mat*),(imat,R)) );
+  PetscUseMethod(imat,"MatInvGetNullSpace_Inv_C",(Mat,Mat*),(imat,R));
   PetscFunctionReturn(0);
 }
 
@@ -1125,7 +1125,7 @@ PetscErrorCode MatInvSetTolerances(Mat imat, PetscReal rtol, PetscReal abstol, P
   PetscValidLogicalCollectiveReal(imat,abstol,3);
   PetscValidLogicalCollectiveReal(imat,dtol,4);
   PetscValidLogicalCollectiveInt(imat,maxits,5);
-  TRY( PetscTryMethod(imat,"MatInvSetTolerances_Inv_C",(Mat,PetscReal,PetscReal,PetscReal,PetscInt),(imat,rtol,abstol,dtol,maxits)) );
+  PetscTryMethod(imat,"MatInvSetTolerances_Inv_C",(Mat,PetscReal,PetscReal,PetscReal,PetscInt),(imat,rtol,abstol,dtol,maxits));
   PetscFunctionReturn(0);
 }
 
@@ -1136,7 +1136,7 @@ PetscErrorCode MatInvGetKSP(Mat imat, KSP *ksp)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
   PetscValidPointer(ksp,2);
-  TRY( PetscUseMethod(imat,"MatInvGetKSP_Inv_C",(Mat,KSP*),(imat,ksp)) );
+  PetscUseMethod(imat,"MatInvGetKSP_Inv_C",(Mat,KSP*),(imat,ksp));
   PetscFunctionReturn(0);
 }
 
@@ -1147,7 +1147,7 @@ PetscErrorCode MatInvGetRegularizedMat(Mat imat, Mat *A)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
   PetscValidPointer(A,2);
-  TRY( PetscUseMethod(imat,"MatInvGetRegularizedMat_Inv_C",(Mat,Mat*),(imat,A)) );
+  PetscUseMethod(imat,"MatInvGetRegularizedMat_Inv_C",(Mat,Mat*),(imat,A));
   PetscFunctionReturn(0);
 }
 
@@ -1158,7 +1158,7 @@ PetscErrorCode MatInvGetMat(Mat imat, Mat *A)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
   PetscValidPointer(A,2);
-  TRY( PetscUseMethod(imat,"MatInvGetMat_Inv_C",(Mat,Mat*),(imat,A)) );
+  PetscUseMethod(imat,"MatInvGetMat_Inv_C",(Mat,Mat*),(imat,A));
   PetscFunctionReturn(0);
 }
 
@@ -1169,7 +1169,7 @@ PetscErrorCode MatInvGetPC(Mat imat, PC *pc)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
   PetscValidPointer(pc,2);
-  TRY( PetscUseMethod(imat,"MatInvGetPC_Inv_C",(Mat,PC*),(imat,pc)) );
+  PetscUseMethod(imat,"MatInvGetPC_Inv_C",(Mat,PC*),(imat,pc));
   PetscFunctionReturn(0);
 }
 
@@ -1181,7 +1181,7 @@ PetscErrorCode MatInvSetMat(Mat imat, Mat A)
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
   PetscValidHeaderSpecific(A,MAT_CLASSID,2);
   PetscCheckSameComm(imat,1,A,2);
-  TRY( PetscTryMethod(imat,"MatInvSetMat_Inv_C",(Mat,Mat),(imat,A)) );
+  PetscTryMethod(imat,"MatInvSetMat_Inv_C",(Mat,Mat),(imat,A));
   PetscFunctionReturn(0);
 }
 
@@ -1192,7 +1192,7 @@ PetscErrorCode MatInvGetRedundancy(Mat imat, PetscInt *red)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
   PetscValidIntPointer(red,2);
-  TRY( PetscUseMethod(imat,"MatInvGetRedundancy_Inv_C",(Mat,PetscInt*),(imat,red)) );
+  PetscUseMethod(imat,"MatInvGetRedundancy_Inv_C",(Mat,PetscInt*),(imat,red));
   PetscFunctionReturn(0);
 }
 
@@ -1211,7 +1211,7 @@ PetscErrorCode MatInvSetRedundancy(Mat imat, PetscInt red)
   if ( (red < 0 && red != PETSC_DECIDE && red != PETSC_DEFAULT) || (red > comm_size) ) {
     FLLOP_SETERRQ(PetscObjectComm((PetscObject)imat), PETSC_ERR_ARG_WRONG, "invalid redundancy parameter: must be an intteger in closed interval [0, comm size]");
   }
-  TRY( PetscTryMethod(imat,"MatInvSetRedundancy_Inv_C",(Mat,PetscInt),(imat,red)) );
+  PetscTryMethod(imat,"MatInvSetRedundancy_Inv_C",(Mat,PetscInt),(imat,red));
   PetscFunctionReturn(0);
 }
 
@@ -1222,7 +1222,7 @@ PetscErrorCode MatInvGetPsubcommType(Mat imat, PetscSubcommType *type)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
   PetscValidIntPointer(type,2);
-  TRY( PetscUseMethod(imat,"MatInvGetPsubcommType_Inv_C",(Mat,PetscSubcommType*),(imat,type)) );
+  PetscUseMethod(imat,"MatInvGetPsubcommType_Inv_C",(Mat,PetscSubcommType*),(imat,type));
   PetscFunctionReturn(0);
 }
 
@@ -1233,7 +1233,7 @@ PetscErrorCode MatInvSetPsubcommType(Mat imat, PetscSubcommType type)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
   PetscValidLogicalCollectiveEnum(imat,type,2);
-  TRY( PetscTryMethod(imat,"MatInvSetPsubcommType_Inv_C",(Mat,PetscSubcommType),(imat,type)) );
+  PetscTryMethod(imat,"MatInvSetPsubcommType_Inv_C",(Mat,PetscSubcommType),(imat,type));
   PetscFunctionReturn(0);
 }
 #undef __FUNCT__  
@@ -1243,7 +1243,7 @@ PetscErrorCode MatInvGetType(Mat imat, MatInvType *type)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
   PetscValidPointer(type,2);
-  TRY( PetscUseMethod(imat,"MatInvGetType_Inv_C",(Mat,MatInvType*),(imat,type)) );
+  PetscUseMethod(imat,"MatInvGetType_Inv_C",(Mat,MatInvType*),(imat,type));
   PetscFunctionReturn(0);
 }
 
@@ -1254,6 +1254,6 @@ PetscErrorCode MatInvSetType(Mat imat, MatInvType type)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
   PetscValidLogicalCollectiveEnum(imat,type,2);
-  TRY( PetscTryMethod(imat,"MatInvSetType_Inv_C",(Mat,MatInvType),(imat,type)) );
+  PetscTryMethod(imat,"MatInvSetType_Inv_C",(Mat,MatInvType),(imat,type));
   PetscFunctionReturn(0);
 }

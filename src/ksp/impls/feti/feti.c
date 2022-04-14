@@ -50,7 +50,7 @@ PetscErrorCode KSPFETISetDirichlet(KSP ksp,IS isDir,QPFetiNumberingType numtype,
   /* TODO valid numtype */
   PetscValidLogicalCollectiveBool(ksp,enforce_by_B,4);
   ierr = KSPSetUp(ksp);CHKERRQ(ierr);
-  ierr = PetscTryMethod(ksp,"KSPFETISetDirichlet_C",(KSP,IS,QPFetiNumberingType,PetscBool),(ksp,isDir,numtype,enforce_by_B));CHKERRQ(ierr);
+  PetscTryMethod(ksp,"KSPFETISetDirichlet_C",(KSP,IS,QPFetiNumberingType,PetscBool),(ksp,isDir,numtype,enforce_by_B));
   PetscFunctionReturn(0);
 }
 

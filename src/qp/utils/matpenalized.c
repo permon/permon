@@ -157,7 +157,7 @@ PetscErrorCode MatPenalizedUpdatePenalty(Mat Arho,PetscReal rho_update)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(Arho,MAT_CLASSID,1);
   PetscValidLogicalCollectiveReal(Arho,rho_update,2);
-  TRY( PetscTryMethod(Arho,"MatPenalizedUpdatePenalty_Penalty_C",(Mat,PetscReal),(Arho,rho_update)) );
+  PetscTryMethod(Arho,"MatPenalizedUpdatePenalty_Penalty_C",(Mat,PetscReal),(Arho,rho_update));
   PetscFunctionReturn(0);
 }
 
@@ -168,7 +168,7 @@ PetscErrorCode MatPenalizedSetPenalty(Mat Arho,PetscReal rho)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(Arho,MAT_CLASSID,1);
   PetscValidLogicalCollectiveReal(Arho,rho,2);
-  TRY( PetscTryMethod(Arho,"MatPenalizedSetPenalty_Penalty_C",(Mat,PetscReal),(Arho,rho)) );
+  PetscTryMethod(Arho,"MatPenalizedSetPenalty_Penalty_C",(Mat,PetscReal),(Arho,rho));
   PetscFunctionReturn(0);
 }
 
@@ -179,7 +179,7 @@ PetscErrorCode MatPenalizedGetPenalty(Mat Arho,PetscReal *rho)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(Arho,MAT_CLASSID,1);
   PetscValidRealPointer(rho,2);
-  TRY( PetscUseMethod(Arho,"MatPenalizedGetPenalty_Penalty_C",(Mat,PetscReal*),(Arho,rho)) );
+  PetscUseMethod(Arho,"MatPenalizedGetPenalty_Penalty_C",(Mat,PetscReal*),(Arho,rho));
   PetscFunctionReturn(0);
 }
 
@@ -190,7 +190,7 @@ PetscErrorCode MatPenalizedGetPenalizedTerm(Mat Arho,Mat *BtB)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(Arho,MAT_CLASSID,1);
   PetscValidPointer(BtB,2);
-  TRY( PetscUseMethod(Arho,"MatPenalizedGetPenalizedTerm_Penalty_C",(Mat,Mat*),(Arho,BtB)) );
+  PetscUseMethod(Arho,"MatPenalizedGetPenalizedTerm_Penalty_C",(Mat,Mat*),(Arho,BtB));
   PetscFunctionReturn(0);
 }
 

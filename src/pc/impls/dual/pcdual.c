@@ -33,7 +33,7 @@ PetscErrorCode PCDualSetType(PC pc,PCDualType type)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(pc,PC_CLASSID,1);
   PetscValidLogicalCollectiveEnum(pc,type,2);
-  TRY( PetscTryMethod(pc,"PCDualSetType_Dual_C",(PC,PCDualType),(pc,type)) );
+  PetscTryMethod(pc,"PCDualSetType_Dual_C",(PC,PCDualType),(pc,type));
   PetscFunctionReturn(0);
 }
 
@@ -55,7 +55,7 @@ PetscErrorCode PCDualGetType(PC pc,PCDualType *type)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(pc,PC_CLASSID,1);
   PetscValidPointer(type,2);
-  TRY( PetscTryMethod(pc,"PCDualGetType_Dual_C",(PC,PCDualType*),(pc,type)) );
+  PetscTryMethod(pc,"PCDualGetType_Dual_C",(PC,PCDualType*),(pc,type));
   PetscFunctionReturn(0);
 }
 

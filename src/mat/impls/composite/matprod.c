@@ -32,7 +32,7 @@ PetscErrorCode MatProdGetMat(Mat A,PetscInt i,Mat *Ai)
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
   PetscValidLogicalCollectiveInt(A,i,2);
   PetscValidPointer(Ai,3);
-  TRY( PetscUseMethod(A,"MatProdGetMat_Prod_C",(Mat,PetscInt,Mat*),(A,i,Ai)) );
+  PetscUseMethod(A,"MatProdGetMat_Prod_C",(Mat,PetscInt,Mat*),(A,i,Ai));
   PetscFunctionReturn(0);
 }
 

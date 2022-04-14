@@ -1245,7 +1245,7 @@ PetscErrorCode QPSSMALXEGetInnerQPS(QPS qps,QPS *inner)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidPointer(inner,2);
-  TRY( PetscUseMethod(qps,"QPSSMALXEGetInnerQPS_SMALXE_C",(QPS,QPS*),(qps,inner)) );
+  PetscUseMethod(qps,"QPSSMALXEGetInnerQPS_SMALXE_C",(QPS,QPS*),(qps,inner));
   PetscFunctionReturn(0);
 }
 
@@ -1256,7 +1256,7 @@ PetscErrorCode QPSSMALXEGetOperatorMaxEigenvalue(QPS qps,PetscReal *maxeig)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidPointer(maxeig,2);
-  TRY( PetscUseMethod(qps,"QPSSMALXEGetOperatorMaxEigenvalue_SMALXE_C",(QPS,PetscReal*),(qps,maxeig)) );
+  PetscUseMethod(qps,"QPSSMALXEGetOperatorMaxEigenvalue_SMALXE_C",(QPS,PetscReal*),(qps,maxeig));
   PetscFunctionReturn(0);
 }
 
@@ -1268,7 +1268,7 @@ PetscErrorCode QPSSMALXESetOperatorMaxEigenvalue(QPS qps,PetscReal maxeig)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidLogicalCollectiveReal(qps,maxeig,2);
   if (maxeig <= 0 && maxeig != PETSC_DECIDE) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be positive");
-  TRY( PetscTryMethod(qps,"QPSSMALXESetOperatorMaxEigenvalue_SMALXE_C",(QPS,PetscReal),(qps,maxeig)) );
+  PetscTryMethod(qps,"QPSSMALXESetOperatorMaxEigenvalue_SMALXE_C",(QPS,PetscReal),(qps,maxeig));
   PetscFunctionReturn(0);
 }
 
@@ -1280,7 +1280,7 @@ PetscErrorCode QPSSMALXEGetM1Initial(QPS qps,PetscReal *M1_initial,QPSScalarArgT
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   if (M1_initial) PetscValidPointer(M1_initial,2);
   if (argtype) PetscValidPointer(argtype,3);
-  TRY( PetscUseMethod(qps,"QPSSMALXEGetM1Initial_SMALXE_C",(QPS,PetscReal*,QPSScalarArgType*),(qps,M1_initial,argtype)) );
+  PetscUseMethod(qps,"QPSSMALXEGetM1Initial_SMALXE_C",(QPS,PetscReal*,QPSScalarArgType*),(qps,M1_initial,argtype));
   PetscFunctionReturn(0);
 }
 
@@ -1293,7 +1293,7 @@ PetscErrorCode QPSSMALXESetM1Initial(QPS qps,PetscReal M1_initial,QPSScalarArgTy
   PetscValidLogicalCollectiveReal(qps,M1_initial,2);
   PetscValidLogicalCollectiveEnum(qps,argtype,3);
   if (M1_initial <= 0) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be positive");
-  TRY( PetscTryMethod(qps,"QPSSMALXESetM1Initial_SMALXE_C",(QPS,PetscReal,QPSScalarArgType),(qps,M1_initial,argtype)) );
+  PetscTryMethod(qps,"QPSSMALXESetM1Initial_SMALXE_C",(QPS,PetscReal,QPSScalarArgType),(qps,M1_initial,argtype));
   PetscFunctionReturn(0);
 }
 
@@ -1305,7 +1305,7 @@ PetscErrorCode QPSSMALXEGetEta(QPS qps,PetscReal *eta,QPSScalarArgType *argtype)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   if (eta) PetscValidPointer(eta,2);
   if (argtype) PetscValidPointer(argtype,3);
-  TRY( PetscUseMethod(qps,"QPSSMALXEGetEta_SMALXE_C",(QPS,PetscReal*,QPSScalarArgType*),(qps,eta,argtype)) );
+  PetscUseMethod(qps,"QPSSMALXEGetEta_SMALXE_C",(QPS,PetscReal*,QPSScalarArgType*),(qps,eta,argtype));
   PetscFunctionReturn(0);
 }
 
@@ -1318,7 +1318,7 @@ PetscErrorCode QPSSMALXESetEta(QPS qps,PetscReal eta,QPSScalarArgType argtype)
   PetscValidLogicalCollectiveReal(qps,eta,2);
   PetscValidLogicalCollectiveEnum(qps,argtype,3);
   if (eta <= 0) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be positive");
-  TRY( PetscTryMethod(qps,"QPSSMALXESetEta_SMALXE_C",(QPS,PetscReal,QPSScalarArgType),(qps,eta,argtype)) );
+  PetscTryMethod(qps,"QPSSMALXESetEta_SMALXE_C",(QPS,PetscReal,QPSScalarArgType),(qps,eta,argtype));
   PetscFunctionReturn(0);
 }
 
@@ -1330,7 +1330,7 @@ PetscErrorCode QPSSMALXEGetRhoInitial(QPS qps,PetscReal *rho_initial,QPSScalarAr
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   if (rho_initial) PetscValidPointer(rho_initial,2);
   if (argtype) PetscValidPointer(argtype,3);
-  TRY( PetscUseMethod(qps,"QPSSMALXEGetRhoInitial_SMALXE_C",(QPS,PetscReal*,QPSScalarArgType*),(qps,rho_initial,argtype)) );
+  PetscUseMethod(qps,"QPSSMALXEGetRhoInitial_SMALXE_C",(QPS,PetscReal*,QPSScalarArgType*),(qps,rho_initial,argtype));
   PetscFunctionReturn(0);
 }
 
@@ -1343,7 +1343,7 @@ PetscErrorCode QPSSMALXESetRhoInitial(QPS qps,PetscReal rho_initial,QPSScalarArg
   PetscValidLogicalCollectiveReal(qps,rho_initial,2);
   PetscValidLogicalCollectiveEnum(qps,argtype,3);
   if (rho_initial <= 0) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be positive");
-  TRY( PetscTryMethod(qps,"QPSSMALXESetRhoInitial_SMALXE_C",(QPS,PetscReal,QPSScalarArgType),(qps,rho_initial,argtype)) );
+  PetscTryMethod(qps,"QPSSMALXESetRhoInitial_SMALXE_C",(QPS,PetscReal,QPSScalarArgType),(qps,rho_initial,argtype));
   PetscFunctionReturn(0);
 }
 
@@ -1354,7 +1354,7 @@ PetscErrorCode QPSSMALXEGetM1Update(QPS qps,PetscReal *M1_update)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidPointer(M1_update,2);
-  TRY( PetscUseMethod(qps,"QPSSMALXEGetM1Update_SMALXE_C",(QPS,PetscReal*),(qps,M1_update)) );
+  PetscUseMethod(qps,"QPSSMALXEGetM1Update_SMALXE_C",(QPS,PetscReal*),(qps,M1_update));
   PetscFunctionReturn(0);
 }
 
@@ -1366,7 +1366,7 @@ PetscErrorCode QPSSMALXESetM1Update(QPS qps,PetscReal M1_update)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidLogicalCollectiveReal(qps,M1_update,2);
   //if (M1_update < 1) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be >= 1");
-  TRY( PetscTryMethod(qps,"QPSSMALXESetM1Update_SMALXE_C",(QPS,PetscReal),(qps,M1_update)) );
+  PetscTryMethod(qps,"QPSSMALXESetM1Update_SMALXE_C",(QPS,PetscReal),(qps,M1_update));
   PetscFunctionReturn(0);
 }
 
@@ -1377,7 +1377,7 @@ PetscErrorCode QPSSMALXEGetRhoUpdate(QPS qps,PetscReal *rho_update)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidPointer(rho_update,2);
-  TRY( PetscUseMethod(qps,"QPSSMALXEGetRhoUpdate_SMALXE_C",(QPS,PetscReal*),(qps,rho_update)) );
+  PetscUseMethod(qps,"QPSSMALXEGetRhoUpdate_SMALXE_C",(QPS,PetscReal*),(qps,rho_update));
   PetscFunctionReturn(0);
 }
 
@@ -1389,7 +1389,7 @@ PetscErrorCode QPSSMALXESetRhoUpdate(QPS qps,PetscReal rho_update)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidLogicalCollectiveReal(qps,rho_update,2);
   if (rho_update < 1) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be >= 1");
-  TRY( PetscTryMethod(qps,"QPSSMALXESetRhoUpdate_SMALXE_C",(QPS,PetscReal),(qps,rho_update)) );
+  PetscTryMethod(qps,"QPSSMALXESetRhoUpdate_SMALXE_C",(QPS,PetscReal),(qps,rho_update));
   PetscFunctionReturn(0);
 }
 
@@ -1400,7 +1400,7 @@ PetscErrorCode QPSSMALXEGetRhoUpdateLate(QPS qps,PetscReal *rho_update_late)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidPointer(rho_update_late,2);
-  TRY( PetscUseMethod(qps,"QPSSMALXEGetRhoUpdateLate_SMALXE_C",(QPS,PetscReal*),(qps,rho_update_late)) );
+  PetscUseMethod(qps,"QPSSMALXEGetRhoUpdateLate_SMALXE_C",(QPS,PetscReal*),(qps,rho_update_late));
   PetscFunctionReturn(0);
 }
 
@@ -1412,7 +1412,7 @@ PetscErrorCode QPSSMALXESetRhoUpdateLate(QPS qps,PetscReal rho_update_late)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidLogicalCollectiveReal(qps,rho_update_late,2);
   if (rho_update_late < 1) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be >= 1");
-  TRY( PetscTryMethod(qps,"QPSSMALXESetRhoUpdateLate_SMALXE_C",(QPS,PetscReal),(qps,rho_update_late)) );
+  PetscTryMethod(qps,"QPSSMALXESetRhoUpdateLate_SMALXE_C",(QPS,PetscReal),(qps,rho_update_late));
   PetscFunctionReturn(0);
 }
 
@@ -1423,7 +1423,7 @@ PetscErrorCode QPSSMALXEGetOperatorMaxEigenvalueIterations(QPS qps,PetscInt *num
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidPointer(numit,2);
-  TRY( PetscUseMethod(qps,"QPSSMALXEGetOperatorMaxEigenvalueIterations_SMALXE_C",(QPS,PetscInt*),(qps,numit)) );
+  PetscUseMethod(qps,"QPSSMALXEGetOperatorMaxEigenvalueIterations_SMALXE_C",(QPS,PetscInt*),(qps,numit));
   PetscFunctionReturn(0);
 }
 
@@ -1435,7 +1435,7 @@ PetscErrorCode QPSSMALXESetOperatorMaxEigenvalueIterations(QPS qps,PetscInt numi
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidLogicalCollectiveInt(qps,numit,2);
   if (numit <= 1) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be > 1");
-  TRY( PetscTryMethod(qps,"QPSSMALXESetOperatorMaxEigenvalueIterations_SMALXE_C",(QPS,PetscInt),(qps,numit)) );
+  PetscTryMethod(qps,"QPSSMALXESetOperatorMaxEigenvalueIterations_SMALXE_C",(QPS,PetscInt),(qps,numit));
   PetscFunctionReturn(0);
 }
 
@@ -1446,7 +1446,7 @@ PetscErrorCode QPSSMALXESetInjectOperatorMaxEigenvalue(QPS qps,PetscBool flg)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidLogicalCollectiveBool(qps,flg,2);
-  TRY( PetscTryMethod(qps,"QPSSMALXESetInjectOperatorMaxEigenvalue_SMALXE_C",(QPS,PetscBool),(qps,flg)) );
+  PetscTryMethod(qps,"QPSSMALXESetInjectOperatorMaxEigenvalue_SMALXE_C",(QPS,PetscBool),(qps,flg));
   PetscFunctionReturn(0);
 }
 
@@ -1457,7 +1457,7 @@ PetscErrorCode QPSSMALXEGetInjectOperatorMaxEigenvalue(QPS qps,PetscBool *flg)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidPointer(flg,2);
-  TRY( PetscUseMethod(qps,"QPSSMALXEGetInjectOperatorMaxEigenvalue_SMALXE_C",(QPS,PetscBool*),(qps,flg)) );
+  PetscUseMethod(qps,"QPSSMALXEGetInjectOperatorMaxEigenvalue_SMALXE_C",(QPS,PetscBool*),(qps,flg));
   PetscFunctionReturn(0);
 }
 
@@ -1468,7 +1468,7 @@ PetscErrorCode QPSSMALXESetOperatorMaxEigenvalueTolerance(QPS qps,PetscReal tol)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidLogicalCollectiveReal(qps,tol,2);
-  TRY( PetscTryMethod(qps,"QPSSMALXESetOperatorMaxEigenvalueTolerance_SMALXE_C",(QPS,PetscReal),(qps,tol)) );
+  PetscTryMethod(qps,"QPSSMALXESetOperatorMaxEigenvalueTolerance_SMALXE_C",(QPS,PetscReal),(qps,tol));
   PetscFunctionReturn(0);
 }
 
@@ -1479,7 +1479,7 @@ PetscErrorCode QPSSMALXEGetOperatorMaxEigenvalueTolerance(QPS qps,PetscReal *tol
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidPointer(tol,2);
-  TRY( PetscUseMethod(qps,"QPSSMALXEGetOperatorMaxEigenvalueTolerance_SMALXE_C",(QPS,PetscReal*),(qps,tol)) );
+  PetscUseMethod(qps,"QPSSMALXEGetOperatorMaxEigenvalueTolerance_SMALXE_C",(QPS,PetscReal*),(qps,tol));
   PetscFunctionReturn(0);
 }
 
@@ -1491,6 +1491,6 @@ PetscErrorCode QPSSMALXESetMonitor(QPS qps,PetscBool flg)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidLogicalCollectiveBool(qps,flg,2);
-  TRY( PetscTryMethod(qps,"QPSSMALXESetMonitor_SMALXE_C",(QPS,PetscBool),(qps,flg)) );
+  PetscTryMethod(qps,"QPSSMALXESetMonitor_SMALXE_C",(QPS,PetscBool),(qps,flg));
   PetscFunctionReturn(0);
 }
