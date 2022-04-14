@@ -377,7 +377,7 @@ static PetscErrorCode MatMultEqualTol_Private(Mat A,PetscBool transpose,Mat B,Pe
       ierr = VecNorm(s2,NORM_INFINITY,&r1);CHKERRQ(ierr);
       r1 /= r2;
     }
-    ierr = PetscInfo2(fllop,"relative error of %D-th MatMult() %g\n",k,r1);CHKERRQ(ierr);
+    ierr = PetscInfo(fllop,"relative error of %D-th MatMult() %g\n",k,r1);CHKERRQ(ierr);
     if (r1 > tol) {
       *flg = PETSC_FALSE;
       break;
@@ -468,7 +468,7 @@ PetscErrorCode MatGetMaxEigenvalue(Mat A, Vec v, PetscScalar *lambda_out, PetscR
   if (lambda_out && !v) {
     TRY( PetscObjectComposedDataGetScalar((PetscObject)A,MatGetMaxEigenvalue_composed_id,lambda,flg) );
     if (flg) {
-      TRY( PetscInfo1(fllop,"returning stashed estimate ||A|| = %.12e\n",lambda) );
+      TRY( PetscInfo(fllop,"returning stashed estimate ||A|| = %.12e\n",lambda) );
       *lambda_out = lambda;
       PetscFunctionReturnI(0);
     }
@@ -496,7 +496,7 @@ PetscErrorCode MatGetMaxEigenvalue(Mat A, Vec v, PetscScalar *lambda_out, PetscR
     TRY( VecMDot(v,2,y_v,vAv_vv) );
     lambda = vAv_vv[0]/vAv_vv[1];
     if (lambda < PETSC_MACHINE_EPSILON) {
-      TRY( PetscInfo1(fllop,"hit nullspace of A and setting A*v to random vector in iteration %d\n",i) );
+      TRY( PetscInfo(fllop,"hit nullspace of A and setting A*v to random vector in iteration %d\n",i) );
 
       if (!rand) {
         TRY( PetscRandomCreate(PetscObjectComm((PetscObject)A),&rand) );
@@ -515,7 +515,7 @@ PetscErrorCode MatGetMaxEigenvalue(Mat A, Vec v, PetscScalar *lambda_out, PetscR
     TRY( VecScale(v, 1.0/PetscSqrtReal(vAv_vv[1])) );
   }
 
-  TRY( PetscInfo7(fllop,"%s  lambda = %.12e  [err relerr reltol] = [%.12e %.12e %.12e]  actual/max iterations = %d/%d\n", (i<=maxits)?"CONVERGED":"NOT CONVERGED", lambda,err,relerr,tol,i,maxits) );
+  TRY( PetscInfo(fllop,"%s  lambda = %.12e  [err relerr reltol] = [%.12e %.12e %.12e]  actual/max iterations = %d/%d\n", (i<=maxits)?"CONVERGED":"NOT CONVERGED", lambda,err,relerr,tol,i,maxits) );
 
   if (lambda_out) *lambda_out = lambda;
 
@@ -982,7 +982,7 @@ PetscErrorCode PermonMatConvertBlocks(Mat A, MatType newtype,MatReuse reuse,Mat 
   TRY( PetscStrallocpy(((PetscObject)A)->name,&name) );
 
   TRY( PetscObjectQueryFunction((PetscObject)A,"PermonMatConvertBlocks_C",&f) );
-  TRY( PetscInfo2(A,"%sfound PermonMatConvertBlocks implementation for type %s\n", f?"":"NOT ", ((PetscObject)A)->type_name) );
+  TRY( PetscInfo(A,"%sfound PermonMatConvertBlocks implementation for type %s\n", f?"":"NOT ", ((PetscObject)A)->type_name) );
   if (!f) f = MatConvert;
   TRY( (*f)(A,newtype,reuse,B) );
 
@@ -1208,7 +1208,7 @@ PetscErrorCode MatCheckNullSpace(Mat K,Mat R,PetscReal tol)
   TRY( MatMult(R,x,d) );
   TRY( MatMult(K,d,y) );
   TRY( VecNorm(y,NORM_2,&normy) );
-  TRY( PetscInfo3(fllop,"||K*R*x|| = %.3e   ||diag(K)|| = %.3e    ||K*R*x|| / ||diag(K)|| = %.3e\n",normy,normd,normy/normd) );
+  TRY( PetscInfo(fllop,"||K*R*x|| = %.3e   ||diag(K)|| = %.3e    ||K*R*x|| / ||diag(K)|| = %.3e\n",normy,normd,normy/normd) );
   FLLOP_ASSERT1(normy / normd < tol, "||K*R*x|| / ||diag(K)|| < %.1e", tol);
   TRY( VecDestroy(&d) );
   TRY( VecDestroy(&x) );

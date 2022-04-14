@@ -96,7 +96,7 @@ static PetscErrorCode PCSetUp_Dual(PC pc)
   Mat Bt, K;
 
   PetscFunctionBegin;
-  TRY( PetscInfo1(pc,"using PCDualType %s\n",PCDualTypes[ctx->pcdualtype]) );
+  TRY( PetscInfo(pc,"using PCDualType %s\n",PCDualTypes[ctx->pcdualtype]) );
 
   if (ctx->pcdualtype == PC_DUAL_NONE) {
     pc->ops->apply = PCApply_Dual_None;

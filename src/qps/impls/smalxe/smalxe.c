@@ -332,11 +332,11 @@ static PetscErrorCode QPSSMALXEUpdateNormBu_Lag_SMALXEON(QPS qps,Vec u,PetscReal
       neval++;
       rdiff = PetscAbs(normBu_exact/normBu0);
       if (rdiff >= upper) {
-        TRY( PetscInfo4(qps,"rdiff = |%.3e / %.3e| = %.3e >= %.3e, ||B*u|| will be recalculated\n",normBu_exact,normBu0,rdiff,upper) );
+        TRY( PetscInfo(qps,"rdiff = |%.3e / %.3e| = %.3e >= %.3e, ||B*u|| will be recalculated\n",normBu_exact,normBu0,rdiff,upper) );
         II=0;
         J = Jstart;
       } else if (rdiff < lower) {
-        TRY( PetscInfo4(qps,"rdiff = |%.3e / %.3e| = %.3e < %.3e, ||B*u|| will be recalculated\n",normBu_exact,normBu0,rdiff,lower) );
+        TRY( PetscInfo(qps,"rdiff = |%.3e / %.3e| = %.3e < %.3e, ||B*u|| will be recalculated\n",normBu_exact,normBu0,rdiff,lower) );
         II=0;
         J = Jstart;
       } else {
@@ -394,7 +394,7 @@ static PetscErrorCode QPSSMALXEUpdateRho_SMALXE(QPS qps, PetscBool Lagrangian_fl
   }
   if (!Lagrangian_flag || rho_update == 1.0) PetscFunctionReturn(0);
   
-  TRY( PetscInfo2(qps,"updating rho, multiply by rho_update%d = %.4e\n",smalxe->state,rho_update) );
+  TRY( PetscInfo(qps,"updating rho, multiply by rho_update%d = %.4e\n",smalxe->state,rho_update) );
   TRY( MatPenalizedUpdatePenalty(A_inner, rho_update) );
   TRY( QPSMPGPUpdateMaxEigenvalue(smalxe->inner, rho_update) );
   smalxe->rho_updates++;
@@ -480,7 +480,7 @@ PetscErrorCode QPSSMALXEUpdate_SMALXE(QPS qps, PetscReal Lag_old, PetscReal Lag,
     } else {
       M1_new = smalxe->M1 / M1_update;
       {
-        TRY( PetscInfo3(qps,"updating M1 := M1/M1_update = %.4e/%.4e = %.4e\n",smalxe->M1,M1_update,M1_new) );
+        TRY( PetscInfo(qps,"updating M1 := M1/M1_update = %.4e/%.4e = %.4e\n",smalxe->M1,M1_update,M1_new) );
         smalxe->M1 = M1_new;                                /* M1 = M1 / M1_update       */
         smalxe->M1_updates++;
       }
@@ -488,7 +488,7 @@ PetscErrorCode QPSSMALXEUpdate_SMALXE(QPS qps, PetscReal Lag_old, PetscReal Lag,
   }
 
   if (smalxe->inner->rnorm > smalxe->enorm) {
-    TRY( PetscInfo2(qps,"not updating rho because G = %.8e > %.8e = E\n",smalxe->inner->rnorm,smalxe->enorm) );
+    TRY( PetscInfo(qps,"not updating rho because G = %.8e > %.8e = E\n",smalxe->inner->rnorm,smalxe->enorm) );
     PetscFunctionReturn(0);
   }
 
@@ -555,9 +555,9 @@ PetscErrorCode QPSConvergedSetUp_Inner_SMALXE(QPS qps_inner)
 
   TRY( VecNorm(b_outer, NORM_2, &cctx->norm_rhs_outer) );
   cctx->gtol = qps_outer->rtol*cctx->norm_rhs_outer;
-  TRY( PetscInfo3(qps_inner,"  gtol = rtol * norm_rhs_outer= %.4e * %.4e = %.4e\n",qps_outer->rtol,cctx->norm_rhs_outer,cctx->gtol) );
+  TRY( PetscInfo(qps_inner,"  gtol = rtol * norm_rhs_outer= %.4e * %.4e = %.4e\n",qps_outer->rtol,cctx->norm_rhs_outer,cctx->gtol) );
   cctx->ttol_outer = PetscMax(qps_outer->rtol*cctx->norm_rhs_outer, qps_outer->atol);
-  TRY( PetscInfo4(qps_outer,"  ttol_outer = max(rtol_outer*norm_rhs_outer, atol_outer) = max(%.4e * %.4e, %.4e) = %.4e\n",qps_outer->rtol,cctx->norm_rhs_outer,qps_outer->atol,cctx->ttol_outer) );
+  TRY( PetscInfo(qps_outer,"  ttol_outer = max(rtol_outer*norm_rhs_outer, atol_outer) = max(%.4e * %.4e, %.4e) = %.4e\n",qps_outer->rtol,cctx->norm_rhs_outer,qps_outer->atol,cctx->ttol_outer) );
 
   //TODO this is just a quick&dirty solution
   /* use inner b for divergence criterion of outer solver */
@@ -643,7 +643,7 @@ PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,KSPConvergedReason *reaso
     *reason = KSP_DIVERGED_ITS;
     qps_outer->reason = KSP_DIVERGED_BREAKDOWN;
     TRY( PetscInfo(qps_inner,"Inner QP solver is diverging (iteration count reached the maximum).\n") );
-    TRY( PetscInfo2(qps_inner,"Current residual norm %14.12e at inner iteration %D\n",(double)gnorm,i) );
+    TRY( PetscInfo(qps_inner,"Current residual norm %14.12e at inner iteration %D\n",(double)gnorm,i) );
     PetscFunctionReturn(0);
   }
 
@@ -669,7 +669,7 @@ PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,KSPConvergedReason *reaso
   }
 
   if (gnorm < qps_inner->atol) {
-    TRY( PetscInfo4(qps_inner,"Inner QP solver has converged. Residual norm gnorm=%.8e is less than atol = min(M1*||Bu||),eta) = %s = %.8e at iteration %D.\n",gnorm,(cctx->MNormBu<smalxe->eta)?"M1||Bu||":"eta",qps_inner->atol,i) );
+    TRY( PetscInfo(qps_inner,"Inner QP solver has converged. Residual norm gnorm=%.8e is less than atol = min(M1*||Bu||),eta) = %s = %.8e at iteration %D.\n",gnorm,(cctx->MNormBu<smalxe->eta)?"M1||Bu||":"eta",qps_inner->atol,i) );
     *reason = KSP_CONVERGED_ATOL;
     if (cctx->MNormBu < smalxe->eta) {
       smalxe->M1_hits++;
@@ -685,13 +685,13 @@ PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,KSPConvergedReason *reaso
 
   if (gnorm <= cctx->gtol) {
     if (smalxe->inner->rnorm > smalxe->enorm) {
-      TRY( PetscInfo2(qps_inner,"skipping gtol criterion because G = %.8e > %.8e = E\n",smalxe->inner->rnorm,smalxe->enorm) );
+      TRY( PetscInfo(qps_inner,"skipping gtol criterion because G = %.8e > %.8e = E\n",smalxe->inner->rnorm,smalxe->enorm) );
     } else {
       if (smalxe->inner_no_gtol_stop < 2) {
-        TRY( PetscInfo3(qps_inner,"Inner QP solver has converged. Residual norm gnorm=%.8e is less than gtol = %.8e at iteration %D\n",gnorm,cctx->gtol,i) );
+        TRY( PetscInfo(qps_inner,"Inner QP solver has converged. Residual norm gnorm=%.8e is less than gtol = %.8e at iteration %D\n",gnorm,cctx->gtol,i) );
         *reason = KSP_CONVERGED_RTOL;
       } else {
-        TRY( PetscInfo3(qps_inner,"Gradient tolerance has been reached. Residual norm gnorm=%.8e is less than gtol = %.8e at iteration %D\n",gnorm,cctx->gtol,i) );
+        TRY( PetscInfo(qps_inner,"Gradient tolerance has been reached. Residual norm gnorm=%.8e is less than gtol = %.8e at iteration %D\n",gnorm,cctx->gtol,i) );
       }
       if (smalxe->state != 3) {
         TRY( PetscInfo( qps_inner,"changing rho_update_type to 3\n") );
@@ -842,10 +842,10 @@ PetscErrorCode QPSSetUp_SMALXE(QPS qps)
     rho = smalxe->rho_user;
   }
 
-  TRY( PetscInfo3(qps,"   eta=%.8e eta_user=%.8e eta_type=%c\n",smalxe->eta,smalxe->eta_user,smalxe->eta_type==QPS_ARG_DIRECT?'D':'M') );
-  TRY( PetscInfo1(qps,"maxeig=%.8e\n",smalxe->maxeig) );
-  TRY( PetscInfo3(qps,"    M1=%.8e  M1_user=%.8e  M1_type=%c\n",smalxe->M1_initial,smalxe->M1_user,smalxe->M1_type==QPS_ARG_DIRECT?'D':'M') );
-  TRY( PetscInfo3(qps,"   rho=%.8e rho_user=%.8e rho_type=%c\n",rho,smalxe->rho_user,smalxe->rho_type==QPS_ARG_DIRECT?'D':'M') );
+  TRY( PetscInfo(qps,"   eta=%.8e eta_user=%.8e eta_type=%c\n",smalxe->eta,smalxe->eta_user,smalxe->eta_type==QPS_ARG_DIRECT?'D':'M') );
+  TRY( PetscInfo(qps,"maxeig=%.8e\n",smalxe->maxeig) );
+  TRY( PetscInfo(qps,"    M1=%.8e  M1_user=%.8e  M1_type=%c\n",smalxe->M1_initial,smalxe->M1_user,smalxe->M1_type==QPS_ARG_DIRECT?'D':'M') );
+  TRY( PetscInfo(qps,"   rho=%.8e rho_user=%.8e rho_type=%c\n",rho,smalxe->rho_user,smalxe->rho_type==QPS_ARG_DIRECT?'D':'M') );
 
   /* explicitly setup projector factory, e.g. to set its inner G_has_orthonormal_rows flag */
   TRY( QPPFSetUp(qp->pf) );
@@ -883,7 +883,7 @@ PetscErrorCode QPSSetUp_SMALXE(QPS qps)
   if (!smalxe->inject_maxeig_set) {
     TRY( QPPFGetGHasOrthonormalRows(qp->pf,&smalxe->inject_maxeig) );
   }
-  TRY( PetscInfo2(qps,"maximum operator eigenvalue estimate %.8e is %sinjected to the inner solver\n",maxeig_inner,smalxe->inject_maxeig?"":"NOT ") );
+  TRY( PetscInfo(qps,"maximum operator eigenvalue estimate %.8e is %sinjected to the inner solver\n",maxeig_inner,smalxe->inject_maxeig?"":"NOT ") );
   if (smalxe->inject_maxeig) TRY( QPSMPGPSetOperatorMaxEigenvalue(smalxe->inner, maxeig_inner) );
   
   TRY( QPSSetAutoPostSolve(smalxe->inner, PETSC_FALSE) );
@@ -1009,7 +1009,7 @@ PetscErrorCode QPSSolve_SMALXE(QPS qps)
     smalxe->normBu_old = smalxe->normBu;
   }
   if (i == maxits) {
-    TRY( PetscInfo1(qps,"Maximum number of iterations has been reached: %D\n",maxits) );
+    TRY( PetscInfo(qps,"Maximum number of iterations has been reached: %D\n",maxits) );
     if (!qps->reason) qps->reason = KSP_DIVERGED_ITS;
   }
 

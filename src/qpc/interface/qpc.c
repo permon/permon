@@ -136,7 +136,7 @@ PetscErrorCode QPCView(QPC qpc,PetscViewer v)
   } else {
     const QPCType type;
     TRY( QPCGetType(qpc, &type) );
-    TRY( PetscInfo1(qpc,"Warning: QPCView not implemented yet for type %s\n",type) );
+    TRY( PetscInfo(qpc,"Warning: QPCView not implemented yet for type %s\n",type) );
   }
   TRY( PetscViewerASCIIPopTab(v) );
   PetscFunctionReturn(0);

@@ -129,11 +129,11 @@ static PetscErrorCode  QPSMPGPUpdateMaxEigenvalue_MPGP(QPS qps, PetscReal maxeig
   if (!qps->setupcalled) FLLOP_SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_WRONGSTATE,"this routine is intended to be called after QPSSetUp");
 
   mpgp->maxeig = maxeig_old*maxeig_update;
-  TRY( PetscInfo3(qps,"updating maxeig := %.8e = %.8e * %.8e = maxeig * maxeig_update\n",mpgp->maxeig,maxeig_old,maxeig_update) );
+  TRY( PetscInfo(qps,"updating maxeig := %.8e = %.8e * %.8e = maxeig * maxeig_update\n",mpgp->maxeig,maxeig_old,maxeig_update) );
 
   if (mpgp->alpha_type == QPS_ARG_MULTIPLE) {
     mpgp->alpha = alpha_old/maxeig_update;
-    TRY( PetscInfo3(qps,"updating alpha := %.8e = %.8e / %.8e = alpha / maxeig_update\n",mpgp->alpha,alpha_old,maxeig_update) );
+    TRY( PetscInfo(qps,"updating alpha := %.8e = %.8e / %.8e = alpha / maxeig_update\n",mpgp->alpha,alpha_old,maxeig_update) );
   }
 
   //TODO temporary
@@ -420,13 +420,13 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
     if (mpgp->alpha_user == PETSC_DECIDE) {
       mpgp->alpha_user = 2.0;
     }
-    TRY( PetscInfo1(qps,"maxeig     = %.8e\n", mpgp->maxeig) );
-    TRY( PetscInfo1(qps,"alpha_user = %.8e\n", mpgp->alpha_user) );
+    TRY( PetscInfo(qps,"maxeig     = %.8e\n", mpgp->maxeig) );
+    TRY( PetscInfo(qps,"alpha_user = %.8e\n", mpgp->alpha_user) );
     mpgp->alpha = mpgp->alpha_user/mpgp->maxeig;
   } else {
     mpgp->alpha = mpgp->alpha_user;
   }
-  TRY( PetscInfo1(qps,  "alpha      = %.8e\n", mpgp->alpha) );
+  TRY( PetscInfo(qps,  "alpha      = %.8e\n", mpgp->alpha) );
   PetscFunctionReturn(0);
 }
 

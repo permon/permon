@@ -136,7 +136,7 @@ static PetscErrorCode QPFetiAssembleDirichlet_ModifyR_Private(QP qp, IS dbcis)
   TRY( ISGetLocalSize(dbcis, &n_dbc_local) );
 
   TRY( MPI_Comm_rank(PetscObjectComm((PetscObject)qp),&rank) );
-  TRY( PetscInfo1(qp,"n_dbc_local=%d\n",n_dbc_local) );
+  TRY( PetscInfo(qp,"n_dbc_local=%d\n",n_dbc_local) );
   if (n_dbc_local) {
     TRY( MatGetSize(R_loc, &m, NULL) );
     TRY( MatCreateSeqAIJ(PETSC_COMM_SELF, m, 0, 0, NULL, &R_loc) );

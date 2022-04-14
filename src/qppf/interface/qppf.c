@@ -398,12 +398,12 @@ PetscErrorCode QPPFSetUp(QPPF cp)
   TRY( MPI_Comm_rank(comm, &rank) );
   TRY( MPI_Comm_size(comm, &size) );
   TRY( PetscObjectGetName((PetscObject)cp->G,&name) );
-  TRY( PetscInfo7(cp, "cp: %x  Mat %s: %x  change flags: %d %d %d %d\n",  cp, name, cp->G, cp->dataChange,  cp->variantChange,  cp->explicitInvChange,  cp->GChange) );
+  TRY( PetscInfo(cp, "cp: %x  Mat %s: %x  change flags: %d %d %d %d\n",  cp, name, cp->G, cp->dataChange,  cp->variantChange,  cp->explicitInvChange,  cp->GChange) );
 
   /* detect orthonormal rows quickly */
   if (!cp->G_has_orthonormal_rows_implicitly) {
     TRY( MatHasOrthonormalRows(cp->G,PETSC_SMALL,3,&cp->G_has_orthonormal_rows_explicitly ) );
-    TRY( PetscInfo2(cp, "Mat %s has %sorthonormal rows\n",name,cp->G_has_orthonormal_rows_explicitly?"":"NOT ") );
+    TRY( PetscInfo(cp, "Mat %s has %sorthonormal rows\n",name,cp->G_has_orthonormal_rows_explicitly?"":"NOT ") );
   }
 
   /* re-init GGt inverse */

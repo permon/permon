@@ -36,7 +36,7 @@ static PetscErrorCode QPTransformBegin_Private(PetscErrorCode(*transform)(QP), c
 
   *qp_inout = qp;
   *child_new = child;
-  TRY( PetscInfo5(qp,"QP %x (#%d) transformed by %s to QP %x (#%d)\n",qp,qp->id,trname,child,child->id) );
+  TRY( PetscInfo(qp,"QP %x (#%d) transformed by %s to QP %x (#%d)\n",qp,qp->id,trname,child,child->id) );
   PetscFunctionReturn(0);
 }
 
@@ -378,7 +378,7 @@ PetscErrorCode QPTEnforceEqByPenalty(QP qp, PetscReal rho_user, PetscBool rho_di
   if (rho < 0) {
     FLLOP_SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_WRONG,"rho must be nonnegative");
   }
-  TRY( PetscInfo1(qp, "using penalty = real %.12e\n", rho) );
+  TRY( PetscInfo(qp, "using penalty = real %.12e\n", rho) );
 
   TRY( PetscLogEventBegin(QPT_EnforceEqByPenalty,qp,0,0,0) );
   TRY( QPTransformBegin(QPTEnforceEqByPenalty, QPTEnforceEqByPenalty_PostSolve_Private,NULL, QP_DUPLICATE_DO_NOT_COPY,&qp,&child,&comm) );
@@ -654,8 +654,8 @@ PetscErrorCode QPTOrthonormalizeEqFromOptions(QP qp)
   _fllop_ierr = PetscObjectOptionsBegin((PetscObject)last);CHKERRQ(_fllop_ierr);
   TRY( PetscOptionsEnum("-qp_E_orth_type","type of eq. con. orthonormalization","QPTOrthonormalizeEq",MatOrthTypes,(PetscEnum)eq_orth_type,(PetscEnum*)&eq_orth_type,NULL) );
   TRY( PetscOptionsEnum("-qp_E_orth_form","form of eq. con. orthonormalization","QPTOrthonormalizeEq",MatOrthForms,(PetscEnum)eq_orth_form,(PetscEnum*)&eq_orth_form,NULL) );
-  TRY( PetscInfo1(qp, "-qp_E_orth_type %s\n",MatOrthTypes[eq_orth_type]) );
-  TRY( PetscInfo1(qp, "-qp_E_orth_form %s\n",MatOrthForms[eq_orth_form]) );
+  TRY( PetscInfo(qp, "-qp_E_orth_type %s\n",MatOrthTypes[eq_orth_type]) );
+  TRY( PetscInfo(qp, "-qp_E_orth_form %s\n",MatOrthForms[eq_orth_form]) );
   TRY( QPTOrthonormalizeEq(last,eq_orth_type,eq_orth_form) );
   _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
   PetscFunctionReturnI(0);
@@ -1461,7 +1461,7 @@ PetscErrorCode QPTScale(QP qp)
   PetscObjectOptionsBegin((PetscObject)qp);
   TRY( PetscOptionsBool("-qp_E_remove_gluing_of_dirichlet","remove gluing of DOFs on Dirichlet boundary","QPTRemoveGluingOfDirichletDofs",remove_gluing_of_dirichlet,&remove_gluing_of_dirichlet,NULL) );
   PetscOptionsEnd();
-  TRY( PetscInfo1(qp, "-qp_E_remove_gluing_of_dirichlet %d\n",remove_gluing_of_dirichlet) );
+  TRY( PetscInfo(qp, "-qp_E_remove_gluing_of_dirichlet %d\n",remove_gluing_of_dirichlet) );
   if (remove_gluing_of_dirichlet) {
     TRY( QPTRemoveGluingOfDirichletDofs(qp) );
   }
@@ -1477,7 +1477,7 @@ PetscErrorCode QPTScale(QP qp)
   d = NULL;
   ScalType = QP_SCALE_NONE;
   TRY( PetscOptionsEnum("-qp_O_scale_type", "", "QPSetSystemScaling", QPScaleTypes, (PetscEnum)ScalType, (PetscEnum*)&ScalType, &set) );
-  TRY( PetscInfo1(qp, "-qp_O_scale_type %s\n",QPScaleTypes[ScalType]) );
+  TRY( PetscInfo(qp, "-qp_O_scale_type %s\n",QPScaleTypes[ScalType]) );
   if (ScalType) {
     if (ScalType == QP_SCALE_ROWS_NORM_2) {
       TRY( MatGetRowNormalization(A,&d) );
@@ -1500,7 +1500,7 @@ PetscErrorCode QPTScale(QP qp)
   d = NULL;
   ScalType = QP_SCALE_NONE;
   TRY( PetscOptionsEnum("-qp_E_scale_type", "", "QPSetEqScaling", QPScaleTypes, (PetscEnum)ScalType, (PetscEnum*)&ScalType, &set) );
-  TRY( PetscInfo1(qp, "-qp_E_scale_type %s\n",QPScaleTypes[ScalType]) );
+  TRY( PetscInfo(qp, "-qp_E_scale_type %s\n",QPScaleTypes[ScalType]) );
   if (ScalType) {
     if (ScalType == QP_SCALE_ROWS_NORM_2) {
       TRY( MatGetRowNormalization(A,&d) );
@@ -1526,7 +1526,7 @@ PetscErrorCode QPTScale(QP qp)
   d = ctx->dI;
   ScalType = QP_SCALE_NONE;
   TRY( PetscOptionsEnum("-qp_I_scale_type", "", "QPSetIneqScaling", QPScaleTypes, (PetscEnum)ScalType, (PetscEnum*)&ScalType, &set) );
-  TRY( PetscInfo1(qp, "-qp_I_scale_type %s\n",QPScaleTypes[ScalType]) );
+  TRY( PetscInfo(qp, "-qp_I_scale_type %s\n",QPScaleTypes[ScalType]) );
   if (ScalType || d) {
     if (ScalType && d) FLLOP_SETERRQ1(comm,PETSC_ERR_SUP,"-qp_I_scale_type %s not supported for given eq. con. scaling",QPScaleTypes[ScalType]);
 
@@ -1549,8 +1549,8 @@ PetscErrorCode QPTScale(QP qp)
   if (qp->R) {
     TRY( PetscOptionsEnum("-qp_R_orth_type", "type of nullspace matrix orthonormalization", "", MatOrthTypes, (PetscEnum)R_orth_type, (PetscEnum*)&R_orth_type, NULL) );
     TRY( PetscOptionsEnum("-qp_R_orth_form", "form of nullspace matrix orthonormalization", "", MatOrthForms, (PetscEnum)R_orth_form, (PetscEnum*)&R_orth_form, NULL) );
-    TRY( PetscInfo1(qp, "-qp_R_orth_type %s\n",MatOrthTypes[R_orth_type]) );
-    TRY( PetscInfo1(qp, "-qp_R_orth_form %s\n",MatOrthForms[R_orth_form]) );
+    TRY( PetscInfo(qp, "-qp_R_orth_type %s\n",MatOrthTypes[R_orth_type]) );
+    TRY( PetscInfo(qp, "-qp_R_orth_form %s\n",MatOrthForms[R_orth_form]) );
     if (R_orth_type) {
       Mat Rnew;
       TRY( MatOrthColumns(qp->R, R_orth_type, R_orth_form, &Rnew, NULL) );
@@ -1575,8 +1575,8 @@ PetscErrorCode QPTNormalizeObjective(QP qp)
   TRY( QPChainGetLast(qp,&qp) );
   TRY( MatGetMaxEigenvalue(qp->A, NULL, &norm_A, PETSC_DECIDE, PETSC_DECIDE) );
   TRY( VecNorm(qp->b,NORM_2,&norm_b) );
-  TRY( PetscInfo2(qp,"||A||=%.12e, scale A by 1/||A||=%.12e\n",norm_A,1.0/norm_A) );
-  TRY( PetscInfo2(qp,"||b||=%.12e, scale b by 1/||b||=%.12e\n",norm_b,1.0/norm_b) );
+  TRY( PetscInfo(qp,"||A||=%.12e, scale A by 1/||A||=%.12e\n",norm_A,1.0/norm_A) );
+  TRY( PetscInfo(qp,"||b||=%.12e, scale b by 1/||b||=%.12e\n",norm_b,1.0/norm_b) );
   TRY( QPTScaleObjectiveByScalar(qp, 1.0/norm_A, 1.0/norm_b) );
   PetscFunctionReturnI(0);
 }
@@ -1591,7 +1591,7 @@ PetscErrorCode QPTNormalizeHessian(QP qp)
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
   TRY( QPChainGetLast(qp,&qp) );
   TRY( MatGetMaxEigenvalue(qp->A, NULL, &norm_A, PETSC_DECIDE, PETSC_DECIDE) );
-  TRY( PetscInfo2(qp,"||A||=%.12e, scale A by 1/||A||=%.12e\n",norm_A,1.0/norm_A) );
+  TRY( PetscInfo(qp,"||A||=%.12e, scale A by 1/||A||=%.12e\n",norm_A,1.0/norm_A) );
   TRY( QPTScaleObjectiveByScalar(qp, 1.0/norm_A, 1.0/norm_A) );
   PetscFunctionReturnI(0);
 }

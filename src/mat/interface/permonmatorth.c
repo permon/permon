@@ -336,7 +336,7 @@ static PetscErrorCode MatOrthColumns_GS(Mat A, MatOrthType type, MatOrthForm for
   TRY( PetscMalloc(N*sizeof(PetscScalar), &dots) );
 
   TRY( (*f)(comm,N, q, s, dots, &o_max, &o_acc) );
-  TRY( PetscInfo4(fllop,"number of columns %d,  orthogonalizations max, avg, total %d, %g, %d\n", N, o_max, ((PetscReal)o_acc)/N, o_acc) );
+  TRY( PetscInfo(fllop,"number of columns %d,  orthogonalizations max, avg, total %d, %g, %d\n", N, o_max, ((PetscReal)o_acc)/N, o_acc) );
 
   /* copy column vectors back to the matrix Q */
   TRY( VecNestRestoreMPI(N,&q) );

@@ -479,7 +479,7 @@ static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
   TRY( FllopPetscObjectInheritPrefixIfNotSet((PetscObject)Areg,(PetscObject)imat,"mat_inv_") );
   TRY( FllopPetscObjectInheritPrefixIfNotSet((PetscObject)A_inner,(PetscObject)imat,"mat_inv_") );
   if (inv->setfromoptionscalled) {
-    TRY( PetscInfo1(fllop,"setting inner matrix with prefix %s from options\n",((PetscObject)A_inner)->prefix) );
+    TRY( PetscInfo(fllop,"setting inner matrix with prefix %s from options\n",((PetscObject)A_inner)->prefix) );
     TRY( PermonMatSetFromOptions(A_inner) );
   }
 

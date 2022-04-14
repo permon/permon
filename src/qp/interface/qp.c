@@ -509,7 +509,7 @@ PetscErrorCode QPSetUpInnerObjects(QP qp)
   if (!qp->b) FLLOP_SETERRQ(comm,PETSC_ERR_ORDER,"linear term must be set before " __FUNCT__);
 
   FllopTraceBegin;
-  TRY( PetscInfo1(qp,"setup inner objects for QP #%d\n",qp->id) );
+  TRY( PetscInfo(qp,"setup inner objects for QP #%d\n",qp->id) );
 
   if (!qp->pc) TRY( QPGetPC(qp,&qp->pc) );
   TRY( PCSetOperators(qp->pc,qp->A,qp->A) );
@@ -632,7 +632,7 @@ PetscErrorCode QPSetUp(QP qp)
   if (!qp->b) FLLOP_SETERRQ(comm,PETSC_ERR_ORDER,"linear term must be set before " __FUNCT__);
 
   FllopTraceBegin;
-  TRY( PetscInfo1(qp,"setup QP #%d\n",qp->id) );
+  TRY( PetscInfo(qp,"setup QP #%d\n",qp->id) );
   TRY( QPSetUpInnerObjects(qp) );
   TRY( QPSetFromOptions_Private(qp) );
   TRY( PCSetUp(qp->pc) );
@@ -827,7 +827,7 @@ PetscErrorCode QPComputeMissingEqMultiplier(QP qp)
   }
 
   TRY( PetscObjectGetName((PetscObject)qp,&name) );
-  TRY( PetscInfo3(qp,"missing eq. con. multiplier computed for QP Object %s (#%d in chain, derived by %s)\n",name,qp->id,qp->transform_name) );
+  TRY( PetscInfo(qp,"missing eq. con. multiplier computed for QP Object %s (#%d in chain, derived by %s)\n",name,qp->id,qp->transform_name) );
   PetscFunctionReturn(0);
 }
 
@@ -895,7 +895,7 @@ PetscErrorCode QPComputeMissingBoxMultipliers(QP qp)
   {
     const char *name_qp;
     TRY( PetscObjectGetName((PetscObject)qp,&name_qp) );
-    TRY( PetscInfo3(qp,"missing lower bound con. multiplier computed for QP Object %s (#%d in chain, derived by %s)\n",name_qp,qp->id,qp->transform_name) );
+    TRY( PetscInfo(qp,"missing lower bound con. multiplier computed for QP Object %s (#%d in chain, derived by %s)\n",name_qp,qp->id,qp->transform_name) );
   }
   PetscFunctionReturn(0);
 }
