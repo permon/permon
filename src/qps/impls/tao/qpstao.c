@@ -151,11 +151,11 @@ PetscErrorCode QPSSetUp_Tao(QPS qps)
   TRY( QPGetBox(qp,&is,&lb,&ub) );
   
   TRY( QPSTaoGetTao(qps,&tao) );
-  TRY( TaoSetInitialVector(tao,x) );
+  TRY( TaoSetSolution(tao,x) );
 
   /* Set routines for function, gradient and hessian evaluation */
-  TRY( TaoSetObjectiveAndGradientRoutine(tao,FormFunctionGradientQPS,qps) );
-  TRY( TaoSetHessianRoutine(tao,qp->A,qp->A,FormHessianQPS,qps) );
+  TRY( TaoSetObjectiveAndGradient(tao,NULL,FormFunctionGradientQPS,qps) );
+  TRY( TaoSetHessian(tao,qp->A,qp->A,FormHessianQPS,qps) );
 
   /* Set Variable bounds */
   TRY( VecDuplicate(x,&lbnew) );

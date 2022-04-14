@@ -139,12 +139,12 @@ int main( int argc, char **argv )
 
   /* Set the initial vector */
   ierr = VecSet(x, zero);CHKERRQ(ierr);
-  ierr = TaoSetInitialVector(tao,x);CHKERRQ(ierr);
+  ierr = TaoSetSolution(tao,x);CHKERRQ(ierr);
 
   /* Set the user function, gradient, hessian evaluation routines and data structures */
-  ierr = TaoSetObjectiveAndGradientRoutine(tao,FormFunctionGradient,(void*) &user);CHKERRQ(ierr);
+  ierr = TaoSetObjectiveAndGradient(tao,NULL,FormFunctionGradient,(void*) &user);CHKERRQ(ierr);
 
-  ierr = TaoSetHessianRoutine(tao,user.A,user.A,FormHessian,(void*)&user);CHKERRQ(ierr);
+  ierr = TaoSetHessian(tao,user.A,user.A,FormHessian,(void*)&user);CHKERRQ(ierr);
 
   /* Set a routine that defines the bounds */
   ierr = VecDuplicate(x,&user.xl);CHKERRQ(ierr);
@@ -548,7 +548,7 @@ PetscErrorCode CallPermonAndCompareResults(Tao tao, void *ctx)
 
   /* Get the solution vector */
   ierr = QPGetSolutionVector(qp, &x_qp);CHKERRQ(ierr);
-  ierr = TaoGetSolutionVector(tao,&x_tao);CHKERRQ(ierr);
+  ierr = TaoGetSolution(tao,&x_tao);CHKERRQ(ierr);
   
   /* Difference of results from TAO and QP */
   ierr = VecNorm(user->B, NORM_2, &rhs_norm);CHKERRQ(ierr);
