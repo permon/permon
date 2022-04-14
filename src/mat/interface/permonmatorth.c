@@ -235,7 +235,7 @@ static PetscErrorCode MatOrthColumns_GS_Default(MPI_Comm comm, PetscInt N, Vec q
 
 #undef __FUNCT__
 #define __FUNCT__ "PetscScalarNormSquared"
-PETSC_STATIC_INLINE PetscErrorCode PetscScalarNormSquared(PetscInt n,const PetscScalar xx[],PetscReal *z)
+static inline PetscErrorCode PetscScalarNormSquared(PetscInt n,const PetscScalar xx[],PetscReal *z)
 {
   PetscBLASInt      one = 1, bn;
   PetscFunctionBegin;

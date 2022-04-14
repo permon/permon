@@ -3,9 +3,9 @@
 
 PetscLogEvent Mat_GetColumnVectors, Mat_RestoreColumnVectors, Mat_MatMultByColumns, Mat_TransposeMatMultByColumns;
 
-PETSC_STATIC_INLINE PetscErrorCode MatMatMultByColumns_MatMult_Private(Mat A, PetscBool A_transpose, Mat B, Mat C);
-PETSC_STATIC_INLINE PetscErrorCode MatMatMultByColumns_MatFilterZeros_Private(Mat *C,PetscBool filter);
-PETSC_STATIC_INLINE PetscErrorCode MatMatMultByColumns_Private(Mat A, PetscBool A_transpose, Mat B, PetscBool filter, Mat *C_new);
+static inline PetscErrorCode MatMatMultByColumns_MatMult_Private(Mat A, PetscBool A_transpose, Mat B, Mat C);
+static inline PetscErrorCode MatMatMultByColumns_MatFilterZeros_Private(Mat *C,PetscBool filter);
+static inline PetscErrorCode MatMatMultByColumns_Private(Mat A, PetscBool A_transpose, Mat B, PetscBool filter, Mat *C_new);
 static PetscErrorCode MatMatBlockDiagMultByColumns_Private(Mat B, PetscBool B_transpose, Mat R, PetscBool filter, Mat *Gt_new);
 
 //TODO add an argument specifying whether values should be copied back during Restore
@@ -115,7 +115,7 @@ PetscErrorCode MatRestoreColumnVectors(Mat A, PetscInt *ncols, Vec *cols_new[])
 
 #undef __FUNCT__
 #define __FUNCT__ "MatMatMultByColumns_MatMult_Private"
-PETSC_STATIC_INLINE PetscErrorCode MatMatMultByColumns_MatMult_Private(Mat A, PetscBool A_transpose, Mat B, Mat C)
+static inline PetscErrorCode MatMatMultByColumns_MatMult_Private(Mat A, PetscBool A_transpose, Mat B, Mat C)
 {
   PetscInt N,N1,j;
   Vec *B_cols,*C_cols;
@@ -141,7 +141,7 @@ PETSC_STATIC_INLINE PetscErrorCode MatMatMultByColumns_MatMult_Private(Mat A, Pe
 
 #undef __FUNCT__
 #define __FUNCT__ "MatMatMultByColumns_MatFilterZeros_Private"
-PETSC_STATIC_INLINE PetscErrorCode MatMatMultByColumns_MatFilterZeros_Private(Mat *C,PetscBool filter)
+static inline PetscErrorCode MatMatMultByColumns_MatFilterZeros_Private(Mat *C,PetscBool filter)
 {
   Mat C_new;
 
@@ -205,7 +205,7 @@ static PetscErrorCode MatMatBlockDiagMultByColumns_Private(Mat B, PetscBool B_tr
 
 #undef __FUNCT__
 #define __FUNCT__ "MatMatMultByColumns_Private"
-PETSC_STATIC_INLINE PetscErrorCode MatMatMultByColumns_Private(Mat A, PetscBool A_transpose, Mat B, PetscBool filter, Mat *C_new)
+static inline PetscErrorCode MatMatMultByColumns_Private(Mat A, PetscBool A_transpose, Mat B, PetscBool filter, Mat *C_new)
 {
   PetscBool flg;
 

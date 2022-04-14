@@ -567,7 +567,7 @@ PetscErrorCode QPSConvergedSetUp_Inner_SMALXE(QPS qps_inner)
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSConverged_Inner_SMALXE_Monitor_Outer"
-PETSC_STATIC_INLINE PetscErrorCode QPSConverged_Inner_SMALXE_Monitor_Outer(QPS qps_inner,QP qp_inner,PetscInt i,PetscReal gnorm,QPSConvergedCtx_Inner_SMALXE *cctx,PetscBool header) 
+static inline PetscErrorCode QPSConverged_Inner_SMALXE_Monitor_Outer(QPS qps_inner,QP qp_inner,PetscInt i,PetscReal gnorm,QPSConvergedCtx_Inner_SMALXE *cctx,PetscBool header) 
 {
   QPS qps_outer = cctx->qps_outer;
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps_outer->data;
@@ -592,7 +592,7 @@ PETSC_STATIC_INLINE PetscErrorCode QPSConverged_Inner_SMALXE_Monitor_Outer(QPS q
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSConverged_Inner_SMALXE_Monitor_Inner"
-PETSC_STATIC_INLINE PetscErrorCode QPSConverged_Inner_SMALXE_Monitor_Inner(QPS qps_inner,QP qp_inner,PetscInt i,PetscReal gnorm,QPSConvergedCtx_Inner_SMALXE *cctx)  
+static inline PetscErrorCode QPSConverged_Inner_SMALXE_Monitor_Inner(QPS qps_inner,QP qp_inner,PetscInt i,PetscReal gnorm,QPSConvergedCtx_Inner_SMALXE *cctx)  
 {
   QPS qps_outer = cctx->qps_outer;
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps_outer->data;

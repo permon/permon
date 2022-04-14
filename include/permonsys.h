@@ -63,21 +63,21 @@ FLLOP_EXTERN PetscErrorCode _fllop_ierr;
 #define FllopDebug5(msg,a1,a2,a3,a4,a5)       0; do { if (FllopDebugEnabled) PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1,a2,a3,a4,a5); } while(0)
 #define FllopDebug6(msg,a1,a2,a3,a4,a5,a6)    0; do { if (FllopDebugEnabled) PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1,a2,a3,a4,a5,a6); } while(0)
 
-PETSC_STATIC_INLINE PetscErrorCode PetscBoolGlobalAnd(MPI_Comm comm,PetscBool loc,PetscBool *glob)
+static inline PetscErrorCode PetscBoolGlobalAnd(MPI_Comm comm,PetscBool loc,PetscBool *glob)
 {
   return MPI_Allreduce(&loc,glob,1,MPIU_BOOL,MPI_LAND,comm);
 }
 
-PETSC_STATIC_INLINE PetscErrorCode PetscBoolGlobalOr(MPI_Comm comm,PetscBool loc,PetscBool *glob)
+static inline PetscErrorCode PetscBoolGlobalOr(MPI_Comm comm,PetscBool loc,PetscBool *glob)
 {
   return MPI_Allreduce(&loc,glob,1,MPIU_BOOL,MPI_LOR,comm);
 }
 
-PETSC_STATIC_INLINE void FLLTIC(PetscLogDouble *t) {
+static inline void FLLTIC(PetscLogDouble *t) {
     PetscTime(t);
 }
 
-PETSC_STATIC_INLINE void FLLTOC(PetscLogDouble *t) {
+static inline void FLLTOC(PetscLogDouble *t) {
     PetscLogDouble toc_time;
     PetscTime(&toc_time);
     *t = toc_time - *t;
