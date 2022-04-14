@@ -206,7 +206,7 @@ PetscErrorCode MatCreatePenalized(QP qp,PetscReal rho,Mat *Arho_new)
   PetscFunctionBegin;
   TRY( QPGetOperator(qp,&A) );
   TRY( QPGetQPPF(qp,&pf) );
-  FLLOP_ASSERT(A,"A specified");
+  PERMON_ASSERT(A,"A specified");
 
   TRY( PetscMalloc(sizeof(Mat_Penalized),&ctx) );
   ctx->A = A; TRY( PetscObjectReference((PetscObject)A) );

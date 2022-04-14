@@ -117,7 +117,7 @@ PetscErrorCode MatIsIdentity(Mat A, PetscReal tol, PetscInt ntrials, PetscBool *
   TRY( PetscObjectGetComm((PetscObject) A, &comm) );
   TRY( MPI_Comm_rank(comm, &rank) );
   TRY( MatGetSize(A, &M, &N) );
-  FLLOP_ASSERT(M==N, "M==N");
+  PERMON_ASSERT(M==N, "M==N");
 
   TRY( MatGetLocalSize(A, &m, &n) );
   TRY( MatCreateIdentity(comm, m, n, N, &E) );
@@ -890,7 +890,7 @@ PetscErrorCode PermonMatGetLocalMat(Mat A,Mat *Aloc)
       if (T_loc) {
         /* hotfix for B=T*Adt */
         TRY( PetscObjectQuery((PetscObject)Bt,"Adt",(PetscObject*)&Adt) );
-        FLLOP_ASSERT(Adt,"Adt");
+        PERMON_ASSERT(Adt,"Adt");
         TRY( PermonMatGetLocalMat(Adt, &Adt_loc) );
         Bt_arr[1]=T_loc;
         Bt_arr[0]=Adt_loc;
@@ -1209,7 +1209,7 @@ PetscErrorCode MatCheckNullSpace(Mat K,Mat R,PetscReal tol)
   TRY( MatMult(K,d,y) );
   TRY( VecNorm(y,NORM_2,&normy) );
   TRY( PetscInfo(fllop,"||K*R*x|| = %.3e   ||diag(K)|| = %.3e    ||K*R*x|| / ||diag(K)|| = %.3e\n",normy,normd,normy/normd) );
-  FLLOP_ASSERT1(normy / normd < tol, "||K*R*x|| / ||diag(K)|| < %.1e", tol);
+  PERMON_ASSERT(normy / normd < tol, "||K*R*x|| / ||diag(K)|| < %.1e", tol);
   TRY( VecDestroy(&d) );
   TRY( VecDestroy(&x) );
   TRY( VecDestroy(&y) );

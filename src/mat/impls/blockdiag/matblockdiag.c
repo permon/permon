@@ -17,7 +17,7 @@ PetscErrorCode MatZeroRowsColumns_BlockDiag(Mat A,PetscInt n,const PetscInt rows
 
   PetscFunctionBegin;
   TRY( ISGlobalToLocalMappingApply(A->rmap->mapping,IS_GTOLM_DROP,n,rows,&nloc,NULL) );
-  FLLOP_ASSERT(n==nloc,"n==nloc");
+  PERMON_ASSERT(n==nloc,"n==nloc");
   TRY( PetscMalloc(n*sizeof(PetscInt),&rows_loc) );
   TRY( ISGlobalToLocalMappingApply(A->rmap->mapping,IS_GTOLM_DROP,n,rows,NULL,rows_loc) );
   if (x) {
@@ -48,7 +48,7 @@ PetscErrorCode MatZeroRows_BlockDiag(Mat A,PetscInt n,const PetscInt rows[],Pets
 
   PetscFunctionBegin;
   TRY( ISGlobalToLocalMappingApply(A->rmap->mapping,IS_GTOLM_DROP,n,rows,&nloc,NULL) );
-  FLLOP_ASSERT(n==nloc,"n==nloc");
+  PERMON_ASSERT(n==nloc,"n==nloc");
   TRY( PetscMalloc(n*sizeof(PetscInt),&rows_loc) );
   TRY( ISGlobalToLocalMappingApply(A->rmap->mapping,IS_GTOLM_DROP,n,rows,NULL,rows_loc) );
   if (x) {
@@ -640,7 +640,7 @@ static PetscErrorCode MatGetColumnVectors_BlockDiag(Mat mat, Vec *cols_new[])
   N = mat->cmap->N;
   jlo = mat->cmap->rstart;
   TRY( MatGetColumnVectors(data->localBlock,&n1,&data->cols_loc) );
-  FLLOP_ASSERT(n==n1,"n==n1");
+  PERMON_ASSERT(n==n1,"n==n1");
 
   TRY( MatCreateVecs(mat, PETSC_IGNORE, &d) );
   TRY( VecDuplicateVecs(d, N, &cols) );

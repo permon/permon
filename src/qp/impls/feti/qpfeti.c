@@ -189,7 +189,7 @@ PetscErrorCode QPFetiAssembleDirichlet(QP qp)
       TRY( ISGetLocalSize(dbcis,&ndbc) );
       TRY( ISGetIndices(dbcis,&dbcarr) );
       TRY( ISGlobalToLocalMappingApply(ctx->l2g_map,IS_GTOLM_DROP,ndbc,dbcarr,&nout,NULL) );
-      FLLOP_ASSERT(ndbc==nout,"n==nout");
+      PERMON_ASSERT(ndbc==nout,"n==nout");
       TRY( PetscMalloc1(ndbc,&dbc_l_arr) );
       TRY( ISGlobalToLocalMappingApply(ctx->l2g_map,IS_GTOLM_DROP,ndbc,dbcarr,NULL,dbc_l_arr) );
       TRY( ISRestoreIndices(dbcis,&dbcarr) );
@@ -342,7 +342,7 @@ PetscErrorCode QPFetiSetUp(QP qp)
   TRY( PetscObjectGetComm((PetscObject)qp,&comm) );
   TRY( PetscLogEventBegin(QP_Feti_SetUp,qp,0,0,0) );
 
-  FLLOP_ASSERT(qp->A,"Operator must be specified");
+  PERMON_ASSERT(qp->A,"Operator must be specified");
   TRY( MatGetLocalSize(qp->A, &nlocaldofs, NULL) );
 
   TRY( PetscOptionsGetEnum(NULL,NULL,"-feti_gluing_type",FetiGluingTypes,(PetscEnum*)&type, NULL) );
@@ -965,7 +965,7 @@ PetscErrorCode QPFetiGetGlobalDir(QP qp, IS dbc, QPFetiNumberingType numtype, IS
       /* convert global decomposed indices to local */
       TRY( MatGetLocalToGlobalMapping(qp->A,&l2dg,NULL) );
       TRY( ISGlobalToLocalMappingApply(l2dg,IS_GTOLM_DROP,ndbc,dbc_arr,&nout,NULL) );
-      FLLOP_ASSERT(ndbc==nout,"n==nout");
+      PERMON_ASSERT(ndbc==nout,"n==nout");
       TRY( PetscMalloc1(ndbc,&dbc_l_arr_nonconst) );
       TRY( ISGlobalToLocalMappingApply(l2dg,IS_GTOLM_DROP,ndbc,dbc_arr,NULL,dbc_l_arr_nonconst) );
       dbc_l_arr = dbc_l_arr_nonconst;

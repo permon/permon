@@ -308,7 +308,7 @@ static PetscErrorCode MatOrthColumns_GS(Mat A, MatOrthType type, MatOrthForm for
       case MAT_ORTH_GS_LINGEN:
         f = MatOrthColumns_GS_Lingen; break;
       default:
-        FLLOP_ASSERT(0,"this should never happen");
+        PERMON_ASSERT(0,"this should never happen");
     }
   }
 
@@ -428,7 +428,7 @@ PetscErrorCode MatOrthColumns(Mat A, MatOrthType type, MatOrthForm form, Mat *Q_
       case MAT_ORTH_INEXACT:
         f = MatOrthColumns_Implicit_Default; break;
       case MAT_ORTH_NONE:
-        FLLOP_ASSERT(0,"this should never happen");
+        PERMON_ASSERT(0,"this should never happen");
     }
   }
   

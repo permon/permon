@@ -412,7 +412,7 @@ PetscErrorCode QPPFSetUp(QPPF cp)
     TRY( QPPFSetUpGGtinv_Private(cp, &cp->GGtinv) );
     TRY( PetscLogObjectParent((PetscObject)cp,(PetscObject)cp->GGtinv) );
   } else {
-    //FLLOP_ASSERT(((Mat_Inv*)cp->GGtinv->data)->ksp->pc->setupcalled,"setupcalled");
+    //PERMON_ASSERT(((Mat_Inv*)cp->GGtinv->data)->ksp->pc->setupcalled,"setupcalled");
     if (!cp->Gt) {
       TRY( QPPFSetUpGt_Private(cp,&cp->Gt) );
     }

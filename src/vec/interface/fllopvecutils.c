@@ -374,7 +374,7 @@ PetscErrorCode   VecGetMPIVector(MPI_Comm comm, PetscInt N,Vec vecs[], Vec *VecO
   PetscInt i;
   
   PetscFunctionBegin;
-  FLLOP_ASSERT(N>0,"N>0");
+  PERMON_ASSERT(N>0,"N>0");
   
   *VecOut = NULL;
       

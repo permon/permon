@@ -225,7 +225,7 @@ static PetscErrorCode MatMergeAndDestroy_NestPermon(MPI_Comm comm, Mat *local_in
   }
   TRY( MatCreateNestPermon(comm,Mn,NULL,Nn,NULL,mats_out,global_out) );
 
-  if (x) FLLOP_ASSERT2((*global_out)->cmap->n == n, "number of local columns requested equals actual number of local columns of the generated matrix (%d != %d)",(*global_out)->cmap->n,n);
+  if (x) PERMON_ASSERT((*global_out)->cmap->n == n, "number of local columns requested equals actual number of local columns of the generated matrix (%d != %d)",(*global_out)->cmap->n,n);
 
   for (i=0; i<MnNn; i++) TRY( MatDestroy(&mats_out[i]) );
   TRY( PetscFree(mats_out) );
@@ -429,7 +429,7 @@ static PetscErrorCode MatMatMult_NestPermon_NestPermon(Mat A,Mat B,PetscReal fil
   PetscFunctionBeginI;
   TRY( MatNestGetSubMats(A,&M,&K1,&A_mats_in) );
   TRY( MatNestGetSubMats(B,&K2,&N,&B_mats_in) );
-  FLLOP_ASSERT(K1==K2,"# nest columns of A  =  # nest rows of B");
+  PERMON_ASSERT(K1==K2,"# nest columns of A  =  # nest rows of B");
 
   MN = M*N;
   TRY( PetscMalloc(K1*sizeof(Mat),&mats_row) );
@@ -547,8 +547,8 @@ static PetscErrorCode MatAXPY_NestPermon(Mat Y, PetscScalar a, Mat X, MatStructu
   PetscFunctionBegin;
   TRY( MatNestGetSubMats(Y,&Mn1,&Nn1,&Y_mats_in) );
   TRY( MatNestGetSubMats(X,&Mn,&Nn,&X_mats_in) );
-  FLLOP_ASSERT(Mn=Mn1,"Mn=Mn1");
-  FLLOP_ASSERT(Nn=Nn1,"Nn=Nn1");
+  PERMON_ASSERT(Mn=Mn1,"Mn=Mn1");
+  PERMON_ASSERT(Nn=Nn1,"Nn=Nn1");
   for (i=0; i<Mn; i++) for (j=0; j<Nn; j++) {
     TRY( MatAXPY(Y_mats_in[i][j],a,X_mats_in[i][j],str) );
   }
@@ -567,7 +567,7 @@ static PetscErrorCode MatExtensionCreateCondensedRows_NestPermon(Mat TA,Mat *A,I
 
   PetscFunctionBegin;
   TRY( MatNestGetSubMats(TA,&Mn,&Nn,&mats_in) );
-  FLLOP_ASSERT(Mn==1,"Mn==1");
+  PERMON_ASSERT(Mn==1,"Mn==1");
   TRY( PetscMalloc1(Nn,&mats_out) );
   TRY( PetscMalloc1(Nn,&ris_block_orig) );
 

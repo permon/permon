@@ -62,7 +62,7 @@ PetscErrorCode MatRemoveGluingOfDirichletDofs_old(Mat Bgt, Vec cg, Mat Bdt, Mat 
   TRY( MatCreateSubMatrix(Bgt,isrow,iscol,MAT_INITIAL_MATRIX,Bgt_new) );
   TRY( FllopPetscObjectInheritName((PetscObject)*Bgt_new,(PetscObject)Bgt,NULL) );
   if (cg_new) {
-    FLLOP_ASSERT(cg,"cg vector specified");
+    PERMON_ASSERT(cg,"cg vector specified");
     TRY( VecGetSubVector(cg,iscol,cg_new) );
     TRY( FllopPetscObjectInheritName((PetscObject)*cg_new,(PetscObject)cg,NULL) );
   }
@@ -157,7 +157,7 @@ PetscErrorCode MatRemoveGluingOfDirichletDofs(Mat Bgt, Vec cg, Mat Bdt, Mat *Bgt
   TRY( MatCreateSubMatrix(Bgt,isrow,iscol,MAT_INITIAL_MATRIX,Bgt_new) );
   TRY( FllopPetscObjectInheritName((PetscObject)*Bgt_new,(PetscObject)Bgt,NULL) );
   if (cg_new) {
-    FLLOP_ASSERT(cg,"cg vector specified");
+    PERMON_ASSERT(cg,"cg vector specified");
     TRY( VecGetSubVector(cg,iscol,cg_new) );
     TRY( FllopPetscObjectInheritName((PetscObject)*cg_new,(PetscObject)cg,NULL) );
   }

@@ -1577,7 +1577,7 @@ PetscErrorCode QPAddEq(QP qp, Mat Beq, Vec ceq)
     TRY( QPAddEq(qp,BE_orig,cE_orig) );
     TRY( MatDestroy(&BE_orig) );
     TRY( VecDestroy(&cE_orig) );
-    FLLOP_ASSERT(qp->BE_nest_count==1,"qp->BE_nest_count==1");
+    PERMON_ASSERT(qp->BE_nest_count==1,"qp->BE_nest_count==1");
   }
   
   M = qp->BE_nest_count++;
@@ -1672,7 +1672,7 @@ PetscErrorCode QPGetEqMultiplicityScaling(QP qp, Vec *dE_new, Vec *dI_new)
     }
   }
   Bc = qp->BI;
-  FLLOP_ASSERT(Bg,"Bg");
+  PERMON_ASSERT(Bg,"Bg");
   
   if (!Bc) { scale_Bc = PETSC_FALSE; count_Bc = PETSC_FALSE; }
   if (!Bd) { scale_Bd = PETSC_FALSE; count_Bd = PETSC_FALSE; }
@@ -1700,7 +1700,7 @@ PetscErrorCode QPGetEqMultiplicityScaling(QP qp, Vec *dE_new, Vec *dI_new)
 
   {
     TRY( MatIsImplicitTranspose(Bg,&flg) );
-    FLLOP_ASSERT(flg,"Bg must be implicit transpose");
+    PERMON_ASSERT(flg,"Bg must be implicit transpose");
     TRY( PermonMatTranspose(Bg,MAT_TRANSPOSE_EXPLICIT,&Bgt) );
     for (i=ilo; i<ihi; i++) {
       TRY( MatGetRow(Bgt,i,&ncols,&cols,&vals) );
@@ -1718,7 +1718,7 @@ PetscErrorCode QPGetEqMultiplicityScaling(QP qp, Vec *dE_new, Vec *dI_new)
 
   if (count_Bd) {
     TRY( MatIsImplicitTranspose(Bd,&flg) );
-    FLLOP_ASSERT(flg,"Bd must be implicit transpose");
+    PERMON_ASSERT(flg,"Bd must be implicit transpose");
     TRY( PermonMatTranspose(Bd,MAT_TRANSPOSE_EXPLICIT,&Bdt) );
     for (i=ilo; i<ihi; i++) {
       TRY( MatGetRow(Bdt,i,&ncols,&cols,&vals) );
@@ -1738,7 +1738,7 @@ PetscErrorCode QPGetEqMultiplicityScaling(QP qp, Vec *dE_new, Vec *dI_new)
 
   if (count_Bc) {
     TRY( MatIsImplicitTranspose(Bc,&flg) );
-    FLLOP_ASSERT(flg,"Bc must be implicit transpose");
+    PERMON_ASSERT(flg,"Bc must be implicit transpose");
     TRY( PermonMatTranspose(Bc,MAT_TRANSPOSE_EXPLICIT,&Bct) );
     for (i=ilo; i<ihi; i++) {
       TRY( MatGetRow(Bct,i,&ncols,&cols,&vals) );

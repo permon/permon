@@ -83,8 +83,8 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
     TRY( MPI_Comm_size(blockComm,&commsize) );
     if (K != Kl) {
       TRY( PetscObjectTypeCompare((PetscObject)K,MATBLOCKDIAG,&blockdiag) );
-      FLLOP_ASSERT(blockdiag, "K should be blockdiag in this case");
-      FLLOP_ASSERT(commsize==1, "Kl should be serial");
+      PERMON_ASSERT(blockdiag, "K should be blockdiag in this case");
+      PERMON_ASSERT(commsize==1, "Kl should be serial");
     }
   }
   

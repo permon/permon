@@ -792,7 +792,7 @@ static PetscErrorCode QPTDualizePostSolve_Private(QP child,QP parent)
 
     PetscFunctionBegin;
     TRY( PetscObjectQuery((PetscObject)F,"Kplus",(PetscObject*)&Kplus) );
-    FLLOP_ASSERT(Kplus,"Kplus != NULL");
+    PERMON_ASSERT(Kplus,"Kplus != NULL");
 
     /* copy lambda back to lambda_E and lambda_I */
     if (parent->BE && parent->BI) {
@@ -890,7 +890,7 @@ static PetscErrorCode MatTransposeMatMult_R_Bt(Mat R, Mat Bt, Mat *G_new)
     Mat BtJ;
     Mat *mats_G;
     TRY( MatNestGetSize(Bt,&Mn,&Nn) );
-    FLLOP_ASSERT(Mn==1,"Mn==1");
+    PERMON_ASSERT(Mn==1,"Mn==1");
     TRY( PetscMalloc(Nn*sizeof(Mat),&mats_G) );
     for (J=0; J<Nn; J++) {
       TRY( MatNestGetSubMat(Bt,0,J,&BtJ) );
@@ -1070,13 +1070,13 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
         mats2[2]=K; mats2[1]=Kplus; mats2[0]=K;
         TRY( MatCreateProd(comm,3,mats2,&prod) );
         TRY( MatMultEqual(prod,K,3,&flg) );
-        FLLOP_ASSERT(flg,"Kplus is left generalized inverse");
+        PERMON_ASSERT(flg,"Kplus is left generalized inverse");
         TRY( MatDestroy(&prod) );
         if (true_mp) {
           mats2[2]=Kplus; mats2[1]=K; mats2[0]=Kplus;
           TRY( MatCreateProd(comm,3,mats2,&prod) );
           TRY( MatMultEqual(prod,Kplus,3,&flg) );
-          FLLOP_ASSERT(flg,"Kplus is Moore-Penrose pseudoinverse");
+          PERMON_ASSERT(flg,"Kplus is Moore-Penrose pseudoinverse");
           TRY( MatDestroy(&prod) );
         }
       }
@@ -1259,7 +1259,7 @@ static PetscErrorCode QPTPostSolve_QPTRemoveGluingOfDirichletDofs(QP child,QP pa
 
   PetscFunctionBegin;
   Mn = child->BE_nest_count;
-  FLLOP_ASSERT(Mn>=1,"child->BE_nest_count >= 2");
+  PERMON_ASSERT(Mn>=1,"child->BE_nest_count >= 2");
   TRY( PetscMalloc4(Mn,&iss_parent,Mn,&iss_child,Mn,&lambda_parent,Mn,&lambda_child) );
 
   TRY( MatNestGetISs(parent->BE,iss_parent,NULL) );
@@ -1342,9 +1342,9 @@ PetscErrorCode QPTRemoveGluingOfDirichletDofs(QP qp)
   TRY( PetscLogEventBegin(QPT_RemoveGluingOfDirichletDofs,qp,0,0,0) );
   TRY( MatNestGetSize(qp->BE,&Mn,&Nn) );
   TRY( MatNestGetSubMats(qp->BE,&Mn,&Nn,&mats) );
-  FLLOP_ASSERT(Mn>=2,"Mn==2");
-  FLLOP_ASSERT(Nn==1,"Nn==1");
-  FLLOP_ASSERT(!qp->cE,"!qp->cE");
+  PERMON_ASSERT(Mn>=2,"Mn==2");
+  PERMON_ASSERT(Nn==1,"Nn==1");
+  PERMON_ASSERT(!qp->cE,"!qp->cE");
   Bg = mats[0][0];
   Bd = mats[1][0];
 
@@ -1734,7 +1734,7 @@ static PetscErrorCode QPTPostSolve_QPTFreezeIneq(QP child,QP parent)
 
   PetscFunctionBegin;
   Mn = child->BE_nest_count;
-  FLLOP_ASSERT(Mn>=1,"child->BE_nest_count >= 1");
+  PERMON_ASSERT(Mn>=1,"child->BE_nest_count >= 1");
 
   if (Mn>1) {
     TRY( PetscMalloc1(Mn,&iss) );
@@ -1796,9 +1796,9 @@ PetscErrorCode QPTSplitBE(QP qp)
   
   PetscFunctionBeginI;
   TRY( PetscObjectGetComm((PetscObject)qp,&comm) );
-  FLLOP_ASSERT(!qp->cE,"!qp->cE");
+  PERMON_ASSERT(!qp->cE,"!qp->cE");
   TRY( MatIsImplicitTranspose(qp->BE, &flg) );
-  FLLOP_ASSERT(flg,"BE is implicit transpose");
+  PERMON_ASSERT(flg,"BE is implicit transpose");
   
   TRY( PetscLogEventBegin(QPT_SplitBE,qp,0,0,0) );
   TRY( QPTransformBegin(QPTSplitBE, NULL, NULL, QP_DUPLICATE_COPY_POINTERS, &qp, &child, &comm) );

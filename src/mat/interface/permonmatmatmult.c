@@ -125,8 +125,8 @@ static inline PetscErrorCode MatMatMultByColumns_MatMult_Private(Mat A, PetscBoo
   f = A_transpose ? MatMultTranspose : MatMult;
   N = B->cmap->N;
   
-  TRY( MatGetColumnVectors(B,&N1,&B_cols) ); FLLOP_ASSERT2(N1==N,"N1==N (%d != %d)",N1,N);
-  TRY( MatGetColumnVectors(C,&N1,&C_cols) ); FLLOP_ASSERT2(N1==N,"N1==N (%d != %d)",N1,N);
+  TRY( MatGetColumnVectors(B,&N1,&B_cols) ); PERMON_ASSERT(N1==N,"N1==N (%d != %d)",N1,N);
+  TRY( MatGetColumnVectors(C,&N1,&C_cols) ); PERMON_ASSERT(N1==N,"N1==N (%d != %d)",N1,N);
   
   for (j=0; j<N; j++) {
     TRY( f(A,B_cols[j],C_cols[j]) );

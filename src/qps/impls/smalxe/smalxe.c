@@ -859,8 +859,8 @@ PetscErrorCode QPSSetUp_SMALXE(QPS qps)
   {
     PetscErrorCode(*transform)(QP);
     TRY( QPGetTransform(qp_inner,&transform) );
-    FLLOP_ASSERT(qp_inner->parent == qp,"qp_inner->parent == qp");
-    FLLOP_ASSERT(transform == (PetscErrorCode(*)(QP))QPTEnforceEqByPenalty,"transform == QPTEnforceEqByRho");
+    PERMON_ASSERT(qp_inner->parent == qp,"qp_inner->parent == qp");
+    PERMON_ASSERT(transform == (PetscErrorCode(*)(QP))QPTEnforceEqByPenalty,"transform == QPTEnforceEqByRho");
   }
 
   /* make independent copy b_inner of the original rhs b to allow updates of b_inner without touching b */
@@ -935,10 +935,10 @@ PetscErrorCode QPSSolve_SMALXE(QPS qps)
     QPSConvergedCtx_Inner_SMALXE *cctx = (QPSConvergedCtx_Inner_SMALXE*) qps_inner->cnvctx;
     PetscErrorCode(*transform)(QP);
 
-    FLLOP_ASSERT(qp == cctx->qp_outer,"qp == cctx->qp_outer");
-    FLLOP_ASSERT(qp_inner == qp->child,"qp_inner == qp->child");
-    FLLOP_ASSERT(qp_inner->parent == qp,"qp_inner->parent == qp");
-    FLLOP_ASSERT(qp_inner->x == qp->x, "qp_inner->x == qp->x");
+    PERMON_ASSERT(qp == cctx->qp_outer,"qp == cctx->qp_outer");
+    PERMON_ASSERT(qp_inner == qp->child,"qp_inner == qp->child");
+    PERMON_ASSERT(qp_inner->parent == qp,"qp_inner->parent == qp");
+    PERMON_ASSERT(qp_inner->x == qp->x, "qp_inner->x == qp->x");
 
     TRY( QPGetTransform(qp_inner,&transform) );
     if (transform != (PetscErrorCode(*)(QP))QPTEnforceEqByPenalty) SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_WRONGSTATE,"last QP transform must be QPTEnforceEqByPenalty");

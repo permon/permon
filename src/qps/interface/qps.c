@@ -1093,7 +1093,7 @@ PetscErrorCode QPSWorkVecStateUpdate(QPS qps,PetscInt idx)
 PetscErrorCode QPSSolutionVecStateUpdate(QPS qps)
 {
   PetscFunctionBegin;
-  FLLOP_ASSERT(qps->solQP,"qps->solQP initialized");
+  PERMON_ASSERT(qps->solQP,"qps->solQP initialized");
   TRY( PetscObjectStateGet((PetscObject)qps->solQP->x,&qps->xstate) );
   PetscFunctionReturn(0);
 }
@@ -1118,7 +1118,7 @@ PetscErrorCode QPSSolutionVecStateChanged(QPS qps,PetscBool *flg)
   PetscObjectState state_saved,state_current;
 
   PetscFunctionBegin;
-  FLLOP_ASSERT(qps->solQP,"qps->solQP initialized");
+  PERMON_ASSERT(qps->solQP,"qps->solQP initialized");
   state_saved = qps->xstate;
   TRY( PetscObjectStateGet((PetscObject)qps->solQP->x,&state_current) );
   *flg = (PetscBool)(state_current != state_saved);
