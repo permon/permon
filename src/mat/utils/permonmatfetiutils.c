@@ -33,7 +33,7 @@ PetscErrorCode MatRemoveGluingOfDirichletDofs_old(Mat Bgt, Vec cg, Mat Bdt, Mat 
     k=0;
     for (j=0; j<ncolsd; j++) {
       if (valsd[j]) k++;
-      if (k>1) FLLOP_SETERRQ1(comm,PETSC_ERR_PLIB,"more than one nonzero in Bd row %d",i);
+      if (k>1) SETERRQ(comm,PETSC_ERR_PLIB,"more than one nonzero in Bd row %d",i);
     }
     TRY( MatRestoreRow(Bdt,i,&ncolsd,&colsd,&valsd) );
     if (k) {
@@ -117,7 +117,7 @@ PetscErrorCode MatRemoveGluingOfDirichletDofs(Mat Bgt, Vec cg, Mat Bdt, Mat *Bgt
       k=0;
       for (jj=0; jj<ncolsd; jj++) {
         if (valsd[jj] > PETSC_MACHINE_EPSILON) k++;
-        if (k>1) FLLOP_SETERRQ1(comm,PETSC_ERR_PLIB,"more than one nonzero in Bd row %d",i);
+        if (k>1) SETERRQ(comm,PETSC_ERR_PLIB,"more than one nonzero in Bd row %d",i);
       }
       TRY( MatRestoreRow(Bdt,i,&ncolsd,&colsd,&valsd) );
       if (k) {

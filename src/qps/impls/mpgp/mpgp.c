@@ -126,7 +126,7 @@ static PetscErrorCode  QPSMPGPUpdateMaxEigenvalue_MPGP(QPS qps, PetscReal maxeig
   PetscReal alpha_old = mpgp->alpha;
 
   PetscFunctionBegin;
-  if (!qps->setupcalled) FLLOP_SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_WRONGSTATE,"this routine is intended to be called after QPSSetUp");
+  if (!qps->setupcalled) SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_WRONGSTATE,"this routine is intended to be called after QPSSetUp");
 
   mpgp->maxeig = maxeig_old*maxeig_update;
   TRY( PetscInfo(qps,"updating maxeig := %.8e = %.8e * %.8e = maxeig * maxeig_update\n",mpgp->maxeig,maxeig_old,maxeig_update) );
@@ -1006,7 +1006,7 @@ PetscErrorCode QPSMPGPSetOperatorMaxEigenvalue(QPS qps,PetscReal maxeig)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidLogicalCollectiveReal(qps,maxeig,2);
-  if (maxeig < 0 && maxeig != PETSC_DECIDE) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be nonnegative");
+  if (maxeig < 0 && maxeig != PETSC_DECIDE) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be nonnegative");
   PetscTryMethod(qps,"QPSMPGPSetOperatorMaxEigenvalue_MPGP_C",(QPS,PetscReal),(qps,maxeig));
   PetscFunctionReturn(0);
 }
@@ -1099,7 +1099,7 @@ PetscErrorCode QPSMPGPSetOperatorMaxEigenvalueIterations(QPS qps,PetscInt numit)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidLogicalCollectiveInt(qps,numit,2);
-  if (numit <= 1) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be > 1");
+  if (numit <= 1) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be > 1");
   PetscTryMethod(qps,"QPSMPGPSetOperatorMaxEigenvalueIterations_MPGP_C",(QPS,PetscInt),(qps,numit));
   PetscFunctionReturn(0);
 }

@@ -376,7 +376,7 @@ PetscErrorCode QPTEnforceEqByPenalty(QP qp, PetscReal rho_user, PetscBool rho_di
   }
 
   if (rho < 0) {
-    FLLOP_SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_WRONG,"rho must be nonnegative");
+    SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_WRONG,"rho must be nonnegative");
   }
   TRY( PetscInfo(qp, "using penalty = real %.12e\n", rho) );
 
@@ -933,7 +933,7 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
   tprim = qp->xwork;
   K = qp->A;
   f = qp->b;
-  if (!qp->B) FLLOP_SETERRQ_WORLD(PETSC_ERR_ARG_NULL,"lin. equality and/or inequality constraint matrix (BE/BI) is needed for dualization");
+  if (!qp->B) SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_ARG_NULL,"lin. equality and/or inequality constraint matrix (BE/BI) is needed for dualization");
 
   TRY( PetscOptionsGetBool(NULL,NULL,"-qpt_dualize_B_explicit",&B_explicit,NULL) );
   TRY( PetscOptionsGetBool(NULL,NULL,"-qpt_dualize_B_extension",&B_extension,NULL) );
@@ -1337,7 +1337,7 @@ PetscErrorCode QPTRemoveGluingOfDirichletDofs(QP qp)
 
   PetscFunctionBeginI;
   TRY( PetscObjectTypeCompareAny((PetscObject)qp->BE,&flg,MATNEST,MATNESTPERMON,"") );
-  if (!flg) FLLOP_SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_SUP,"only for eq. con. matrix qp->BE of type MATNEST or MATNESTPERMON");
+  if (!flg) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_SUP,"only for eq. con. matrix qp->BE of type MATNEST or MATNESTPERMON");
 
   TRY( PetscLogEventBegin(QPT_RemoveGluingOfDirichletDofs,qp,0,0,0) );
   TRY( MatNestGetSize(qp->BE,&Mn,&Nn) );
@@ -1482,7 +1482,7 @@ PetscErrorCode QPTScale(QP qp)
     if (ScalType == QP_SCALE_ROWS_NORM_2) {
       TRY( MatGetRowNormalization(A,&d) );
     } else {
-      FLLOP_SETERRQ1(comm,PETSC_ERR_SUP,"-qp_O_scale_type %s not supported",QPScaleTypes[ScalType]);
+      SETERRQ(comm,PETSC_ERR_SUP,"-qp_O_scale_type %s not supported",QPScaleTypes[ScalType]);
     }
 
     TRY( QPTScale_Private(A,b,d,&DA,&Db) );
@@ -1507,7 +1507,7 @@ PetscErrorCode QPTScale(QP qp)
     } else if (ScalType == QP_SCALE_DDM_MULTIPLICITY) {
       TRY( QPGetEqMultiplicityScaling(qp,&d,&ctx->dI) );
     } else {
-      FLLOP_SETERRQ1(comm,PETSC_ERR_SUP,"-qp_E_scale_type %s not supported",QPScaleTypes[ScalType]);
+      SETERRQ(comm,PETSC_ERR_SUP,"-qp_E_scale_type %s not supported",QPScaleTypes[ScalType]);
     }
 
     TRY( QPTScale_Private(A,b,d,&DA,&Db) );
@@ -1528,12 +1528,12 @@ PetscErrorCode QPTScale(QP qp)
   TRY( PetscOptionsEnum("-qp_I_scale_type", "", "QPSetIneqScaling", QPScaleTypes, (PetscEnum)ScalType, (PetscEnum*)&ScalType, &set) );
   TRY( PetscInfo(qp, "-qp_I_scale_type %s\n",QPScaleTypes[ScalType]) );
   if (ScalType || d) {
-    if (ScalType && d) FLLOP_SETERRQ1(comm,PETSC_ERR_SUP,"-qp_I_scale_type %s not supported for given eq. con. scaling",QPScaleTypes[ScalType]);
+    if (ScalType && d) SETERRQ(comm,PETSC_ERR_SUP,"-qp_I_scale_type %s not supported for given eq. con. scaling",QPScaleTypes[ScalType]);
 
     if (ScalType == QP_SCALE_ROWS_NORM_2) {
       TRY( MatGetRowNormalization(A,&d) );
     } else if (!d) {
-      FLLOP_SETERRQ1(comm,PETSC_ERR_SUP,"-qp_I_scale_type %s not supported",QPScaleTypes[ScalType]);
+      SETERRQ(comm,PETSC_ERR_SUP,"-qp_I_scale_type %s not supported",QPScaleTypes[ScalType]);
     }
 
     TRY( QPTScale_Private(A,b,d,&DA,&Db) );
@@ -1825,7 +1825,7 @@ PetscErrorCode QPTSplitBE(QP qp)
       idxg[ng] = i;
       ng += 1;
     }else{
-      FLLOP_SETERRQ(comm, PETSC_ERR_COR, "B columns can't have every element zero");
+      SETERRQ(comm, PETSC_ERR_COR, "B columns can't have every element zero");
     }
     TRY( MatRestoreRow(Be, i, &ncols, &cols, &vals) );
   }

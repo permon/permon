@@ -148,7 +148,7 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
     TRY( MatMumpsSetIcntl(F,25,-1) ); /* compute complete null space */
     mumps->id.job = JOB_SOLVE;
     PetscMUMPS_c(&mumps->id);
-    if (mumps->id.INFOG(1) < 0) SETERRQ2(PETSC_COMM_SELF,PETSC_ERR_LIB,"Error reported by MUMPS in solve phase: INFOG(1)=%d,INFOG(2)=%d\n",mumps->id.INFOG(1),mumps->id.INFOG(2));
+    if (mumps->id.INFOG(1) < 0) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_LIB,"Error reported by MUMPS in solve phase: INFOG(1)=%d,INFOG(2)=%d\n",mumps->id.INFOG(1),mumps->id.INFOG(2));
 
     if (mumps->petsc_size > 1 && !mumps->myid) {
       TRY( PetscFree(mumps->id.rhs) );
@@ -189,7 +189,7 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
 static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
 {
   PetscFunctionBeginI;
-  FLLOP_SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"MUMPS library is currently needed for nullspace computation");
+  SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"MUMPS library is currently needed for nullspace computation");
   PetscFunctionReturnI(0);
 }
 #endif
@@ -261,7 +261,7 @@ static PetscErrorCode MatInvGetRegularizedMat_Inv(Mat imat, Mat *A)
   KSP ksp;
 
   PetscFunctionBegin;
-  if (!inv->setupcalled) FLLOP_SETERRQ(PetscObjectComm((PetscObject)imat),PETSC_ERR_ARG_WRONGSTATE,"This function can be called only after MatInvSetUp");
+  if (!inv->setupcalled) SETERRQ(PetscObjectComm((PetscObject)imat),PETSC_ERR_ARG_WRONGSTATE,"This function can be called only after MatInvSetUp");
   TRY( MatInvGetKSP(imat,&ksp) );
   TRY( KSPGetOperators(ksp, A, NULL) );
   PetscFunctionReturn(0);
@@ -417,8 +417,8 @@ static PetscErrorCode MatInvSetUp_Inv(Mat imat)
 
   FllopTracedFunctionBegin;
   if (inv->setupcalled) PetscFunctionReturn(0);
-  if (inv->type == MAT_INV_BLOCKDIAG && inv->redundancy > 0) FLLOP_SETERRQ(PetscObjectComm((PetscObject)imat),PETSC_ERR_SUP, "Cannot use MAT_INV_BLOCKDIAG and redundancy at the same time");
-  if (inv->regtype && !inv->R) FLLOP_SETERRQ(PetscObjectComm((PetscObject)imat),PETSC_ERR_ARG_WRONGSTATE,"regularization is requested but nullspace is not set");
+  if (inv->type == MAT_INV_BLOCKDIAG && inv->redundancy > 0) SETERRQ(PetscObjectComm((PetscObject)imat),PETSC_ERR_SUP, "Cannot use MAT_INV_BLOCKDIAG and redundancy at the same time");
+  if (inv->regtype && !inv->R) SETERRQ(PetscObjectComm((PetscObject)imat),PETSC_ERR_ARG_WRONGSTATE,"regularization is requested but nullspace is not set");
 
   FllopTraceBegin;
   TRY( PetscLogEventBegin(Mat_Inv_SetUp,imat,0,0,0) );
@@ -449,8 +449,8 @@ static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
 
   FllopTracedFunctionBegin;
   if (inv->inner_objects_created) PetscFunctionReturn(0);
-  if (inv->type == MAT_INV_BLOCKDIAG && inv->redundancy > 0) FLLOP_SETERRQ(PetscObjectComm((PetscObject)imat),PETSC_ERR_SUP, "Cannot use MAT_INV_BLOCKDIAG and redundancy at the same time");
-  if (inv->regtype && !inv->R) FLLOP_SETERRQ(PetscObjectComm((PetscObject)imat),PETSC_ERR_ARG_WRONGSTATE,"regularization is requested but nullspace is not set");
+  if (inv->type == MAT_INV_BLOCKDIAG && inv->redundancy > 0) SETERRQ(PetscObjectComm((PetscObject)imat),PETSC_ERR_SUP, "Cannot use MAT_INV_BLOCKDIAG and redundancy at the same time");
+  if (inv->regtype && !inv->R) SETERRQ(PetscObjectComm((PetscObject)imat),PETSC_ERR_ARG_WRONGSTATE,"regularization is requested but nullspace is not set");
   TRY( MPI_Comm_size(PetscObjectComm((PetscObject)imat),&size) );
 
   FllopTraceBegin;
@@ -692,11 +692,11 @@ static PetscErrorCode MatInvExplicitly_Inv(Mat imat, PetscBool transpose, MatReu
   TRY( PetscObjectGetComm((PetscObject)imat, &comm) );
   TRY( MatGetSize(     imat, &M, PETSC_IGNORE) );
   TRY( MatGetLocalSize(imat, &m, &n) );
-  if (m != n) FLLOP_SETERRQ2(comm, PETSC_ERR_ARG_SIZ, "only for locally square matrices, m != n, %d != %d", m, n);
+  if (m != n) SETERRQ(comm, PETSC_ERR_ARG_SIZ, "only for locally square matrices, m != n, %d != %d", m, n);
   TRY( MatInvGetKSP(imat, &ksp) );//innerksp
   TRY( MatInvGetRedundancy(imat, &redundancy) );
 
-  if (imat==*imat_explicit) FLLOP_SETERRQ(comm, PETSC_ERR_ARG_IDN, "Arguments #1 and #3 cannot be the same matrix.");
+  if (imat==*imat_explicit) SETERRQ(comm, PETSC_ERR_ARG_IDN, "Arguments #1 and #3 cannot be the same matrix.");
 
   if (scall == MAT_INITIAL_MATRIX) {
     TRY( MatCreateDensePermon(comm, m, m, M, M, NULL, &B) );
@@ -838,7 +838,7 @@ PetscErrorCode MatView_Inv(Mat imat, PetscViewer viewer)
   TRY( MPI_Comm_rank(comm, &rank) );
   TRY( MPI_Comm_size(comm, &size) );
   TRY( PetscObjectTypeCompare((PetscObject)viewer,PETSCVIEWERASCII,&iascii) );
-  if (!iascii) FLLOP_SETERRQ2(comm,PETSC_ERR_SUP,"Viewer type %s not supported for matrix type %s",((PetscObject)viewer)->type,((PetscObject)imat)->type_name);
+  if (!iascii) SETERRQ(comm,PETSC_ERR_SUP,"Viewer type %s not supported for matrix type %s",((PetscObject)viewer)->type,((PetscObject)imat)->type_name);
   TRY( PetscViewerGetFormat(viewer,&format) );
 
   if (format == PETSC_VIEWER_DEFAULT) {
@@ -1209,7 +1209,7 @@ PetscErrorCode MatInvSetRedundancy(Mat imat, PetscInt red)
   TRY( PetscObjectGetComm((PetscObject)imat, &comm) );
   TRY( MPI_Comm_size(comm, &comm_size) );
   if ( (red < 0 && red != PETSC_DECIDE && red != PETSC_DEFAULT) || (red > comm_size) ) {
-    FLLOP_SETERRQ(PetscObjectComm((PetscObject)imat), PETSC_ERR_ARG_WRONG, "invalid redundancy parameter: must be an intteger in closed interval [0, comm size]");
+    SETERRQ(PetscObjectComm((PetscObject)imat), PETSC_ERR_ARG_WRONG, "invalid redundancy parameter: must be an intteger in closed interval [0, comm size]");
   }
   PetscTryMethod(imat,"MatInvSetRedundancy_Inv_C",(Mat,PetscInt),(imat,red));
   PetscFunctionReturn(0);

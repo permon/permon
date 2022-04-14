@@ -339,7 +339,7 @@ static PetscErrorCode MatMultEqualTol_Private(Mat A,PetscBool transpose,Mat B,Pe
   f = transpose ? MatMultTranspose : MatMult;
   ierr = MatGetLocalSize(A,&am,&an);CHKERRQ(ierr);
   ierr = MatGetLocalSize(B,&bm,&bn);CHKERRQ(ierr);
-  if (am != bm || an != bn) FLLOP_SETERRQ4(PETSC_COMM_SELF,PETSC_ERR_ARG_SIZ,"Mat A,Mat B: local dim %D %D %D %D",am,bm,an,bn);
+  if (am != bm || an != bn) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_SIZ,"Mat A,Mat B: local dim %D %D %D %D",am,bm,an,bn);
   PetscCheckSameComm(A,1,B,2);
 
   if (n==PETSC_DECIDE || n==PETSC_DEFAULT) {
@@ -667,7 +667,7 @@ PetscErrorCode MatMergeAndDestroy(MPI_Comm comm, Mat *local_in, Vec column_layou
   PetscValidHeaderSpecific(A,MAT_CLASSID,2);
   PetscValidPointer(global_out,4);
   TRY( MPI_Comm_size(PetscObjectComm((PetscObject)A),&size) );
-  if (size > 1) FLLOP_SETERRQ(comm,PETSC_ERR_ARG_WRONG,"currently input matrices must be sequential");
+  if (size > 1) SETERRQ(comm,PETSC_ERR_ARG_WRONG,"currently input matrices must be sequential");
   if (!registered) {
     TRY( PetscLogEventRegister("MatMergeAndDestr",MAT_CLASSID,&Mat_MergeAndDestroy) );
     registered = PETSC_TRUE;
@@ -683,7 +683,7 @@ PetscErrorCode MatMergeAndDestroy(MPI_Comm comm, Mat *local_in, Vec column_layou
   TRY( PetscBoolGlobalAnd(comm, local_in ? PETSC_TRUE : PETSC_FALSE, &all_nonnull) );
   if (!all_nonnull) {
     TRY( MPI_Comm_rank(comm,&rank) );
-    FLLOP_SETERRQ1(comm,PETSC_ERR_ARG_NULL,"null local matrix on rank %d; currently, local matrices must be either all non-null or all null", rank);
+    SETERRQ(comm,PETSC_ERR_ARG_NULL,"null local matrix on rank %d; currently, local matrices must be either all non-null or all null", rank);
   }
 
   if (size > 1) {
@@ -954,7 +954,7 @@ PetscErrorCode PermonMatMatMult(Mat A,Mat B,MatReuse scall,PetscReal fill,Mat *C
 
   TRY( MatIsImplicitTranspose(A, &flg_A) );
   TRY( MatIsImplicitTranspose(B, &flg_B) );
-  if (flg_A && flg_B) FLLOP_SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_INCOMP,"both matrices #1,#2 cannot be implicit transposes (MATTRANSPOSEMAT)");
+  if (flg_A && flg_B) SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_INCOMP,"both matrices #1,#2 cannot be implicit transposes (MATTRANSPOSEMAT)");
   if (flg_A) {
     TRY( MatTransposeGetMat(A,&T) );
     TRY( MatTransposeMatMult(T,B,scall,fill,C) );
@@ -1011,7 +1011,7 @@ PetscErrorCode  MatTransposeMatMultWorks(Mat A,Mat B,PetscBool *flg)
   MatCheckPreallocated(B,2);
   if (!B->assembled) SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_WRONGSTATE,"Not for unassembled matrix");
   if (B->factortype) SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_WRONGSTATE,"Not for factored matrix");
-  if (B->rmap->N!=A->rmap->N) SETERRQ2(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_SIZ,"Matrix dimensions are incompatible, %D != %D",B->rmap->N,A->rmap->N);
+  if (B->rmap->N!=A->rmap->N) SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_SIZ,"Matrix dimensions are incompatible, %D != %D",B->rmap->N,A->rmap->N);
   MatCheckPreallocated(A,1);
 
   *flg = PETSC_TRUE;
@@ -1197,8 +1197,8 @@ PetscErrorCode MatCheckNullSpace(Mat K,Mat R,PetscReal tol)
   PetscValidHeaderSpecific(K,MAT_CLASSID,1);
   PetscValidHeaderSpecific(R,MAT_CLASSID,2);
   PetscValidLogicalCollectiveReal(K,tol,3);
-  if (K->cmap->N != R->rmap->N) SETERRQ2(PetscObjectComm((PetscObject)K),PETSC_ERR_ARG_SIZ,"non-conforming global size of K and R: %D != %D",K->cmap->N,R->rmap->N);
-  if (K->cmap->n != R->rmap->n) SETERRQ2(PETSC_COMM_SELF,PETSC_ERR_ARG_SIZ,"non-conforming local size of K and R: %D != %D",K->cmap->n,R->rmap->n);
+  if (K->cmap->N != R->rmap->N) SETERRQ(PetscObjectComm((PetscObject)K),PETSC_ERR_ARG_SIZ,"non-conforming global size of K and R: %D != %D",K->cmap->N,R->rmap->N);
+  if (K->cmap->n != R->rmap->n) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_SIZ,"non-conforming local size of K and R: %D != %D",K->cmap->n,R->rmap->n);
 
   TRY( MatCreateVecs(K,&d,&y) );
   TRY( MatCreateVecs(R,&x,NULL) );
@@ -1233,8 +1233,8 @@ PetscErrorCode MatRedistributeRows(Mat mat_from,IS rowperm,PetscInt base,Mat mat
   PetscValidHeaderSpecific(mat_from,MAT_CLASSID,1);
   PetscValidHeaderSpecific(mat_to,MAT_CLASSID,4);
   PetscCheckSameComm(mat_from,1,mat_to,4);
-  if (mat_from->rmap->N != mat_to->rmap->N) SETERRQ2(PetscObjectComm((PetscObject)mat_from),PETSC_ERR_ARG_SIZ,"Input matrices must have equal global number of rows, %D != %D",mat_from->rmap->N,mat_to->rmap->N);
-  if (mat_from->cmap->N != mat_to->cmap->N) SETERRQ2(PetscObjectComm((PetscObject)mat_from),PETSC_ERR_ARG_SIZ,"Input matrices must have equal global number of columns, %D != %D",mat_from->cmap->N,mat_to->cmap->N);
+  if (mat_from->rmap->N != mat_to->rmap->N) SETERRQ(PetscObjectComm((PetscObject)mat_from),PETSC_ERR_ARG_SIZ,"Input matrices must have equal global number of rows, %D != %D",mat_from->rmap->N,mat_to->rmap->N);
+  if (mat_from->cmap->N != mat_to->cmap->N) SETERRQ(PetscObjectComm((PetscObject)mat_from),PETSC_ERR_ARG_SIZ,"Input matrices must have equal global number of columns, %D != %D",mat_from->cmap->N,mat_to->cmap->N);
   m_from = mat_from->rmap->n;
   m_to = mat_to->rmap->n;
   M_to = mat_to->rmap->N;

@@ -69,7 +69,7 @@ PetscErrorCode FllopMakePath(const char *dir, mode_t mode)
     mkdir(tmp, mode);
     
     TRY( PetscTestDirectory(dir, 'x', &flg) );    
-    if (!flg) FLLOP_SETERRQ1(PETSC_COMM_SELF, PETSC_ERR_FILE_WRITE, "Directory %s was not created properly.", dir);
+    if (!flg) SETERRQ(PETSC_COMM_SELF, PETSC_ERR_FILE_WRITE, "Directory %s was not created properly.", dir);
     PetscFunctionReturn(0);
 }
 

@@ -46,7 +46,7 @@ PetscErrorCode QPCSetUp(QPC qpc)
   FllopTraceBegin;
 
   /* it is necessary to set up lambdawork vectors based on given constraint data */
-  if (!qpc->ops->setup) SETERRQ1(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
+  if (!qpc->ops->setup) SETERRQ(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
 
   /* prepare lambdawork vector based on the layout of given constraint data */
   /* this method is independent on layout of IS (so it is the same for IS=null) */
@@ -155,7 +155,7 @@ PetscErrorCode QPCViewKKT(QPC qpc, Vec x, PetscReal normb, PetscViewer v)
   PetscValidHeaderSpecific(v,PETSC_VIEWER_CLASSID,4);
 
   TRY( QPCGetSubvector( qpc, x, &x_sub) );
-  if (!qpc->ops->viewkkt) SETERRQ1(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
+  if (!qpc->ops->viewkkt) SETERRQ(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
   TRY( (*qpc->ops->viewkkt)(qpc, x_sub, normb, v) );
   TRY( QPCRestoreSubvector( qpc, x, &x_sub) );
   PetscFunctionReturn(0);
@@ -212,7 +212,7 @@ PetscErrorCode QPCSetType(QPC qpc, const QPCType type)
     if (issame) PetscFunctionReturn(0);
 
     TRY( PetscFunctionListFind(QPCList,type,(void(**)(void))&create) );
-    if (!create) SETERRQ1(PETSC_COMM_SELF,PETSC_ERR_ARG_UNKNOWN_TYPE,"Unable to find requested QPC type %s",type);
+    if (!create) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_UNKNOWN_TYPE,"Unable to find requested QPC type %s",type);
 
     /* Destroy the pre-existing private QPC context */
     if (qpc->ops->destroy) TRY( (*qpc->ops->destroy)(qpc) );
@@ -286,7 +286,7 @@ PetscErrorCode QPCGetBlockSize(QPC qpc,PetscInt *bs)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
   PetscValidIntPointer(bs,2);
-  if (!qpc->ops->getblocksize) SETERRQ1(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
+  if (!qpc->ops->getblocksize) SETERRQ(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
   TRY( (*qpc->ops->getblocksize)(qpc,bs) );
   PetscFunctionReturn(0);
 }
@@ -353,7 +353,7 @@ PetscErrorCode QPCGetNumberOfConstraints(QPC qpc,PetscInt *num)
   PetscValidIntPointer(num,2);
 
   /* verify if there is a corresponding function of QPC type */
-  if (!qpc->ops->getnumberofconstraints) SETERRQ1(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
+  if (!qpc->ops->getnumberofconstraints) SETERRQ(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
 
   /* QPC of this type has own implementation of getnumberofconstraints*/
   TRY( (*qpc->ops->getnumberofconstraints)(qpc,num) );
@@ -380,7 +380,7 @@ PetscErrorCode QPCGetConstraintFunction(QPC qpc, Vec x, Vec *hx)
   PetscValidPointer(hx,3);
 
   /* verify if there is a corresponding function of QPC type */
-  if (!qpc->ops->getconstraintfunction) SETERRQ1(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
+  if (!qpc->ops->getconstraintfunction) SETERRQ(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
 
   /* set up QPC (if not already set) */
   TRY( QPCSetUp(qpc) );
@@ -486,7 +486,7 @@ PetscErrorCode QPCProject(QPC qpc,Vec x, Vec Px)
   PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
   PetscValidHeaderSpecific(x,VEC_CLASSID,2);
   PetscValidHeaderSpecific(Px,VEC_CLASSID,3);
-  if (!qpc->ops->project) SETERRQ1(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
+  if (!qpc->ops->project) SETERRQ(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
   TRY( QPCSetUp(qpc) );
 
   /* at first, copy the values of x to be sure that also unconstrained components will be set */
@@ -526,7 +526,7 @@ PetscErrorCode QPCFeas(QPC qpc, Vec x, Vec d, PetscScalar *alpha)
   PetscValidHeaderSpecific(x,VEC_CLASSID,2);
   PetscValidHeaderSpecific(d,VEC_CLASSID,3);
   PetscValidScalarPointer(alpha,4);
-  if (!qpc->ops->feas) SETERRQ1(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
+  if (!qpc->ops->feas) SETERRQ(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
 
   /* scatter the gradients */
   TRY(QPCGetSubvector( qpc, x, &x_sub));
@@ -574,7 +574,7 @@ PetscErrorCode QPCGrads(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
   TRY(QPCGetSubvector( qpc, gf, &gf_sub));
   TRY(QPCGetSubvector( qpc, gc, &gc_sub));
 
-  if (!qpc->ops->grads) SETERRQ1(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
+  if (!qpc->ops->grads) SETERRQ(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
   TRY((*qpc->ops->grads)(qpc, x_sub, g_sub, gf_sub, gc_sub));
 
   /* restore the gradients */
@@ -622,7 +622,7 @@ PetscErrorCode QPCGradReduced(QPC qpc, Vec x, Vec gf, PetscReal alpha, Vec gr)
   TRY(QPCGetSubvector( qpc, gf, &gf_sub));
   TRY(QPCGetSubvector( qpc, gr, &gr_sub));
 
-  if (!qpc->ops->gradreduced) SETERRQ1(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
+  if (!qpc->ops->gradreduced) SETERRQ(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
   TRY((*qpc->ops->gradreduced)(qpc, x_sub, gf_sub, alpha, gr_sub));
 
   /* restore the gradients */

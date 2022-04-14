@@ -212,7 +212,7 @@ PetscErrorCode QPSSetUp(QPS qps)
   
   TRY( QPSSetDefaultTypeIfNotSpecified(qps) );
   TRY( QPSIsQPCompatible(qps,solqp,&flg) );
-  if (!flg) FLLOP_SETERRQ1(((PetscObject)qps)->comm,PETSC_ERR_ARG_INCOMP,"QPS solver %s is not compatible with its attached QP",((PetscObject)qps)->type_name);
+  if (!flg) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_INCOMP,"QPS solver %s is not compatible with its attached QP",((PetscObject)qps)->type_name);
   
   if (qps->ops->setup) { TRY( (*qps->ops->setup)(qps) ); }
   TRY( QPChainSetUp(solqp) );
@@ -395,7 +395,7 @@ PetscErrorCode QPSSetType(QPS qps, const QPSType type)
     if (issame) PetscFunctionReturn(0);
 
     TRY( PetscFunctionListFind(QPSList,type,(void(**)(void))&create_xxx) );
-    if (!create_xxx) FLLOP_SETERRQ1(PETSC_COMM_SELF,PETSC_ERR_ARG_UNKNOWN_TYPE,"Unable to find requested QPS type %s",type);
+    if (!create_xxx) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_UNKNOWN_TYPE,"Unable to find requested QPS type %s",type);
 
     /* Destroy the pre-existing private QPS context */
     if (qps->ops->destroy) TRY( (*qps->ops->destroy)(qps) );
@@ -434,7 +434,7 @@ PetscErrorCode QPSSetDefaultType(QPS qps)
   
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  if (!qps->topQP) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ORDER,"QPS needs QP to be set in order to find a default type");
+  if (!qps->topQP) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ORDER,"QPS needs QP to be set in order to find a default type");
   
   TRY( QPChainGetLast(qps->topQP,&qp) );
 
@@ -443,7 +443,7 @@ PetscErrorCode QPSSetDefaultType(QPS qps)
   TRY( QPGetQPC(qp,&qpc) );
 
   /* general linear inequality constraints Bx <= c */  
-  if (Bineq) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"There is currently no QPS type implemented that can solve QP s.t. linear inequality constraints without any preprocessing. Try to use QPDualize");
+  if (Bineq) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"There is currently no QPS type implemented that can solve QP s.t. linear inequality constraints without any preprocessing. Try to use QPDualize");
   
   /* problem with linear equality constraints Bx = c */
   if (Beq) {
@@ -691,7 +691,7 @@ PetscErrorCode QPSConvergedDefault(QPS qps,KSPConvergedReason *reason)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   *reason = KSP_CONVERGED_ITERATING;
 
-  if (!cctx) FLLOP_SETERRQ(((PetscObject) qps)->comm, PETSC_ERR_ARG_NULL, "Convergence context must have been created with QPSConvergedDefaultCreate()");
+  if (!cctx) SETERRQ(((PetscObject) qps)->comm, PETSC_ERR_ARG_NULL, "Convergence context must have been created with QPSConvergedDefaultCreate()");
   if (!cctx->setup_called) {
     TRY( QPSConvergedDefaultSetUp(qps) );
   }
@@ -730,7 +730,7 @@ PetscErrorCode QPSConvergedDefaultSetUp(QPS qps)
 
   PetscFunctionBegin;
   if (cctx->setup_called) PetscFunctionReturn(0);
-  if (!qps->setupcalled) FLLOP_SETERRQ(((PetscObject) qps)->comm, PETSC_ERR_ARG_WRONGSTATE, "QPSSetUp() not yet called");
+  if (!qps->setupcalled) SETERRQ(((PetscObject) qps)->comm, PETSC_ERR_ARG_WRONGSTATE, "QPSSetUp() not yet called");
   TRY( VecNorm(qps->solQP->b, NORM_2, &cctx->norm_rhs) );
   cctx->ttol = PetscMax(qps->rtol*cctx->norm_rhs, qps->atol);
   cctx->norm_rhs_div = cctx->norm_rhs;
@@ -920,19 +920,19 @@ PetscErrorCode QPSSetTolerances(QPS qps,PetscReal rtol,PetscReal atol,PetscReal 
   PetscValidLogicalCollectiveInt(qps,max_it,5);
 
   if (rtol != PETSC_DEFAULT) {
-    if (rtol < 0.0 || 1.0 <= rtol) FLLOP_SETERRQ1(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Relative tolerance %g must be non-negative and less than 1.0",rtol);
+    if (rtol < 0.0 || 1.0 <= rtol) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Relative tolerance %g must be non-negative and less than 1.0",rtol);
     qps->rtol = rtol;
   }
   if (atol != PETSC_DEFAULT) {
-    if (atol < 0.0) FLLOP_SETERRQ1(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Absolute tolerance %g must be non-negative",atol);
+    if (atol < 0.0) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Absolute tolerance %g must be non-negative",atol);
     qps->atol = atol;
   }
   if (divtol != PETSC_DEFAULT) {
-    if (divtol < 0.0) FLLOP_SETERRQ1(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Divergence tolerance %g must be larger than 1.0",divtol);
+    if (divtol < 0.0) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Divergence tolerance %g must be larger than 1.0",divtol);
     qps->divtol = divtol;
   }
   if (max_it != PETSC_DEFAULT) {
-    if (max_it < 0) FLLOP_SETERRQ1(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Maximum number of iterations %D must be non-negative",max_it);
+    if (max_it < 0) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Maximum number of iterations %D must be non-negative",max_it);
     qps->max_it = max_it;
   }
   PetscFunctionReturn(0);

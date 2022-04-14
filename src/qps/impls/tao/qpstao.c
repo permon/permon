@@ -83,7 +83,7 @@ PetscErrorCode QPSTaoGetTao(QPS qps,Tao *tao)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidPointer(tao,2);
   TRY( PetscObjectTypeCompare((PetscObject)qps,QPSTAO,&flg) );
-  if (!flg) FLLOP_SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_SUP,"This is a QPSTAO specific routine!");
+  if (!flg) SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_SUP,"This is a QPSTAO specific routine!");
   qpstao = (QPS_Tao*)qps->data;
   if (!qpstao->tao) {
     TRY( QPSGetOptionsPrefix(qps,&prefix) );
@@ -108,7 +108,7 @@ PetscErrorCode QPSTaoSetType(QPS qps,TaoType type)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   TRY( PetscObjectTypeCompare((PetscObject)qps,QPSTAO,&flg) );
-  if (!flg) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"This is a QPSTAO specific routine!");
+  if (!flg) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"This is a QPSTAO specific routine!");
   qpstao = (QPS_Tao*)qps->data;
   TRY( QPSTaoGetTao(qps,&qpstao->tao) );
   TRY( TaoSetType(qpstao->tao,type) );
@@ -125,7 +125,7 @@ PetscErrorCode QPSTaoGetType(QPS qps,TaoType *type)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   TRY( PetscObjectTypeCompare((PetscObject)qps,QPSTAO,&flg) );
-  if (!flg) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"This is a QPSTAO specific routine!");
+  if (!flg) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"This is a QPSTAO specific routine!");
   qpstao = (QPS_Tao*)qps->data;
   TRY( QPSTaoGetTao(qps,&qpstao->tao) );
   TRY( TaoGetType(qpstao->tao,type) );

@@ -177,7 +177,7 @@ int main( int argc, char **argv )
   /* Solve the bound constrained problem */
   ierr = TaoSolve(tao);CHKERRQ(ierr);
   ierr = TaoGetConvergedReason(tao, &reason);CHKERRQ(ierr);
-  if (reason < 0) SETERRQ2(PETSC_COMM_WORLD, PETSC_ERR_NOT_CONVERGED, "TAO diverged, reason %D (%s)", reason, TaoConvergedReasons[reason]);
+  if (reason < 0) SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_NOT_CONVERGED, "TAO diverged, reason %D (%s)", reason, TaoConvergedReasons[reason]);
   
   /* Call PERMON solver and compare results */
   ierr = CallPermonAndCompareResults(tao, &user);CHKERRQ(ierr);
@@ -544,7 +544,7 @@ PetscErrorCode CallPermonAndCompareResults(Tao tao, void *ctx)
   /* Solve the QP */
   ierr = QPSSolve(qps);CHKERRQ(ierr);  
   ierr = QPSGetConvergedReason(qps, &reason);CHKERRQ(ierr);
-  if (reason < 0) SETERRQ2(PETSC_COMM_WORLD, PETSC_ERR_NOT_CONVERGED, "QPS diverged, reason %D (%s)", reason, KSPConvergedReasons[reason]);
+  if (reason < 0) SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_NOT_CONVERGED, "QPS diverged, reason %D (%s)", reason, KSPConvergedReasons[reason]);
 
   /* Get the solution vector */
   ierr = QPGetSolutionVector(qp, &x_qp);CHKERRQ(ierr);

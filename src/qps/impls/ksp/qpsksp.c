@@ -51,7 +51,7 @@ PetscErrorCode QPSKSPSetKSP(QPS qps,KSP ksp)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidHeaderSpecific(ksp,KSP_CLASSID,2);
   TRY( PetscObjectTypeCompare((PetscObject)qps,QPSKSP,&flg) );
-  if (!flg) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"This is a QPSKSP specific routine!");
+  if (!flg) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"This is a QPSKSP specific routine!");
   qpsksp = (QPS_KSP*)qps->data;
   
   TRY( KSPDestroy(&qpsksp->ksp) );
@@ -75,7 +75,7 @@ PetscErrorCode QPSKSPGetKSP(QPS qps,KSP *ksp)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidPointer(ksp,2);
   TRY( PetscObjectTypeCompare((PetscObject)qps,QPSKSP,&flg) );
-  if (!flg) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"This is a QPSKSP specific routine!");
+  if (!flg) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"This is a QPSKSP specific routine!");
   qpsksp = (QPS_KSP*)qps->data;
   *ksp = qpsksp->ksp;
   PetscFunctionReturn(0);
@@ -91,7 +91,7 @@ PetscErrorCode QPSKSPSetType(QPS qps,KSPType type)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   TRY( PetscObjectTypeCompare((PetscObject)qps,QPSKSP,&flg) );
-  if (!flg) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"This is a QPSKSP specific routine!");
+  if (!flg) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"This is a QPSKSP specific routine!");
   qpsksp = (QPS_KSP*)qps->data;
   TRY( KSPSetType(qpsksp->ksp,type) );
   PetscFunctionReturn(0);
@@ -107,7 +107,7 @@ PetscErrorCode QPSKSPGetType(QPS qps,KSPType *type)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   TRY( PetscObjectTypeCompare((PetscObject)qps,QPSKSP,&flg) );
-  if (!flg) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"This is a QPSKSP specific routine!");
+  if (!flg) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"This is a QPSKSP specific routine!");
   qpsksp = (QPS_KSP*)qps->data;
   TRY( KSPGetType(qpsksp->ksp,type) );
   PetscFunctionReturn(0);

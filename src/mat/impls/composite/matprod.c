@@ -19,7 +19,7 @@ static PetscErrorCode MatProdGetMat_Prod(Mat A,PetscInt index,Mat *Ai)
       break;
     }
   }
-  if (!ilink) FLLOP_SETERRQ1(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_OUTOFRANGE,"partial matrix index out of range: %d",i);
+  if (!ilink) SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_OUTOFRANGE,"partial matrix index out of range: %d",i);
   *Ai = ilink->mat;
   PetscFunctionReturn(0);
 }
@@ -46,7 +46,7 @@ PetscErrorCode MatMult_Prod(Mat A,Vec x,Vec y)
   Vec               in,out;
 
   PetscFunctionBegin;
-  if (!next) FLLOP_SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_WRONGSTATE,"Must provide at least one matrix with MatCompositeAddMat()");
+  if (!next) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_WRONGSTATE,"Must provide at least one matrix with MatCompositeAddMat()");
   in = x;
   if (shell->right) {
     if (!shell->rightwork) {
@@ -82,7 +82,7 @@ PetscErrorCode MatMultTranspose_Prod(Mat A,Vec x,Vec y)
   Vec               in,out;
 
   PetscFunctionBegin;
-  if (!tail) FLLOP_SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_WRONGSTATE,"Must provide at least one matrix with MatCompositeAddMat()");
+  if (!tail) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_WRONGSTATE,"Must provide at least one matrix with MatCompositeAddMat()");
   in = x;
   if (shell->left) {
     if (!shell->leftwork) {
@@ -215,7 +215,7 @@ PetscErrorCode  MatCreateProd(MPI_Comm comm,PetscInt nmat,const Mat *mats,Mat *m
   PetscInt       m,n,M,N,i;
   
   PetscFunctionBegin;
-  if (nmat < 1) FLLOP_SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_OUTOFRANGE,"Must pass in at least one matrix");
+  if (nmat < 1) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_OUTOFRANGE,"Must pass in at least one matrix");
   PetscValidPointer(mat,3);
 
   ierr = MatGetLocalSize(mats[0],PETSC_IGNORE,&n);CHKERRQ(ierr);

@@ -261,7 +261,7 @@ PetscErrorCode QPViewKKT(QP qp,PetscViewer v)
   PetscCheckSameComm(qp,1,v,2);
 
   TRY( PetscObjectTypeCompare((PetscObject)v,PETSCVIEWERASCII,&flg) );
-  if (!flg) FLLOP_SETERRQ1(comm,PETSC_ERR_SUP,"Viewer type %s not supported for QP",((PetscObject)v)->type_name);
+  if (!flg) SETERRQ(comm,PETSC_ERR_SUP,"Viewer type %s not supported for QP",((PetscObject)v)->type_name);
 
   TRY( PetscOptionsGetBool(((PetscObject)qp)->options,NULL,"-qp_view_kkt_compare_lambda_E",&compare_lambda_E,NULL) );
 
@@ -404,7 +404,7 @@ PetscErrorCode QPView(QP qp,PetscViewer v)
   PetscCheckSameComm(qp,1,v,2);
 
   TRY( PetscObjectTypeCompare((PetscObject)v,PETSCVIEWERASCII,&iascii) );
-  if (!iascii) FLLOP_SETERRQ1(comm,PETSC_ERR_SUP,"Viewer type %s not supported for QP",((PetscObject)v)->type_name);
+  if (!iascii) SETERRQ(comm,PETSC_ERR_SUP,"Viewer type %s not supported for QP",((PetscObject)v)->type_name);
   TRY( PetscObjectName((PetscObject)qp) );
   TRY( PetscObjectPrintClassNamePrefixType((PetscObject)qp,v) );
   TRY( PetscViewerASCIIPrintf(v, "#%d in chain, derived by %s\n",qp->id,qp->transform_name) );
@@ -505,8 +505,8 @@ PetscErrorCode QPSetUpInnerObjects(QP qp)
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
 
   TRY( PetscObjectGetComm((PetscObject)qp,&comm) );
-  if (!qp->A) FLLOP_SETERRQ(comm,PETSC_ERR_ORDER,"Hessian must be set before " __FUNCT__);
-  if (!qp->b) FLLOP_SETERRQ(comm,PETSC_ERR_ORDER,"linear term must be set before " __FUNCT__);
+  if (!qp->A) SETERRQ(comm,PETSC_ERR_ORDER,"Hessian must be set before " __FUNCT__);
+  if (!qp->b) SETERRQ(comm,PETSC_ERR_ORDER,"linear term must be set before " __FUNCT__);
 
   FllopTraceBegin;
   TRY( PetscInfo(qp,"setup inner objects for QP #%d\n",qp->id) );
@@ -628,8 +628,8 @@ PetscErrorCode QPSetUp(QP qp)
   if (qp->setupcalled) PetscFunctionReturn(0);
 
   TRY( PetscObjectGetComm((PetscObject)qp,&comm) );
-  if (!qp->A) FLLOP_SETERRQ(comm,PETSC_ERR_ORDER,"Hessian must be set before " __FUNCT__);
-  if (!qp->b) FLLOP_SETERRQ(comm,PETSC_ERR_ORDER,"linear term must be set before " __FUNCT__);
+  if (!qp->A) SETERRQ(comm,PETSC_ERR_ORDER,"Hessian must be set before " __FUNCT__);
+  if (!qp->b) SETERRQ(comm,PETSC_ERR_ORDER,"linear term must be set before " __FUNCT__);
 
   FllopTraceBegin;
   TRY( PetscInfo(qp,"setup QP #%d\n",qp->id) );
@@ -927,7 +927,7 @@ PetscErrorCode QPComputeObjective(QP qp, Vec x, PetscReal *f)
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
   PetscValidHeaderSpecific(x,VEC_CLASSID,2);
   PetscValidRealPointer(f,3);
-  if (!qp->setupcalled) FLLOP_SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ORDER,"QPSetUp must be called first.");
+  if (!qp->setupcalled) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ORDER,"QPSetUp must be called first.");
   TRY( MatMult(qp->A,x,qp->xwork) );
   TRY( VecAYPX(qp->xwork,-0.5,qp->b) );
   TRY( VecDot(x,qp->xwork,f) );
@@ -959,7 +959,7 @@ PetscErrorCode QPComputeObjectiveGradient(QP qp, Vec x, Vec g)
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
   PetscValidHeaderSpecific(x,VEC_CLASSID,2);
   PetscValidHeaderSpecific(g,VEC_CLASSID,3);
-  if (!qp->setupcalled) FLLOP_SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ORDER,"QPSetUp must be called first.");
+  if (!qp->setupcalled) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ORDER,"QPSetUp must be called first.");
   TRY( MatMult(qp->A,x,g) );
   TRY( VecAXPY(g,-1.0,qp->b) );
   PetscFunctionReturn(0);
@@ -994,7 +994,7 @@ PetscErrorCode QPComputeObjectiveFromGradient(QP qp, Vec x, Vec g, PetscReal *f)
   PetscValidHeaderSpecific(x,VEC_CLASSID,2);
   PetscValidRealPointer(f,4);
   PetscValidHeaderSpecific(g,VEC_CLASSID,3);
-  if (!qp->setupcalled) FLLOP_SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ORDER,"QPSetUp must be called first.");
+  if (!qp->setupcalled) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ORDER,"QPSetUp must be called first.");
 
   TRY( VecWAXPY(qp->xwork,-1.0,qp->b,g) );
   TRY( VecDot(x,qp->xwork,f) );
@@ -1032,7 +1032,7 @@ PetscErrorCode QPComputeObjectiveAndGradient(QP qp, Vec x, Vec g, PetscReal *f)
   PetscValidHeaderSpecific(x,VEC_CLASSID,2);
   if (f) PetscValidRealPointer(f,4);
   if (g) PetscValidHeaderSpecific(g,VEC_CLASSID,3);
-  if (!qp->setupcalled) FLLOP_SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ORDER,"QPSetUp must be called first.");
+  if (!qp->setupcalled) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ORDER,"QPSetUp must be called first.");
 
   if (!g) {
     TRY( QPComputeObjective(qp,x,f) );
@@ -1680,8 +1680,8 @@ PetscErrorCode QPGetEqMultiplicityScaling(QP qp, Vec *dE_new, Vec *dI_new)
   TRY( PetscOptionsGetBool(NULL,NULL,"-qp_E_scale_Bc",&scale_Bc,NULL) );
   TRY( PetscOptionsGetBool(NULL,NULL,"-qp_E_count_Bd",&count_Bd,NULL) );
   TRY( PetscOptionsGetBool(NULL,NULL,"-qp_E_count_Bc",&count_Bc,NULL) );
-  //if (scale_Bc && !count_Bc) FLLOP_SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_INCOMP,"-qp_E_scale_Bc implies -qp_E_count_Bc");
-  //if (scale_Bd && !count_Bd) FLLOP_SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_INCOMP,"-qp_E_scale_Bd implies -qp_E_count_Bd");
+  //if (scale_Bc && !count_Bc) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_INCOMP,"-qp_E_scale_Bc implies -qp_E_count_Bc");
+  //if (scale_Bd && !count_Bd) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_INCOMP,"-qp_E_scale_Bd implies -qp_E_count_Bd");
 
   TRY( MatGetOwnershipRangeColumn(Bg,&ilo,&ihi) );
 
@@ -1725,7 +1725,7 @@ PetscErrorCode QPGetEqMultiplicityScaling(QP qp, Vec *dE_new, Vec *dI_new)
       k=0;
       for (j=0; j<ncols; j++) {
         if (vals[j]) k++;
-        if (k>1) FLLOP_SETERRQ1(comm,PETSC_ERR_PLIB,"more than one nonzero in Bd row %d",i);
+        if (k>1) SETERRQ(comm,PETSC_ERR_PLIB,"more than one nonzero in Bd row %d",i);
       }
       TRY( MatRestoreRow(Bdt,i,&ncols,&cols,&vals) );
       if (k) {
@@ -1930,7 +1930,7 @@ PetscErrorCode QPGetBox(QP qp, IS *is, Vec *lb, Vec *ub)
   TRY( QPGetQPC(qp,&qpc));
   if (qpc) {
     TRY( PetscObjectTypeCompare((PetscObject)qpc,QPCBOX,&flg) );
-    if (!flg) SETERRQ1(PetscObjectComm((PetscObject)qp),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qp->qpc)->type_name);
+    if (!flg) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qp->qpc)->type_name);
     TRY( QPCBoxGet(qpc,lb,ub) );
     if (is) TRY( QPCGetIS(qpc,is));
   } else {
@@ -2103,7 +2103,7 @@ PetscErrorCode QPGetVecs(QP qp,Vec *right,Vec *left)
   if (qp->A) {
     TRY( MatCreateVecs(qp->A,right,left) );
   } else {
-    FLLOP_SETERRQ(((PetscObject)qp)->comm,PETSC_ERR_ORDER,"system operator not set yet");
+    SETERRQ(((PetscObject)qp)->comm,PETSC_ERR_ORDER,"system operator not set yet");
   }
   PetscFunctionReturn(0);
 }

@@ -39,7 +39,7 @@ static PetscErrorCode MatExtensionSetColumnIS_Extension(Mat TA,IS cis)
   Mat_Extension *data = (Mat_Extension*) TA->data;
 
   PetscFunctionBegin;
-  if (data->setupcalled) FLLOP_SETERRQ(PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONGSTATE,"cannot alter inner data after first MatMult* call");
+  if (data->setupcalled) SETERRQ(PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONGSTATE,"cannot alter inner data after first MatMult* call");
   data->cis = cis;
   TRY( PetscObjectReference((PetscObject)cis) );
   PetscFunctionReturn(0);
@@ -107,7 +107,7 @@ static PetscErrorCode MatExtensionSetRowIS_Extension(Mat TA,IS ris,PetscBool row
   Mat_Extension *data = (Mat_Extension*) TA->data;
 
   PetscFunctionBegin;
-  if (data->setupcalled) FLLOP_SETERRQ(PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONGSTATE,"cannot alter inner data after first MatMult* call");
+  if (data->setupcalled) SETERRQ(PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONGSTATE,"cannot alter inner data after first MatMult* call");
   if (rows_use_global_numbering) {
     data->ris = ris;
   } else {
@@ -210,9 +210,9 @@ static PetscErrorCode MatExtensionSetCondensed_Extension(Mat TA,Mat A)
   PetscMPIInt commsize;
 
   PetscFunctionBegin;
-  if (data->setupcalled) FLLOP_SETERRQ(PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONGSTATE,"cannot alter inner data after first MatMult* call");
+  if (data->setupcalled) SETERRQ(PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONGSTATE,"cannot alter inner data after first MatMult* call");
   TRY( MPI_Comm_size(PetscObjectComm((PetscObject)A),&commsize) );
-  if (commsize > 1) FLLOP_SETERRQ(PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONG,"inner matrix must be sequential");
+  if (commsize > 1) SETERRQ(PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONG,"inner matrix must be sequential");
   data->A = A;
   TRY( PetscObjectReference((PetscObject)A) );
   PetscFunctionReturn(0);
@@ -653,7 +653,7 @@ PetscErrorCode MatTransposeMatMult_BlockDiag_Extension_2MPIAIJ(Mat B, Mat TA, Ma
     TRY( MatSeqAIJSetPreallocation(C_out, rnnz_diag, NULL) );
     TRY( MatMPIAIJSetPreallocation(C_out, rnnz_diag, NULL, rnnz - rnnz_diag, NULL) );
   } else{
-    FLLOP_SETERRQ(comm,PETSC_ERR_ARG_WRONG,"scall must be MAT_INITIAL_MATRIX");
+    SETERRQ(comm,PETSC_ERR_ARG_WRONG,"scall must be MAT_INITIAL_MATRIX");
   }
   TRY( MatGetOwnershipRange(C_out, &ilo, NULL) );
 
@@ -775,7 +775,7 @@ PetscErrorCode MatMatTransposeMult_Extension_Extension_same(Mat A, Mat B, MatReu
     int M_max;
     TRY( MPI_Allreduce(&M_loc,&M_max,1,MPIU_INT,MPI_MAX,comm) );
     if (M_loc != M_max) {
-      FLLOP_SETERRQ(comm,PETSC_ERR_ARG_SIZ,"implemented only for matrices with same local row dimension");
+      SETERRQ(comm,PETSC_ERR_ARG_SIZ,"implemented only for matrices with same local row dimension");
     }
 #endif
     if (!mattype) {
@@ -791,7 +791,7 @@ PetscErrorCode MatMatTransposeMult_Extension_Extension_same(Mat A, Mat B, MatReu
       isSym = PETSC_TRUE;
     }
   } else {
-    FLLOP_SETERRQ(comm,PETSC_ERR_ARG_WRONG,"scall must be MAT_INITIAL_MATRIX");
+    SETERRQ(comm,PETSC_ERR_ARG_WRONG,"scall must be MAT_INITIAL_MATRIX");
   }
   
   /* get number of indices to recv from neigbours */
@@ -1057,7 +1057,7 @@ static PetscErrorCode MatProductNumeric_Extension(Mat C)
   switch (product->type) {
   case MATPRODUCT_ABt:
     if (A != B) {
-      FLLOP_SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_WRONG,"implemented only for A=B");
+      SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_WRONG,"implemented only for A=B");
     }
     PetscObjectOptionsBegin((PetscObject)C);
     TRY( PetscOptionsEList("-MatMatMultExt_mattype","MatMatMultExt_mattype","Set type of resulting matrix when assembling from extension type",allowedMats,3,MATAIJ,&mattype,NULL) );

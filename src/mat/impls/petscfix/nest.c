@@ -30,9 +30,9 @@ static PetscErrorCode MatGetColumnVectors_NestPermon(Mat A, Vec *cols_new[])
     N1_last = mats[0][J]->cmap->N;
     for (II=0; II<Mn; II++) {
       mat = mats[II][J];
-      if (!mat) FLLOP_SETERRQ2(comm,PETSC_ERR_SUP,"block (%d, %d) is null but null blocks not currently supported",II,J);
+      if (!mat) SETERRQ(comm,PETSC_ERR_SUP,"block (%d, %d) is null but null blocks not currently supported",II,J);
       TRY( MatGetColumnVectors(mat,&N1,&cols_for_each_row_block[II]) );
-      if (N1 != N1_last) FLLOP_SETERRQ4(comm,PETSC_ERR_ARG_SIZ,"block (%d, %d) has different number of columns than block (%d, %d)",II,J,II-1,J);
+      if (N1 != N1_last) SETERRQ(comm,PETSC_ERR_ARG_SIZ,"block (%d, %d) has different number of columns than block (%d, %d)",II,J,II-1,J);
       N1_last = N1;
 
       TRY( PetscContainerCreate(comm, &container) );
@@ -209,11 +209,11 @@ static PetscErrorCode MatMergeAndDestroy_NestPermon(MPI_Comm comm, Mat *local_in
     PetscInt Nn_cl;
     TRY( VecGetLocalSize(x,&n) );
     TRY( VecGetSize(x,&N) );
-    if (A->cmap->N != N) FLLOP_SETERRQ(comm,PETSC_ERR_ARG_SIZ,"global length of Vec #3 must be equal to the global number of columns of Mat #2");
+    if (A->cmap->N != N) SETERRQ(comm,PETSC_ERR_ARG_SIZ,"global length of Vec #3 must be equal to the global number of columns of Mat #2");
     TRY( PetscObjectTypeCompare((PetscObject)x,VECNEST,&flg) );
-    if (!flg) FLLOP_SETERRQ(comm,PETSC_ERR_ARG_WRONG,"Vec #3 has to be nest");
+    if (!flg) SETERRQ(comm,PETSC_ERR_ARG_WRONG,"Vec #3 has to be nest");
     TRY( VecNestGetSubVecs(x,&Nn_cl,&vecs_x) );
-    if (Nn != Nn_cl) FLLOP_SETERRQ(comm,PETSC_ERR_ARG_INCOMP,"number of nested vectors of Vec #3 must be equal to the number of nested columns of Mat #2");
+    if (Nn != Nn_cl) SETERRQ(comm,PETSC_ERR_ARG_INCOMP,"number of nested vectors of Vec #3 must be equal to the number of nested columns of Mat #2");
   }
 
   MnNn = Mn*Nn;
@@ -574,7 +574,7 @@ static PetscErrorCode MatExtensionCreateCondensedRows_NestPermon(Mat TA,Mat *A,I
   for (j=0; j<Nn; j++) {
     block = mats_in[0][j];
     TRY( PetscObjectTypeCompare((PetscObject)block,MATEXTENSION,&flg) );
-    if (!flg) FLLOP_SETERRQ1(PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONG,"nested block %d,0 is not extension",j);
+    if (!flg) SETERRQ(PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONG,"nested block %d,0 is not extension",j);
     TRY( MatExtensionGetRowISLocal(block,&ris_block_orig[j]) );
   }
 
@@ -691,7 +691,7 @@ static PetscErrorCode MatCreateNestPermonVerticalMerge_Extract_Private(PetscInt 
       }
     } else {
       TRY( MatNestGetSubMats(A,&Mn,&Nn,&mats2d) );
-      if (Nn > 1) FLLOP_SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_WRONG,"number of nested column blocks exceeds 1");
+      if (Nn > 1) SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_WRONG,"number of nested column blocks exceeds 1");
       TRY( PetscMalloc1(Mn,&mats) );
       for (i=0; i<Mn; i++) mats[i] = mats2d[i][0];
       TRY( MatCreateNestPermonVerticalMerge_Extract_Private(Mn,mats,nmats_out,mats_out) );

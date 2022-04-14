@@ -240,8 +240,8 @@ PetscErrorCode MatRegularize(Mat K, Mat R, MatRegularizationType type, Mat *newK
   PetscValidHeaderSpecific(R,MAT_CLASSID,2);
   PetscCheckSameComm(K,1,R,2);
   TRY( PetscObjectGetComm((PetscObject)K,&comm) );
-  if (K->rmap->n!=K->cmap->n) FLLOP_SETERRQ(comm,PETSC_ERR_ARG_SIZ,"Matrix #1 must be locally square");
-  if (K->rmap->n!=R->rmap->n) FLLOP_SETERRQ2(comm,PETSC_ERR_ARG_SIZ,"Matrices #1 and #2 don't have the same row layout, %D != %D",K->rmap->n,R->rmap->n);
+  if (K->rmap->n!=K->cmap->n) SETERRQ(comm,PETSC_ERR_ARG_SIZ,"Matrix #1 must be locally square");
+  if (K->rmap->n!=R->rmap->n) SETERRQ(comm,PETSC_ERR_ARG_SIZ,"Matrices #1 and #2 don't have the same row layout, %D != %D",K->rmap->n,R->rmap->n);
 
   FllopTraceBegin;
   TRY( PetscLogEventBegin(Mat_Regularize,K,R,0,0) );

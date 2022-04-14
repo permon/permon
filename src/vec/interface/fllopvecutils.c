@@ -233,9 +233,9 @@ PetscErrorCode VecCheckSameLayoutIS(Vec vec, IS is)
   TRY( ISGetLocalSize(is,&n) );
   TRY( ISGetSize(is,&N) );
   TRY( ISGetBlockSize(is,&bs) );
-  if (vec->map->n   != n)  FLLOP_SETERRQ2(PetscObjectComm((PetscObject)is),PETSC_ERR_ARG_INCOMP,"Vec local size %d != IS local size %d",  vec->map->n,  n);
-  if (vec->map->N   != N)  FLLOP_SETERRQ2(PetscObjectComm((PetscObject)is),PETSC_ERR_ARG_INCOMP,"Vec global size %d != IS global size %d",vec->map->N,  N);
-  if (vec->map->bs  != bs) FLLOP_SETERRQ2(PetscObjectComm((PetscObject)is),PETSC_ERR_ARG_INCOMP,"Vec block size %d != IS block size %d",  vec->map->bs, bs);
+  if (vec->map->n   != n)  SETERRQ(PetscObjectComm((PetscObject)is),PETSC_ERR_ARG_INCOMP,"Vec local size %d != IS local size %d",  vec->map->n,  n);
+  if (vec->map->N   != N)  SETERRQ(PetscObjectComm((PetscObject)is),PETSC_ERR_ARG_INCOMP,"Vec global size %d != IS global size %d",vec->map->N,  N);
+  if (vec->map->bs  != bs) SETERRQ(PetscObjectComm((PetscObject)is),PETSC_ERR_ARG_INCOMP,"Vec block size %d != IS block size %d",  vec->map->bs, bs);
   PetscFunctionReturn(0);
 }
 
@@ -247,9 +247,9 @@ PetscErrorCode VecCheckSameLayoutVec(Vec v1, Vec v2)
   PetscValidHeaderSpecific(v1,VEC_CLASSID,1);
   PetscValidHeaderSpecific(v2,VEC_CLASSID,1);
   PetscCheckSameComm(v1,1,v2,2);
-  if (v1->map->n    != v2->map->n)  FLLOP_SETERRQ2(PetscObjectComm((PetscObject)v1),PETSC_ERR_ARG_INCOMP,"Vec #1 local size %d != Vec #2 local size %d",  v1->map->n, v2->map->n);
-  if (v1->map->N    != v2->map->N)  FLLOP_SETERRQ2(PetscObjectComm((PetscObject)v1),PETSC_ERR_ARG_INCOMP,"Vec #1 global size %d != Vec #2 global size %d",v1->map->N, v2->map->N);
-  if (v1->map->bs   != v2->map->bs) FLLOP_SETERRQ2(PetscObjectComm((PetscObject)v1),PETSC_ERR_ARG_INCOMP,"Vec #1 block size %d != Vec #2 block size %d",  v1->map->bs,v2->map->bs);
+  if (v1->map->n    != v2->map->n)  SETERRQ(PetscObjectComm((PetscObject)v1),PETSC_ERR_ARG_INCOMP,"Vec #1 local size %d != Vec #2 local size %d",  v1->map->n, v2->map->n);
+  if (v1->map->N    != v2->map->N)  SETERRQ(PetscObjectComm((PetscObject)v1),PETSC_ERR_ARG_INCOMP,"Vec #1 global size %d != Vec #2 global size %d",v1->map->N, v2->map->N);
+  if (v1->map->bs   != v2->map->bs) SETERRQ(PetscObjectComm((PetscObject)v1),PETSC_ERR_ARG_INCOMP,"Vec #1 block size %d != Vec #2 block size %d",  v1->map->bs,v2->map->bs);
   PetscFunctionReturn(0);
 }
 

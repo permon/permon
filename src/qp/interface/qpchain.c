@@ -241,7 +241,7 @@ PetscErrorCode QPChainPostSolve(QP qp)
   view = (PetscBool)(view && !PetscPreLoadingOn);
   if (view) {
     TRY( PetscObjectTypeCompare((PetscObject)v,PETSCVIEWERASCII,&flg) );
-    if (!flg) FLLOP_SETERRQ1(comm,PETSC_ERR_SUP,"Viewer type %s not supported",((PetscObject)v)->type_name);
+    if (!flg) SETERRQ(comm,PETSC_ERR_SUP,"Viewer type %s not supported",((PetscObject)v)->type_name);
     TRY( PetscViewerASCIIPrintf(v,"=====================\n") );
   }
 
@@ -304,7 +304,7 @@ PetscErrorCode QPChainViewKKT(QP qp, PetscViewer v)
   PetscCheckSameComm(qp,1,v,2);
 
   TRY( PetscObjectTypeCompare((PetscObject)v,PETSCVIEWERASCII,&iascii) );
-  if (!iascii) FLLOP_SETERRQ1(comm,PETSC_ERR_SUP,"Viewer type %s not supported",((PetscObject)v)->type_name);
+  if (!iascii) SETERRQ(comm,PETSC_ERR_SUP,"Viewer type %s not supported",((PetscObject)v)->type_name);
 
   TRY( PetscViewerASCIIPrintf(v,"=====================\n") );
   TRY( QPChainGetLast(qp,&cqp) );
@@ -348,7 +348,7 @@ PetscErrorCode QPChainView(QP qp, PetscViewer v)
   PetscCheckSameComm(qp,1,v,2);
 
   TRY( PetscObjectTypeCompare((PetscObject)v,PETSCVIEWERASCII,&iascii) );
-  if (!iascii) FLLOP_SETERRQ1(comm,PETSC_ERR_SUP,"Viewer type %s not supported",((PetscObject)v)->type_name);
+  if (!iascii) SETERRQ(comm,PETSC_ERR_SUP,"Viewer type %s not supported",((PetscObject)v)->type_name);
 
   TRY( PetscViewerASCIIPrintf(v,"=====================\n") );
   TRY( PetscViewerASCIIPrintf(v,__FUNCT__" output follows\n") );
@@ -390,7 +390,7 @@ PetscErrorCode QPChainViewQPPF(QP qp,PetscViewer v)
   PetscCheckSameComm(qp,1,v,2);
 
   TRY( PetscObjectTypeCompare((PetscObject)v,PETSCVIEWERASCII,&iascii) );
-  if (!iascii) FLLOP_SETERRQ1(comm,PETSC_ERR_SUP,"Viewer type %s not supported",((PetscObject)v)->type_name);
+  if (!iascii) SETERRQ(comm,PETSC_ERR_SUP,"Viewer type %s not supported",((PetscObject)v)->type_name);
 
   TRY( PetscViewerASCIIPrintf(v,"=====================\n") );
   TRY( PetscViewerASCIIPrintf(v,__FUNCT__" output follows\n") );

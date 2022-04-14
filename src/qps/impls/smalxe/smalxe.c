@@ -390,7 +390,7 @@ static PetscErrorCode QPSSMALXEUpdateRho_SMALXE(QPS qps, PetscBool Lagrangian_fl
   switch (smalxe->state) {
     case 1: rho_update = smalxe->rho_update; break;
     case 3: rho_update = smalxe->rho_update_late; Lagrangian_flag = PETSC_TRUE; break;
-    default: FLLOP_SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_WRONGSTATE,"invalid SMALXE state");
+    default: SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_WRONGSTATE,"invalid SMALXE state");
   }
   if (!Lagrangian_flag || rho_update == 1.0) PetscFunctionReturn(0);
   
@@ -941,7 +941,7 @@ PetscErrorCode QPSSolve_SMALXE(QPS qps)
     FLLOP_ASSERT(qp_inner->x == qp->x, "qp_inner->x == qp->x");
 
     TRY( QPGetTransform(qp_inner,&transform) );
-    if (transform != (PetscErrorCode(*)(QP))QPTEnforceEqByPenalty) FLLOP_SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_WRONGSTATE,"last QP transform must be QPTEnforceEqByPenalty");
+    if (transform != (PetscErrorCode(*)(QP))QPTEnforceEqByPenalty) SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_WRONGSTATE,"last QP transform must be QPTEnforceEqByPenalty");
   }
 #endif
 
@@ -1267,7 +1267,7 @@ PetscErrorCode QPSSMALXESetOperatorMaxEigenvalue(QPS qps,PetscReal maxeig)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidLogicalCollectiveReal(qps,maxeig,2);
-  if (maxeig <= 0 && maxeig != PETSC_DECIDE) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be positive");
+  if (maxeig <= 0 && maxeig != PETSC_DECIDE) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be positive");
   PetscTryMethod(qps,"QPSSMALXESetOperatorMaxEigenvalue_SMALXE_C",(QPS,PetscReal),(qps,maxeig));
   PetscFunctionReturn(0);
 }
@@ -1292,7 +1292,7 @@ PetscErrorCode QPSSMALXESetM1Initial(QPS qps,PetscReal M1_initial,QPSScalarArgTy
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidLogicalCollectiveReal(qps,M1_initial,2);
   PetscValidLogicalCollectiveEnum(qps,argtype,3);
-  if (M1_initial <= 0) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be positive");
+  if (M1_initial <= 0) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be positive");
   PetscTryMethod(qps,"QPSSMALXESetM1Initial_SMALXE_C",(QPS,PetscReal,QPSScalarArgType),(qps,M1_initial,argtype));
   PetscFunctionReturn(0);
 }
@@ -1317,7 +1317,7 @@ PetscErrorCode QPSSMALXESetEta(QPS qps,PetscReal eta,QPSScalarArgType argtype)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidLogicalCollectiveReal(qps,eta,2);
   PetscValidLogicalCollectiveEnum(qps,argtype,3);
-  if (eta <= 0) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be positive");
+  if (eta <= 0) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be positive");
   PetscTryMethod(qps,"QPSSMALXESetEta_SMALXE_C",(QPS,PetscReal,QPSScalarArgType),(qps,eta,argtype));
   PetscFunctionReturn(0);
 }
@@ -1342,7 +1342,7 @@ PetscErrorCode QPSSMALXESetRhoInitial(QPS qps,PetscReal rho_initial,QPSScalarArg
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidLogicalCollectiveReal(qps,rho_initial,2);
   PetscValidLogicalCollectiveEnum(qps,argtype,3);
-  if (rho_initial <= 0) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be positive");
+  if (rho_initial <= 0) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be positive");
   PetscTryMethod(qps,"QPSSMALXESetRhoInitial_SMALXE_C",(QPS,PetscReal,QPSScalarArgType),(qps,rho_initial,argtype));
   PetscFunctionReturn(0);
 }
@@ -1365,7 +1365,7 @@ PetscErrorCode QPSSMALXESetM1Update(QPS qps,PetscReal M1_update)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidLogicalCollectiveReal(qps,M1_update,2);
-  //if (M1_update < 1) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be >= 1");
+  //if (M1_update < 1) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be >= 1");
   PetscTryMethod(qps,"QPSSMALXESetM1Update_SMALXE_C",(QPS,PetscReal),(qps,M1_update));
   PetscFunctionReturn(0);
 }
@@ -1388,7 +1388,7 @@ PetscErrorCode QPSSMALXESetRhoUpdate(QPS qps,PetscReal rho_update)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidLogicalCollectiveReal(qps,rho_update,2);
-  if (rho_update < 1) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be >= 1");
+  if (rho_update < 1) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be >= 1");
   PetscTryMethod(qps,"QPSSMALXESetRhoUpdate_SMALXE_C",(QPS,PetscReal),(qps,rho_update));
   PetscFunctionReturn(0);
 }
@@ -1411,7 +1411,7 @@ PetscErrorCode QPSSMALXESetRhoUpdateLate(QPS qps,PetscReal rho_update_late)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidLogicalCollectiveReal(qps,rho_update_late,2);
-  if (rho_update_late < 1) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be >= 1");
+  if (rho_update_late < 1) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be >= 1");
   PetscTryMethod(qps,"QPSSMALXESetRhoUpdateLate_SMALXE_C",(QPS,PetscReal),(qps,rho_update_late));
   PetscFunctionReturn(0);
 }
@@ -1434,7 +1434,7 @@ PetscErrorCode QPSSMALXESetOperatorMaxEigenvalueIterations(QPS qps,PetscInt numi
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidLogicalCollectiveInt(qps,numit,2);
-  if (numit <= 1) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be > 1");
+  if (numit <= 1) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be > 1");
   PetscTryMethod(qps,"QPSSMALXESetOperatorMaxEigenvalueIterations_SMALXE_C",(QPS,PetscInt),(qps,numit));
   PetscFunctionReturn(0);
 }
