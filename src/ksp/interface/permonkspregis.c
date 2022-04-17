@@ -7,9 +7,7 @@ PETSC_EXTERN PetscErrorCode KSPCreate_FETI(KSP);
 #define __FUNCT__ "PermonKSPRegisterAll"
 PetscErrorCode PermonKSPRegisterAll()
 {
-  PetscErrorCode ierr;
-  
   PetscFunctionBegin;
-  ierr = KSPRegister(KSPFETI, KSPCreate_FETI);CHKERRQ(ierr);
+  PetscCall(KSPRegister(KSPFETI, KSPCreate_FETI));
   PetscFunctionReturn(0);
 }

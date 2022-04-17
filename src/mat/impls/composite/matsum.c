@@ -19,7 +19,7 @@ static PetscErrorCode MatSumGetMat_Sum(Mat A,PetscInt index,Mat *Ai)
       break;
     }
   }
-  if (!ilink) FLLOP_SETERRQ1(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_OUTOFRANGE,"partial matrix index out of range: %d",i);
+  if (!ilink) SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_OUTOFRANGE,"partial matrix index out of range: %d",i);
   *Ai = ilink->mat;
   PetscFunctionReturn(0);
 }
@@ -32,7 +32,7 @@ PetscErrorCode MatSumGetMat(Mat A,PetscInt i,Mat *Ai)
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
   PetscValidLogicalCollectiveInt(A,i,2);
   PetscValidPointer(Ai,3);
-  TRY( PetscUseMethod(A,"MatSumGetMat_Sum_C",(Mat,PetscInt,Mat*),(A,i,Ai)) );
+  PetscUseMethod(A,"MatSumGetMat_Sum_C",(Mat,PetscInt,Mat*),(A,i,Ai));
   PetscFunctionReturn(0);
 }
 
@@ -42,36 +42,35 @@ PetscErrorCode MatMult_Sum(Mat A,Vec x,Vec y)
 {
   Mat_Composite     *shell = (Mat_Composite*)A->data;
   Mat_CompositeLink next = shell->head;
-  PetscErrorCode    ierr;
   Vec               in,out;
 
   PetscFunctionBegin;
-  if (!next) FLLOP_SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_WRONGSTATE,"Must provide at least one matrix with MatCompositeAddMat()");
+  if (!next) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_WRONGSTATE,"Must provide at least one matrix with MatCompositeAddMat()");
   in = x;
   if (shell->right) {
     if (!shell->rightwork) {
-      ierr = VecDuplicate(shell->right,&shell->rightwork);CHKERRQ(ierr);
+      PetscCall(VecDuplicate(shell->right,&shell->rightwork));
     }
-    ierr = VecPointwiseMult(shell->rightwork,shell->right,in);CHKERRQ(ierr);
+    PetscCall(VecPointwiseMult(shell->rightwork,shell->right,in));
     in   = shell->rightwork;
   }
-  ierr = MatMult(next->mat,in,y);CHKERRQ(ierr);
+  PetscCall(MatMult(next->mat,in,y));
   while ((next = next->next)) {
     if (next->mat->ops->multadd) {
-      ierr = MatMultAdd(next->mat,in,y,y);CHKERRQ(ierr);
+      PetscCall(MatMultAdd(next->mat,in,y,y));
     } else {
       if (!next->work) { /* should reuse previous work if the same size */
-        ierr = MatCreateVecs(next->mat,NULL,&next->work);CHKERRQ(ierr);
+        PetscCall(MatCreateVecs(next->mat,NULL,&next->work));
       }
       out = next->work;
-      ierr = MatMult(next->mat,in,out);CHKERRQ(ierr);
-      ierr = VecAXPY(y,1.0,out);CHKERRQ(ierr);
+      PetscCall(MatMult(next->mat,in,out));
+      PetscCall(VecAXPY(y,1.0,out));
     }
   }
   if (shell->left) {
-    ierr = VecPointwiseMult(y,shell->left,y);CHKERRQ(ierr);
+    PetscCall(VecPointwiseMult(y,shell->left,y));
   }
-  ierr = VecScale(y,shell->scale);CHKERRQ(ierr);
+  PetscCall(VecScale(y,shell->scale));
   PetscFunctionReturn(0);
 }
 
@@ -81,27 +80,26 @@ PetscErrorCode MatMultTranspose_Sum(Mat A,Vec x,Vec y)
 {
   Mat_Composite     *shell = (Mat_Composite*)A->data;
   Mat_CompositeLink next = shell->head;
-  PetscErrorCode    ierr;
   Vec               in;
 
   PetscFunctionBegin;
-  if (!next) FLLOP_SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_WRONGSTATE,"Must provide at least one matrix with MatCompositeAddMat()");
+  if (!next) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_WRONGSTATE,"Must provide at least one matrix with MatCompositeAddMat()");
   in = x;
   if (shell->left) {
     if (!shell->leftwork) {
-      ierr = VecDuplicate(shell->left,&shell->leftwork);CHKERRQ(ierr);
+      PetscCall(VecDuplicate(shell->left,&shell->leftwork));
     }
-    ierr = VecPointwiseMult(shell->leftwork,shell->left,in);CHKERRQ(ierr);
+    PetscCall(VecPointwiseMult(shell->leftwork,shell->left,in));
     in   = shell->leftwork;
   }
-  ierr = MatMultTranspose(next->mat,in,y);CHKERRQ(ierr);
+  PetscCall(MatMultTranspose(next->mat,in,y));
   while ((next = next->next)) {
-    ierr = MatMultTransposeAdd(next->mat,in,y,y);CHKERRQ(ierr);
+    PetscCall(MatMultTransposeAdd(next->mat,in,y,y));
   }
   if (shell->right) {
-    ierr = VecPointwiseMult(y,shell->right,y);CHKERRQ(ierr);
+    PetscCall(VecPointwiseMult(y,shell->right,y));
   }
-  ierr = VecScale(y,shell->scale);CHKERRQ(ierr);
+  PetscCall(VecScale(y,shell->scale));
   PetscFunctionReturn(0);
 }
 
@@ -113,14 +111,14 @@ PetscErrorCode MatMultAdd_Sum(Mat A,Vec x,Vec y,Vec z)
 
   PetscFunctionBegin;
   if (y != z) {
-    TRY( MatMult_Sum(A,x,z) );
-    TRY( VecAXPY(z,1.0,y) );
+    PetscCall(MatMult_Sum(A,x,z));
+    PetscCall(VecAXPY(z,1.0,y));
   } else {
     if (!shell->rightwork) {
-      TRY( VecDuplicate(z,&shell->rightwork) );
+      PetscCall(VecDuplicate(z,&shell->rightwork));
     }
-    TRY( MatMult(A,x,shell->rightwork) );
-    TRY( VecAXPY(z,1.0,shell->rightwork) );
+    PetscCall(MatMult(A,x,shell->rightwork));
+    PetscCall(VecAXPY(z,1.0,shell->rightwork));
   }
   PetscFunctionReturn(0);
 }
@@ -130,8 +128,8 @@ PetscErrorCode MatMultAdd_Sum(Mat A,Vec x,Vec y,Vec z)
 PetscErrorCode MatMultTransposeAdd_Sum(Mat A,Vec x,Vec y,Vec z)
 {
   PetscFunctionBegin;
-  TRY( MatMultTranspose_Sum(A, x, z) );
-  TRY( VecAXPY(z, 1.0, y) );
+  PetscCall(MatMultTranspose_Sum(A, x, z));
+  PetscCall(VecAXPY(z, 1.0, y));
   PetscFunctionReturn(0);
 }
 
@@ -139,16 +137,15 @@ PetscErrorCode MatMultTransposeAdd_Sum(Mat A,Vec x,Vec y,Vec z)
 #define __FUNCT__ "MatCreate_Sum"
 FLLOP_EXTERN PetscErrorCode  MatCreate_Sum(Mat A)
 {
-  PetscErrorCode ierr;
   PetscErrorCode (*createComposite)(Mat);
   Mat_Composite  *composite;
 
   PetscFunctionBegin;
-  ierr = PetscFunctionListFind(MatList,MATCOMPOSITE,(void(**)(void))&createComposite);CHKERRQ(ierr);
-  ierr = createComposite(A);CHKERRQ(ierr);
+  PetscCall(PetscFunctionListFind(MatList,MATCOMPOSITE,(void(**)(void))&createComposite));
+  PetscCall(createComposite(A));
   composite = (Mat_Composite*)A->data;
 
-  TRY( PetscObjectComposeFunction((PetscObject)A,"MatSumGetMat_Sum_C",MatSumGetMat_Sum) );
+  PetscCall(PetscObjectComposeFunction((PetscObject)A,"MatSumGetMat_Sum_C",MatSumGetMat_Sum));
 
   A->ops->mult              = MatMult_Sum;
   A->ops->multtranspose     = MatMultTranspose_Sum;
@@ -159,7 +156,7 @@ FLLOP_EXTERN PetscErrorCode  MatCreate_Sum(Mat A)
   composite->head           = NULL;
   composite->tail           = NULL;
 
-  ierr = PetscObjectChangeTypeName((PetscObject)A,MATSUM);CHKERRQ(ierr);
+  PetscCall(PetscObjectChangeTypeName((PetscObject)A,MATSUM));
   PetscFunctionReturn(0);
 }
 
@@ -196,24 +193,23 @@ $       MatAssemblyEnd(mat,MAT_FINAL_ASSEMBLY);
 @*/
 PetscErrorCode  MatCreateSum(MPI_Comm comm,PetscInt nmat,const Mat *mats,Mat *mat)
 {
-  PetscErrorCode ierr;
   PetscInt       m,n,M,N,i;
 
   PetscFunctionBegin;
-  if (nmat < 1) FLLOP_SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_OUTOFRANGE,"Must pass in at least one matrix");
+  if (nmat < 1) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_OUTOFRANGE,"Must pass in at least one matrix");
   PetscValidPointer(mat,3);
 
-  ierr = MatGetLocalSize(mats[0],PETSC_IGNORE,&n);CHKERRQ(ierr);
-  ierr = MatGetLocalSize(mats[nmat-1],&m,PETSC_IGNORE);CHKERRQ(ierr);
-  ierr = MatGetSize(mats[0],PETSC_IGNORE,&N);CHKERRQ(ierr);
-  ierr = MatGetSize(mats[nmat-1],&M,PETSC_IGNORE);CHKERRQ(ierr);
-  ierr = MatCreate(comm,mat);CHKERRQ(ierr);
-  ierr = MatSetSizes(*mat,m,n,M,N);CHKERRQ(ierr);
-  ierr = MatSetType(*mat,MATSUM);CHKERRQ(ierr);
+  PetscCall(MatGetLocalSize(mats[0],PETSC_IGNORE,&n));
+  PetscCall(MatGetLocalSize(mats[nmat-1],&m,PETSC_IGNORE));
+  PetscCall(MatGetSize(mats[0],PETSC_IGNORE,&N));
+  PetscCall(MatGetSize(mats[nmat-1],&M,PETSC_IGNORE));
+  PetscCall(MatCreate(comm,mat));
+  PetscCall(MatSetSizes(*mat,m,n,M,N));
+  PetscCall(MatSetType(*mat,MATSUM));
   for (i=0; i<nmat; i++) {
-    ierr = MatCompositeAddMat(*mat,mats[i]);CHKERRQ(ierr);
+    PetscCall(MatCompositeAddMat(*mat,mats[i]));
   }
-  ierr = MatAssemblyBegin(*mat,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  ierr = MatAssemblyEnd(*mat,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+  PetscCall(MatAssemblyBegin(*mat,MAT_FINAL_ASSEMBLY));
+  PetscCall(MatAssemblyEnd(*mat,MAT_FINAL_ASSEMBLY));
   PetscFunctionReturn(0);
 }

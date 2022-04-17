@@ -8,9 +8,9 @@ PetscErrorCode MatMult_OneRow(Mat A, Vec x, Vec z) {
     PetscScalar alpha;
 
     PetscFunctionBegin;
-    TRY( MatShellGetContext(A, (void*) &a) );
-    TRY( VecDot(a,x,&alpha) );
-    TRY( VecSet(z,alpha) );  /* z has length 1 */
+    PetscCall(MatShellGetContext(A, (void*) &a));
+    PetscCall(VecDot(a,x,&alpha));
+    PetscCall(VecSet(z,alpha));  /* z has length 1 */
     PetscFunctionReturn(0);
 }
 
@@ -24,16 +24,16 @@ PetscErrorCode MatMultAdd_OneRow(Mat A, Vec x, Vec w, Vec z) {
     PetscScalar *zarr;
 
     PetscFunctionBegin;
-    TRY( MPI_Comm_rank(PetscObjectComm((PetscObject)A),&rank) );
-    TRY( MatShellGetContext(A, (void*) &a) );
-    TRY( VecDot(a,x,&alpha) );
-    TRY( VecGetArrayRead(w,&warr) );
-    TRY( VecGetArray(z,&zarr) );
+    PetscCallMPI(MPI_Comm_rank(PetscObjectComm((PetscObject)A),&rank));
+    PetscCall(MatShellGetContext(A, (void*) &a));
+    PetscCall(VecDot(a,x,&alpha));
+    PetscCall(VecGetArrayRead(w,&warr));
+    PetscCall(VecGetArray(z,&zarr));
     if (!rank) {
       zarr[0] = warr[0] + alpha; /* w and z have length 1 */
     }
-    TRY( VecRestoreArrayRead(w,&warr) );
-    TRY( VecRestoreArray(z,&zarr) );
+    PetscCall(VecRestoreArrayRead(w,&warr));
+    PetscCall(VecRestoreArray(z,&zarr));
     PetscFunctionReturn(0);
 }
 
@@ -46,14 +46,14 @@ PetscErrorCode MatMultTranspose_OneRow(Mat A, Vec x, Vec z) {
     PetscScalar xval;
 
     PetscFunctionBegin;
-    TRY( MPI_Comm_rank(PetscObjectComm((PetscObject)A),&rank) );
-    TRY( MatShellGetContext(A, (void*) &a) );
+    PetscCallMPI(MPI_Comm_rank(PetscObjectComm((PetscObject)A),&rank));
+    PetscCall(MatShellGetContext(A, (void*) &a));
     if (!rank) {
-      TRY( VecGetValues(x,1,&zero,&xval) );  /* x has length 1 */
+      PetscCall(VecGetValues(x,1,&zero,&xval));  /* x has length 1 */
     }
-    TRY( MPI_Bcast(&xval,1,MPIU_SCALAR,0,PetscObjectComm((PetscObject)A)) );
-    TRY( VecCopy(a,z));
-    TRY( VecScale(z,xval) );
+    PetscCallMPI(MPI_Bcast(&xval,1,MPIU_SCALAR,0,PetscObjectComm((PetscObject)A)));
+    PetscCall(VecCopy(a,z));
+    PetscCall(VecScale(z,xval));
     PetscFunctionReturn(0);
 }
 
@@ -66,16 +66,16 @@ PetscErrorCode MatMultTransposeAdd_OneRow(Mat A, Vec x, Vec w, Vec z) {
     PetscScalar xval;
 
     PetscFunctionBegin;
-    TRY( MPI_Comm_rank(PetscObjectComm((PetscObject)A),&rank) );
-    TRY( MatShellGetContext(A, (void*) &a) );
+    PetscCallMPI(MPI_Comm_rank(PetscObjectComm((PetscObject)A),&rank));
+    PetscCall(MatShellGetContext(A, (void*) &a));
     if (!rank) {
-      TRY( VecGetValues(x,1,&zero,&xval) );  /* x has length 1 */
+      PetscCall(VecGetValues(x,1,&zero,&xval));  /* x has length 1 */
     }
-    TRY( MPI_Bcast(&xval,1,MPIU_SCALAR,0,PetscObjectComm((PetscObject)A)) );
+    PetscCallMPI(MPI_Bcast(&xval,1,MPIU_SCALAR,0,PetscObjectComm((PetscObject)A)));
     if (w == z) {
-      TRY( VecAXPY(z,xval,a) );
+      PetscCall(VecAXPY(z,xval,a));
     } else {
-      TRY( VecWAXPY(z,xval,a,w) );
+      PetscCall(VecWAXPY(z,xval,a,w));
     }
     PetscFunctionReturn(0);
 }
@@ -86,9 +86,9 @@ PetscErrorCode MatDestroy_OneRow(Mat A) {
     Vec a;
 
     PetscFunctionBegin;
-    TRY( MatShellGetContext(A, (void*) &a) );
-    TRY( VecDestroy(&a) );
-    TRY( MatShellSetContext(A, NULL) );
+    PetscCall(MatShellGetContext(A, (void*) &a));
+    PetscCall(VecDestroy(&a));
+    PetscCall(MatShellSetContext(A, NULL));
     PetscFunctionReturn(0);
 }
 
@@ -100,16 +100,16 @@ PetscErrorCode MatCreateOneRow(Vec a, Mat *A_new)
   Mat A;
 
   PetscFunctionBeginUser;
-  TRY( VecGetLocalSize(a,&n) );
-  TRY( MatCreateShellPermon(PetscObjectComm((PetscObject)a), PETSC_DECIDE, n, 1, PETSC_DECIDE, a, &A));
-  TRY( FllopPetscObjectInheritName((PetscObject)A,(PetscObject)a,NULL) );
-  TRY( PetscObjectReference((PetscObject)a) );
+  PetscCall(VecGetLocalSize(a,&n));
+  PetscCall(MatCreateShellPermon(PetscObjectComm((PetscObject)a), PETSC_DECIDE, n, 1, PETSC_DECIDE, a, &A));
+  PetscCall(FllopPetscObjectInheritName((PetscObject)A,(PetscObject)a,NULL));
+  PetscCall(PetscObjectReference((PetscObject)a));
 
-  TRY( MatShellSetOperation(A,MATOP_DESTROY,(void(*)(void))MatDestroy_OneRow) );
-  TRY( MatShellSetOperation(A,MATOP_MULT,(void(*)(void))MatMult_OneRow) );
-  TRY( MatShellSetOperation(A,MATOP_MULT_ADD,(void(*)(void))MatMultAdd_OneRow) );
-  TRY( MatShellSetOperation(A,MATOP_MULT_TRANSPOSE,(void(*)(void))MatMultTranspose_OneRow) );
-  TRY( MatShellSetOperation(A,MATOP_MULT_TRANSPOSE_ADD,(void(*)(void))MatMultTransposeAdd_OneRow) );
+  PetscCall(MatShellSetOperation(A,MATOP_DESTROY,(void(*)(void))MatDestroy_OneRow));
+  PetscCall(MatShellSetOperation(A,MATOP_MULT,(void(*)(void))MatMult_OneRow));
+  PetscCall(MatShellSetOperation(A,MATOP_MULT_ADD,(void(*)(void))MatMultAdd_OneRow));
+  PetscCall(MatShellSetOperation(A,MATOP_MULT_TRANSPOSE,(void(*)(void))MatMultTranspose_OneRow));
+  PetscCall(MatShellSetOperation(A,MATOP_MULT_TRANSPOSE_ADD,(void(*)(void))MatMultTransposeAdd_OneRow));
   *A_new = A;
   PetscFunctionReturn(0);
 }

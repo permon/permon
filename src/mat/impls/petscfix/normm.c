@@ -10,36 +10,35 @@
 PetscErrorCode MatMultAdd_Normal_permonfix(Mat N,Vec v1,Vec v2,Vec v3)
 {
   Mat_Normal     *Na = (Mat_Normal*)N->data;
-  PetscErrorCode ierr;
   Vec            in;
 
   PetscFunctionBegin;
   in = v1;
   if (Na->right) {
     if (!Na->rightwork) {
-      ierr = VecDuplicate(Na->right,&Na->rightwork);CHKERRQ(ierr);
+      PetscCall(VecDuplicate(Na->right,&Na->rightwork));
     }
-    ierr = VecPointwiseMult(Na->rightwork,Na->right,in);CHKERRQ(ierr);
+    PetscCall(VecPointwiseMult(Na->rightwork,Na->right,in));
     in   = Na->rightwork;
   }
-  ierr = MatMult(Na->A,in,Na->w);CHKERRQ(ierr);
-  ierr = VecScale(Na->w,Na->scale);CHKERRQ(ierr);
+  PetscCall(MatMult(Na->A,in,Na->w));
+  PetscCall(VecScale(Na->w,Na->scale));
   if (Na->left) {
     if (v2 == v3) {
       if (!Na->leftwork) {
-        ierr = VecDuplicate(Na->left,&Na->leftwork);CHKERRQ(ierr);
+        PetscCall(VecDuplicate(Na->left,&Na->leftwork));
       }
-      ierr = VecCopy(v2,Na->leftwork);CHKERRQ(ierr);
-      ierr = MatMultTranspose(Na->A,Na->w,v3);CHKERRQ(ierr);
-      ierr = VecPointwiseMult(v3,Na->left,v3);CHKERRQ(ierr);
-      ierr = VecAXPY(v3,1.0,Na->leftwork);CHKERRQ(ierr);
+      PetscCall(VecCopy(v2,Na->leftwork));
+      PetscCall(MatMultTranspose(Na->A,Na->w,v3));
+      PetscCall(VecPointwiseMult(v3,Na->left,v3));
+      PetscCall(VecAXPY(v3,1.0,Na->leftwork));
     } else {
-      ierr = MatMultTranspose(Na->A,Na->w,v3);CHKERRQ(ierr);
-      ierr = VecPointwiseMult(v3,Na->left,v3);CHKERRQ(ierr);
-      ierr = VecAXPY(v3,1.0,v2);CHKERRQ(ierr);
+      PetscCall(MatMultTranspose(Na->A,Na->w,v3));
+      PetscCall(VecPointwiseMult(v3,Na->left,v3));
+      PetscCall(VecAXPY(v3,1.0,v2));
     }
   } else {
-    ierr = MatMultTransposeAdd(Na->A,Na->w,v2,v3);CHKERRQ(ierr);
+    PetscCall(MatMultTransposeAdd(Na->A,Na->w,v2,v3));
   }
   PetscFunctionReturn(0);
 }
@@ -49,36 +48,35 @@ PetscErrorCode MatMultAdd_Normal_permonfix(Mat N,Vec v1,Vec v2,Vec v3)
 PetscErrorCode MatMultTransposeAdd_Normal_permonfix(Mat N,Vec v1,Vec v2,Vec v3)
 {
   Mat_Normal     *Na = (Mat_Normal*)N->data;
-  PetscErrorCode ierr;
   Vec            in;
 
   PetscFunctionBegin;
   in = v1;
   if (Na->left) {
     if (!Na->leftwork) {
-      ierr = VecDuplicate(Na->left,&Na->leftwork);CHKERRQ(ierr);
+      PetscCall(VecDuplicate(Na->left,&Na->leftwork));
     }
-    ierr = VecPointwiseMult(Na->leftwork,Na->left,in);CHKERRQ(ierr);
+    PetscCall(VecPointwiseMult(Na->leftwork,Na->left,in));
     in   = Na->leftwork;
   }
-  ierr = MatMult(Na->A,in,Na->w);CHKERRQ(ierr);
-  ierr = VecScale(Na->w,Na->scale);CHKERRQ(ierr);
+  PetscCall(MatMult(Na->A,in,Na->w));
+  PetscCall(VecScale(Na->w,Na->scale));
   if (Na->right) {
     if (v2 == v3) {
       if (!Na->rightwork) {
-        ierr = VecDuplicate(Na->right,&Na->rightwork);CHKERRQ(ierr);
+        PetscCall(VecDuplicate(Na->right,&Na->rightwork));
       }
-      ierr = VecCopy(v2,Na->rightwork);CHKERRQ(ierr);
-      ierr = MatMultTranspose(Na->A,Na->w,v3);CHKERRQ(ierr);
-      ierr = VecPointwiseMult(v3,Na->right,v3);CHKERRQ(ierr);
-      ierr = VecAXPY(v3,1.0,Na->rightwork);CHKERRQ(ierr);
+      PetscCall(VecCopy(v2,Na->rightwork));
+      PetscCall(MatMultTranspose(Na->A,Na->w,v3));
+      PetscCall(VecPointwiseMult(v3,Na->right,v3));
+      PetscCall(VecAXPY(v3,1.0,Na->rightwork));
     } else {
-      ierr = MatMultTranspose(Na->A,Na->w,v3);CHKERRQ(ierr);
-      ierr = VecPointwiseMult(v3,Na->right,v3);CHKERRQ(ierr);
-      ierr = VecAXPY(v3,1.0,v2);CHKERRQ(ierr);
+      PetscCall(MatMultTranspose(Na->A,Na->w,v3));
+      PetscCall(VecPointwiseMult(v3,Na->right,v3));
+      PetscCall(VecAXPY(v3,1.0,v2));
     }
   } else {
-    ierr = MatMultTransposeAdd(Na->A,Na->w,v2,v3);CHKERRQ(ierr);
+    PetscCall(MatMultTransposeAdd(Na->A,Na->w,v2,v3));
   }
   PetscFunctionReturn(0);
 }
@@ -88,12 +86,11 @@ PetscErrorCode MatMultTransposeAdd_Normal_permonfix(Mat N,Vec v1,Vec v2,Vec v3)
 #define __FUNCT__ "MatCreateNormal_permonfix"
 PetscErrorCode MatCreateNormal_permonfix(Mat A,Mat *N)
 {
-  PetscErrorCode ierr;
   PetscFunctionBegin;
-  ierr = MatCreateNormal(A,N);CHKERRQ(ierr);
+  PetscCall(MatCreateNormal(A,N));
   (*N)->ops->multadd = MatMultAdd_Normal_permonfix;
   (*N)->ops->multtransposeadd = MatMultTransposeAdd_Normal_permonfix;
-  ierr = MatSetUp(*N);CHKERRQ(ierr);
+  PetscCall(MatSetUp(*N));
   PetscFunctionReturn(0);
 }
 

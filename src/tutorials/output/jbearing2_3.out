@@ -17,7 +17,7 @@ QPS Object: 3 MPI processes
       Tao Object: (qps_) 3 MPI processes
         type: blmvm
         Gradient steps: 31
-        Mat Object: (tao_blmvm_) 3 MPI processes
+        Mat Object: (qps_tao_blmvm_) 3 MPI processes
           type: lmvmbfgs
           rows=900, cols=900
             Scale type: DIAGONAL
@@ -40,7 +40,7 @@ QPS Object: 3 MPI processes
                 Number of updates: 309
                 Number of rejects: 0
                 Number of resets: 34
-        TaoLineSearch Object: (qps_) 3 MPI processes
+        TaoLineSearch Object: 3 MPI processes
           type: more-thuente
           maximum function evaluations=30
           tolerances: ftol=0.0001, rtol=1e-10, gtol=0.9

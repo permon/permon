@@ -7,17 +7,16 @@
 static PetscErrorCode MatMultAdd_ShellPermon(Mat A,Vec x,Vec y,Vec z)
 {
   Mat_Shell      *shell = (Mat_Shell*)A->data;
-  PetscErrorCode ierr;
 
   PetscFunctionBegin;
   if (y == z) {
-    if (!shell->right_add_work) {ierr = VecDuplicate(z,&shell->right_add_work);CHKERRQ(ierr);}
-    ierr = MatMult(A,x,shell->right_add_work);CHKERRQ(ierr);
-    ierr = VecAXPY(shell->right_add_work,1.0,y);CHKERRQ(ierr);
-    ierr = VecCopy(shell->right_add_work,z);CHKERRQ(ierr);
+    if (!shell->right_add_work) PetscCall(VecDuplicate(z,&shell->right_add_work));
+    PetscCall(MatMult(A,x,shell->right_add_work));
+    PetscCall(VecAXPY(shell->right_add_work,1.0,y));
+    PetscCall(VecCopy(shell->right_add_work,z));
   } else {
-    ierr = MatMult(A,x,z);CHKERRQ(ierr);
-    ierr = VecAXPY(z,1.0,y);CHKERRQ(ierr);
+    PetscCall(MatMult(A,x,z));
+    PetscCall(VecAXPY(z,1.0,y));
   }
   PetscFunctionReturn(0);
 }
@@ -27,8 +26,8 @@ static PetscErrorCode MatMultAdd_ShellPermon(Mat A,Vec x,Vec y,Vec z)
 PetscErrorCode MatCreateShellPermon(MPI_Comm comm,PetscInt m,PetscInt n,PetscInt M,PetscInt N,void *ctx,Mat *A)
 {
   PetscFunctionBegin;
-  TRY( MatCreateShell(comm,m,n,M,N,ctx,A) );
-  TRY( MatShellSetOperation(*A,MATOP_MULT_ADD,(void(*)())MatMultAdd_ShellPermon) );
+  PetscCall(MatCreateShell(comm,m,n,M,N,ctx,A));
+  PetscCall(MatShellSetOperation(*A,MATOP_MULT_ADD,(void(*)())MatMultAdd_ShellPermon));
   PetscFunctionReturn(0);
 }
 
@@ -38,7 +37,7 @@ PetscErrorCode MatCreateShellPermon(MPI_Comm comm,PetscInt m,PetscInt n,PetscInt
 PetscErrorCode MatCreateDummy(MPI_Comm comm,PetscInt m,PetscInt n,PetscInt M,PetscInt N,void *ctx,Mat *A)
 {
   PetscFunctionBegin;
-  TRY( MatCreateShell(comm,m,n,M,N,ctx,A) );
-  TRY( PetscObjectChangeTypeName((PetscObject)*A,MATDUMMY) );
+  PetscCall(MatCreateShell(comm,m,n,M,N,ctx,A));
+  PetscCall(PetscObjectChangeTypeName((PetscObject)*A,MATDUMMY));
   PetscFunctionReturn(0);
 }

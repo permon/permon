@@ -12,7 +12,7 @@ static PetscErrorCode QPSTaoConverged_Tao(Tao tao,void *ctx)
   //TODO sqrt?
   qps->rnorm = tao->residual;
   qps->iteration = tao->niter;
-  TRY( (*qps->convergencetest)(qps,&qps->reason) );
+  PetscCall((*qps->convergencetest)(qps,&qps->reason));
 
   //TODO quick&dirty
   if (qps->reason > 0) {
@@ -44,8 +44,8 @@ static PetscErrorCode FormFunctionGradientQPS(Tao tao, Vec X, PetscReal *fcn, Ve
   QPS         qps = (QPS) qps_void;
 
   PetscFunctionBegin; 
-  TRY( QPSGetSolvedQP(qps,&qp) );
-  TRY( QPComputeObjectiveAndGradient(qp,X,G,fcn) );
+  PetscCall(QPSGetSolvedQP(qps,&qp));
+  PetscCall(QPComputeObjectiveAndGradient(qp,X,G,fcn));
   PetscFunctionReturn(0);
   
 }
@@ -82,17 +82,17 @@ PetscErrorCode QPSTaoGetTao(QPS qps,Tao *tao)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidPointer(tao,2);
-  TRY( PetscObjectTypeCompare((PetscObject)qps,QPSTAO,&flg) );
-  if (!flg) FLLOP_SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_SUP,"This is a QPSTAO specific routine!");
+  PetscCall(PetscObjectTypeCompare((PetscObject)qps,QPSTAO,&flg));
+  if (!flg) SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_SUP,"This is a QPSTAO specific routine!");
   qpstao = (QPS_Tao*)qps->data;
   if (!qpstao->tao) {
-    TRY( QPSGetOptionsPrefix(qps,&prefix) );
-    TRY( TaoCreate(PetscObjectComm((PetscObject)qps),&qpstao->tao) );
-    TRY( TaoSetOptionsPrefix(qpstao->tao,prefix) );
-    TRY( TaoAppendOptionsPrefix(qpstao->tao,"qps_") );
-    TRY( PetscLogObjectParent((PetscObject)qps,(PetscObject)qpstao->tao) );
-    TRY( PetscObjectIncrementTabLevel((PetscObject)qpstao->tao,(PetscObject)qps,1) );
-    TRY( TaoSetType(qpstao->tao,TAOGPCG) );
+    PetscCall(QPSGetOptionsPrefix(qps,&prefix));
+    PetscCall(TaoCreate(PetscObjectComm((PetscObject)qps),&qpstao->tao));
+    PetscCall(TaoSetOptionsPrefix(qpstao->tao,prefix));
+    PetscCall(TaoAppendOptionsPrefix(qpstao->tao,"qps_"));
+    PetscCall(PetscLogObjectParent((PetscObject)qps,(PetscObject)qpstao->tao));
+    PetscCall(PetscObjectIncrementTabLevel((PetscObject)qpstao->tao,(PetscObject)qps,1));
+    PetscCall(TaoSetType(qpstao->tao,TAOGPCG));
   }
   *tao = qpstao->tao;
   PetscFunctionReturn(0);
@@ -107,11 +107,11 @@ PetscErrorCode QPSTaoSetType(QPS qps,TaoType type)
   
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  TRY( PetscObjectTypeCompare((PetscObject)qps,QPSTAO,&flg) );
-  if (!flg) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"This is a QPSTAO specific routine!");
+  PetscCall(PetscObjectTypeCompare((PetscObject)qps,QPSTAO,&flg));
+  if (!flg) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"This is a QPSTAO specific routine!");
   qpstao = (QPS_Tao*)qps->data;
-  TRY( QPSTaoGetTao(qps,&qpstao->tao) );
-  TRY( TaoSetType(qpstao->tao,type) );
+  PetscCall(QPSTaoGetTao(qps,&qpstao->tao));
+  PetscCall(TaoSetType(qpstao->tao,type));
   PetscFunctionReturn(0);
 }
 
@@ -124,11 +124,11 @@ PetscErrorCode QPSTaoGetType(QPS qps,TaoType *type)
   
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  TRY( PetscObjectTypeCompare((PetscObject)qps,QPSTAO,&flg) );
-  if (!flg) FLLOP_SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"This is a QPSTAO specific routine!");
+  PetscCall(PetscObjectTypeCompare((PetscObject)qps,QPSTAO,&flg));
+  if (!flg) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"This is a QPSTAO specific routine!");
   qpstao = (QPS_Tao*)qps->data;
-  TRY( QPSTaoGetTao(qps,&qpstao->tao) );
-  TRY( TaoGetType(qpstao->tao,type) );
+  PetscCall(QPSTaoGetTao(qps,&qpstao->tao));
+  PetscCall(TaoGetType(qpstao->tao,type));
   PetscFunctionReturn(0);
 }
 
@@ -145,66 +145,66 @@ PetscErrorCode QPSSetUp_Tao(QPS qps)
   PC               pc;
   
   PetscFunctionBegin;
-  TRY( QPSGetSolvedQP(qps,&qp) );
-  TRY( QPGetRhs(qp,&b) );
-  TRY( QPGetSolutionVector(qp,&x) );
-  TRY( QPGetBox(qp,&is,&lb,&ub) );
+  PetscCall(QPSGetSolvedQP(qps,&qp));
+  PetscCall(QPGetRhs(qp,&b));
+  PetscCall(QPGetSolutionVector(qp,&x));
+  PetscCall(QPGetBox(qp,&is,&lb,&ub));
   
-  TRY( QPSTaoGetTao(qps,&tao) );
-  TRY( TaoSetInitialVector(tao,x) );
+  PetscCall(QPSTaoGetTao(qps,&tao));
+  PetscCall(TaoSetSolution(tao,x));
 
   /* Set routines for function, gradient and hessian evaluation */
-  TRY( TaoSetObjectiveAndGradientRoutine(tao,FormFunctionGradientQPS,qps) );
-  TRY( TaoSetHessianRoutine(tao,qp->A,qp->A,FormHessianQPS,qps) );
+  PetscCall(TaoSetObjectiveAndGradient(tao,NULL,FormFunctionGradientQPS,qps));
+  PetscCall(TaoSetHessian(tao,qp->A,qp->A,FormHessianQPS,qps));
 
   /* Set Variable bounds */
-  TRY( VecDuplicate(x,&lbnew) );
-  TRY( VecDuplicate(x,&ubnew) );
-  TRY( VecSet(lbnew,PETSC_NINFINITY) );
-  TRY( VecSet(ubnew,PETSC_INFINITY) );
+  PetscCall(VecDuplicate(x,&lbnew));
+  PetscCall(VecDuplicate(x,&ubnew));
+  PetscCall(VecSet(lbnew,PETSC_NINFINITY));
+  PetscCall(VecSet(ubnew,PETSC_INFINITY));
 
   if (lb) {
     if (is) {
-      TRY( VecISCopy(lbnew,is,SCATTER_FORWARD,lb) );
+      PetscCall(VecISCopy(lbnew,is,SCATTER_FORWARD,lb));
     } else {
-      TRY( VecCopy(lb,lbnew) );
+      PetscCall(VecCopy(lb,lbnew));
     }
   }
 
   if (ub) {
     if (is) {
-      TRY( VecISCopy(ubnew,is,SCATTER_FORWARD,ub) );
+      PetscCall(VecISCopy(ubnew,is,SCATTER_FORWARD,ub));
     } else {
-      TRY( VecCopy(ub,ubnew) );
+      PetscCall(VecCopy(ub,ubnew));
     }
   }
 
-  TRY( TaoSetVariableBounds(tao,lbnew,ubnew) );
-  TRY( VecDestroy(&lbnew) );
-  TRY( VecDestroy(&ubnew) );
+  PetscCall(TaoSetVariableBounds(tao,lbnew,ubnew));
+  PetscCall(VecDestroy(&lbnew));
+  PetscCall(VecDestroy(&ubnew));
 
   /* set specific stopping criterion for TAO inside QPSTAO */
-  TRY( TaoSetConvergenceTest(tao,QPSTaoConverged_Tao,qps) );
-  TRY( TaoSetTolerances( tao, qps->atol, qps->rtol, PETSC_DEFAULT ) );
+  PetscCall(TaoSetConvergenceTest(tao,QPSTaoConverged_Tao,qps));
+  PetscCall(TaoSetTolerances( tao, qps->atol, qps->rtol, PETSC_DEFAULT ));
 
   /* Check for any tao command line options */
   if (qpstao->setfromoptionscalled) {
-    TRY( TaoSetFromOptions(tao) );
+    PetscCall(TaoSetFromOptions(tao));
   }
 
-  TRY( TaoGetKSP(tao,&ksp) );
+  PetscCall(TaoGetKSP(tao,&ksp));
   if (ksp) {
     /* set KSP defaults after TaoSetFromOptions as it can create new KSP instance */
     const char *prefix;
-    TRY( QPSGetOptionsPrefix(qps,&prefix) );
-    TRY( KSPSetOptionsPrefix(ksp,prefix) );
-    TRY( KSPAppendOptionsPrefix(ksp,"qps_tao_") );
-    TRY( KSPGetPC(ksp,&pc) );
-    TRY( PCSetType(pc,PCNONE) );
-    TRY( KSPSetFromOptions(ksp) );
+    PetscCall(QPSGetOptionsPrefix(qps,&prefix));
+    PetscCall(KSPSetOptionsPrefix(ksp,prefix));
+    PetscCall(KSPAppendOptionsPrefix(ksp,"qps_tao_"));
+    PetscCall(KSPGetPC(ksp,&pc));
+    PetscCall(PCSetType(pc,PCNONE));
+    PetscCall(KSPSetFromOptions(ksp));
   }
 
-  TRY( TaoSetUp(tao) );
+  PetscCall(TaoSetUp(tao));
   PetscFunctionReturn(0);  
 }
 
@@ -217,9 +217,9 @@ PetscErrorCode QPSSolve_Tao(QPS qps)
   PetscInt         its;
   
   PetscFunctionBegin;
-  TRY( QPSTaoGetTao(qps,&tao) );
-  TRY( TaoSolve(tao) );
-  TRY( TaoGetLinearSolveIterations(tao,&its) );
+  PetscCall(QPSTaoGetTao(qps,&tao));
+  PetscCall(TaoSolve(tao));
+  PetscCall(TaoGetLinearSolveIterations(tao,&its));
   qpstao->ksp_its += its;
   PetscFunctionReturn(0);
 }
@@ -242,8 +242,8 @@ PetscErrorCode QPSView_Tao(QPS qps, PetscViewer v)
   Tao              tao;
   
   PetscFunctionBegin;
-  TRY( QPSTaoGetTao(qps,&tao) );
-  TRY( TaoView(tao, v) );
+  PetscCall(QPSTaoGetTao(qps,&tao));
+  PetscCall(TaoView(tao, v));
   PetscFunctionReturn(0);  
 }
 
@@ -256,17 +256,17 @@ PetscErrorCode QPSViewConvergence_Tao(QPS qps, PetscViewer v)
   QPS_Tao       *qpstao = (QPS_Tao*)qps->data;
 
   PetscFunctionBegin;
-  TRY( PetscObjectTypeCompare((PetscObject)v,PETSCVIEWERASCII,&iascii) );
+  PetscCall(PetscObjectTypeCompare((PetscObject)v,PETSCVIEWERASCII,&iascii));
   if (iascii) {
-    TRY( QPSTaoGetTao(qps,&qpstao->tao) );
-    TRY( TaoGetType(qpstao->tao,&taotype) );
-    TRY( PetscViewerASCIIPrintf(v, "TaoType: %s\n", taotype) );
-    TRY( PetscViewerASCIIPrintf(v, "Number of KSP iterations in last iteration: %d\n", qpstao->tao->ksp_its) );
-    TRY( PetscViewerASCIIPrintf(v, "Total number of KSP iterations: %d\n", qpstao->ksp_its) );
-    TRY( PetscViewerASCIIPrintf(v, "Information about last TAOSolve:\n") );
-    TRY( PetscViewerASCIIPushTab(v) );
-    TRY( TaoView(qpstao->tao,v) );
-    TRY( PetscViewerASCIIPopTab(v) );
+    PetscCall(QPSTaoGetTao(qps,&qpstao->tao));
+    PetscCall(TaoGetType(qpstao->tao,&taotype));
+    PetscCall(PetscViewerASCIIPrintf(v, "TaoType: %s\n", taotype));
+    PetscCall(PetscViewerASCIIPrintf(v, "Number of KSP iterations in last iteration: %d\n", qpstao->tao->ksp_its));
+    PetscCall(PetscViewerASCIIPrintf(v, "Total number of KSP iterations: %d\n", qpstao->ksp_its));
+    PetscCall(PetscViewerASCIIPrintf(v, "Information about last TAOSolve:\n"));
+    PetscCall(PetscViewerASCIIPushTab(v));
+    PetscCall(TaoView(qpstao->tao,v));
+    PetscCall(PetscViewerASCIIPopTab(v));
   }
   PetscFunctionReturn(0);
 }
@@ -278,7 +278,7 @@ PetscErrorCode QPSReset_Tao(QPS qps)
   QPS_Tao         *qpstao = (QPS_Tao*)qps->data;
 
   PetscFunctionBegin;
-  TRY( TaoDestroy(&qpstao->tao) );
+  PetscCall(TaoDestroy(&qpstao->tao));
   qpstao->ksp_its = 0;
   PetscFunctionReturn(0);
 }
@@ -288,7 +288,7 @@ PetscErrorCode QPSReset_Tao(QPS qps)
 PetscErrorCode QPSDestroy_Tao(QPS qps)
 {
   PetscFunctionBegin;
-  TRY( QPSDestroyDefault(qps) );
+  PetscCall(QPSDestroyDefault(qps));
   PetscFunctionReturn(0);  
 }
 
@@ -301,13 +301,13 @@ PetscErrorCode QPSIsQPCompatible_Tao(QPS qps,QP qp,PetscBool *flg)
   QPC qpc;
   
   PetscFunctionBegin;
-  TRY( QPGetEq(qp,&Beq,&ceq) );
-  TRY( QPGetIneq(qp,&Bineq,&cineq) );
-  TRY( QPGetQPC(qp,&qpc) );
+  PetscCall(QPGetEq(qp,&Beq,&ceq));
+  PetscCall(QPGetIneq(qp,&Bineq,&cineq));
+  PetscCall(QPGetQPC(qp,&qpc));
   if (Beq || ceq || Bineq || cineq) {
     *flg = PETSC_FALSE;
   } else {
-    TRY( PetscObjectTypeCompare((PetscObject)qpc,QPCBOX,flg) );
+    PetscCall(PetscObjectTypeCompare((PetscObject)qpc,QPCBOX,flg));
   }
   PetscFunctionReturn(0);   
 }
@@ -320,8 +320,8 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_Tao(QPS qps)
   MPI_Comm        comm;
   
   PetscFunctionBegin;
-  TRY( PetscObjectGetComm((PetscObject)qps,&comm) );
-  TRY( PetscNewLog(qps,&qpstao) );
+  PetscCall(PetscObjectGetComm((PetscObject)qps,&comm));
+  PetscCall(PetscNewLog(qps,&qpstao));
   qps->data                  = (void*)qpstao;
   qpstao->setfromoptionscalled = PETSC_FALSE;
   qpstao->ksp_its            = 0;

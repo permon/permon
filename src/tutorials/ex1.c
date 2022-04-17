@@ -27,15 +27,14 @@ Input parameters include:\n\
 PetscErrorCode viewDraw(Vec x) {
   PetscViewer    v1;
   PetscDraw      draw;
-  PetscErrorCode ierr;
-
   PetscFunctionBeginUser;
-  ierr = PetscViewerDrawOpen(PETSC_COMM_WORLD,0,"",80,380,400,160,&v1);CHKERRQ(ierr);
-  ierr = PetscViewerDrawGetDraw(v1,0,&draw);CHKERRQ(ierr);
-  ierr = PetscDrawSetDoubleBuffer(draw);CHKERRQ(ierr);
-  ierr = PetscDrawSetFromOptions(draw);CHKERRQ(ierr);
-  ierr = VecView(x,v1);CHKERRQ(ierr);
-  ierr = PetscViewerDestroy(&v1);CHKERRQ(ierr);
+
+  PetscCall(PetscViewerDrawOpen(PETSC_COMM_WORLD,0,"",80,380,400,160,&v1));
+  PetscCall(PetscViewerDrawGetDraw(v1,0,&draw));
+  PetscCall(PetscDrawSetDoubleBuffer(draw));
+  PetscCall(PetscDrawSetFromOptions(draw));
+  PetscCall(VecView(x,v1));
+  PetscCall(PetscViewerDestroy(&v1));
   PetscFunctionReturn(0);
 }
 
@@ -54,69 +53,68 @@ int main(int argc,char **args)
   PetscInt       i,n = 10,col[3],rstart,rend;
   PetscReal      h,value[3];
   PetscBool      converged,viewSol=PETSC_FALSE;
-  PetscErrorCode ierr;
 
-  ierr = PermonInitialize(&argc,&args,(char *)0,help);if (ierr) return ierr;
-  ierr = PetscOptionsGetInt(NULL,NULL,"-n",&n,NULL);CHKERRQ(ierr);
-  ierr = PetscOptionsGetBool(NULL,NULL,"-sol",&viewSol,NULL);CHKERRQ(ierr);
+  PetscCall(PermonInitialize(&argc,&args,(char *)0,help));
+  PetscCall(PetscOptionsGetInt(NULL,NULL,"-n",&n,NULL));
+  PetscCall(PetscOptionsGetBool(NULL,NULL,"-sol",&viewSol,NULL));
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   * Setup matrices and vectors
   *  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   h = 1./(n-1);
-  ierr = MatCreate(PETSC_COMM_WORLD,&A);CHKERRQ(ierr);
-  ierr = MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,n,n);CHKERRQ(ierr);
-  ierr = MatSetFromOptions(A);CHKERRQ(ierr);
-  ierr = MatSetUp(A);CHKERRQ(ierr);
-  ierr = MatGetOwnershipRange(A,&rstart,&rend);CHKERRQ(ierr);
-  ierr = MatCreateVecs(A,&x,&b);CHKERRQ(ierr);
-  ierr = VecDuplicate(x,&c);CHKERRQ(ierr);
+  PetscCall(MatCreate(PETSC_COMM_WORLD,&A));
+  PetscCall(MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,n,n));
+  PetscCall(MatSetFromOptions(A));
+  PetscCall(MatSetUp(A));
+  PetscCall(MatGetOwnershipRange(A,&rstart,&rend));
+  PetscCall(MatCreateVecs(A,&x,&b));
+  PetscCall(VecDuplicate(x,&c));
 
   if (!rstart) {
     rstart = 1;
     i      = 0; value[0] = 1.0;
-    ierr   = MatSetValues(A,1,&i,1,&i,value,INSERT_VALUES);CHKERRQ(ierr);
-    ierr   = VecSetValue(b,i,0,INSERT_VALUES);CHKERRQ(ierr);
+    PetscCall(MatSetValues(A,1,&i,1,&i,value,INSERT_VALUES));
+    PetscCall(VecSetValue(b,i,0,INSERT_VALUES));
   }
   if (rend == n) {
     rend = n-1;
     i    = n-1; value[0] = 1.0;
-    ierr = MatSetValues(A,1,&i,1,&i,value,INSERT_VALUES);CHKERRQ(ierr);
-    ierr = VecSetValue(b,i,0,INSERT_VALUES);CHKERRQ(ierr);
+    PetscCall(MatSetValues(A,1,&i,1,&i,value,INSERT_VALUES));
+    PetscCall(VecSetValue(b,i,0,INSERT_VALUES));
   }
   value[0] = -1.0; value[1] = 2.0; value[2] = -1.0;
   for (i=rstart; i<rend; i++) {
     col[0] = i-1; col[1] = i; col[2] = i+1;
     if (i == 1)   col[0] = -1; /* ignore the first value in the second row (Dirichlet BC) */
     if (i == n-2) col[2] = -1; /* ignore the third value in the second to last row (Dirichlet BC) */
-    ierr = MatSetValues(A,1,&i,3,col,value,INSERT_VALUES);CHKERRQ(ierr);
-    ierr = VecSetValue(b,i,-15*h*h*2,INSERT_VALUES);CHKERRQ(ierr);
-    ierr = VecSetValue(c,i,fobst(i,n),INSERT_VALUES);CHKERRQ(ierr);
+    PetscCall(MatSetValues(A,1,&i,3,col,value,INSERT_VALUES));
+    PetscCall(VecSetValue(b,i,-15*h*h*2,INSERT_VALUES));
+    PetscCall(VecSetValue(c,i,fobst(i,n),INSERT_VALUES));
   }
-  ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  ierr = VecAssemblyBegin(b);CHKERRQ(ierr);
-  ierr = VecAssemblyEnd(b);CHKERRQ(ierr);
-  ierr = VecAssemblyBegin(c);CHKERRQ(ierr);
-  ierr = VecAssemblyEnd(c);CHKERRQ(ierr);
+  PetscCall(MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY));
+  PetscCall(MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY));
+  PetscCall(VecAssemblyBegin(b));
+  PetscCall(VecAssemblyEnd(b));
+  PetscCall(VecAssemblyBegin(c));
+  PetscCall(VecAssemblyEnd(c));
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   * Setup QP: argmin 1/2 x'Ax -x'b s.t. c <= x
   *  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  ierr = QPCreate(PETSC_COMM_WORLD,&qp);CHKERRQ(ierr);
+  PetscCall(QPCreate(PETSC_COMM_WORLD,&qp));
   /* Set matrix representing QP operator */
-  ierr = QPSetOperator(qp,A);CHKERRQ(ierr);
+  PetscCall(QPSetOperator(qp,A));
   /* Set right hand side */
-  ierr = QPSetRhs(qp,b);CHKERRQ(ierr);
+  PetscCall(QPSetRhs(qp,b));
   /* Set initial guess.
   * THIS VECTOR WILL ALSO HOLD THE SOLUTION OF QP */
-  ierr = QPSetInitialVector(qp,x);CHKERRQ(ierr);
+  PetscCall(QPSetInitialVector(qp,x));
   /* Set box constraints.
   * c <= x <= PETSC_INFINITY */
-  ierr = QPSetBox(qp,NULL,c,NULL);CHKERRQ(ierr);
+  PetscCall(QPSetBox(qp,NULL,c,NULL));
   /* Set runtime options, e.g
   *   -qp_chain_view_kkt */
-  ierr = QPSetFromOptions(qp);CHKERRQ(ierr);
+  PetscCall(QPSetFromOptions(qp));
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   * Setup QPS, i.e. QP Solver
@@ -124,33 +122,33 @@ int main(int argc,char **args)
   *   We could specify the comm explicitly, in this case PETSC_COMM_WORLD.
   *   Also, all PERMON objects are PETSc objects as well :)
   *  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  ierr = QPSCreate(PetscObjectComm((PetscObject)qp),&qps);CHKERRQ(ierr);
+  PetscCall(QPSCreate(PetscObjectComm((PetscObject)qp),&qps));
   /* Set QP to solve */
-  ierr = QPSSetQP(qps,qp);CHKERRQ(ierr);
+  PetscCall(QPSSetQP(qps,qp));
   /* Set runtime options for solver, e.g,
   *   -qps_type <type> -qps_rtol <relative tolerance> -qps_view_convergence */
-  ierr = QPSSetFromOptions(qps);CHKERRQ(ierr);
+  PetscCall(QPSSetFromOptions(qps));
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   * Solve QP
   *  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  ierr = QPSSolve(qps);CHKERRQ(ierr);
+  PetscCall(QPSSolve(qps));
 
   /* Check that QPS converged */
-  ierr = QPIsSolved(qp,&converged);CHKERRQ(ierr);
+  PetscCall(QPIsSolved(qp,&converged));
   if (!converged) PetscPrintf(PETSC_COMM_WORLD,"QPS did not converge!\n");
-  if (viewSol) ierr = VecView(x,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-  if (viewSol) ierr = viewDraw(c);CHKERRQ(ierr);
-  if (viewSol) ierr = viewDraw(x);CHKERRQ(ierr);
+  if (viewSol) PetscCall(VecView(x,PETSC_VIEWER_STDOUT_WORLD));
+  if (viewSol) PetscCall(viewDraw(c));
+  if (viewSol) PetscCall(viewDraw(x));
 
-  ierr = QPSDestroy(&qps);CHKERRQ(ierr);
-  ierr = QPDestroy(&qp);CHKERRQ(ierr);
-  ierr = VecDestroy(&x);CHKERRQ(ierr);
-  ierr = VecDestroy(&c);CHKERRQ(ierr);
-  ierr = VecDestroy(&b);CHKERRQ(ierr);
-  ierr = MatDestroy(&A);CHKERRQ(ierr);
-  ierr = PermonFinalize();
-  return ierr;
+  PetscCall(QPSDestroy(&qps));
+  PetscCall(QPDestroy(&qp));
+  PetscCall(VecDestroy(&x));
+  PetscCall(VecDestroy(&c));
+  PetscCall(VecDestroy(&b));
+  PetscCall(MatDestroy(&A));
+  PetscCall(PermonFinalize());
+  return 0;
 }
 
 
@@ -187,4 +185,3 @@ int main(int argc,char **args)
       suffix: blmvm_3
       nsize: 3
 TEST*/
-

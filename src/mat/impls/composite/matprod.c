@@ -19,7 +19,7 @@ static PetscErrorCode MatProdGetMat_Prod(Mat A,PetscInt index,Mat *Ai)
       break;
     }
   }
-  if (!ilink) FLLOP_SETERRQ1(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_OUTOFRANGE,"partial matrix index out of range: %d",i);
+  if (!ilink) SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_OUTOFRANGE,"partial matrix index out of range: %d",i);
   *Ai = ilink->mat;
   PetscFunctionReturn(0);
 }
@@ -32,7 +32,7 @@ PetscErrorCode MatProdGetMat(Mat A,PetscInt i,Mat *Ai)
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
   PetscValidLogicalCollectiveInt(A,i,2);
   PetscValidPointer(Ai,3);
-  TRY( PetscUseMethod(A,"MatProdGetMat_Prod_C",(Mat,PetscInt,Mat*),(A,i,Ai)) );
+  PetscUseMethod(A,"MatProdGetMat_Prod_C",(Mat,PetscInt,Mat*),(A,i,Ai));
   PetscFunctionReturn(0);
 }
 
@@ -42,33 +42,32 @@ PetscErrorCode MatMult_Prod(Mat A,Vec x,Vec y)
 {
   Mat_Composite     *shell = (Mat_Composite*)A->data;  
   Mat_CompositeLink next = shell->head;
-  PetscErrorCode    ierr;
   Vec               in,out;
 
   PetscFunctionBegin;
-  if (!next) FLLOP_SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_WRONGSTATE,"Must provide at least one matrix with MatCompositeAddMat()");
+  if (!next) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_WRONGSTATE,"Must provide at least one matrix with MatCompositeAddMat()");
   in = x;
   if (shell->right) {
     if (!shell->rightwork) {
-      ierr = VecDuplicate(shell->right,&shell->rightwork);CHKERRQ(ierr);
+      PetscCall(VecDuplicate(shell->right,&shell->rightwork));
     }
-    ierr = VecPointwiseMult(shell->rightwork,shell->right,in);CHKERRQ(ierr);
+    PetscCall(VecPointwiseMult(shell->rightwork,shell->right,in));
     in   = shell->rightwork;
   }
   while (next->next) {
     if (!next->work) { /* should reuse previous work if the same size */
-      ierr = MatCreateVecs(next->mat,NULL,&next->work);CHKERRQ(ierr);
+      PetscCall(MatCreateVecs(next->mat,NULL,&next->work));
     }
     out = next->work;
-    ierr = MatMult(next->mat,in,out);CHKERRQ(ierr);
+    PetscCall(MatMult(next->mat,in,out));
     in   = out;
     next = next->next;
   }
-  ierr = MatMult(next->mat,in,y);CHKERRQ(ierr);
+  PetscCall(MatMult(next->mat,in,y));
   if (shell->left) {
-    ierr = VecPointwiseMult(y,shell->left,y);CHKERRQ(ierr);
+    PetscCall(VecPointwiseMult(y,shell->left,y));
   }
-  ierr = VecScale(y,shell->scale);CHKERRQ(ierr);
+  PetscCall(VecScale(y,shell->scale));
   PetscFunctionReturn(0);
 }
 
@@ -78,33 +77,32 @@ PetscErrorCode MatMultTranspose_Prod(Mat A,Vec x,Vec y)
 {
   Mat_Composite     *shell = (Mat_Composite*)A->data;  
   Mat_CompositeLink tail = shell->tail;
-  PetscErrorCode    ierr;
   Vec               in,out;
 
   PetscFunctionBegin;
-  if (!tail) FLLOP_SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_WRONGSTATE,"Must provide at least one matrix with MatCompositeAddMat()");
+  if (!tail) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_WRONGSTATE,"Must provide at least one matrix with MatCompositeAddMat()");
   in = x;
   if (shell->left) {
     if (!shell->leftwork) {
-      ierr = VecDuplicate(shell->left,&shell->leftwork);CHKERRQ(ierr);
+      PetscCall(VecDuplicate(shell->left,&shell->leftwork));
     }
-    ierr = VecPointwiseMult(shell->leftwork,shell->left,in);CHKERRQ(ierr);
+    PetscCall(VecPointwiseMult(shell->leftwork,shell->left,in));
     in   = shell->leftwork;
   }
   while (tail->prev) {
     if (!tail->prev->work) { /* should reuse previous work if the same size */
-      ierr = MatCreateVecs(tail->mat,&tail->prev->work,NULL);CHKERRQ(ierr);
+      PetscCall(MatCreateVecs(tail->mat,&tail->prev->work,NULL));
     }
     out = tail->prev->work;
-    ierr = MatMultTranspose(tail->mat,in,out);CHKERRQ(ierr);
+    PetscCall(MatMultTranspose(tail->mat,in,out));
     in   = out;
     tail = tail->prev;
   }
-  ierr = MatMultTranspose(tail->mat,in,y);CHKERRQ(ierr);
+  PetscCall(MatMultTranspose(tail->mat,in,y));
   if (shell->right) {
-    ierr = VecPointwiseMult(y,shell->right,y);CHKERRQ(ierr);
+    PetscCall(VecPointwiseMult(y,shell->right,y));
   }
-  ierr = VecScale(y,shell->scale);CHKERRQ(ierr);
+  PetscCall(VecScale(y,shell->scale));
   PetscFunctionReturn(0);
 }
 
@@ -116,13 +114,13 @@ PetscErrorCode MatMultAdd_Prod(Mat A,Vec x,Vec y,Vec z)
 
   PetscFunctionBegin;
   if (y == z) {
-    if (!shell->leftwork) { TRY( VecDuplicate(z,&shell->leftwork) ); }
-    TRY( MatMult_Prod(A,x,shell->leftwork) );
-    TRY( VecCopy(y,z) );
-    TRY( VecAXPY(z,1.0,shell->leftwork) );
+    if (!shell->leftwork) { PetscCall(VecDuplicate(z,&shell->leftwork)); }
+    PetscCall(MatMult_Prod(A,x,shell->leftwork));
+    PetscCall(VecCopy(y,z));
+    PetscCall(VecAXPY(z,1.0,shell->leftwork));
   } else {
-    TRY( MatMult_Prod(A,x,z) );
-    TRY( VecAXPY(z,1.0,y) );
+    PetscCall(MatMult_Prod(A,x,z));
+    PetscCall(VecAXPY(z,1.0,y));
   }
   PetscFunctionReturn(0);
 }
@@ -135,13 +133,13 @@ PetscErrorCode MatMultTransposeAdd_Prod(Mat A,Vec x,Vec y, Vec z)
 
   PetscFunctionBegin;
   if (y == z) {
-    if (!shell->rightwork) { TRY( VecDuplicate(z,&shell->rightwork) ); }
-    TRY( MatMultTranspose_Prod(A,x,shell->rightwork) );
-    TRY( VecCopy(y,z) );
-    TRY( VecAXPY(z,1.0,shell->rightwork) );
+    if (!shell->rightwork) { PetscCall(VecDuplicate(z,&shell->rightwork)); }
+    PetscCall(MatMultTranspose_Prod(A,x,shell->rightwork));
+    PetscCall(VecCopy(y,z));
+    PetscCall(VecAXPY(z,1.0,shell->rightwork));
   } else {
-    TRY( MatMultTranspose_Prod(A,x,z) );
-    TRY( VecAXPY(z,1.0,y) );
+    PetscCall(MatMultTranspose_Prod(A,x,z));
+    PetscCall(VecAXPY(z,1.0,y));
   }
   PetscFunctionReturn(0);
 }
@@ -150,13 +148,12 @@ PetscErrorCode MatMultTransposeAdd_Prod(Mat A,Vec x,Vec y, Vec z)
 #define __FUNCT__ "MatCreate_Prod"
 FLLOP_EXTERN PetscErrorCode  MatCreate_Prod(Mat A)
 {
-  PetscErrorCode ierr;
   PetscErrorCode (*createComposite)(Mat);
   Mat_Composite  *composite;
 
   PetscFunctionBegin;
-  ierr = PetscFunctionListFind(MatList,MATCOMPOSITE,(void(**)(void))&createComposite);CHKERRQ(ierr);
-  ierr = createComposite(A);CHKERRQ(ierr);
+  PetscCall(PetscFunctionListFind(MatList,MATCOMPOSITE,(void(**)(void))&createComposite));
+  PetscCall(createComposite(A));
   composite = (Mat_Composite*)A->data;
 
   A->ops->mult               = MatMult_Prod;
@@ -166,13 +163,13 @@ FLLOP_EXTERN PetscErrorCode  MatCreate_Prod(Mat A)
   A->ops->getdiagonal        = NULL;
   composite->type            = MAT_COMPOSITE_MULTIPLICATIVE;
 
-  TRY( PetscObjectComposeFunction((PetscObject)A,"MatProdGetMat_Prod_C",MatProdGetMat_Prod) );
+  PetscCall(PetscObjectComposeFunction((PetscObject)A,"MatProdGetMat_Prod_C",MatProdGetMat_Prod));
 
   composite->type           = MAT_COMPOSITE_MULTIPLICATIVE;
   composite->head           = NULL;
   composite->tail           = NULL;
 
-  ierr = PetscObjectChangeTypeName((PetscObject)A,MATPROD);CHKERRQ(ierr);
+  PetscCall(PetscObjectChangeTypeName((PetscObject)A,MATPROD));
   PetscFunctionReturn(0);
 }
 
@@ -211,24 +208,23 @@ $       MatAssemblyEnd(mat,MAT_FINAL_ASSEMBLY);
 @*/
 PetscErrorCode  MatCreateProd(MPI_Comm comm,PetscInt nmat,const Mat *mats,Mat *mat)
 {
-  PetscErrorCode ierr;
   PetscInt       m,n,M,N,i;
   
   PetscFunctionBegin;
-  if (nmat < 1) FLLOP_SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_OUTOFRANGE,"Must pass in at least one matrix");
+  if (nmat < 1) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_OUTOFRANGE,"Must pass in at least one matrix");
   PetscValidPointer(mat,3);
 
-  ierr = MatGetLocalSize(mats[0],PETSC_IGNORE,&n);CHKERRQ(ierr);
-  ierr = MatGetLocalSize(mats[nmat-1],&m,PETSC_IGNORE);CHKERRQ(ierr);
-  ierr = MatGetSize(mats[0],PETSC_IGNORE,&N);CHKERRQ(ierr);
-  ierr = MatGetSize(mats[nmat-1],&M,PETSC_IGNORE);CHKERRQ(ierr);
-  ierr = MatCreate(comm,mat);CHKERRQ(ierr);
-  ierr = MatSetSizes(*mat,m,n,M,N);CHKERRQ(ierr);
-  ierr = MatSetType(*mat,MATPROD);CHKERRQ(ierr);
+  PetscCall(MatGetLocalSize(mats[0],PETSC_IGNORE,&n));
+  PetscCall(MatGetLocalSize(mats[nmat-1],&m,PETSC_IGNORE));
+  PetscCall(MatGetSize(mats[0],PETSC_IGNORE,&N));
+  PetscCall(MatGetSize(mats[nmat-1],&M,PETSC_IGNORE));
+  PetscCall(MatCreate(comm,mat));
+  PetscCall(MatSetSizes(*mat,m,n,M,N));
+  PetscCall(MatSetType(*mat,MATPROD));
   for (i=0; i<nmat; i++) {
-    ierr = MatCompositeAddMat(*mat,mats[i]);CHKERRQ(ierr);
+    PetscCall(MatCompositeAddMat(*mat,mats[i]));
   }
-  ierr = MatAssemblyBegin(*mat,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  ierr = MatAssemblyEnd(*mat,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+  PetscCall(MatAssemblyBegin(*mat,MAT_FINAL_ASSEMBLY));
+  PetscCall(MatAssemblyEnd(*mat,MAT_FINAL_ASSEMBLY));
   PetscFunctionReturn(0);
 }

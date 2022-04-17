@@ -23,7 +23,7 @@ PetscErrorCode FllopCreate(MPI_Comm comm,FLLOP *fllop_new)
 
   PetscFunctionBegin;
   PetscValidPointer(fllop_new,2);
-  TRY( PetscHeaderCreate(fllop,FLLOP_CLASSID,"FLLOP","FLLOP","FLLOP",comm,0,0) );
+  PetscCall(PetscHeaderCreate(fllop,FLLOP_CLASSID,"FLLOP","FLLOP","FLLOP",comm,0,0));
   *fllop_new = fllop;
   PetscFunctionReturn(0);
 }
@@ -39,7 +39,7 @@ PetscErrorCode FllopDestroy(FLLOP *fllop)
     *fllop = 0;
     PetscFunctionReturn(0);
   }
-  TRY( PetscHeaderDestroy(fllop) );
+  PetscCall(PetscHeaderDestroy(fllop));
   PetscFunctionReturn(0);
 }
 
@@ -53,8 +53,8 @@ PetscErrorCode FllopMakePath(const char *dir, mode_t mode)
     PetscBool flg;
     
     PetscFunctionBegin;
-    TRY( PetscSNPrintf(tmp, FLLOP_MAX_PATH_LEN, "%s", dir) );
-    TRY( PetscStrlen(tmp, &len) );
+    PetscCall(PetscSNPrintf(tmp, FLLOP_MAX_PATH_LEN, "%s", dir));
+    PetscCall(PetscStrlen(tmp, &len));
 
     if (tmp[len - 1] == '/')
         tmp[len - 1] = 0;
@@ -68,8 +68,8 @@ PetscErrorCode FllopMakePath(const char *dir, mode_t mode)
 
     mkdir(tmp, mode);
     
-    TRY( PetscTestDirectory(dir, 'x', &flg) );    
-    if (!flg) FLLOP_SETERRQ1(PETSC_COMM_SELF, PETSC_ERR_FILE_WRITE, "Directory %s was not created properly.", dir);
+    PetscCall(PetscTestDirectory(dir, 'x', &flg));    
+    if (!flg) SETERRQ(PETSC_COMM_SELF, PETSC_ERR_FILE_WRITE, "Directory %s was not created properly.", dir);
     PetscFunctionReturn(0);
 }
 
@@ -83,25 +83,25 @@ PetscErrorCode FllopProcessInfoExclusions(PetscClassId classid, const char *clas
 
   PetscFunctionBegin;
   if (FllopInfoEnabled) {
-    TRY( PetscInfoActivateClass(classid) );
+    PetscCall(PetscInfoActivateClass(classid));
   } else {
-    TRY( PetscInfoDeactivateClass(classid) );
+    PetscCall(PetscInfoDeactivateClass(classid));
   }
   
   /* Process info exclusions */
-  TRY( PetscOptionsGetString(NULL,NULL, "-info_exclude", logList, 256, &opt) );
+  PetscCall(PetscOptionsGetString(NULL,NULL, "-info_exclude", logList, 256, &opt));
   if (opt) {
-    TRY( PetscStrstr(logList, classname, &str) );
+    PetscCall(PetscStrstr(logList, classname, &str));
     if (str) {
-      TRY( PetscInfoDeactivateClass(classid) );
+      PetscCall(PetscInfoDeactivateClass(classid));
     }
   }
   /* Process summary exclusions */
-  TRY( PetscOptionsGetString(NULL,NULL, "-log_summary_exclude", logList, 256, &opt) );
+  PetscCall(PetscOptionsGetString(NULL,NULL, "-log_summary_exclude", logList, 256, &opt));
   if (opt) {
-    TRY( PetscStrstr(logList, classname, &str) );
+    PetscCall(PetscStrstr(logList, classname, &str));
     if (str) {
-      TRY( PetscLogEventDeactivateClass(classid) );
+      PetscCall(PetscLogEventDeactivateClass(classid));
     }
   }  
   
@@ -142,8 +142,8 @@ PetscErrorCode FllopPetscInfoDeactivateAll()
   PetscInt i;
 
   PetscFunctionBegin;
-  for (i = PETSC_SMALLEST_CLASSID+1; i < PETSC_SMALLEST_CLASSID+60; i++) TRY( PetscInfoDeactivateClass(i) );
-  TRY( PetscInfoDeactivateClass(0) );
+  for (i = PETSC_SMALLEST_CLASSID+1; i < PETSC_SMALLEST_CLASSID+60; i++) PetscCall(PetscInfoDeactivateClass(i));
+  PetscCall(PetscInfoDeactivateClass(0));
   PetscFunctionReturn(0);
 }
 
@@ -170,60 +170,59 @@ PetscErrorCode FllopSetFromOptions()
   PetscBool      flg=PETSC_FALSE;
   PetscBool      info, excl, fllop_info;
   char           logname[PETSC_MAX_PATH_LEN];
-  PetscErrorCode ierr;
   
   PetscFunctionBegin;
   logname[0] = 0;
-  ierr = PetscOptionsBegin(PETSC_COMM_WORLD, NULL, "FLLOP options", NULL);CHKERRQ(ierr);
+  PetscOptionsBegin(PETSC_COMM_WORLD, NULL, "FLLOP options", NULL);
   {
     flg = PETSC_FALSE;
-    ierr = PetscOptionsBool("-fllop_object_info", "print one-line info messages about matrices and vectors", NULL, PETSC_FALSE, &flg, NULL);CHKERRQ(ierr);
-    ierr = FllopSetObjectInfo(flg);CHKERRQ(ierr);
+    PetscCall(PetscOptionsBool("-fllop_object_info", "print one-line info messages about matrices and vectors", NULL, PETSC_FALSE, &flg, NULL));
+    PetscCall(FllopSetObjectInfo(flg));
     flg = PETSC_FALSE;
-    ierr = PetscOptionsBool("-fllop_trace",       "trace crucial FLLOP functions",                           NULL, PETSC_FALSE, &flg, NULL);CHKERRQ(ierr);
-    ierr = FllopSetTrace(flg);CHKERRQ(ierr);
+    PetscCall(PetscOptionsBool("-fllop_trace",       "trace crucial FLLOP functions",                           NULL, PETSC_FALSE, &flg, NULL));
+    PetscCall(FllopSetTrace(flg));
     flg = PETSC_FALSE;
-    ierr = PetscOptionsBool("-fllop_debug",       "enable FLLOP debug messages",                             NULL, PETSC_FALSE, &flg, NULL);CHKERRQ(ierr);
-    ierr = FllopSetDebug(flg);CHKERRQ(ierr);    
+    PetscCall(PetscOptionsBool("-fllop_debug",       "enable FLLOP debug messages",                             NULL, PETSC_FALSE, &flg, NULL));
+    PetscCall(FllopSetDebug(flg));    
     flg = PETSC_FALSE;
 #if defined (PETSC_USE_INFO)
-    ierr = PetscOptionsString("-fllop_info",      "enable info messages only from FLLOP",                    NULL, NULL, logname, 256, &fllop_info);CHKERRQ(ierr);
+    PetscCall(PetscOptionsString("-fllop_info",      "enable info messages only from FLLOP",                    NULL, NULL, logname, 256, &fllop_info));
 #endif     
   }
-  ierr = PetscOptionsEnd();CHKERRQ(ierr);
+  PetscOptionsEnd();
 
 #if defined (PETSC_USE_INFO)
   {
     info = PETSC_FALSE;
-    ierr = PetscOptionsGetString(NULL,NULL, "-info", logname, 256, &info);CHKERRQ(ierr);
-    ierr = PetscOptionsGetString(NULL,NULL, "-info_exclude", logList, 256, &excl);CHKERRQ(ierr);
+    PetscCall(PetscOptionsGetString(NULL,NULL, "-info", logname, 256, &info));
+    PetscCall(PetscOptionsGetString(NULL,NULL, "-info_exclude", logList, 256, &excl));
     
     if (fllop_info || info) {
       FllopInfoEnabled = PETSC_TRUE;
-      ierr = PetscInfoAllow(PETSC_TRUE);CHKERRQ(ierr);
+      PetscCall(PetscInfoAllow(PETSC_TRUE));
       if (logname[0]) {
-        ierr = PetscInfoSetFile(logname,"w");CHKERRQ(ierr);
+        PetscCall(PetscInfoSetFile(logname,"w"));
       }
     }
     
     if (!info) {
-      TRY( FllopPetscInfoDeactivateAll() );
+      PetscCall(FllopPetscInfoDeactivateAll());
     }    
 
     if (excl) {
-      ierr = PetscStrstr(logList, "petsc", &className);CHKERRQ(ierr);
+      PetscCall(PetscStrstr(logList, "petsc", &className));
       if (className) {
-        TRY( FllopPetscInfoDeactivateAll() );
+        PetscCall(FllopPetscInfoDeactivateAll());
       }
 
-      ierr = PetscStrstr(logList, "fllop", &className);CHKERRQ(ierr);
+      PetscCall(PetscStrstr(logList, "fllop", &className));
       if (className) FllopInfoEnabled = PETSC_FALSE;
     }
 
     if (FllopInfoEnabled) {
-      ierr = PetscInfoActivateClass(FLLOP_CLASSID);CHKERRQ(ierr);
+      PetscCall(PetscInfoActivateClass(FLLOP_CLASSID));
     } else {
-      ierr = PetscInfoDeactivateClass(FLLOP_CLASSID);CHKERRQ(ierr);
+      PetscCall(PetscInfoDeactivateClass(FLLOP_CLASSID));
     }
   }
 #endif
@@ -237,7 +236,6 @@ PetscErrorCode FllopEventRegLogGetEvent(PetscEventRegLog eventLog, const char na
 {
   PetscBool      match;
   int            e;
-  PetscErrorCode ierr;
 
   PetscFunctionBegin;
   PetscValidCharPointer(name,2);
@@ -245,7 +243,7 @@ PetscErrorCode FllopEventRegLogGetEvent(PetscEventRegLog eventLog, const char na
   *event = -1;
   *exists = PETSC_FALSE;
   for (e = 0; e < eventLog->numEvents; e++) {
-    ierr = PetscStrcasecmp(eventLog->eventInfo[e].name, name, &match);CHKERRQ(ierr);
+    PetscCall(PetscStrcasecmp(eventLog->eventInfo[e].name, name, &match));
     if (match) {
       *event = e;
       *exists = PETSC_TRUE;
@@ -261,11 +259,10 @@ PetscErrorCode FllopEventRegLogGetEvent(PetscEventRegLog eventLog, const char na
 PetscErrorCode  FllopPetscLogEventGetId(const char name[], PetscLogEvent *event, PetscBool *exists)
 {
   PetscStageLog  stageLog;
-  PetscErrorCode ierr;
 
   PetscFunctionBegin;
-  ierr = PetscLogGetStageLog(&stageLog);CHKERRQ(ierr);
-  ierr = FllopEventRegLogGetEvent(stageLog->eventLog, name, event, exists);CHKERRQ(ierr);
+  PetscCall(PetscLogGetStageLog(&stageLog));
+  PetscCall(FllopEventRegLogGetEvent(stageLog->eventLog, name, event, exists));
   PetscFunctionReturn(0);
 }
 
@@ -280,14 +277,14 @@ PetscErrorCode FllopPetscObjectInheritName(PetscObject obj,PetscObject orig,cons
   PetscValidHeader(obj,1);
   PetscValidHeader(orig,2);
   if (suffix) PetscValidCharPointer(suffix,3);
-  TRY( PetscObjectName((PetscObject)orig) );
+  PetscCall(PetscObjectName((PetscObject)orig));
   if (obj==orig && !suffix) PetscFunctionReturn(0);
-  TRY( PetscStrlen(orig->name,&len1) );
-  TRY( PetscStrlen(suffix,&len2) );
-  TRY( PetscMalloc((1+len1+len2)*sizeof(char),&name) );
-  TRY( PetscStrcpy(name,orig->name) );
-  TRY( PetscStrcat(name,suffix) );
-  TRY( PetscFree(obj->name) );
+  PetscCall(PetscStrlen(orig->name,&len1));
+  PetscCall(PetscStrlen(suffix,&len2));
+  PetscCall(PetscMalloc((1+len1+len2)*sizeof(char),&name));
+  PetscCall(PetscStrcpy(name,orig->name));
+  PetscCall(PetscStrcat(name,suffix));
+  PetscCall(PetscFree(obj->name));
   obj->name = name;
   PetscFunctionReturn(0);
 }
@@ -302,18 +299,18 @@ PetscErrorCode FllopPetscObjectInheritPrefix(PetscObject obj,PetscObject orig,co
   PetscValidHeader(obj,1);
   PetscValidHeader(orig,2);
   if (suffix) PetscValidCharPointer(suffix,3);
-  TRY( PetscFree(obj->prefix) );
+  PetscCall(PetscFree(obj->prefix));
 
   if (!orig->prefix) {
-    TRY( PetscStrallocpy(suffix,&obj->prefix) );
+    PetscCall(PetscStrallocpy(suffix,&obj->prefix));
     PetscFunctionReturn(0);
   }
 
-  TRY( PetscStrlen(orig->prefix,&len1) );
-  TRY( PetscStrlen(suffix,&len2) );
-  TRY( PetscMalloc((1+len1+len2)*sizeof(char),&obj->prefix) );
-  TRY( PetscStrcpy(obj->prefix,orig->prefix) );
-  TRY( PetscStrcat(obj->prefix,suffix) );
+  PetscCall(PetscStrlen(orig->prefix,&len1));
+  PetscCall(PetscStrlen(suffix,&len2));
+  PetscCall(PetscMalloc((1+len1+len2)*sizeof(char),&obj->prefix));
+  PetscCall(PetscStrcpy(obj->prefix,orig->prefix));
+  PetscCall(PetscStrcat(obj->prefix,suffix));
   PetscFunctionReturn(0);
 }
 
@@ -326,6 +323,6 @@ PetscErrorCode FllopPetscObjectInheritPrefixIfNotSet(PetscObject obj,PetscObject
   PetscValidHeader(orig,2);
   if (suffix) PetscValidCharPointer(suffix,3);
   if (obj->prefix) PetscFunctionReturn(0);
-  TRY( FllopPetscObjectInheritPrefix(obj,orig,suffix) );
+  PetscCall(FllopPetscObjectInheritPrefix(obj,orig,suffix));
   PetscFunctionReturn(0);
 }

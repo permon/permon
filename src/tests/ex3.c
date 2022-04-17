@@ -8,40 +8,38 @@ int main(int argc,char **args)
   PetscInt       i,n = 5,row[2],col[2],rstart,rend;
   PetscReal      val[] = {1.0, -1.0, -1.0, 1.0};
 
-  PetscErrorCode ierr;
+  PetscCall(PermonInitialize(&argc,&args,(char *)0,(char *)0));
+  PetscCall(PetscOptionsGetInt(NULL,NULL,"-n",&n,NULL));
 
-  ierr = PermonInitialize(&argc,&args,(char *)0,(char *)0);if (ierr) return ierr;
-  ierr = PetscOptionsGetInt(NULL,NULL,"-n",&n,NULL);CHKERRQ(ierr);
-
-  ierr = MatCreate(PETSC_COMM_WORLD,&A);CHKERRQ(ierr);
-  ierr = MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,n,n);CHKERRQ(ierr);
-  ierr = MatSetFromOptions(A);CHKERRQ(ierr);
-  ierr = MatSetUp(A);CHKERRQ(ierr);
-  ierr = MatGetOwnershipRange(A,&rstart,&rend);CHKERRQ(ierr);
+  PetscCall(MatCreate(PETSC_COMM_WORLD,&A));
+  PetscCall(MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,n,n));
+  PetscCall(MatSetFromOptions(A));
+  PetscCall(MatSetUp(A));
+  PetscCall(MatGetOwnershipRange(A,&rstart,&rend));
 
   /* Construct rank-defficient matrix (without Dirichlet BC) */
   if (rend==n) rend--;
   for (i=rstart; i<rend; i++) {
     row[0] = i; row[1] = i+1;
     col[0] = i; col[1] = i+1;
-    ierr = MatSetValues(A,2,row,2,col,val,ADD_VALUES);CHKERRQ(ierr);
+    PetscCall(MatSetValues(A,2,row,2,col,val,ADD_VALUES));
   }
-  ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+  PetscCall(MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY));
+  PetscCall(MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY));
 
-  ierr = MatCreateInv(A,MAT_INV_MONOLITHIC,&Ainv);CHKERRQ(ierr);
-  ierr = MatInvComputeNullSpace(Ainv);CHKERRQ(ierr);
+  PetscCall(MatCreateInv(A,MAT_INV_MONOLITHIC,&Ainv));
+  PetscCall(MatInvComputeNullSpace(Ainv));
   /* nullspace is checked automatically in MatInvComputeNullSpace() in debug mode */
   {
     Mat R;
-    ierr = MatInvGetNullSpace(Ainv,&R);CHKERRQ(ierr);
-    ierr = MatCheckNullSpace(A,R,PETSC_SMALL);CHKERRQ(ierr);
+    PetscCall(MatInvGetNullSpace(Ainv,&R));
+    PetscCall(MatCheckNullSpace(A,R,PETSC_SMALL));
   }
 
-  ierr = MatDestroy(&A);CHKERRQ(ierr);
-  ierr = MatDestroy(&Ainv);CHKERRQ(ierr);
-  ierr = PermonFinalize();
-  return ierr;
+  PetscCall(MatDestroy(&A));
+  PetscCall(MatDestroy(&Ainv));
+  PetscCall(PermonFinalize());
+  return 0;
 }
 
 
@@ -51,4 +49,3 @@ int main(int argc,char **args)
   test:
     nsize: {{1 2 4}}
 TEST*/
-

@@ -28,30 +28,29 @@ int main(int argc,char **args)
   IS dirichletIS;
   PetscBool dirInHess = PETSC_FALSE; /* Enforce Dirichlet BC in Hessian? */
   KSPConvergedReason reason;
-  PetscErrorCode ierr;
 
   /* Init PERMON */
-  ierr = PermonInitialize(&argc,&args,(char*)0,help);if (ierr) return ierr;
+  PetscCall(PermonInitialize(&argc,&args,(char*)0,help));
 
   /* Get number of elems per subdomain and number of subdomains */
-  ierr = PetscOptionsGetInt(NULL,NULL,"-ne",&ne_l,NULL);CHKERRQ(ierr); /* number of local elements */
-  ierr = MPI_Comm_size(PETSC_COMM_WORLD,&ns);CHKERRQ(ierr); /* number of subdomains */
-  ierr = MPI_Comm_rank(PETSC_COMM_WORLD,&rank);CHKERRQ(ierr);
+  PetscCall(PetscOptionsGetInt(NULL,NULL,"-ne",&ne_l,NULL)); /* number of local elements */
+  PetscCallMPI(MPI_Comm_size(PETSC_COMM_WORLD,&ns)); /* number of subdomains */
+  PetscCallMPI(MPI_Comm_rank(PETSC_COMM_WORLD,&rank));
   ne = ns*ne_l;
   ndofs = ns*ne_l+1;
   ndofs_l = ne_l+1;
   h = 1.0/ne;
 
   /* Create l2g mapping*/
-  ierr = PetscMalloc1(ndofs_l,&global_indices);CHKERRQ(ierr);
+  PetscCall(PetscMalloc1(ndofs_l,&global_indices));
   for (i=0; i<ndofs_l; i++) {
     global_indices[i]=rank*ne_l +i;
   }
-  ierr = ISLocalToGlobalMappingCreate(PETSC_COMM_WORLD,1,ndofs_l,global_indices,PETSC_OWN_POINTER,&l2g);
+  PetscCall(ISLocalToGlobalMappingCreate(PETSC_COMM_WORLD,1,ndofs_l,global_indices,PETSC_OWN_POINTER,&l2g));
   /* Create MATIS object needed by KSPFETI */
-  ierr = MatCreateIS(PETSC_COMM_WORLD,1,PETSC_DECIDE,PETSC_DECIDE,ndofs,ndofs,l2g,NULL,&A);CHKERRQ(ierr);
-  ierr = MatISSetPreallocation(A,3,NULL,3,NULL);CHKERRQ(ierr);
-  ierr = MatCreateVecs(A,&solution,&rhs);CHKERRQ(ierr);
+  PetscCall(MatCreateIS(PETSC_COMM_WORLD,1,PETSC_DECIDE,PETSC_DECIDE,ndofs,ndofs,l2g,l2g,&A));
+  PetscCall(MatISSetPreallocation(A,3,NULL,3,NULL));
+  PetscCall(MatCreateVecs(A,&solution,&rhs));
 
   /* assemble global matrix */
   for (i=0; i<ne_l; i++) {
@@ -59,58 +58,58 @@ int main(int argc,char **args)
     bloc[1] = bloc[1]; 
     idx[0] = i;
     idx[1] = i+1;
-    ierr = MatSetValuesLocal(A,2,idx,2,idx,Aloc,ADD_VALUES);CHKERRQ(ierr);
-    ierr = VecSetValuesLocal(rhs,2,idx,bloc,ADD_VALUES);CHKERRQ(ierr);
+    PetscCall(MatSetValuesLocal(A,2,idx,2,idx,Aloc,ADD_VALUES));
+    PetscCall(VecSetValuesLocal(rhs,2,idx,bloc,ADD_VALUES));
   }
   /* Call assembly functions */
-  ierr = VecAssemblyBegin(rhs);CHKERRQ(ierr);
-  ierr = VecAssemblyEnd(rhs);CHKERRQ(ierr);
-  ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+  PetscCall(VecAssemblyBegin(rhs));
+  PetscCall(VecAssemblyEnd(rhs));
+  PetscCall(MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY));
+  PetscCall(MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY));
 
   /* create and customize KSP for (T)FETI */
-  ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);CHKERRQ(ierr);
-  ierr = KSPSetType(ksp,KSPFETI);CHKERRQ(ierr);
-  ierr = KSPSetOperators(ksp,A,A);CHKERRQ(ierr);
-  ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-  ierr = KSPSetUp(ksp);CHKERRQ(ierr);
+  PetscCall(KSPCreate(PETSC_COMM_WORLD,&ksp));
+  PetscCall(KSPSetType(ksp,KSPFETI));
+  PetscCall(KSPSetOperators(ksp,A,A));
+  PetscCall(KSPSetFromOptions(ksp));
+  PetscCall(KSPSetUp(ksp));
 
   /* Set Dirichlet BC */
   idx[0] = 0; idx[1]=ndofs-1;
   if (!rank) { 
-    ierr = ISCreateGeneral(PETSC_COMM_WORLD,1,idx,PETSC_COPY_VALUES,&dirichletIS);CHKERRQ(ierr);
+    PetscCall(ISCreateGeneral(PETSC_COMM_WORLD,1,idx,PETSC_COPY_VALUES,&dirichletIS));
     if (ns==1) {
       idx[1]=ndofs_l-1;
-      ierr = ISCreateGeneral(PETSC_COMM_WORLD,2,idx,PETSC_COPY_VALUES,&dirichletIS);CHKERRQ(ierr);
+      PetscCall(ISCreateGeneral(PETSC_COMM_WORLD,2,idx,PETSC_COPY_VALUES,&dirichletIS));
     }
   } else if (rank == ns-1) {
-    ierr = ISCreateGeneral(PETSC_COMM_WORLD,1,&idx[1],PETSC_COPY_VALUES,&dirichletIS);CHKERRQ(ierr);
+    PetscCall(ISCreateGeneral(PETSC_COMM_WORLD,1,&idx[1],PETSC_COPY_VALUES,&dirichletIS));
   } else {
-    ierr = ISCreateGeneral(PETSC_COMM_WORLD,0,idx,PETSC_COPY_VALUES,&dirichletIS);CHKERRQ(ierr);
+    PetscCall(ISCreateGeneral(PETSC_COMM_WORLD,0,idx,PETSC_COPY_VALUES,&dirichletIS));
   }
-  ierr = PetscOptionsGetBool(NULL,NULL,"-dir_in_hess",&dirInHess,NULL);CHKERRQ(ierr); 
-  ierr = KSPFETISetDirichlet(ksp,dirichletIS,FETI_GLOBAL_UNDECOMPOSED,PetscNot(dirInHess));CHKERRQ(ierr);
+  PetscCall(PetscOptionsGetBool(NULL,NULL,"-dir_in_hess",&dirInHess,NULL)); 
+  PetscCall(KSPFETISetDirichlet(ksp,dirichletIS,FETI_GLOBAL_UNDECOMPOSED,PetscNot(dirInHess)));
   /* Values of Dirichlet BC are passed in solution */
-  //ierr = VecSet(solution,1.0);CHKERRQ(ierr); 
-  //ierr = KSPSetInitialGuessNonzero);CHKERRQ(ierr);
+  //PetscCall(VecSet(solution,1.0)); 
+  //PetscCall(KSPSetInitialGuessNonzero));
   
   /* Solve */
-  ierr = KSPSolve(ksp,rhs,solution);CHKERRQ(ierr);
-  ierr = KSPGetIterationNumber(ksp,&its);CHKERRQ(ierr);
-  ierr = KSPGetConvergedReason(ksp,&reason);CHKERRQ(ierr);
+  PetscCall(KSPSolve(ksp,rhs,solution));
+  PetscCall(KSPGetIterationNumber(ksp,&its));
+  PetscCall(KSPGetConvergedReason(ksp,&reason));
 
-  ierr = PetscPrintf(PETSC_COMM_WORLD,"PERMON FETI %s in %d iteration\n",KSPConvergedReasons[reason],its);CHKERRQ(ierr);
+  PetscCall(PetscPrintf(PETSC_COMM_WORLD,"PERMON FETI %s in %d iteration\n",KSPConvergedReasons[reason],its));
 
   /* Free workspace */
-  ierr = ISDestroy(&dirichletIS);CHKERRQ(ierr);
-  ierr = ISLocalToGlobalMappingDestroy(&l2g);CHKERRQ(ierr);
-  ierr = VecDestroy(&solution);CHKERRQ(ierr);
-  ierr = VecDestroy(&rhs);CHKERRQ(ierr);
-  ierr = MatDestroy(&A);CHKERRQ(ierr);
-  ierr = KSPDestroy(&ksp);CHKERRQ(ierr);
+  PetscCall(ISDestroy(&dirichletIS));
+  PetscCall(ISLocalToGlobalMappingDestroy(&l2g));
+  PetscCall(VecDestroy(&solution));
+  PetscCall(VecDestroy(&rhs));
+  PetscCall(MatDestroy(&A));
+  PetscCall(KSPDestroy(&ksp));
   /* Quit PERMON */
-  ierr = PermonFinalize();
-  return ierr;
+  PetscCall(PermonFinalize());
+  return 0;
 }
 
 /*TEST
@@ -129,4 +128,3 @@ int main(int argc,char **args)
       output_file: output/ex1_1.out
       args: -dual_qppf_redundancy 2
 TEST*/
-

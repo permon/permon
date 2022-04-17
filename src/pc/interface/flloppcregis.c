@@ -8,6 +8,6 @@ FLLOP_EXTERN PetscErrorCode PCCreate_Dual(PC);
 PetscErrorCode  FllopPCRegisterAll()
 {
   PetscFunctionBegin;
-  TRY( PCRegister(PCDUAL, PCCreate_Dual) );
+  PetscCall(PCRegister(PCDUAL, PCCreate_Dual));
   PetscFunctionReturn(0);
 }

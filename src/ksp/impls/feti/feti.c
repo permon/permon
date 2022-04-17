@@ -42,15 +42,13 @@ static PetscErrorCode KSPFETISetDirichlet_FETI(KSP ksp,IS isDir,QPFetiNumberingT
 #define __FUNCT__ "KSPFETISetDirichlet"
 PetscErrorCode KSPFETISetDirichlet(KSP ksp,IS isDir,QPFetiNumberingType numtype,PetscBool enforce_by_B)
 {
-  PetscErrorCode ierr;
-
   PetscFunctionBegin;
   PetscValidHeaderSpecific(ksp,KSP_CLASSID,1);
   if (isDir) PetscValidHeaderSpecific(isDir,IS_CLASSID,2);
   /* TODO valid numtype */
   PetscValidLogicalCollectiveBool(ksp,enforce_by_B,4);
-  ierr = KSPSetUp(ksp);CHKERRQ(ierr);
-  ierr = PetscTryMethod(ksp,"KSPFETISetDirichlet_C",(KSP,IS,QPFetiNumberingType,PetscBool),(ksp,isDir,numtype,enforce_by_B));CHKERRQ(ierr);
+  PetscCall(KSPSetUp(ksp));
+  PetscTryMethod(ksp,"KSPFETISetDirichlet_C",(KSP,IS,QPFetiNumberingType,PetscBool),(ksp,isDir,numtype,enforce_by_B));
   PetscFunctionReturn(0);
 }
 
@@ -59,13 +57,12 @@ PetscErrorCode KSPFETISetDirichlet(KSP ksp,IS isDir,QPFetiNumberingType numtype,
 static PetscErrorCode KSPQPSSetUp(KSP ksp)
 {
   KSP_FETI *feti = (KSP_FETI*)ksp->data;
-  PetscErrorCode ierr;
 
   PetscFunctionBegin;
-  ierr = QPSCreate(PetscObjectComm((PetscObject)ksp),&feti->qps);CHKERRQ(ierr);
-  ierr = QPSSetQP(feti->qps,feti->qp);CHKERRQ(ierr);
-  ierr = QPSSetFromOptions(feti->qps);CHKERRQ(ierr);
-  ierr = QPSSetUp(feti->qps);CHKERRQ(ierr);
+  PetscCall(QPSCreate(PetscObjectComm((PetscObject)ksp),&feti->qps));
+  PetscCall(QPSSetQP(feti->qps,feti->qp));
+  PetscCall(QPSSetFromOptions(feti->qps));
+  PetscCall(QPSSetUp(feti->qps));
   PetscFunctionReturn(0);
 }
 
@@ -74,26 +71,25 @@ static PetscErrorCode KSPQPSSetUp(KSP ksp)
 static PetscErrorCode KSPFETISetUp(KSP ksp)
 {
   KSP_FETI *feti = (KSP_FETI*)ksp->data;
-  PetscErrorCode ierr;
 
   PetscFunctionBegin;
-  //ierr = VecDuplicate(ksp->vec_sol,&feti->x);CHKERRQ(ierr);
-  //ierr = VecCopy(ksp->vec_sol,feti->x);CHKERRQ(ierr);
-  //ierr = VecDuplicate(ksp->vec_rhs,&feti->b);CHKERRQ(ierr);
-  //ierr = VecCopy(ksp->vec_rhs,feti->b);CHKERRQ(ierr);
+  //PetscCall(VecDuplicate(ksp->vec_sol,&feti->x));
+  //PetscCall(VecCopy(ksp->vec_sol,feti->x));
+  //PetscCall(VecDuplicate(ksp->vec_rhs,&feti->b));
+  //PetscCall(VecCopy(ksp->vec_rhs,feti->b));
   feti->x = ksp->vec_sol;
   feti->b = ksp->vec_rhs;
-  ierr = QPSetRhs(feti->qp,feti->b);CHKERRQ(ierr);
-  ierr = QPSetInitialVector(feti->qp,feti->x);CHKERRQ(ierr);
-  /*ierr = QPSetInitialVector(feti->qp,ksp->vec_sol);CHKERRQ(ierr);
-  ierr = QPSetRhs(feti->qp,ksp->vec_rhs);CHKERRQ(ierr);*/
-  ierr = QPTMatISToBlockDiag(feti->qp);CHKERRQ(ierr);
+  PetscCall(QPSetRhs(feti->qp,feti->b));
+  PetscCall(QPSetInitialVector(feti->qp,feti->x));
+  /*PetscCall(QPSetInitialVector(feti->qp,ksp->vec_sol));
+  PetscCall(QPSetRhs(feti->qp,ksp->vec_rhs));*/
+  PetscCall(QPTMatISToBlockDiag(feti->qp));
   /* FETI chain needs blockDiag */
-  ierr = QPGetChild(feti->qp,&feti->qp);CHKERRQ(ierr);
-  if (feti->isDir) ierr = QPFetiSetDirichlet(feti->qp,feti->isDir,feti->dirNumType,feti->dirEnforceExt);CHKERRQ(ierr);
-  ierr = QPFetiSetUp(feti->qp);CHKERRQ(ierr);
-  ierr = QPTFromOptions(feti->qp);CHKERRQ(ierr);
-  ierr = QPGetParent(feti->qp,&feti->qp);CHKERRQ(ierr);
+  PetscCall(QPGetChild(feti->qp,&feti->qp));
+  if (feti->isDir) PetscCall(QPFetiSetDirichlet(feti->qp,feti->isDir,feti->dirNumType,feti->dirEnforceExt));
+  PetscCall(QPFetiSetUp(feti->qp));
+  PetscCall(QPTFromOptions(feti->qp));
+  PetscCall(QPGetParent(feti->qp,&feti->qp));
   PetscFunctionReturn(0);
 }
 
@@ -104,17 +100,16 @@ PetscErrorCode KSPSetUp_FETI(KSP ksp)
   KSP_FETI *feti = (KSP_FETI*)ksp->data;
   Mat A;
   PetscBool ismatis;
-  PetscErrorCode ierr;
 
   PetscFunctionBegin;
-  ierr = KSPGetOperators(ksp,&A,NULL);CHKERRQ(ierr);
-  ierr = PetscObjectTypeCompare((PetscObject)A,MATIS,&ismatis);CHKERRQ(ierr);
+  PetscCall(KSPGetOperators(ksp,&A,NULL));
+  PetscCall(PetscObjectTypeCompare((PetscObject)A,MATIS,&ismatis));
   if (!ismatis) SETERRQ(PetscObjectComm((PetscObject)ksp),PETSC_ERR_USER,"Amat should be of type MATIS");
 
-  ierr = PetscOptionsInsertString(NULL,"-feti");CHKERRQ(ierr);
+  PetscCall(PetscOptionsInsertString(NULL,"-feti"));
 
-  ierr = QPCreate(PetscObjectComm((PetscObject)ksp),&feti->qp);CHKERRQ(ierr);
-  ierr = QPSetOperator(feti->qp,A);CHKERRQ(ierr);
+  PetscCall(QPCreate(PetscObjectComm((PetscObject)ksp),&feti->qp));
+  PetscCall(QPSetOperator(feti->qp,A));
 
   /* TODO allow full FETI setup before KSPSolve
   if (feti->b && feti->x) {
@@ -129,15 +124,14 @@ PetscErrorCode KSPSetUp_FETI(KSP ksp)
 PetscErrorCode KSPDestroy_FETI(KSP ksp)
 {
   KSP_FETI *feti = (KSP_FETI*)ksp->data;
-  PetscErrorCode ierr;
 
   PetscFunctionBegin;
-  //ierr = VecDestroy(&feti->b);CHKERRQ(ierr);
-  //ierr = VecDestroy(&feti->x);CHKERRQ(ierr);
-  ierr = QPSDestroy(&feti->qps);CHKERRQ(ierr);
-  ierr = QPDestroy(&feti->qp);CHKERRQ(ierr);
-  ierr = KSPDestroyDefault(ksp);CHKERRQ(ierr);
-  ierr = PetscObjectComposeFunction((PetscObject)ksp,"KSPFETISetDirichlet_C",NULL);CHKERRQ(ierr);
+  //PetscCall(VecDestroy(&feti->b));
+  //PetscCall(VecDestroy(&feti->x));
+  PetscCall(QPSDestroy(&feti->qps));
+  PetscCall(QPDestroy(&feti->qp));
+  PetscCall(KSPDestroyDefault(ksp));
+  PetscCall(PetscObjectComposeFunction((PetscObject)ksp,"KSPFETISetDirichlet_C",NULL));
   PetscFunctionReturn(0);
 }
 
@@ -147,15 +141,14 @@ PetscErrorCode KSPDestroy_FETI(KSP ksp)
 PetscErrorCode KSPSolve_FETI(KSP ksp)
 {
   KSP_FETI *feti = (KSP_FETI*)ksp->data;
-  PetscErrorCode ierr;
 
   PetscFunctionBegin;
-  ierr = KSPFETISetUp(ksp);CHKERRQ(ierr);
-  ierr = KSPQPSSetUp(ksp);CHKERRQ(ierr);
-  ierr = QPSSolve(feti->qps);CHKERRQ(ierr);
-  ierr = QPSGetConvergedReason(feti->qps,&ksp->reason);CHKERRQ(ierr);
-  ierr = QPSGetIterationNumber(feti->qps,&ksp->its);CHKERRQ(ierr);
-  ierr = QPGetSolutionVector(feti->qp,&ksp->vec_sol);CHKERRQ(ierr);
+  PetscCall(KSPFETISetUp(ksp));
+  PetscCall(KSPQPSSetUp(ksp));
+  PetscCall(QPSSolve(feti->qps));
+  PetscCall(QPSGetConvergedReason(feti->qps,&ksp->reason));
+  PetscCall(QPSGetIterationNumber(feti->qps,&ksp->its));
+  PetscCall(QPGetSolutionVector(feti->qp,&ksp->vec_sol));
   PetscFunctionReturn(0);
 }
 
@@ -177,19 +170,18 @@ M*/
 FLLOP_EXTERN PetscErrorCode KSPCreate_FETI(KSP ksp)
 {
   KSP_FETI *feti;
-  PetscErrorCode ierr;
 
   PetscFunctionBegin;
-  ierr = PetscNewLog(ksp,&feti);CHKERRQ(ierr);
+  PetscCall(PetscNewLog(ksp,&feti));
   ksp->data = (void*)feti;
 
   //TODO norms
-  TRY( KSPSetSupportedNorm(ksp,KSP_NORM_UNPRECONDITIONED,PC_LEFT,2) );
+  PetscCall(KSPSetSupportedNorm(ksp,KSP_NORM_UNPRECONDITIONED,PC_LEFT,2));
 
   ksp->ops->setup          = KSPSetUp_FETI;
   ksp->ops->solve          = KSPSolve_FETI;
   ksp->ops->destroy        = KSPDestroy_FETI;
 
-  ierr = PetscObjectComposeFunction((PetscObject)ksp,"KSPFETISetDirichlet_C",KSPFETISetDirichlet_FETI);CHKERRQ(ierr);
+  PetscCall(PetscObjectComposeFunction((PetscObject)ksp,"KSPFETISetDirichlet_C",KSPFETISetDirichlet_FETI));
   PetscFunctionReturn(0);
 }

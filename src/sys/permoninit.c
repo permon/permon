@@ -36,23 +36,22 @@ FLLOP   fllop;
 @*/
 PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], const char help[])
 {
-  PetscErrorCode ierr;
   PetscBool flg=PETSC_FALSE;
   char pfile[PETSC_MAX_PATH_LEN];
 
   if (FllopInitializeCalled) {
-    ierr=PetscInfo(0,"FLLOP already initialized, skipping initialization.\n");CHKERRQ(ierr);
+    PetscCall(PetscInfo(0,"FLLOP already initialized, skipping initialization.\n"));
     return(0);
   }
 
   if (!PetscInitializeCalled) {
     if (argc&&args) {
-      ierr = PetscInitialize(argc,args,file,help);CHKERRQ(ierr);
+      PetscCall(PetscInitialize(argc,args,file,help));
     } else {
-      ierr = PetscInitialize(&fllop_one,&fllop_executablePtr,file,help);CHKERRQ(ierr);
+      PetscCall(PetscInitialize(&fllop_one,&fllop_executablePtr,file,help));
     }
     FllopBeganPetsc=PETSC_TRUE;
-    ierr=PetscInfo(0,"FLLOP successfully started PETSc.\n");CHKERRQ(ierr);
+    PetscCall(PetscInfo(0,"FLLOP successfully started PETSc.\n"));
   }
   
   if (!PetscInitializeCalled) {
@@ -60,39 +59,39 @@ PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], cons
     exit(1);
   }
 
-  ierr = PetscClassIdRegister("FLLOP",&FLLOP_CLASSID);CHKERRQ(ierr);
-  ierr = FllopCreate(PETSC_COMM_WORLD,&fllop);CHKERRQ(ierr);
+  PetscCall(PetscClassIdRegister("FLLOP",&FLLOP_CLASSID));
+  PetscCall(FllopCreate(PETSC_COMM_WORLD,&fllop));
 
-  ierr = PetscOptionsGetBool(NULL,NULL,"-skip_flloprc",&flg,NULL);CHKERRQ(ierr);
+  PetscCall(PetscOptionsGetBool(NULL,NULL,"-skip_flloprc",&flg,NULL));
   if (!flg) {
-    ierr = PetscGetHomeDirectory(pfile,PETSC_MAX_PATH_LEN-16);CHKERRQ(ierr);
+    PetscCall(PetscGetHomeDirectory(pfile,PETSC_MAX_PATH_LEN-16));
     /* warning: assumes all processes have a home directory or none, but nothing in between */
     if (pfile[0]) {
-      ierr = PetscStrcat(pfile,"/.flloprc");CHKERRQ(ierr);
-      ierr = PetscOptionsInsertFile(PETSC_COMM_WORLD,NULL,pfile,PETSC_FALSE);CHKERRQ(ierr);
+      PetscCall(PetscStrcat(pfile,"/.flloprc"));
+      PetscCall(PetscOptionsInsertFile(PETSC_COMM_WORLD,NULL,pfile,PETSC_FALSE));
     }
-    ierr = PetscOptionsInsertFile(PETSC_COMM_WORLD,NULL, "flloprc", PETSC_FALSE);CHKERRQ(ierr);
-    ierr = PetscOptionsInsertFile(PETSC_COMM_WORLD,NULL, ".flloprc", PETSC_FALSE);CHKERRQ(ierr);
+    PetscCall(PetscOptionsInsertFile(PETSC_COMM_WORLD,NULL, "flloprc", PETSC_FALSE));
+    PetscCall(PetscOptionsInsertFile(PETSC_COMM_WORLD,NULL, ".flloprc", PETSC_FALSE));
     /* override by petsc options - flloprc currently takes the lowest precedence */
-    ierr = PetscOptionsInsert(NULL,argc,args,file);CHKERRQ(ierr);
+    PetscCall(PetscOptionsInsert(NULL,argc,args,file));
   } else {
-    ierr = PetscInfo(fllop,"skipping flloprc due to -skip_flloprc\n");CHKERRQ(ierr);
+    PetscCall(PetscInfo(fllop,"skipping flloprc due to -skip_flloprc\n"));
   }
 
-  ierr = FllopSetFromOptions();CHKERRQ(ierr);
+  PetscCall(FllopSetFromOptions());
 
   flg = PETSC_FALSE;
-  ierr = PetscOptionsGetBool(NULL,NULL,"-options_view",&flg,NULL);CHKERRQ(ierr);
-  if (!flg){ ierr = PetscOptionsGetBool(NULL,NULL,"-options_table",&flg,NULL);CHKERRQ(ierr); }
-  if (flg) { ierr = PetscOptionsView(NULL,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr); }
+  PetscCall(PetscOptionsGetBool(NULL,NULL,"-options_view",&flg,NULL));
+  if (!flg)PetscCall(PetscOptionsGetBool(NULL,NULL,"-options_table",&flg,NULL));
+  if (flg) PetscCall(PetscOptionsView(NULL,PETSC_VIEWER_STDOUT_WORLD));
 
   /* register all PERMON implementations of PETSc classes */
-  ierr = PermonMatRegisterAll();CHKERRQ(ierr);
-  ierr = FllopPCRegisterAll();CHKERRQ(ierr);
-  ierr = PermonKSPRegisterAll();CHKERRQ(ierr);
+  PetscCall(PermonMatRegisterAll());
+  PetscCall(FllopPCRegisterAll());
+  PetscCall(PermonKSPRegisterAll());
   
   FllopInitializeCalled = PETSC_TRUE;
-  ierr = PetscInfo(fllop,"FLLOP successfully initialized.\n");CHKERRQ(ierr);
+  PetscCall(PetscInfo(fllop,"FLLOP successfully initialized.\n"));
   return 0;
 }
 
@@ -107,14 +106,12 @@ PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], cons
 @*/
 PetscErrorCode PermonFinalize()
 {
-  PetscErrorCode ierr;
-
   PetscFunctionBegin;
   if (!FllopInitializeCalled) {
     PetscFunctionReturn(0);
   }
-  ierr = PetscInfo(fllop,"FllopFinalize() called\n");CHKERRQ(ierr);  
-  ierr = FllopDestroy(&fllop);CHKERRQ(ierr);
+  PetscCall(PetscInfo(fllop,"FllopFinalize() called\n"));  
+  PetscCall(FllopDestroy(&fllop));
 
   if (FllopBeganPetsc) {
     PetscFinalize();
@@ -134,12 +131,10 @@ PetscErrorCode PermonFinalize()
 #define __FUNCT__ "PetscDLLibraryRegister_permon"
 PetscErrorCode PetscDLLibraryRegister_permon()
 {
-  PetscErrorCode ierr;
-
   PetscFunctionBegin;
-  ierr = QPPFInitializePackage();CHKERRQ(ierr);
-  ierr = QPInitializePackage();CHKERRQ(ierr);
-  ierr = QPSInitializePackage();CHKERRQ(ierr);
+  PetscCall(QPPFInitializePackage());
+  PetscCall(QPInitializePackage());
+  PetscCall(QPSInitializePackage());
   PetscFunctionReturn(0);
 }
 #endif /* PETSC_HAVE_DYNAMIC_LIBRARIES */

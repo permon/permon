@@ -10,12 +10,6 @@
 #endif
 
 //TODO remove all these FLLOP_* macros
-#define FLLOP_SETERRQ( comm,n,s) SETERRQ(comm,n,s)
-#define FLLOP_SETERRQ1(comm,n,s,a1) SETERRQ1(comm,n,s,a1)
-#define FLLOP_SETERRQ2(comm,n,s,a1,a2) SETERRQ2(comm,n,s,a1,a2)
-#define FLLOP_SETERRQ3(comm,n,s,a1,a2,a3) SETERRQ3(comm,n,s,a1,a2,a3)
-#define FLLOP_SETERRQ4(comm,n,s,a1,a2,a3,a4) SETERRQ4(comm,n,s,a1,a2,a3,a4)
-#define FLLOP_SETERRQ5(comm,n,s,a1,a2,a3,a4,a5) SETERRQ5(comm,n,s,a1,a2,a3,a4,a5)
 #define FLLOP_EXTERN PETSC_EXTERN
 #define FLLOP_INTERN PETSC_INTERN
 
@@ -41,19 +35,7 @@ FLLOP_EXTERN char FLLOP_ObjNameBuffer_Global[FLLOP_MAX_NAME_LEN];
 
 /* BEGIN Function-like Macros */
 FLLOP_EXTERN PetscErrorCode _fllop_ierr;
-#define TRY(f) do {_fllop_ierr = f;CHKERRQ(_fllop_ierr);} while (0)
-#define FLLOP_SETERRQ_WORLD( n,s)                 FLLOP_SETERRQ(PETSC_COMM_WORLD,n,s)
-#define FLLOP_SETERRQ_WORLD1(n,s,a1)              FLLOP_SETERRQ1(PETSC_COMM_WORLD,n,s,a1)
-#define FLLOP_SETERRQ_WORLD2(n,s,a1,a2)           FLLOP_SETERRQ2(PETSC_COMM_WORLD,n,s,a1,a2)
-#define FLLOP_SETERRQ_WORLD3(n,s,a1,a2,a3)        FLLOP_SETERRQ3(PETSC_COMM_WORLD,n,s,a1,a2,a3)
-#define FLLOP_SETERRQ_WORLD4(n,s,a1,a2,a3,a4)     FLLOP_SETERRQ4(PETSC_COMM_WORLD,n,s,a1,a2,a3,a4)
-#define FLLOP_SETERRQ_WORLD5(n,s,a1,a2,a3,a4,a5)  FLLOP_SETERRQ5(PETSC_COMM_WORLD,n,s,a1,a2,a3,a4,a5)
-#define FLLOP_ASSERT( c,cstr)                     if (PetscUnlikely(!(c))) FLLOP_SETERRQ( PETSC_COMM_SELF,PETSC_ERR_PLIB, "Assertion failed: " cstr);
-#define FLLOP_ASSERT1(c,cstr,a1)                  if (PetscUnlikely(!(c))) FLLOP_SETERRQ1(PETSC_COMM_SELF,PETSC_ERR_PLIB, "Assertion failed: " cstr, a1);
-#define FLLOP_ASSERT2(c,cstr,a1,a2)               if (PetscUnlikely(!(c))) FLLOP_SETERRQ2(PETSC_COMM_SELF,PETSC_ERR_PLIB, "Assertion failed: " cstr, a1,a2);
-#define FLLOP_ASSERT3(c,cstr,a1,a2,a3)            if (PetscUnlikely(!(c))) FLLOP_SETERRQ3(PETSC_COMM_SELF,PETSC_ERR_PLIB, "Assertion failed: " cstr, a1,a2,a3);
-#define FLLOP_ASSERT4(c,cstr,a1,a2,a3,a4)         if (PetscUnlikely(!(c))) FLLOP_SETERRQ4(PETSC_COMM_SELF,PETSC_ERR_PLIB, "Assertion failed: " cstr, a1,a2,a3,a4);
-#define FLLOP_ASSERT5(c,cstr,a1,a2,a3,a4,a5)      if (PetscUnlikely(!(c))) FLLOP_SETERRQ4(PETSC_COMM_SELF,PETSC_ERR_PLIB, "Assertion failed: " cstr, a1,a2,a3,a4,a5);
+#define PERMON_ASSERT(c,...)                 if (PetscUnlikely(!(c))) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_PLIB,__VA_ARGS__);
 
 #define FllopDebug(msg)                       0; do { if (FllopDebugEnabled) PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg); } while(0)
 #define FllopDebug1(msg,a1)                   0; do { if (FllopDebugEnabled) PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1); } while(0)
@@ -63,21 +45,21 @@ FLLOP_EXTERN PetscErrorCode _fllop_ierr;
 #define FllopDebug5(msg,a1,a2,a3,a4,a5)       0; do { if (FllopDebugEnabled) PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1,a2,a3,a4,a5); } while(0)
 #define FllopDebug6(msg,a1,a2,a3,a4,a5,a6)    0; do { if (FllopDebugEnabled) PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1,a2,a3,a4,a5,a6); } while(0)
 
-PETSC_STATIC_INLINE PetscErrorCode PetscBoolGlobalAnd(MPI_Comm comm,PetscBool loc,PetscBool *glob)
+static inline PetscErrorCode PetscBoolGlobalAnd(MPI_Comm comm,PetscBool loc,PetscBool *glob)
 {
   return MPI_Allreduce(&loc,glob,1,MPIU_BOOL,MPI_LAND,comm);
 }
 
-PETSC_STATIC_INLINE PetscErrorCode PetscBoolGlobalOr(MPI_Comm comm,PetscBool loc,PetscBool *glob)
+static inline PetscErrorCode PetscBoolGlobalOr(MPI_Comm comm,PetscBool loc,PetscBool *glob)
 {
   return MPI_Allreduce(&loc,glob,1,MPIU_BOOL,MPI_LOR,comm);
 }
 
-PETSC_STATIC_INLINE void FLLTIC(PetscLogDouble *t) {
+static inline void FLLTIC(PetscLogDouble *t) {
     PetscTime(t);
 }
 
-PETSC_STATIC_INLINE void FLLTOC(PetscLogDouble *t) {
+static inline void FLLTOC(PetscLogDouble *t) {
     PetscLogDouble toc_time;
     PetscTime(&toc_time);
     *t = toc_time - *t;
@@ -96,7 +78,7 @@ if (FllopTraceEnabled) {\
     PeFuBe_s_[PeFuBe_i_]=' ';\
     PeFuBe_s_[PeFuBe_i_+1]=0;\
     FLLTIC(&ttttt);\
-    TRY( PetscPrintf(PETSC_COMM_WORLD,"%s%d BEGIN FUNCTION %s\n",PeFuBe_s_,PeFuBe_i_,__FUNCT__) );\
+    PetscCall(PetscPrintf(PETSC_COMM_WORLD,"%s%d BEGIN FUNCTION %s\n",PeFuBe_s_,PeFuBe_i_,__FUNCT__));\
     PeFuBe_i_++;\
 }
 
@@ -108,7 +90,7 @@ FllopTraceBegin;
 {\
 if (FllopTraceEnabled) {\
     FLLTOC(&ttttt);\
-    TRY( PetscPrintf(PETSC_COMM_WORLD,"%s%d END   FUNCTION %s (%2.2f s)\n",PeFuBe_s_,--PeFuBe_i_,__FUNCT__,ttttt) );\
+    PetscCall(PetscPrintf(PETSC_COMM_WORLD,"%s%d END   FUNCTION %s (%2.2f s)\n",PeFuBe_s_,--PeFuBe_i_,__FUNCT__,ttttt));\
     PeFuBe_s_[PeFuBe_i_]=0;\
     PetscFunctionReturn(rrrrr);\
 } else {\

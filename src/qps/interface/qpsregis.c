@@ -17,15 +17,13 @@ PetscBool  QPSRegisterAllCalled = PETSC_FALSE;
 #define __FUNCT__ "QPSRegisterAll"
 PetscErrorCode  QPSRegisterAll(void)
 {
-  PetscErrorCode ierr;
-
   PetscFunctionBegin;
   QPSRegisterAllCalled = PETSC_TRUE;
-  ierr = QPSRegister(QPSKSP,      QPSCreate_KSP);CHKERRQ(ierr);
-  ierr = QPSRegister(QPSMPGP,     QPSCreate_MPGP);CHKERRQ(ierr);
-  ierr = QPSRegister(QPSSMALXE,   QPSCreate_SMALXE);CHKERRQ(ierr);
-  ierr = QPSRegister(QPSTAO,      QPSCreate_Tao);CHKERRQ(ierr);
-  ierr = QPSRegister(QPSPCPG,     QPSCreate_PCPG);CHKERRQ(ierr);
+  PetscCall(QPSRegister(QPSKSP,      QPSCreate_KSP));
+  PetscCall(QPSRegister(QPSMPGP,     QPSCreate_MPGP));
+  PetscCall(QPSRegister(QPSSMALXE,   QPSCreate_SMALXE));
+  PetscCall(QPSRegister(QPSTAO,      QPSCreate_Tao));
+  PetscCall(QPSRegister(QPSPCPG,     QPSCreate_PCPG));
   PetscFunctionReturn(0);
 }
 
@@ -33,9 +31,7 @@ PetscErrorCode  QPSRegisterAll(void)
 #define __FUNCT__ "QPSRegister"
 PetscErrorCode QPSRegister(const char sname[],PetscErrorCode (*function)(QPS))
 {
-  PetscErrorCode ierr;
-
   PetscFunctionBegin;
-  ierr = PetscFunctionListAdd(&QPSList,sname,function);CHKERRQ(ierr);
+  PetscCall(PetscFunctionListAdd(&QPSList,sname,function));
   PetscFunctionReturn(0);
 }

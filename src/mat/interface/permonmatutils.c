@@ -28,76 +28,76 @@ PetscErrorCode MatPrintInfo(Mat mat)
   if (!FllopObjectInfoEnabled) PetscFunctionReturn(0);
 
   PetscValidHeaderSpecific(mat,MAT_CLASSID,1);
-  TRY( PetscObjectGetTabLevel((PetscObject)mat, &tablevel) );
+  PetscCall(PetscObjectGetTabLevel((PetscObject)mat, &tablevel));
   for (i=0; i<tablevel; i++) {
-    TRY( PetscPrintf(comm, "  ") );
+    PetscCall(PetscPrintf(comm, "  "));
   }
 
   if (mat == NULL) {
-    TRY( PetscPrintf(comm, "Mat NULL\n") );
+    PetscCall(PetscPrintf(comm, "Mat NULL\n"));
     PetscFunctionReturn(0);
   }
 
-  TRY( MatGetSize(mat, &M, &N) );
-  TRY( MatGetLocalSize(mat, &m, &n) );
-  TRY( MatGetType(mat, &type) );
-  TRY( PetscObjectGetName((PetscObject) mat, &name) );
-  TRY( PetscObjectGetOptionsPrefix((PetscObject) mat, &prefix) );
+  PetscCall(MatGetSize(mat, &M, &N));
+  PetscCall(MatGetLocalSize(mat, &m, &n));
+  PetscCall(MatGetType(mat, &type));
+  PetscCall(PetscObjectGetName((PetscObject) mat, &name));
+  PetscCall(PetscObjectGetOptionsPrefix((PetscObject) mat, &prefix));
 
-  TRY( PetscPrintf(comm,
+  PetscCall(PetscPrintf(comm,
       "Mat %8x %-16s %-10s %-10s sizes %d %d %d %d",
-          mat, name, prefix, type,                m, n, M, N) );
+          mat, name, prefix, type,                m, n, M, N));
 
   if (mat->ops->getinfo) {
     MatInfo info;
     PetscInt sumnnz,sumalloc,maxnnz;
 
-    TRY( MatGetInfo(mat, MAT_GLOBAL_SUM, &info) );
+    PetscCall(MatGetInfo(mat, MAT_GLOBAL_SUM, &info));
     sumnnz  =  (PetscInt) info.nz_used;
     sumalloc = (PetscInt) info.nz_allocated;
     fill = ((PetscReal) sumnnz) / M / N;
-    TRY( MatGetInfo(mat, MAT_GLOBAL_MAX, &info) );
+    PetscCall(MatGetInfo(mat, MAT_GLOBAL_MAX, &info));
     maxnnz  =  (PetscInt) info.nz_used;
-    TRY( PetscPrintf(comm,"  [sum(nnz) sum(alloc) max(nnz) fill]=[%d %d %d %.2f]",sumnnz,sumalloc,maxnnz,fill) );
+    PetscCall(PetscPrintf(comm,"  [sum(nnz) sum(alloc) max(nnz) fill]=[%d %d %d %.2f]",sumnnz,sumalloc,maxnnz,fill));
   }
 
-  TRY( PetscPrintf(comm, "\n") );
+  PetscCall(PetscPrintf(comm, "\n"));
 
   //TODO implement as type-specific methods
-  TRY( PetscObjectTypeCompare((PetscObject)mat, MATTRANSPOSEMAT, &flg) );
+  PetscCall(PetscObjectTypeCompare((PetscObject)mat, MATTRANSPOSEMAT, &flg));
   if (flg) {
-    TRY( MatTransposeGetMat(mat,&inmat) );
-    TRY( PetscObjectGetTabLevel((PetscObject)inmat,&tablevel) );
-    TRY( PetscObjectIncrementTabLevel((PetscObject)inmat,(PetscObject)mat,1) );
-    TRY( MatPrintInfo(inmat) );
-    TRY( PetscObjectSetTabLevel((PetscObject)inmat,tablevel) );
+    PetscCall(MatTransposeGetMat(mat,&inmat));
+    PetscCall(PetscObjectGetTabLevel((PetscObject)inmat,&tablevel));
+    PetscCall(PetscObjectIncrementTabLevel((PetscObject)inmat,(PetscObject)mat,1));
+    PetscCall(MatPrintInfo(inmat));
+    PetscCall(PetscObjectSetTabLevel((PetscObject)inmat,tablevel));
   }
 
-  TRY( PetscObjectTypeCompare((PetscObject)mat, MATBLOCKDIAG, &flg) );
+  PetscCall(PetscObjectTypeCompare((PetscObject)mat, MATBLOCKDIAG, &flg));
   if (flg) {
     PetscMPIInt rank;
 
-    TRY( MPI_Comm_rank(comm,&rank) );
+    PetscCallMPI(MPI_Comm_rank(comm,&rank));
     if (!rank) {
-      TRY( MatGetDiagonalBlock(mat,&inmat) );
-      TRY( PetscObjectGetTabLevel((PetscObject)inmat,&tablevel) );
-      TRY( PetscObjectIncrementTabLevel((PetscObject)inmat,(PetscObject)mat,1) );
-      TRY( MatPrintInfo(inmat) );
-      TRY( PetscObjectSetTabLevel((PetscObject)inmat,tablevel) );
+      PetscCall(MatGetDiagonalBlock(mat,&inmat));
+      PetscCall(PetscObjectGetTabLevel((PetscObject)inmat,&tablevel));
+      PetscCall(PetscObjectIncrementTabLevel((PetscObject)inmat,(PetscObject)mat,1));
+      PetscCall(MatPrintInfo(inmat));
+      PetscCall(PetscObjectSetTabLevel((PetscObject)inmat,tablevel));
     }
   }
 
-  TRY( PetscObjectTypeCompare((PetscObject)mat, MATNESTPERMON, &flg) );
+  PetscCall(PetscObjectTypeCompare((PetscObject)mat, MATNESTPERMON, &flg));
   if (flg) {
     PetscInt Mn,Nn,i,j;
-    TRY( MatNestGetSize(mat,&Mn,&Nn) );
+    PetscCall(MatNestGetSize(mat,&Mn,&Nn));
     for (i=0; i<Mn; i++) for (j=0; j<Nn; j++) {
-      TRY( MatNestGetSubMat(mat,i,j,&inmat) );
-      TRY( PetscObjectGetTabLevel((PetscObject)inmat,&tablevel) );
-      TRY( PetscObjectIncrementTabLevel((PetscObject)inmat,(PetscObject)mat,1) );
-      TRY( PetscPrintf(comm, "  nested Mat (%d,%d):\n",i,j) );
-      TRY( MatPrintInfo(inmat) );
-      TRY( PetscObjectSetTabLevel((PetscObject)inmat,tablevel) );
+      PetscCall(MatNestGetSubMat(mat,i,j,&inmat));
+      PetscCall(PetscObjectGetTabLevel((PetscObject)inmat,&tablevel));
+      PetscCall(PetscObjectIncrementTabLevel((PetscObject)inmat,(PetscObject)mat,1));
+      PetscCall(PetscPrintf(comm, "  nested Mat (%d,%d):\n",i,j));
+      PetscCall(MatPrintInfo(inmat));
+      PetscCall(PetscObjectSetTabLevel((PetscObject)inmat,tablevel));
     }
   }
 
@@ -114,15 +114,15 @@ PetscErrorCode MatIsIdentity(Mat A, PetscReal tol, PetscInt ntrials, PetscBool *
   PetscMPIInt rank;
 
   PetscFunctionBegin;
-  TRY( PetscObjectGetComm((PetscObject) A, &comm) );
-  TRY( MPI_Comm_rank(comm, &rank) );
-  TRY( MatGetSize(A, &M, &N) );
-  FLLOP_ASSERT(M==N, "M==N");
+  PetscCall(PetscObjectGetComm((PetscObject) A, &comm));
+  PetscCallMPI(MPI_Comm_rank(comm, &rank));
+  PetscCall(MatGetSize(A, &M, &N));
+  PERMON_ASSERT(M==N, "M==N");
 
-  TRY( MatGetLocalSize(A, &m, &n) );
-  TRY( MatCreateIdentity(comm, m, n, N, &E) );
-  TRY( MatMultEqualTol(A, E, ntrials, tol, flg) );
-  TRY( MatDestroy(&E) );
+  PetscCall(MatGetLocalSize(A, &m, &n));
+  PetscCall(MatCreateIdentity(comm, m, n, N, &E));
+  PetscCall(MatMultEqualTol(A, E, ntrials, tol, flg));
+  PetscCall(MatDestroy(&E));
   PetscFunctionReturn(0);
 }
 
@@ -135,12 +135,12 @@ PetscErrorCode MatIsZero(Mat A, PetscReal tol, PetscInt ntrials, PetscBool *flg)
   MPI_Comm comm;
 
   PetscFunctionBegin;
-  TRY( PetscObjectGetComm((PetscObject) A, &comm) );
-  TRY( MatGetSize(A, &M, &N) );
-  TRY( MatGetLocalSize(A, &m, &n) );
-  TRY( MatCreateZero(comm, m, n, M, N, &O) );
-  TRY( MatMultEqualTol(A, O, ntrials, tol, flg) );
-  TRY( MatDestroy(&O) );
+  PetscCall(PetscObjectGetComm((PetscObject) A, &comm));
+  PetscCall(MatGetSize(A, &M, &N));
+  PetscCall(MatGetLocalSize(A, &m, &n));
+  PetscCall(MatCreateZero(comm, m, n, M, N, &O));
+  PetscCall(MatMultEqualTol(A, O, ntrials, tol, flg));
+  PetscCall(MatDestroy(&O));
   PetscFunctionReturn(0);
 }
 
@@ -152,13 +152,13 @@ PetscErrorCode MatIsSymmetricByType(Mat A, PetscBool *flg)
   MPI_Comm comm;
 
   PetscFunctionBegin;
-  TRY( PetscObjectGetComm((PetscObject)A, &comm) );
-  TRY( PetscObjectTypeCompare((PetscObject)A, MATBLOCKDIAG, &_flg) );
-  if (_flg) TRY( MatGetDiagonalBlock(A, &A) );
+  PetscCall(PetscObjectGetComm((PetscObject)A, &comm));
+  PetscCall(PetscObjectTypeCompare((PetscObject)A, MATBLOCKDIAG, &_flg));
+  if (_flg) PetscCall(MatGetDiagonalBlock(A, &A));
   {
-    TRY( PetscObjectTypeCompareAny((PetscObject)A, &_flg, MATSBAIJ, MATSEQSBAIJ, MATMPISBAIJ, "") );
+    PetscCall(PetscObjectTypeCompareAny((PetscObject)A, &_flg, MATSBAIJ, MATSEQSBAIJ, MATMPISBAIJ, ""));
   }
-  TRY( PetscBoolGlobalAnd(comm, _flg, flg) );
+  PetscCall(PetscBoolGlobalAnd(comm, _flg, flg));
   PetscFunctionReturn(0);
 }
 
@@ -167,7 +167,7 @@ PetscErrorCode MatIsSymmetricByType(Mat A, PetscBool *flg)
 PetscErrorCode MatMult_Identity(Mat E, Vec x, Vec y)
 {
   PetscFunctionBegin;
-  TRY( VecCopy(x, y) );
+  PetscCall(VecCopy(x, y));
   PetscFunctionReturn(0);
 }
 
@@ -176,7 +176,7 @@ PetscErrorCode MatMult_Identity(Mat E, Vec x, Vec y)
 PetscErrorCode MatMultAdd_Identity(Mat E, Vec x, Vec y, Vec z)
 {
   PetscFunctionBegin;
-  TRY( VecWAXPY(z,1.0,x,y) );
+  PetscCall(VecWAXPY(z,1.0,x,y));
   PetscFunctionReturn(0);
 }
 #undef __FUNCT__
@@ -184,13 +184,13 @@ PetscErrorCode MatMultAdd_Identity(Mat E, Vec x, Vec y, Vec z)
 PetscErrorCode MatCreateIdentity(MPI_Comm comm, PetscInt m, PetscInt n, PetscInt N, Mat *E)
 {
   PetscFunctionBegin;
-  TRY( MatCreateShellPermon(comm, m, n, N, N, NULL, E) );
-  TRY( MatShellSetOperation(*E, MATOP_MULT, (void(*)()) MatMult_Identity) );
-  TRY( MatShellSetOperation(*E, MATOP_MULT_TRANSPOSE, (void(*)()) MatMult_Identity) );
-  TRY( MatShellSetOperation(*E, MATOP_MULT_ADD, (void(*)()) MatMultAdd_Identity) );
-  TRY( MatShellSetOperation(*E, MATOP_MULT_TRANSPOSE_ADD, (void(*)()) MatMultAdd_Identity) );
-  TRY( MatSetOption(*E, MAT_SYMMETRIC, PETSC_TRUE) );
-  TRY( MatSetOption(*E, MAT_SYMMETRY_ETERNAL, PETSC_TRUE) );
+  PetscCall(MatCreateShellPermon(comm, m, n, N, N, NULL, E));
+  PetscCall(MatShellSetOperation(*E, MATOP_MULT, (void(*)()) MatMult_Identity));
+  PetscCall(MatShellSetOperation(*E, MATOP_MULT_TRANSPOSE, (void(*)()) MatMult_Identity));
+  PetscCall(MatShellSetOperation(*E, MATOP_MULT_ADD, (void(*)()) MatMultAdd_Identity));
+  PetscCall(MatShellSetOperation(*E, MATOP_MULT_TRANSPOSE_ADD, (void(*)()) MatMultAdd_Identity));
+  PetscCall(MatSetOption(*E, MAT_SYMMETRIC, PETSC_TRUE));
+  PetscCall(MatSetOption(*E, MAT_SYMMETRY_ETERNAL, PETSC_TRUE));
   PetscFunctionReturn(0);
 }
 
@@ -199,7 +199,7 @@ PetscErrorCode MatCreateIdentity(MPI_Comm comm, PetscInt m, PetscInt n, PetscInt
 PetscErrorCode MatMult_Zero(Mat O, Vec x, Vec y)
 {
   PetscFunctionBegin;
-  TRY( VecZeroEntries(y) );
+  PetscCall(VecZeroEntries(y));
   PetscFunctionReturn(0);
 }
 
@@ -208,7 +208,7 @@ PetscErrorCode MatMult_Zero(Mat O, Vec x, Vec y)
 PetscErrorCode MatMultAdd_Zero(Mat O, Vec x, Vec y, Vec z)
 {
   PetscFunctionBegin;
-  TRY( VecZeroEntries(z) );
+  PetscCall(VecZeroEntries(z));
   PetscFunctionReturn(0);
 }
 #undef __FUNCT__
@@ -216,13 +216,13 @@ PetscErrorCode MatMultAdd_Zero(Mat O, Vec x, Vec y, Vec z)
 PetscErrorCode MatCreateZero(MPI_Comm comm, PetscInt m, PetscInt n, PetscInt M, PetscInt N, Mat *O)
 {
   PetscFunctionBegin;
-  TRY( MatCreateShellPermon(comm, m, n, M, N, NULL, O) );
-  TRY( MatShellSetOperation(*O, MATOP_MULT, (void(*)()) MatMult_Zero) );
-  TRY( MatShellSetOperation(*O, MATOP_MULT_TRANSPOSE, (void(*)()) MatMult_Zero) );
-  TRY( MatShellSetOperation(*O, MATOP_MULT_ADD, (void(*)()) MatMultAdd_Zero) );
-  TRY( MatShellSetOperation(*O, MATOP_MULT_TRANSPOSE_ADD, (void(*)()) MatMultAdd_Zero) );
-  TRY( MatSetOption(*O, MAT_SYMMETRIC, PETSC_TRUE) );
-  TRY( MatSetOption(*O, MAT_SYMMETRY_ETERNAL, PETSC_TRUE) );
+  PetscCall(MatCreateShellPermon(comm, m, n, M, N, NULL, O));
+  PetscCall(MatShellSetOperation(*O, MATOP_MULT, (void(*)()) MatMult_Zero));
+  PetscCall(MatShellSetOperation(*O, MATOP_MULT_TRANSPOSE, (void(*)()) MatMult_Zero));
+  PetscCall(MatShellSetOperation(*O, MATOP_MULT_ADD, (void(*)()) MatMultAdd_Zero));
+  PetscCall(MatShellSetOperation(*O, MATOP_MULT_TRANSPOSE_ADD, (void(*)()) MatMultAdd_Zero));
+  PetscCall(MatSetOption(*O, MAT_SYMMETRIC, PETSC_TRUE));
+  PetscCall(MatSetOption(*O, MAT_SYMMETRY_ETERNAL, PETSC_TRUE));
   PetscFunctionReturn(0);
 }
 
@@ -233,8 +233,8 @@ PetscErrorCode MatMult_Diag(Mat D, Vec x, Vec y)
   Vec d;
 
   PetscFunctionBegin;
-  TRY( MatShellGetContext(D, (Vec*)&d) );
-  TRY( VecPointwiseMult(y, d, x) );
+  PetscCall(MatShellGetContext(D, (Vec*)&d));
+  PetscCall(VecPointwiseMult(y, d, x));
   PetscFunctionReturn(0);
 }
 
@@ -245,9 +245,9 @@ PetscErrorCode MatMultAdd_Diag(Mat D, Vec x, Vec y, Vec z)
   Vec d;
 
   PetscFunctionBegin;
-  TRY( MatShellGetContext(D, (Vec*)&d) );
-  TRY( VecPointwiseMult(z, d, x) );
-  TRY( VecAXPY(z, 1.0, y) );
+  PetscCall(MatShellGetContext(D, (Vec*)&d));
+  PetscCall(VecPointwiseMult(z, d, x));
+  PetscCall(VecAXPY(z, 1.0, y));
   PetscFunctionReturn(0);
 }
 
@@ -258,8 +258,8 @@ PetscErrorCode MatDestroy_Diag(Mat D, Vec x, Vec y, Vec z)
   Vec d;
 
   PetscFunctionBegin;
-  TRY( MatShellGetContext(D, (Vec*)&d) );
-  TRY( VecDestroy(&d) );
+  PetscCall(MatShellGetContext(D, (Vec*)&d));
+  PetscCall(VecDestroy(&d));
   PetscFunctionReturn(0);
 }
 
@@ -270,8 +270,8 @@ PetscErrorCode MatGetDiagonal_Diag(Mat D,Vec out_d)
   Vec d;
 
   PetscFunctionBegin;
-  TRY( MatShellGetContext(D, (Vec*)&d) );
-  TRY( VecCopy(d,out_d) );
+  PetscCall(MatShellGetContext(D, (Vec*)&d));
+  PetscCall(VecCopy(d,out_d));
   PetscFunctionReturn(0);
 }
 
@@ -282,18 +282,18 @@ PetscErrorCode MatCreateDiag(Vec d, Mat *D)
   PetscInt m,M;
 
   PetscFunctionBegin;
-  TRY( VecGetLocalSize(d, &m) );
-  TRY( VecGetSize(d, &M) );
-  TRY( MatCreateShellPermon(PetscObjectComm((PetscObject)d), m, m, M, M, d, D) );
-  TRY( PetscObjectReference((PetscObject)d) );
-  TRY( MatShellSetOperation(*D, MATOP_MULT, (void(*)()) MatMult_Diag) );
-  TRY( MatShellSetOperation(*D, MATOP_MULT_TRANSPOSE, (void(*)()) MatMult_Diag) );
-  TRY( MatShellSetOperation(*D, MATOP_MULT_ADD, (void(*)()) MatMultAdd_Diag) );
-  TRY( MatShellSetOperation(*D, MATOP_MULT_TRANSPOSE_ADD, (void(*)()) MatMultAdd_Diag) );
-  TRY( MatShellSetOperation(*D, MATOP_DESTROY, (void(*)()) MatDestroy_Diag) );
-  TRY( MatShellSetOperation(*D, MATOP_GET_DIAGONAL, (void(*)()) MatGetDiagonal_Diag) );
-  TRY( MatSetOption(*D, MAT_SYMMETRIC, PETSC_TRUE) );
-  TRY( MatSetOption(*D, MAT_SYMMETRY_ETERNAL, PETSC_TRUE) );
+  PetscCall(VecGetLocalSize(d, &m));
+  PetscCall(VecGetSize(d, &M));
+  PetscCall(MatCreateShellPermon(PetscObjectComm((PetscObject)d), m, m, M, M, d, D));
+  PetscCall(PetscObjectReference((PetscObject)d));
+  PetscCall(MatShellSetOperation(*D, MATOP_MULT, (void(*)()) MatMult_Diag));
+  PetscCall(MatShellSetOperation(*D, MATOP_MULT_TRANSPOSE, (void(*)()) MatMult_Diag));
+  PetscCall(MatShellSetOperation(*D, MATOP_MULT_ADD, (void(*)()) MatMultAdd_Diag));
+  PetscCall(MatShellSetOperation(*D, MATOP_MULT_TRANSPOSE_ADD, (void(*)()) MatMultAdd_Diag));
+  PetscCall(MatShellSetOperation(*D, MATOP_DESTROY, (void(*)()) MatDestroy_Diag));
+  PetscCall(MatShellSetOperation(*D, MATOP_GET_DIAGONAL, (void(*)()) MatGetDiagonal_Diag));
+  PetscCall(MatSetOption(*D, MAT_SYMMETRIC, PETSC_TRUE));
+  PetscCall(MatSetOption(*D, MAT_SYMMETRY_ETERNAL, PETSC_TRUE));
   PetscFunctionReturn(0);
 }
 
@@ -305,19 +305,19 @@ PetscErrorCode MatCreateOperatorFromUpperTriangular(Mat U, Mat *A)
   Vec d;
 
   PetscFunctionBegin;
-  TRY( MatCreateVecs(U, NULL, &d) );
-  TRY( MatGetDiagonal(U, d) );
-  TRY( MatCreateDiag(d, &D) );
-  TRY( MatScale(D, -1.0) );
-  TRY( PermonMatTranspose(U, MAT_TRANSPOSE_CHEAPEST, &L) );
+  PetscCall(MatCreateVecs(U, NULL, &d));
+  PetscCall(MatGetDiagonal(U, d));
+  PetscCall(MatCreateDiag(d, &D));
+  PetscCall(MatScale(D, -1.0));
+  PetscCall(PermonMatTranspose(U, MAT_TRANSPOSE_CHEAPEST, &L));
   A_arr[0] = U;
   A_arr[1] = L;
   A_arr[2] = D;
-  TRY( MatCreateSum(PetscObjectComm((PetscObject)U), 3, A_arr, A) );
-  TRY( MatSetOption(*A, MAT_SYMMETRIC, PETSC_TRUE) );
-  TRY( MatSetOption(*A, MAT_SYMMETRY_ETERNAL, PETSC_TRUE) );
-  TRY( MatDestroy(&L) );
-  TRY( MatDestroy(&D) );
+  PetscCall(MatCreateSum(PetscObjectComm((PetscObject)U), 3, A_arr, A));
+  PetscCall(MatSetOption(*A, MAT_SYMMETRIC, PETSC_TRUE));
+  PetscCall(MatSetOption(*A, MAT_SYMMETRY_ETERNAL, PETSC_TRUE));
+  PetscCall(MatDestroy(&L));
+  PetscCall(MatDestroy(&D));
   PetscFunctionReturn(0);
 }
 
@@ -325,7 +325,6 @@ PetscErrorCode MatCreateOperatorFromUpperTriangular(Mat U, Mat *A)
 #define __FUNCT__ "MatMultEqualTol_Private"
 static PetscErrorCode MatMultEqualTol_Private(Mat A,PetscBool transpose,Mat B,PetscInt n,PetscReal tol,PetscBool  *flg)
 {
-  PetscErrorCode ierr;
   Vec            x,s1,s2;
   PetscRandom    rctx;
   PetscReal      r1,r2;
@@ -337,9 +336,9 @@ static PetscErrorCode MatMultEqualTol_Private(Mat A,PetscBool transpose,Mat B,Pe
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
   PetscValidHeaderSpecific(B,MAT_CLASSID,2);
   f = transpose ? MatMultTranspose : MatMult;
-  ierr = MatGetLocalSize(A,&am,&an);CHKERRQ(ierr);
-  ierr = MatGetLocalSize(B,&bm,&bn);CHKERRQ(ierr);
-  if (am != bm || an != bn) FLLOP_SETERRQ4(PETSC_COMM_SELF,PETSC_ERR_ARG_SIZ,"Mat A,Mat B: local dim %D %D %D %D",am,bm,an,bn);
+  PetscCall(MatGetLocalSize(A,&am,&an));
+  PetscCall(MatGetLocalSize(B,&bm,&bn));
+  if (am != bm || an != bn) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_SIZ,"Mat A,Mat B: local dim %D %D %D %D",am,bm,an,bn);
   PetscCheckSameComm(A,1,B,2);
 
   if (n==PETSC_DECIDE || n==PETSC_DEFAULT) {
@@ -353,40 +352,40 @@ static PetscErrorCode MatMultEqualTol_Private(Mat A,PetscBool transpose,Mat B,Pe
     PetscValidLogicalCollectiveReal(A,tol,5);
   }
 
-  ierr = PetscRandomCreate(((PetscObject)A)->comm,&rctx);CHKERRQ(ierr);
-  ierr = PetscRandomSetFromOptions(rctx);CHKERRQ(ierr);
+  PetscCall(PetscRandomCreate(((PetscObject)A)->comm,&rctx));
+  PetscCall(PetscRandomSetFromOptions(rctx));
   if (transpose) {
-    ierr = MatCreateVecs(B,&s1,&x);CHKERRQ(ierr);
+    PetscCall(MatCreateVecs(B,&s1,&x));
   } else {
-    ierr = MatCreateVecs(B,&x,&s1);CHKERRQ(ierr);
+    PetscCall(MatCreateVecs(B,&x,&s1));
   }
-  ierr = VecSetFromOptions(x);CHKERRQ(ierr);
-  ierr = VecSetFromOptions(s1);CHKERRQ(ierr);
-  ierr = VecDuplicate(s1,&s2);CHKERRQ(ierr);
+  PetscCall(VecSetFromOptions(x));
+  PetscCall(VecSetFromOptions(s1));
+  PetscCall(VecDuplicate(s1,&s2));
 
   *flg = PETSC_TRUE;
   for (k=0; k<n; k++) {
-    ierr = VecSetRandom(x,rctx);CHKERRQ(ierr);
-    ierr = (*f)(A,x,s1);CHKERRQ(ierr);
-    ierr = (*f)(B,x,s2);CHKERRQ(ierr);
-    ierr = VecNorm(s2,NORM_INFINITY,&r2);CHKERRQ(ierr);
+    PetscCall(VecSetRandom(x,rctx));
+    PetscCall((*f)(A,x,s1));
+    PetscCall((*f)(B,x,s2));
+    PetscCall(VecNorm(s2,NORM_INFINITY,&r2));
     if (r2 < tol){
-      ierr = VecNorm(s1,NORM_INFINITY,&r1);CHKERRQ(ierr);
+      PetscCall(VecNorm(s1,NORM_INFINITY,&r1));
     } else {
-      ierr = VecAXPY(s2,none,s1);CHKERRQ(ierr);
-      ierr = VecNorm(s2,NORM_INFINITY,&r1);CHKERRQ(ierr);
+      PetscCall(VecAXPY(s2,none,s1));
+      PetscCall(VecNorm(s2,NORM_INFINITY,&r1));
       r1 /= r2;
     }
-    ierr = PetscInfo2(fllop,"relative error of %D-th MatMult() %g\n",k,r1);CHKERRQ(ierr);
+    PetscCall(PetscInfo(fllop,"relative error of %D-th MatMult() %g\n",k,r1));
     if (r1 > tol) {
       *flg = PETSC_FALSE;
       break;
     }
   }
-  ierr = PetscRandomDestroy(&rctx);CHKERRQ(ierr);
-  ierr = VecDestroy(&x);CHKERRQ(ierr);
-  ierr = VecDestroy(&s1);CHKERRQ(ierr);
-  ierr = VecDestroy(&s2);CHKERRQ(ierr);
+  PetscCall(PetscRandomDestroy(&rctx));
+  PetscCall(VecDestroy(&x));
+  PetscCall(VecDestroy(&s1));
+  PetscCall(VecDestroy(&s2));
   PetscFunctionReturn(0);
 }
 
@@ -395,7 +394,7 @@ static PetscErrorCode MatMultEqualTol_Private(Mat A,PetscBool transpose,Mat B,Pe
 PetscErrorCode MatMultEqualTol(Mat A,Mat B,PetscInt n,PetscReal tol,PetscBool  *flg)
 {
   PetscFunctionBegin;
-  TRY( MatMultEqualTol_Private(A,PETSC_FALSE,B,n,tol,flg) );
+  PetscCall(MatMultEqualTol_Private(A,PETSC_FALSE,B,n,tol,flg));
   PetscFunctionReturn(0);
 }
 
@@ -404,7 +403,7 @@ PetscErrorCode MatMultEqualTol(Mat A,Mat B,PetscInt n,PetscReal tol,PetscBool  *
 PetscErrorCode MatMultTransposeEqualTol(Mat A,Mat B,PetscInt n,PetscReal tol,PetscBool  *flg)
 {
   PetscFunctionBegin;
-  TRY( MatMultEqualTol_Private(A,PETSC_TRUE,B,n,tol,flg) );
+  PetscCall(MatMultEqualTol_Private(A,PETSC_TRUE,B,n,tol,flg));
   PetscFunctionReturn(0);
 }
 
@@ -416,12 +415,12 @@ PetscErrorCode MatMatIsZero(Mat A, Mat B, PetscReal tol, PetscInt ntrials, Petsc
   MPI_Comm comm;
 
   PetscFunctionBegin;
-  TRY( PetscObjectGetComm((PetscObject)A, &comm) );
+  PetscCall(PetscObjectGetComm((PetscObject)A, &comm));
   KR_arr[1]=A;
   KR_arr[0]=B;
-  TRY( MatCreateProd(comm, 2, KR_arr, &KR) );
-  TRY( MatIsZero(KR, tol, ntrials, flg) );
-  TRY( MatDestroy(&KR) );
+  PetscCall(MatCreateProd(comm, 2, KR_arr, &KR));
+  PetscCall(MatIsZero(KR, tol, ntrials, flg));
+  PetscCall(MatDestroy(&KR));
   PetscFunctionReturn(0);
 }
 
@@ -461,49 +460,49 @@ PetscErrorCode MatGetMaxEigenvalue(Mat A, Vec v, PetscScalar *lambda_out, PetscR
   PetscFunctionBeginI;
   lambda = lambda0 = err = relerr = 0.0;
   if (!registered) {
-    TRY( PetscLogEventRegister("MatGetMaxEig",MAT_CLASSID,&Mat_GetMaxEigenvalue) );
-    TRY( PetscObjectComposedDataRegister(&MatGetMaxEigenvalue_composed_id) );
+    PetscCall(PetscLogEventRegister("MatGetMaxEig",MAT_CLASSID,&Mat_GetMaxEigenvalue));
+    PetscCall(PetscObjectComposedDataRegister(&MatGetMaxEigenvalue_composed_id));
     registered = PETSC_TRUE;
   }
   if (lambda_out && !v) {
-    TRY( PetscObjectComposedDataGetScalar((PetscObject)A,MatGetMaxEigenvalue_composed_id,lambda,flg) );
+    PetscCall(PetscObjectComposedDataGetScalar((PetscObject)A,MatGetMaxEigenvalue_composed_id,lambda,flg));
     if (flg) {
-      TRY( PetscInfo1(fllop,"returning stashed estimate ||A|| = %.12e\n",lambda) );
+      PetscCall(PetscInfo(fllop,"returning stashed estimate ||A|| = %.12e\n",lambda));
       *lambda_out = lambda;
       PetscFunctionReturnI(0);
     }
   }
 
-  TRY( PetscLogEventBegin(Mat_GetMaxEigenvalue,A,0,0,0) );
+  PetscCall(PetscLogEventBegin(Mat_GetMaxEigenvalue,A,0,0,0));
 
   if (tol==PETSC_DECIDE || tol == PETSC_DEFAULT)    tol = 1e-4;
   if (maxits==PETSC_DECIDE || maxits == PETSC_DEFAULT) maxits = 50;
   if (!v) {
-    TRY( MatCreateVecs(A,&v,NULL) );
-    TRY( VecSet(v, 1.0) );
+    PetscCall(MatCreateVecs(A,&v,NULL));
+    PetscCall(VecSet(v, 1.0));
     destroy_v = PETSC_TRUE;
   }
-  TRY( VecDuplicate(v,&Av) );
+  PetscCall(VecDuplicate(v,&Av));
   y_v[0] = Av; y_v[1] = v;
 
   lambda = 0.0;
   for(i=1; i <= maxits; i++) {
     lambda0 = lambda;
-    TRY( MatMult(A, v, Av) );         /* y = A*v */
+    PetscCall(MatMult(A, v, Av));         /* y = A*v */
     /* lambda = (v,A*v)/(v,v) */
-    //TRY( VecDot(v, y, &vAv) );
-    //TRY( VecDot(v, v, &vv) );
-    TRY( VecMDot(v,2,y_v,vAv_vv) );
+    //PetscCall(VecDot(v, y, &vAv));
+    //PetscCall(VecDot(v, v, &vv));
+    PetscCall(VecMDot(v,2,y_v,vAv_vv));
     lambda = vAv_vv[0]/vAv_vv[1];
     if (lambda < PETSC_MACHINE_EPSILON) {
-      TRY( PetscInfo1(fllop,"hit nullspace of A and setting A*v to random vector in iteration %d\n",i) );
+      PetscCall(PetscInfo(fllop,"hit nullspace of A and setting A*v to random vector in iteration %d\n",i));
 
       if (!rand) {
-        TRY( PetscRandomCreate(PetscObjectComm((PetscObject)A),&rand) );
-        TRY( PetscRandomSetType(rand,PETSCRAND48) );
+        PetscCall(PetscRandomCreate(PetscObjectComm((PetscObject)A),&rand));
+        PetscCall(PetscRandomSetType(rand,PETSCRAND48));
       }
-      TRY( VecSetRandom(Av,rand) );
-      TRY( VecDot(v, Av, &vAv_vv[0]) );
+      PetscCall(VecSetRandom(Av,rand));
+      PetscCall(VecDot(v, Av, &vAv_vv[0]));
     }
 
     err = PetscAbsScalar(lambda-lambda0);
@@ -511,18 +510,18 @@ PetscErrorCode MatGetMaxEigenvalue(Mat A, Vec v, PetscScalar *lambda_out, PetscR
     if (relerr < tol) break;
 
     /* v = A*v/||A*v||  replaced by v = A*v/||v|| */
-    TRY( VecCopy(Av, v) );
-    TRY( VecScale(v, 1.0/PetscSqrtReal(vAv_vv[1])) );
+    PetscCall(VecCopy(Av, v));
+    PetscCall(VecScale(v, 1.0/PetscSqrtReal(vAv_vv[1])));
   }
 
-  TRY( PetscInfo7(fllop,"%s  lambda = %.12e  [err relerr reltol] = [%.12e %.12e %.12e]  actual/max iterations = %d/%d\n", (i<=maxits)?"CONVERGED":"NOT CONVERGED", lambda,err,relerr,tol,i,maxits) );
+  PetscCall(PetscInfo(fllop,"%s  lambda = %.12e  [err relerr reltol] = [%.12e %.12e %.12e]  actual/max iterations = %d/%d\n", (i<=maxits)?"CONVERGED":"NOT CONVERGED", lambda,err,relerr,tol,i,maxits));
 
   if (lambda_out) *lambda_out = lambda;
 
-  if (destroy_v) TRY( VecDestroy(&v) );
-  TRY( VecDestroy(&Av) );
-  TRY( PetscRandomDestroy(&rand) );
-  TRY( PetscLogEventEnd(Mat_GetMaxEigenvalue,A,0,0,0) );
+  if (destroy_v) PetscCall(VecDestroy(&v));
+  PetscCall(VecDestroy(&Av));
+  PetscCall(PetscRandomDestroy(&rand));
+  PetscCall(PetscLogEventEnd(Mat_GetMaxEigenvalue,A,0,0,0));
   PetscFunctionReturnI(0);
 }
 
@@ -539,16 +538,16 @@ static PetscErrorCode MatFilterZeros_Default(Mat A, PetscReal tol, Mat *newAf)
   Mat Af;
 
   PetscFunctionBegin;
-  TRY( MatGetSize(A, &M, &N) );
-  TRY( MatGetLocalSize(A, &m, &n) );
-  TRY( MatGetOwnershipRange(A, &ilo, &ihi) );
-  TRY( MatGetOwnershipRangeColumn(A, &jlo, &jhi) );
-  TRY( PetscObjectGetComm((PetscObject)A, &comm) );
+  PetscCall(MatGetSize(A, &M, &N));
+  PetscCall(MatGetLocalSize(A, &m, &n));
+  PetscCall(MatGetOwnershipRange(A, &ilo, &ihi));
+  PetscCall(MatGetOwnershipRangeColumn(A, &jlo, &jhi));
+  PetscCall(PetscObjectGetComm((PetscObject)A, &comm));
 
-  TRY( PetscMalloc(m*sizeof(PetscInt), &d_nnz) );
-  TRY( PetscMalloc(m*sizeof(PetscInt), &o_nnz) );
+  PetscCall(PetscMalloc(m*sizeof(PetscInt), &d_nnz));
+  PetscCall(PetscMalloc(m*sizeof(PetscInt), &o_nnz));
   for (i=0; i<m; i++) {
-    TRY( MatGetRow(    A, i+ilo, &ncols, &cols, &vals) );
+    PetscCall(MatGetRow(    A, i+ilo, &ncols, &cols, &vals));
     d_nnz[i] = 0;
     o_nnz[i] = 0;
     for (j=0; j<ncols; j++) {
@@ -557,22 +556,22 @@ static PetscErrorCode MatFilterZeros_Default(Mat A, PetscReal tol, Mat *newAf)
         else                                 o_nnz[i]++;
       }
     }
-    TRY( MatRestoreRow(A, i+ilo, &ncols, &cols, &vals) );
+    PetscCall(MatRestoreRow(A, i+ilo, &ncols, &cols, &vals));
   }
 
-  TRY( MatCreate(comm, &Af) );
-  TRY( MatSetSizes(Af,m,n,M,N) );
-  TRY( MatSetType(Af, MATAIJ) );
-  TRY( MatSeqAIJSetPreallocation(Af, 0, d_nnz) );
-  TRY( MatMPIAIJSetPreallocation(Af, 0, d_nnz, 0, o_nnz) );
+  PetscCall(MatCreate(comm, &Af));
+  PetscCall(MatSetSizes(Af,m,n,M,N));
+  PetscCall(MatSetType(Af, MATAIJ));
+  PetscCall(MatSeqAIJSetPreallocation(Af, 0, d_nnz));
+  PetscCall(MatMPIAIJSetPreallocation(Af, 0, d_nnz, 0, o_nnz));
 
-  TRY( PetscFree(d_nnz) );
-  TRY( PetscFree(o_nnz) );
+  PetscCall(PetscFree(d_nnz));
+  PetscCall(PetscFree(o_nnz));
 
-  TRY( PetscMalloc(N*sizeof(PetscScalar), &valsf) );
-  TRY( PetscMalloc(N*sizeof(PetscInt),    &colsf) );
+  PetscCall(PetscMalloc(N*sizeof(PetscScalar), &valsf));
+  PetscCall(PetscMalloc(N*sizeof(PetscInt),    &colsf));
   for (i=ilo; i<ihi; i++) {
-    TRY( MatGetRow(    A, i, &ncols, &cols, &vals) );
+    PetscCall(MatGetRow(    A, i, &ncols, &cols, &vals));
     jf = 0;
     for (j=0; j<ncols; j++) {
       if (PetscAbs(vals[j]) > tol) {
@@ -582,13 +581,13 @@ static PetscErrorCode MatFilterZeros_Default(Mat A, PetscReal tol, Mat *newAf)
       }
     }
     ncolsf = jf;
-    TRY( MatSetValues(Af,1,&i,ncolsf,colsf,valsf,INSERT_VALUES) );
-    TRY( MatRestoreRow(A, i, &ncols, &cols, &vals) );
+    PetscCall(MatSetValues(Af,1,&i,ncolsf,colsf,valsf,INSERT_VALUES));
+    PetscCall(MatRestoreRow(A, i, &ncols, &cols, &vals));
   }
-  TRY( MatAssemblyBegin(Af, MAT_FINAL_ASSEMBLY) );
-  TRY( MatAssemblyEnd(  Af, MAT_FINAL_ASSEMBLY) );
-  TRY( PetscFree(valsf) );
-  TRY( PetscFree(colsf) );
+  PetscCall(MatAssemblyBegin(Af, MAT_FINAL_ASSEMBLY));
+  PetscCall(MatAssemblyEnd(  Af, MAT_FINAL_ASSEMBLY));
+  PetscCall(PetscFree(valsf));
+  PetscCall(PetscFree(colsf));
   *newAf = Af;
   PetscFunctionReturn(0);
 }
@@ -605,15 +604,15 @@ PetscErrorCode MatFilterZeros(Mat A, PetscReal tol, Mat *Af_new)
   PetscValidLogicalCollectiveReal(A,tol,2);
   PetscValidPointer(Af_new,3);
   if (!registered) {
-    TRY( PetscLogEventRegister("MatFilterZeros",MAT_CLASSID,&Mat_FilterZeros) );
+    PetscCall(PetscLogEventRegister("MatFilterZeros",MAT_CLASSID,&Mat_FilterZeros));
     registered = PETSC_TRUE;
   }
-  TRY( PetscObjectQueryFunction((PetscObject)A,"MatFilterZeros_C",&f) );
+  PetscCall(PetscObjectQueryFunction((PetscObject)A,"MatFilterZeros_C",&f));
   if (!f) f = MatFilterZeros_Default;
 
-  TRY( PetscLogEventBegin(Mat_FilterZeros,A,0,0,0) );
-  TRY( (*f)(A,tol,Af_new) );
-  TRY( PetscLogEventEnd(Mat_FilterZeros,A,0,0,0) );
+  PetscCall(PetscLogEventBegin(Mat_FilterZeros,A,0,0,0));
+  PetscCall((*f)(A,tol,Af_new));
+  PetscCall(PetscLogEventEnd(Mat_FilterZeros,A,0,0,0));
   PetscFunctionReturnI(0);
 }
 
@@ -623,8 +622,8 @@ static PetscErrorCode MatMergeAndDestroy_Default(MPI_Comm comm, Mat *local_in, V
 {
   PetscFunctionBegin;
   PetscInt n = PETSC_DECIDE;
-  if (x) TRY( VecGetLocalSize(x,&n) );
-  TRY( MatCreateMPIMatConcatenateSeqMat(comm, *local_in, n, MAT_INITIAL_MATRIX, global_out) );
+  if (x) PetscCall(VecGetLocalSize(x,&n));
+  PetscCall(MatCreateMPIMatConcatenateSeqMat(comm, *local_in, n, MAT_INITIAL_MATRIX, global_out));
   PetscFunctionReturn(0);
 }
 
@@ -638,16 +637,16 @@ static PetscErrorCode MatMergeAndDestroy_SeqDense(MPI_Comm comm, Mat *local_in, 
   Mat A = *local_in;
 
   PetscFunctionBegin;
-  if (x) TRY( VecGetLocalSize(x,&n) );
-  TRY( MatCreateDensePermon(comm,A->rmap->n,n,PETSC_DECIDE,A->cmap->N,NULL,&global) );
-  TRY( MatDenseGetArray(A,&arr_in) );
-  TRY( MatDenseGetArray(global,&arr_out) );
+  if (x) PetscCall(VecGetLocalSize(x,&n));
+  PetscCall(MatCreateDensePermon(comm,A->rmap->n,n,PETSC_DECIDE,A->cmap->N,NULL,&global));
+  PetscCall(MatDenseGetArray(A,&arr_in));
+  PetscCall(MatDenseGetArray(global,&arr_out));
   //TODO pointer copy
-  TRY( PetscMemcpy(arr_out,arr_in, A->rmap->n * A->cmap->n * sizeof(PetscScalar)) );
-  TRY( MatDenseRestoreArray(global,&arr_out) );
-  TRY( MatDenseRestoreArray(A,&arr_in) );
-  TRY( MatAssemblyBegin(global,MAT_FINAL_ASSEMBLY) );
-  TRY( MatAssemblyEnd(global,MAT_FINAL_ASSEMBLY) );
+  PetscCall(PetscMemcpy(arr_out,arr_in, A->rmap->n * A->cmap->n * sizeof(PetscScalar)));
+  PetscCall(MatDenseRestoreArray(global,&arr_out));
+  PetscCall(MatDenseRestoreArray(A,&arr_in));
+  PetscCall(MatAssemblyBegin(global,MAT_FINAL_ASSEMBLY));
+  PetscCall(MatAssemblyEnd(global,MAT_FINAL_ASSEMBLY));
   *global_out = global;
   PetscFunctionReturn(0);
 }
@@ -666,34 +665,34 @@ PetscErrorCode MatMergeAndDestroy(MPI_Comm comm, Mat *local_in, Vec column_layou
   PetscValidPointer(local_in,2);
   PetscValidHeaderSpecific(A,MAT_CLASSID,2);
   PetscValidPointer(global_out,4);
-  TRY( MPI_Comm_size(PetscObjectComm((PetscObject)A),&size) );
-  if (size > 1) FLLOP_SETERRQ(comm,PETSC_ERR_ARG_WRONG,"currently input matrices must be sequential");
+  PetscCallMPI(MPI_Comm_size(PetscObjectComm((PetscObject)A),&size));
+  if (size > 1) SETERRQ(comm,PETSC_ERR_ARG_WRONG,"currently input matrices must be sequential");
   if (!registered) {
-    TRY( PetscLogEventRegister("MatMergeAndDestr",MAT_CLASSID,&Mat_MergeAndDestroy) );
+    PetscCall(PetscLogEventRegister("MatMergeAndDestr",MAT_CLASSID,&Mat_MergeAndDestroy));
     registered = PETSC_TRUE;
   }
 
-  TRY( MPI_Comm_size(comm,&size) );
-  TRY( PetscBoolGlobalOr( comm, local_in ? PETSC_TRUE : PETSC_FALSE, &any_nonnull) );
+  PetscCallMPI(MPI_Comm_size(comm,&size));
+  PetscCall(PetscBoolGlobalOr( comm, local_in ? PETSC_TRUE : PETSC_FALSE, &any_nonnull));
   if (!any_nonnull) {
     *global_out = NULL;
     PetscFunctionReturnI(0);
   }
 
-  TRY( PetscBoolGlobalAnd(comm, local_in ? PETSC_TRUE : PETSC_FALSE, &all_nonnull) );
+  PetscCall(PetscBoolGlobalAnd(comm, local_in ? PETSC_TRUE : PETSC_FALSE, &all_nonnull));
   if (!all_nonnull) {
-    TRY( MPI_Comm_rank(comm,&rank) );
-    FLLOP_SETERRQ1(comm,PETSC_ERR_ARG_NULL,"null local matrix on rank %d; currently, local matrices must be either all non-null or all null", rank);
+    PetscCallMPI(MPI_Comm_rank(comm,&rank));
+    SETERRQ(comm,PETSC_ERR_ARG_NULL,"null local matrix on rank %d; currently, local matrices must be either all non-null or all null", rank);
   }
 
   if (size > 1) {
 
     /* try to find a type-specific implementation */
-    TRY( PetscObjectQueryFunction((PetscObject)A,"MatMergeAndDestroy_C",&f) );
+    PetscCall(PetscObjectQueryFunction((PetscObject)A,"MatMergeAndDestroy_C",&f));
 
     /* work-around for MATSEQDENSE to avoid need of a new constructor */
     if (!f) {
-      TRY( PetscObjectTypeCompare((PetscObject)A,MATSEQDENSE,&flg) );
+      PetscCall(PetscObjectTypeCompare((PetscObject)A,MATSEQDENSE,&flg));
       if (flg) f = MatMergeAndDestroy_SeqDense;
     }
 
@@ -701,11 +700,11 @@ PetscErrorCode MatMergeAndDestroy(MPI_Comm comm, Mat *local_in, Vec column_layou
     if (!f) f = MatMergeAndDestroy_Default;
 
     /* call the implementation */
-    TRY( PetscLogEventBegin(Mat_MergeAndDestroy,A,0,0,0) );
-    TRY( (*f)(comm,local_in,column_layout,global_out) );
-    TRY( PetscLogEventEnd(  Mat_MergeAndDestroy,A,0,0,0) );
+    PetscCall(PetscLogEventBegin(Mat_MergeAndDestroy,A,0,0,0));
+    PetscCall((*f)(comm,local_in,column_layout,global_out));
+    PetscCall(PetscLogEventEnd(  Mat_MergeAndDestroy,A,0,0,0));
 
-    TRY( MatDestroy(local_in) );
+    PetscCall(MatDestroy(local_in));
   } else {
     *global_out = *local_in;
     *local_in = NULL;
@@ -721,8 +720,8 @@ PetscErrorCode MatInheritSymmetry(Mat A, Mat B)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
   PetscValidHeaderSpecific(B,MAT_CLASSID,2);
-  TRY( MatIsSymmetricKnown(A, &symset, &symflg) );
-  if (symset) TRY( MatSetOption(B, MAT_SYMMETRIC, symflg) );
+  PetscCall(MatIsSymmetricKnown(A, &symset, &symflg));
+  if (symset) PetscCall(MatSetOption(B, MAT_SYMMETRIC, symflg));
   PetscFunctionReturn(0);
 }
 
@@ -735,14 +734,14 @@ PetscErrorCode MatGetRowNormalization2(Mat A, Vec *d_new)
   Vec d;
 
   PetscFunctionBegin;
-  TRY( MatCreateVecs(A,NULL,&d) );
-  TRY( PermonMatTranspose(A,MAT_TRANSPOSE_EXPLICIT, &At) );
-  TRY( MatCreateNormal(At,&AAt) );
-  TRY( MatGetDiagonal(AAt,d) );
-  TRY( VecSqrtAbs(d) );
-  TRY( VecReciprocal(d) );
-  TRY( MatDestroy(&At) );
-  TRY( MatDestroy(&AAt) );
+  PetscCall(MatCreateVecs(A,NULL,&d));
+  PetscCall(PermonMatTranspose(A,MAT_TRANSPOSE_EXPLICIT, &At));
+  PetscCall(MatCreateNormal(At,&AAt));
+  PetscCall(MatGetDiagonal(AAt,d));
+  PetscCall(VecSqrtAbs(d));
+  PetscCall(VecReciprocal(d));
+  PetscCall(MatDestroy(&At));
+  PetscCall(MatDestroy(&AAt));
   *d_new = d;
   PetscFunctionReturn(0);
 }
@@ -776,37 +775,37 @@ PetscErrorCode MatGetRowNormalization(Mat A, Vec *d_new)
   PetscScalar s;
 
   PetscFunctionBegin;
-  TRY( MatCreateVecs(A,NULL,&d) );
-  TRY( MatGetSize(A, &M, &N) );
-  TRY( MatGetOwnershipRange(A, &ilo, &ihi) );
+  PetscCall(MatCreateVecs(A,NULL,&d));
+  PetscCall(MatGetSize(A, &M, &N));
+  PetscCall(MatGetOwnershipRange(A, &ilo, &ihi));
 
   /* create vector rv of length equal to the maximum number of nonzeros per row */
   for (i=ilo; i<ihi; i++) {
-    TRY( MatGetRow(    A, i, &ncols, NULL, NULL) );
+    PetscCall(MatGetRow(    A, i, &ncols, NULL, NULL));
     if (ncols > maxncols) maxncols = ncols;
-    TRY( MatRestoreRow(A, i, &ncols, NULL, NULL) );
+    PetscCall(MatRestoreRow(A, i, &ncols, NULL, NULL));
   }
-  TRY( VecCreateSeq(PETSC_COMM_SELF, maxncols, &rv) );
+  PetscCall(VecCreateSeq(PETSC_COMM_SELF, maxncols, &rv));
 
   for (i=ilo; i<ihi; i++) {
     /* copy values from the i-th row to the vector rv */
-    TRY( MatGetRow(    A, i, &ncols, NULL, &vals) );
-    TRY( VecZeroEntries(rv) );
-    TRY( VecGetArray(rv,&rvv) );
-    TRY( PetscMemcpy(rvv,vals,ncols*sizeof(PetscScalar)) );
-    TRY( VecRestoreArray(rv,&rvv) );
-    TRY( MatRestoreRow(A, i, &ncols, NULL, &vals) );
+    PetscCall(MatGetRow(    A, i, &ncols, NULL, &vals));
+    PetscCall(VecZeroEntries(rv));
+    PetscCall(VecGetArray(rv,&rvv));
+    PetscCall(PetscMemcpy(rvv,vals,ncols*sizeof(PetscScalar)));
+    PetscCall(VecRestoreArray(rv,&rvv));
+    PetscCall(MatRestoreRow(A, i, &ncols, NULL, &vals));
 
-    TRY( VecPointwiseMult(rv, rv, rv) );                /* rv = rv.^2           */
-    TRY( VecSum(rv, &s) );                              /* s = sum(rv)          */
-    TRY( VecSetValue(d, i, s, INSERT_VALUES) );         /* d(i) = s             */
+    PetscCall(VecPointwiseMult(rv, rv, rv));                /* rv = rv.^2           */
+    PetscCall(VecSum(rv, &s));                              /* s = sum(rv)          */
+    PetscCall(VecSetValue(d, i, s, INSERT_VALUES));         /* d(i) = s             */
   }
-  TRY( VecAssemblyBegin(d) );
-  TRY( VecAssemblyEnd(d) );
+  PetscCall(VecAssemblyBegin(d));
+  PetscCall(VecAssemblyEnd(d));
 
-  TRY( VecSqrtAbs(d) );                                 /* d = sqrt(abs(d))     */
-  TRY( VecReciprocal(d) );                              /* d = 1./d              */
-  TRY( VecDestroy(&rv) );
+  PetscCall(VecSqrtAbs(d));                                 /* d = sqrt(abs(d))     */
+  PetscCall(VecReciprocal(d));                              /* d = 1./d              */
+  PetscCall(VecDestroy(&rv));
   *d_new = d;
   PetscFunctionReturn(0);
 }
@@ -819,12 +818,12 @@ static PetscErrorCode PermonMatGetLocalMat_Default(Mat A,Mat *Aloc)
   Mat *Aloc_ptr;
 
   PetscFunctionBegin;
-  TRY( MatGetOwnershipIS(A,&ris,&cis) );
-  TRY( MatCreateSubMatrices(A,1,&ris,&cis,MAT_INITIAL_MATRIX,&Aloc_ptr) );
+  PetscCall(MatGetOwnershipIS(A,&ris,&cis));
+  PetscCall(MatCreateSubMatrices(A,1,&ris,&cis,MAT_INITIAL_MATRIX,&Aloc_ptr));
   *Aloc = *Aloc_ptr;
-  TRY( PetscFree(Aloc_ptr) );
-  TRY( ISDestroy(&ris) );
-  TRY( ISDestroy(&cis) );
+  PetscCall(PetscFree(Aloc_ptr));
+  PetscCall(ISDestroy(&ris));
+  PetscCall(ISDestroy(&cis));
   PetscFunctionReturn(0);
 }
 
@@ -833,7 +832,7 @@ static PetscErrorCode PermonMatGetLocalMat_Default(Mat A,Mat *Aloc)
 static PetscErrorCode PermonMatGetLocalMat_MPIAIJ(Mat A,Mat *Aloc)
 {
   PetscFunctionBegin;
-  TRY( MatMPIAIJGetLocalMat(A, MAT_INITIAL_MATRIX, Aloc) );
+  PetscCall(MatMPIAIJGetLocalMat(A, MAT_INITIAL_MATRIX, Aloc));
   PetscFunctionReturn(0);
 }
 
@@ -842,8 +841,8 @@ static PetscErrorCode PermonMatGetLocalMat_MPIAIJ(Mat A,Mat *Aloc)
 static PetscErrorCode PermonMatGetLocalMat_MPIDense(Mat A,Mat *Aloc)
 {
   PetscFunctionBegin;
-  TRY( MatDenseGetLocalMatrix(A, Aloc) );
-  TRY( PetscObjectReference((PetscObject)*Aloc) );
+  PetscCall(MatDenseGetLocalMatrix(A, Aloc));
+  PetscCall(PetscObjectReference((PetscObject)*Aloc));
   PetscFunctionReturn(0);
 }
 
@@ -860,22 +859,22 @@ PetscErrorCode PermonMatGetLocalMat(Mat A,Mat *Aloc)
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
   PetscValidPointer(Aloc,2);
   if (!registered) {
-    TRY( PetscLogEventRegister("FlMatGetLocalMat",MAT_CLASSID,&PermonMat_GetLocalMat) );
+    PetscCall(PetscLogEventRegister("FlMatGetLocalMat",MAT_CLASSID,&PermonMat_GetLocalMat));
     registered = PETSC_TRUE;
   }
-  TRY( MPI_Comm_size(PetscObjectComm((PetscObject)A),&size) );
+  PetscCallMPI(MPI_Comm_size(PetscObjectComm((PetscObject)A),&size));
   if (size > 1) {
-    TRY( PetscObjectQueryFunction((PetscObject)A,"PermonMatGetLocalMat_C",&f) );
+    PetscCall(PetscObjectQueryFunction((PetscObject)A,"PermonMatGetLocalMat_C",&f));
 
     /* work-around for MATMPIAIJ to avoid need of a new constructor */
     if (!f) {
-      TRY( PetscObjectTypeCompare((PetscObject)A,MATMPIAIJ,&flg) );
+      PetscCall(PetscObjectTypeCompare((PetscObject)A,MATMPIAIJ,&flg));
       if (flg) f = PermonMatGetLocalMat_MPIAIJ;
     }
 
     /* work-around for MATDENSEAIJ to avoid need of a new constructor */
     if (!f) {
-      TRY( PetscObjectTypeCompareAny((PetscObject)A,&flg,MATMPIDENSEPERMON,MATMPIDENSE,"") );
+      PetscCall(PetscObjectTypeCompareAny((PetscObject)A,&flg,MATMPIDENSEPERMON,MATMPIDENSE,""));
       if (flg) f = PermonMatGetLocalMat_MPIDense;
     }
 
@@ -886,27 +885,27 @@ PetscErrorCode PermonMatGetLocalMat(Mat A,Mat *Aloc)
       Mat Bt = A;
       Mat Bt_arr[2];
 
-      TRY( PetscObjectQuery((PetscObject)Bt,"T_loc",(PetscObject*)&T_loc) );
+      PetscCall(PetscObjectQuery((PetscObject)Bt,"T_loc",(PetscObject*)&T_loc));
       if (T_loc) {
         /* hotfix for B=T*Adt */
-        TRY( PetscObjectQuery((PetscObject)Bt,"Adt",(PetscObject*)&Adt) );
-        FLLOP_ASSERT(Adt,"Adt");
-        TRY( PermonMatGetLocalMat(Adt, &Adt_loc) );
+        PetscCall(PetscObjectQuery((PetscObject)Bt,"Adt",(PetscObject*)&Adt));
+        PERMON_ASSERT(Adt,"Adt");
+        PetscCall(PermonMatGetLocalMat(Adt, &Adt_loc));
         Bt_arr[1]=T_loc;
         Bt_arr[0]=Adt_loc;
-        TRY( MatCreateProd(PETSC_COMM_SELF, 2, Bt_arr, Aloc) );
-        TRY( MatPrintInfo(Bt) );
-        TRY( MatPrintInfo(*Aloc) );
+        PetscCall(MatCreateProd(PETSC_COMM_SELF, 2, Bt_arr, Aloc));
+        PetscCall(MatPrintInfo(Bt));
+        PetscCall(MatPrintInfo(*Aloc));
         PetscFunctionReturn(0);
       }
     }
 
-    TRY( PetscLogEventBegin(PermonMat_GetLocalMat,A,0,0,0) );
-    TRY( (*f)(A,Aloc) );
-    TRY( PetscLogEventEnd(  PermonMat_GetLocalMat,A,0,0,0) );
+    PetscCall(PetscLogEventBegin(PermonMat_GetLocalMat,A,0,0,0));
+    PetscCall((*f)(A,Aloc));
+    PetscCall(PetscLogEventEnd(  PermonMat_GetLocalMat,A,0,0,0));
   } else {
     *Aloc = A;
-    TRY( PetscObjectReference((PetscObject)A) );
+    PetscCall(PetscObjectReference((PetscObject)A));
   }
   PetscFunctionReturn(0);
 }
@@ -916,7 +915,7 @@ PetscErrorCode PermonMatGetLocalMat(Mat A,Mat *Aloc)
 static PetscErrorCode PermonMatCreateDenseProductMatrix_Default(Mat A, PetscBool A_transpose, Mat B, Mat *C)
 {
   PetscFunctionBegin;
-  TRY( MatCreateDensePermon(PetscObjectComm((PetscObject)A), (A_transpose) ? A->cmap->n : A->rmap->n, B->cmap->n, (A_transpose) ? A->cmap->N : A->rmap->N, B->cmap->N, NULL, C) );
+  PetscCall(MatCreateDensePermon(PetscObjectComm((PetscObject)A), (A_transpose) ? A->cmap->n : A->rmap->n, B->cmap->n, (A_transpose) ? A->cmap->N : A->rmap->N, B->cmap->N, NULL, C));
   PetscFunctionReturn(0);
 }
 
@@ -931,9 +930,9 @@ PetscErrorCode PermonMatCreateDenseProductMatrix(Mat A, PetscBool A_transpose, M
   PetscValidLogicalCollectiveBool(A,A_transpose,2);
   PetscValidHeaderSpecific(B,MAT_CLASSID,3);
   PetscValidPointer(C_new,4);
-  TRY( PetscObjectQueryFunction((PetscObject)A,"PermonMatCreateDenseProductMatrix_C",&f) );
+  PetscCall(PetscObjectQueryFunction((PetscObject)A,"PermonMatCreateDenseProductMatrix_C",&f));
   if (!f) f = PermonMatCreateDenseProductMatrix_Default;
-  TRY( (*f)(A,A_transpose,B,C_new) );
+  PetscCall((*f)(A,A_transpose,B,C_new));
   PetscFunctionReturnI(0);
 }
 
@@ -952,17 +951,17 @@ PetscErrorCode PermonMatMatMult(Mat A,Mat B,MatReuse scall,PetscReal fill,Mat *C
   PetscValidLogicalCollectiveReal(A,fill,4);
   PetscValidPointer(C,5);
 
-  TRY( MatIsImplicitTranspose(A, &flg_A) );
-  TRY( MatIsImplicitTranspose(B, &flg_B) );
-  if (flg_A && flg_B) FLLOP_SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_INCOMP,"both matrices #1,#2 cannot be implicit transposes (MATTRANSPOSEMAT)");
+  PetscCall(MatIsImplicitTranspose(A, &flg_A));
+  PetscCall(MatIsImplicitTranspose(B, &flg_B));
+  if (flg_A && flg_B) SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_INCOMP,"both matrices #1,#2 cannot be implicit transposes (MATTRANSPOSEMAT)");
   if (flg_A) {
-    TRY( MatTransposeGetMat(A,&T) );
-    TRY( MatTransposeMatMult(T,B,scall,fill,C) );
+    PetscCall(MatTransposeGetMat(A,&T));
+    PetscCall(MatTransposeMatMult(T,B,scall,fill,C));
   } else if (flg_B) {
-    TRY( MatTransposeGetMat(B,&T) );
-    TRY( MatMatTransposeMult(A,T,scall,fill,C) );
+    PetscCall(MatTransposeGetMat(B,&T));
+    PetscCall(MatMatTransposeMult(A,T,scall,fill,C));
   } else {
-    TRY( MatMatMult(A,B,scall,fill,C) );
+    PetscCall(MatMatMult(A,B,scall,fill,C));
   }
   PetscFunctionReturnI(0);
 }
@@ -979,14 +978,14 @@ PetscErrorCode PermonMatConvertBlocks(Mat A, MatType newtype,MatReuse reuse,Mat 
   PetscValidType(A,1);
   PetscValidPointer(B,4);
 
-  TRY( PetscStrallocpy(((PetscObject)A)->name,&name) );
+  PetscCall(PetscStrallocpy(((PetscObject)A)->name,&name));
 
-  TRY( PetscObjectQueryFunction((PetscObject)A,"PermonMatConvertBlocks_C",&f) );
-  TRY( PetscInfo2(A,"%sfound PermonMatConvertBlocks implementation for type %s\n", f?"":"NOT ", ((PetscObject)A)->type_name) );
+  PetscCall(PetscObjectQueryFunction((PetscObject)A,"PermonMatConvertBlocks_C",&f));
+  PetscCall(PetscInfo(A,"%sfound PermonMatConvertBlocks implementation for type %s\n", f?"":"NOT ", ((PetscObject)A)->type_name));
   if (!f) f = MatConvert;
-  TRY( (*f)(A,newtype,reuse,B) );
+  PetscCall((*f)(A,newtype,reuse,B));
 
-  TRY( PetscFree(((PetscObject)*B)->name) );
+  PetscCall(PetscFree(((PetscObject)*B)->name));
   ((PetscObject)*B)->name = name;
   PetscFunctionReturn(0);
 }
@@ -996,7 +995,6 @@ PetscErrorCode PermonMatConvertBlocks(Mat A, MatType newtype,MatReuse reuse,Mat 
 #define __FUNCT__ "MatTransposeMatMultWorks"
 PetscErrorCode  MatTransposeMatMultWorks(Mat A,Mat B,PetscBool *flg)
 {
-  PetscErrorCode ierr;
   PetscErrorCode (*fA)(Mat,Mat,Mat);
   PetscErrorCode (*fB)(Mat,Mat,Mat);
   PetscErrorCode (*transposematmult)(Mat,Mat,Mat) = NULL;
@@ -1011,7 +1009,7 @@ PetscErrorCode  MatTransposeMatMultWorks(Mat A,Mat B,PetscBool *flg)
   MatCheckPreallocated(B,2);
   if (!B->assembled) SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_WRONGSTATE,"Not for unassembled matrix");
   if (B->factortype) SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_WRONGSTATE,"Not for factored matrix");
-  if (B->rmap->N!=A->rmap->N) SETERRQ2(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_SIZ,"Matrix dimensions are incompatible, %D != %D",B->rmap->N,A->rmap->N);
+  if (B->rmap->N!=A->rmap->N) SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_SIZ,"Matrix dimensions are incompatible, %D != %D",B->rmap->N,A->rmap->N);
   MatCheckPreallocated(A,1);
 
   *flg = PETSC_TRUE;
@@ -1022,12 +1020,12 @@ PetscErrorCode  MatTransposeMatMultWorks(Mat A,Mat B,PetscBool *flg)
   } else {
     /* dispatch based on the type of A and B from their PetscObject's PetscFunctionLists. */
     char multname[256];
-    ierr = PetscStrcpy(multname,"MatTransposeMatMult_");CHKERRQ(ierr);
-    ierr = PetscStrcat(multname,((PetscObject)A)->type_name);CHKERRQ(ierr);
-    ierr = PetscStrcat(multname,"_");CHKERRQ(ierr);
-    ierr = PetscStrcat(multname,((PetscObject)B)->type_name);CHKERRQ(ierr);
-    ierr = PetscStrcat(multname,"_C");CHKERRQ(ierr); /* e.g., multname = "MatMatMult_seqdense_seqaij_C" */
-    ierr = PetscObjectQueryFunction((PetscObject)B,multname,&transposematmult);CHKERRQ(ierr);
+    PetscCall(PetscStrcpy(multname,"MatTransposeMatMult_"));
+    PetscCall(PetscStrcat(multname,((PetscObject)A)->type_name));
+    PetscCall(PetscStrcat(multname,"_"));
+    PetscCall(PetscStrcat(multname,((PetscObject)B)->type_name));
+    PetscCall(PetscStrcat(multname,"_C")); /* e.g., multname = "MatMatMult_seqdense_seqaij_C" */
+    PetscCall(PetscObjectQueryFunction((PetscObject)B,multname,&transposematmult));
     if (!transposematmult) *flg = PETSC_FALSE;
   }
   PetscFunctionReturn(0);
@@ -1068,7 +1066,6 @@ PetscErrorCode  MatTransposeMatMultWorks(Mat A,Mat B,PetscBool *flg)
 @*/
 PetscErrorCode  PermonMatSetFromOptions(Mat B)
 {
-  PetscErrorCode ierr;
   const char     *deft = MATAIJ;
   char           type[256];
   PetscBool      flg,set;
@@ -1076,46 +1073,46 @@ PetscErrorCode  PermonMatSetFromOptions(Mat B)
   PetscFunctionBeginI;
   PetscValidHeaderSpecific(B,MAT_CLASSID,1);
 
-  ierr = PetscObjectOptionsBegin((PetscObject)B);CHKERRQ(ierr);
+  PetscObjectOptionsBegin((PetscObject)B);
 
   if (B->rmap->bs < 0) {
     PetscInt newbs = -1;
-    ierr = PetscOptionsInt("-mat_block_size","Set the blocksize used to store the matrix","MatSetBlockSize",newbs,&newbs,&flg);CHKERRQ(ierr);
+    PetscCall(PetscOptionsInt("-mat_block_size","Set the blocksize used to store the matrix","MatSetBlockSize",newbs,&newbs,&flg));
     if (flg) {
-      ierr = PetscLayoutSetBlockSize(B->rmap,newbs);CHKERRQ(ierr);
-      ierr = PetscLayoutSetBlockSize(B->cmap,newbs);CHKERRQ(ierr);
+      PetscCall(PetscLayoutSetBlockSize(B->rmap,newbs));
+      PetscCall(PetscLayoutSetBlockSize(B->cmap,newbs));
     }
   }
 
-  ierr = PetscOptionsFList("-mat_type","Matrix type","MatSetType",MatList,deft,type,256,&flg);CHKERRQ(ierr);
+  PetscCall(PetscOptionsFList("-mat_type","Matrix type","MatSetType",MatList,deft,type,256,&flg));
   if (!((PetscObject)B)->type_name) {
     if (flg) {
-      ierr = MatSetType(B,type);CHKERRQ(ierr);
+      PetscCall(MatSetType(B,type));
     } else if (!((PetscObject)B)->type_name) {
-      ierr = MatSetType(B,deft);CHKERRQ(ierr);
+      PetscCall(MatSetType(B,deft));
     }
   } else if (flg) {
-    ierr = PermonMatConvertInplace(B,type);CHKERRQ(ierr);
+    PetscCall(PermonMatConvertInplace(B,type));
   }
 
-  ierr = PetscOptionsName("-mat_is_symmetric","Checks if mat is symmetric on MatAssemblyEnd()","MatIsSymmetric",&B->checksymmetryonassembly);CHKERRQ(ierr);
-  ierr = PetscOptionsReal("-mat_is_symmetric","Checks if mat is symmetric on MatAssemblyEnd()","MatIsSymmetric",B->checksymmetrytol,&B->checksymmetrytol,NULL);CHKERRQ(ierr);
-  ierr = PetscOptionsBool("-mat_null_space_test","Checks if provided null space is correct in MatAssemblyEnd()","MatSetNullSpaceTest",B->checknullspaceonassembly,&B->checknullspaceonassembly,NULL);CHKERRQ(ierr);
+  PetscCall(PetscOptionsName("-mat_is_symmetric","Checks if mat is symmetric on MatAssemblyEnd()","MatIsSymmetric",&B->checksymmetryonassembly));
+  PetscCall(PetscOptionsReal("-mat_is_symmetric","Checks if mat is symmetric on MatAssemblyEnd()","MatIsSymmetric",B->checksymmetrytol,&B->checksymmetrytol,NULL));
+  PetscCall(PetscOptionsBool("-mat_null_space_test","Checks if provided null space is correct in MatAssemblyEnd()","MatSetNullSpaceTest",B->checknullspaceonassembly,&B->checknullspaceonassembly,NULL));
 
   if (B->ops->setfromoptions) {
-    ierr = (*B->ops->setfromoptions)(PetscOptionsObject,B);CHKERRQ(ierr);
+    PetscCall((*B->ops->setfromoptions)(PetscOptionsObject,B));
   }
 
   flg  = PETSC_FALSE;
-  ierr = PetscOptionsBool("-mat_new_nonzero_location_err","Generate an error if new nonzeros are created in the matrix structure (useful to test preallocation)","MatSetOption",flg,&flg,&set);CHKERRQ(ierr);
-  if (set) {ierr = MatSetOption(B,MAT_NEW_NONZERO_LOCATION_ERR,flg);CHKERRQ(ierr);}
+  PetscCall(PetscOptionsBool("-mat_new_nonzero_location_err","Generate an error if new nonzeros are created in the matrix structure (useful to test preallocation)","MatSetOption",flg,&flg,&set));
+  if (set) PetscCall(MatSetOption(B,MAT_NEW_NONZERO_LOCATION_ERR,flg));
   flg  = PETSC_FALSE;
-  ierr = PetscOptionsBool("-mat_new_nonzero_allocation_err","Generate an error if new nonzeros are allocated in the matrix structure (useful to test preallocation)","MatSetOption",flg,&flg,&set);CHKERRQ(ierr);
-  if (set) {ierr = MatSetOption(B,MAT_NEW_NONZERO_ALLOCATION_ERR,flg);CHKERRQ(ierr);}
+  PetscCall(PetscOptionsBool("-mat_new_nonzero_allocation_err","Generate an error if new nonzeros are allocated in the matrix structure (useful to test preallocation)","MatSetOption",flg,&flg,&set));
+  if (set) PetscCall(MatSetOption(B,MAT_NEW_NONZERO_ALLOCATION_ERR,flg));
 
   /* process any options handlers added with PetscObjectAddOptionsHandler() */
-  ierr = PetscObjectProcessOptionsHandlers(PetscOptionsObject,(PetscObject)B);CHKERRQ(ierr);
-  ierr = PetscOptionsEnd();CHKERRQ(ierr);
+  PetscCall(PetscObjectProcessOptionsHandlers(PetscOptionsObject,(PetscObject)B));
+  PetscOptionsEnd();
   PetscFunctionReturnI(0);
 }
 
@@ -1143,7 +1140,7 @@ PetscErrorCode PermonMatCopyProperties(Mat A,Mat B)
 #define __FUNCT__ "PermonMatConvertInplace"
 PetscErrorCode PermonMatConvertInplace(Mat A, MatType type)
 {
-  PetscErrorCode   ierr,ierr1;
+  PetscErrorCode   ierr;
   PetscBool        sametype,issame;
   PetscInt         refct;
   PetscObjectState state;
@@ -1151,8 +1148,8 @@ PetscErrorCode PermonMatConvertInplace(Mat A, MatType type)
   Mat              tmp;
 
   PetscFunctionBeginI;
-  ierr = PetscObjectTypeCompare((PetscObject)A,type,&sametype);CHKERRQ(ierr);
-  ierr = PetscStrcmp(type,MATSAME,&issame);CHKERRQ(ierr);
+  PetscCall(PetscObjectTypeCompare((PetscObject)A,type,&sametype));
+  PetscCall(PetscStrcmp(type,MATSAME,&issame));
   if (issame || sametype) PetscFunctionReturn(0);
 
   refct = ((PetscObject)A)->refct;
@@ -1163,23 +1160,23 @@ PetscErrorCode PermonMatConvertInplace(Mat A, MatType type)
   ((PetscObject)A)->name = 0;
   ((PetscObject)A)->prefix = 0;
 
-  ierr = MatCreate(PetscObjectComm((PetscObject)A),&tmp);CHKERRQ(ierr);
-  ierr = PermonMatCopyProperties(A,tmp);CHKERRQ(ierr);
+  PetscCall(MatCreate(PetscObjectComm((PetscObject)A),&tmp));
+  PetscCall(PermonMatCopyProperties(A,tmp));
 
-  ierr = PetscPushErrorHandler(PetscReturnErrorHandler,NULL);CHKERRQ(ierr);
-  ierr1 = MatConvert(A,type,MAT_INPLACE_MATRIX,&A);
-  ierr = PetscPopErrorHandler();CHKERRQ(ierr);
-  if (ierr1 == PETSC_ERR_SUP) {
-    ierr = PetscInfo(fllop,"matrix type not supported, trying to convert to MATAIJ first\n");CHKERRQ(ierr);
-    ierr = MatConvert(A,MATAIJ,MAT_INPLACE_MATRIX,&A);CHKERRQ(ierr);
-    ierr = MatConvert(A,type,MAT_INPLACE_MATRIX,&A);CHKERRQ(ierr);
-  } else if (ierr1) {
+  PetscCall(PetscPushErrorHandler(PetscReturnErrorHandler,NULL));
+  ierr = MatConvert(A,type,MAT_INPLACE_MATRIX,&A);
+  PetscCall(PetscPopErrorHandler());
+  if (ierr == PETSC_ERR_SUP) {
+    PetscCall(PetscInfo(fllop,"matrix type not supported, trying to convert to MATAIJ first\n"));
+    PetscCall(MatConvert(A,MATAIJ,MAT_INPLACE_MATRIX,&A));
+    PetscCall(MatConvert(A,type,MAT_INPLACE_MATRIX,&A));
+  } else if (ierr) {
     /* re-throw error in other error cases */
-    ierr = MatConvert(A,type,MAT_INPLACE_MATRIX,&A);CHKERRQ(ierr);
+    PetscCall(MatConvert(A,type,MAT_INPLACE_MATRIX,&A));
   }
 
-  ierr = PermonMatCopyProperties(tmp,A);CHKERRQ(ierr);
-  ierr = MatDestroy(&tmp);CHKERRQ(ierr);
+  PetscCall(PermonMatCopyProperties(tmp,A));
+  PetscCall(MatDestroy(&tmp));
 
   ((PetscObject)A)->refct = refct;
   ((PetscObject)A)->state = state + 1;
@@ -1197,22 +1194,22 @@ PetscErrorCode MatCheckNullSpace(Mat K,Mat R,PetscReal tol)
   PetscValidHeaderSpecific(K,MAT_CLASSID,1);
   PetscValidHeaderSpecific(R,MAT_CLASSID,2);
   PetscValidLogicalCollectiveReal(K,tol,3);
-  if (K->cmap->N != R->rmap->N) SETERRQ2(PetscObjectComm((PetscObject)K),PETSC_ERR_ARG_SIZ,"non-conforming global size of K and R: %D != %D",K->cmap->N,R->rmap->N);
-  if (K->cmap->n != R->rmap->n) SETERRQ2(PETSC_COMM_SELF,PETSC_ERR_ARG_SIZ,"non-conforming local size of K and R: %D != %D",K->cmap->n,R->rmap->n);
+  if (K->cmap->N != R->rmap->N) SETERRQ(PetscObjectComm((PetscObject)K),PETSC_ERR_ARG_SIZ,"non-conforming global size of K and R: %D != %D",K->cmap->N,R->rmap->N);
+  if (K->cmap->n != R->rmap->n) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_SIZ,"non-conforming local size of K and R: %D != %D",K->cmap->n,R->rmap->n);
 
-  TRY( MatCreateVecs(K,&d,&y) );
-  TRY( MatCreateVecs(R,&x,NULL) );
-  TRY( MatGetDiagonal(K,d) );
-  TRY( VecNorm(d,NORM_2,&normd) );
-  TRY( VecSetRandom(x,NULL) );
-  TRY( MatMult(R,x,d) );
-  TRY( MatMult(K,d,y) );
-  TRY( VecNorm(y,NORM_2,&normy) );
-  TRY( PetscInfo3(fllop,"||K*R*x|| = %.3e   ||diag(K)|| = %.3e    ||K*R*x|| / ||diag(K)|| = %.3e\n",normy,normd,normy/normd) );
-  FLLOP_ASSERT1(normy / normd < tol, "||K*R*x|| / ||diag(K)|| < %.1e", tol);
-  TRY( VecDestroy(&d) );
-  TRY( VecDestroy(&x) );
-  TRY( VecDestroy(&y) );
+  PetscCall(MatCreateVecs(K,&d,&y));
+  PetscCall(MatCreateVecs(R,&x,NULL));
+  PetscCall(MatGetDiagonal(K,d));
+  PetscCall(VecNorm(d,NORM_2,&normd));
+  PetscCall(VecSetRandom(x,NULL));
+  PetscCall(MatMult(R,x,d));
+  PetscCall(MatMult(K,d,y));
+  PetscCall(VecNorm(y,NORM_2,&normy));
+  PetscCall(PetscInfo(fllop,"||K*R*x|| = %.3e   ||diag(K)|| = %.3e    ||K*R*x|| / ||diag(K)|| = %.3e\n",normy,normd,normy/normd));
+  PERMON_ASSERT(normy / normd < tol, "||K*R*x|| / ||diag(K)|| < %.1e", tol);
+  PetscCall(VecDestroy(&d));
+  PetscCall(VecDestroy(&x));
+  PetscCall(VecDestroy(&y));
   PetscFunctionReturnI(0);
 }
 
@@ -1227,28 +1224,27 @@ PetscErrorCode MatRedistributeRows(Mat mat_from,IS rowperm,PetscInt base,Mat mat
   Vec             v_from,v_to;
   IS              is_to;
   VecScatter      sc;
-  PetscErrorCode  ierr;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(mat_from,MAT_CLASSID,1);
   PetscValidHeaderSpecific(mat_to,MAT_CLASSID,4);
   PetscCheckSameComm(mat_from,1,mat_to,4);
-  if (mat_from->rmap->N != mat_to->rmap->N) SETERRQ2(PetscObjectComm((PetscObject)mat_from),PETSC_ERR_ARG_SIZ,"Input matrices must have equal global number of rows, %D != %D",mat_from->rmap->N,mat_to->rmap->N);
-  if (mat_from->cmap->N != mat_to->cmap->N) SETERRQ2(PetscObjectComm((PetscObject)mat_from),PETSC_ERR_ARG_SIZ,"Input matrices must have equal global number of columns, %D != %D",mat_from->cmap->N,mat_to->cmap->N);
+  if (mat_from->rmap->N != mat_to->rmap->N) SETERRQ(PetscObjectComm((PetscObject)mat_from),PETSC_ERR_ARG_SIZ,"Input matrices must have equal global number of rows, %D != %D",mat_from->rmap->N,mat_to->rmap->N);
+  if (mat_from->cmap->N != mat_to->cmap->N) SETERRQ(PetscObjectComm((PetscObject)mat_from),PETSC_ERR_ARG_SIZ,"Input matrices must have equal global number of columns, %D != %D",mat_from->cmap->N,mat_to->cmap->N);
   m_from = mat_from->rmap->n;
   m_to = mat_to->rmap->n;
   M_to = mat_to->rmap->N;
   N = mat_to->cmap->N;
-  ierr = MatGetOwnershipRanges(mat_to,&rstart);CHKERRQ(ierr);
-  ierr = MPI_Comm_size(PetscObjectComm((PetscObject)mat_to),&commsize);CHKERRQ(ierr);
-  ierr = ISGetIndices(rowperm,&indices);CHKERRQ(ierr);
+  PetscCall(MatGetOwnershipRanges(mat_to,&rstart));
+  PetscCallMPI(MPI_Comm_size(PetscObjectComm((PetscObject)mat_to),&commsize));
+  PetscCall(ISGetIndices(rowperm,&indices));
 
-  ierr = MatDenseGetArray(mat_from,&arr_from);CHKERRQ(ierr);
-  ierr = VecCreateSeqWithArray(PETSC_COMM_SELF,1,m_from*N,arr_from,&v_from);CHKERRQ(ierr);
-  ierr = MatDenseGetArray(mat_to,&arr_to);CHKERRQ(ierr);
-  ierr = VecCreateMPIWithArray(PetscObjectComm((PetscObject)mat_to),1,m_to*N,M_to*N,arr_to,&v_to);CHKERRQ(ierr);
+  PetscCall(MatDenseGetArray(mat_from,&arr_from));
+  PetscCall(VecCreateSeqWithArray(PETSC_COMM_SELF,1,m_from*N,arr_from,&v_from));
+  PetscCall(MatDenseGetArray(mat_to,&arr_to));
+  PetscCall(VecCreateMPIWithArray(PetscObjectComm((PetscObject)mat_to),1,m_to*N,M_to*N,arr_to,&v_to));
 
-  ierr = PetscMalloc1(m_from*N,&idxx);CHKERRQ(ierr);
+  PetscCall(PetscMalloc1(m_from*N,&idxx));
   for (i=0; i<m_from; i++) {
     PetscInt proc,idx,iidx,j,m;
 
@@ -1263,21 +1259,21 @@ PetscErrorCode MatRedistributeRows(Mat mat_from,IS rowperm,PetscInt base,Mat mat
 
     for (j=0; j<N; j++) idxx[i+j*m_from] = iidx + j*m;
   }
-  ierr = ISCreateGeneral(PETSC_COMM_SELF,m_from*N,idxx,PETSC_COPY_VALUES,&is_to);CHKERRQ(ierr);
-  ierr = VecScatterCreate(v_from,NULL,v_to,is_to,&sc);CHKERRQ(ierr);
-  ierr = VecScatterBegin(sc,v_from,v_to,INSERT_VALUES,SCATTER_FORWARD);CHKERRQ(ierr);
-  ierr = VecScatterEnd(sc,v_from,v_to,INSERT_VALUES,SCATTER_FORWARD);CHKERRQ(ierr);
-  ierr = ISDestroy(&is_to);CHKERRQ(ierr);
-  ierr = VecScatterDestroy(&sc);CHKERRQ(ierr);
+  PetscCall(ISCreateGeneral(PETSC_COMM_SELF,m_from*N,idxx,PETSC_COPY_VALUES,&is_to));
+  PetscCall(VecScatterCreate(v_from,NULL,v_to,is_to,&sc));
+  PetscCall(VecScatterBegin(sc,v_from,v_to,INSERT_VALUES,SCATTER_FORWARD));
+  PetscCall(VecScatterEnd(sc,v_from,v_to,INSERT_VALUES,SCATTER_FORWARD));
+  PetscCall(ISDestroy(&is_to));
+  PetscCall(VecScatterDestroy(&sc));
 
-  TRY( MatAssemblyBegin(mat_to,MAT_FINAL_ASSEMBLY) );
-  TRY( MatAssemblyEnd(mat_to,MAT_FINAL_ASSEMBLY) );
+  PetscCall(MatAssemblyBegin(mat_to,MAT_FINAL_ASSEMBLY));
+  PetscCall(MatAssemblyEnd(mat_to,MAT_FINAL_ASSEMBLY));
 
-  ierr = ISRestoreIndices(rowperm,&indices);CHKERRQ(ierr);
-  ierr = MatDenseRestoreArray(mat_to,&arr_to);CHKERRQ(ierr);
-  ierr = VecDestroy(&v_to);CHKERRQ(ierr);
-  ierr = PetscFree(idxx);CHKERRQ(ierr);
-  ierr = VecDestroy(&v_from);CHKERRQ(ierr);
-  ierr = MatDenseRestoreArray(mat_from,&arr_from);CHKERRQ(ierr);
+  PetscCall(ISRestoreIndices(rowperm,&indices));
+  PetscCall(MatDenseRestoreArray(mat_to,&arr_to));
+  PetscCall(VecDestroy(&v_to));
+  PetscCall(PetscFree(idxx));
+  PetscCall(VecDestroy(&v_from));
+  PetscCall(MatDenseRestoreArray(mat_from,&arr_from));
   PetscFunctionReturn(0);
 }

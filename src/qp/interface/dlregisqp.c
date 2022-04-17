@@ -12,21 +12,21 @@ PetscErrorCode QPInitializePackage()
   if (QPPackageInitialized) PetscFunctionReturn(0);
   QPPackageInitialized = PETSC_TRUE;
   /* Register Classes */
-  TRY( PetscClassIdRegister("QP Problem",         &QP_CLASSID) );
+  PetscCall(PetscClassIdRegister("QP Problem",         &QP_CLASSID));
   /* Register Events */
-  TRY( PetscLogEventRegister("QPTHomogenizeEq",   QP_CLASSID, &QPT_HomogenizeEq) );
-  TRY( PetscLogEventRegister("QPTEnfEqProject",   QP_CLASSID, &QPT_EnforceEqByProjector) );
-  TRY( PetscLogEventRegister("QPTEnfEqPenalty",   QP_CLASSID, &QPT_EnforceEqByPenalty) );
-  TRY( PetscLogEventRegister("QPTDualize",        QP_CLASSID, &QPT_Dualize) );
-  TRY( PetscLogEventRegister("QPTDualize:G",      QP_CLASSID, &QPT_Dualize_AssembleG) );
-  TRY( PetscLogEventRegister("QPTDualize:FactK",  QP_CLASSID, &QPT_Dualize_FactorK) );
-  TRY( PetscLogEventRegister("QPTDualize:Bt",     QP_CLASSID, &QPT_Dualize_PrepareBt) );
-  TRY( PetscLogEventRegister("QPTFetiPrepare",    QP_CLASSID, &QPT_FetiPrepare) );
-  TRY( PetscLogEventRegister("QPTAllInOne",       QP_CLASSID, &QPT_AllInOne) );
-  TRY( PetscLogEventRegister("QPTOrthonormEq",    QP_CLASSID, &QPT_OrthonormalizeEq) );
-  TRY( PetscLogEventRegister("QPTRemoveGluing",   QP_CLASSID, &QPT_RemoveGluingOfDirichletDofs) );
-  TRY( PetscLogEventRegister("QPTSplitBE",        QP_CLASSID, &QPT_SplitBE) );
+  PetscCall(PetscLogEventRegister("QPTHomogenizeEq",   QP_CLASSID, &QPT_HomogenizeEq));
+  PetscCall(PetscLogEventRegister("QPTEnfEqProject",   QP_CLASSID, &QPT_EnforceEqByProjector));
+  PetscCall(PetscLogEventRegister("QPTEnfEqPenalty",   QP_CLASSID, &QPT_EnforceEqByPenalty));
+  PetscCall(PetscLogEventRegister("QPTDualize",        QP_CLASSID, &QPT_Dualize));
+  PetscCall(PetscLogEventRegister("QPTDualize:G",      QP_CLASSID, &QPT_Dualize_AssembleG));
+  PetscCall(PetscLogEventRegister("QPTDualize:FactK",  QP_CLASSID, &QPT_Dualize_FactorK));
+  PetscCall(PetscLogEventRegister("QPTDualize:Bt",     QP_CLASSID, &QPT_Dualize_PrepareBt));
+  PetscCall(PetscLogEventRegister("QPTFetiPrepare",    QP_CLASSID, &QPT_FetiPrepare));
+  PetscCall(PetscLogEventRegister("QPTAllInOne",       QP_CLASSID, &QPT_AllInOne));
+  PetscCall(PetscLogEventRegister("QPTOrthonormEq",    QP_CLASSID, &QPT_OrthonormalizeEq));
+  PetscCall(PetscLogEventRegister("QPTRemoveGluing",   QP_CLASSID, &QPT_RemoveGluingOfDirichletDofs));
+  PetscCall(PetscLogEventRegister("QPTSplitBE",        QP_CLASSID, &QPT_SplitBE));
   /* Process info & summary exclusions */
-  TRY( FllopProcessInfoExclusions(QP_CLASSID, QP_CLASS_NAME) );
+  PetscCall(FllopProcessInfoExclusions(QP_CLASSID, QP_CLASS_NAME));
   PetscFunctionReturn(0);
 }
