@@ -16,24 +16,24 @@ PetscErrorCode MatZeroRowsColumns_BlockDiag(Mat A,PetscInt n,const PetscInt rows
   PetscInt nloc, *rows_loc;
 
   PetscFunctionBegin;
-  TRY( ISGlobalToLocalMappingApply(A->rmap->mapping,IS_GTOLM_DROP,n,rows,&nloc,NULL) );
+  CHKERRQ(ISGlobalToLocalMappingApply(A->rmap->mapping,IS_GTOLM_DROP,n,rows,&nloc,NULL));
   PERMON_ASSERT(n==nloc,"n==nloc");
-  TRY( PetscMalloc(n*sizeof(PetscInt),&rows_loc) );
-  TRY( ISGlobalToLocalMappingApply(A->rmap->mapping,IS_GTOLM_DROP,n,rows,NULL,rows_loc) );
+  CHKERRQ(PetscMalloc(n*sizeof(PetscInt),&rows_loc));
+  CHKERRQ(ISGlobalToLocalMappingApply(A->rmap->mapping,IS_GTOLM_DROP,n,rows,NULL,rows_loc));
   if (x) {
-    TRY( VecGetLocalVectorRead(x,xloc) );
+    CHKERRQ(VecGetLocalVectorRead(x,xloc));
   } else {
     xloc = NULL;
   }
   if (b) {
-    TRY( VecGetLocalVector(b,bloc) );
+    CHKERRQ(VecGetLocalVector(b,bloc));
   } else {
     bloc = NULL;
   }
-  TRY( MatZeroRowsColumns(Aloc,nloc,rows_loc,diag,xloc,bloc) );
-  if (x) TRY( VecRestoreLocalVectorRead(x,xloc) );
-  if (b) TRY( VecRestoreLocalVector(b,bloc) );
-  TRY( PetscFree(rows_loc) );
+  CHKERRQ(MatZeroRowsColumns(Aloc,nloc,rows_loc,diag,xloc,bloc));
+  if (x) CHKERRQ(VecRestoreLocalVectorRead(x,xloc));
+  if (b) CHKERRQ(VecRestoreLocalVector(b,bloc));
+  CHKERRQ(PetscFree(rows_loc));
   PetscFunctionReturn(0);
 }
 
@@ -47,24 +47,24 @@ PetscErrorCode MatZeroRows_BlockDiag(Mat A,PetscInt n,const PetscInt rows[],Pets
   PetscInt nloc, *rows_loc;
 
   PetscFunctionBegin;
-  TRY( ISGlobalToLocalMappingApply(A->rmap->mapping,IS_GTOLM_DROP,n,rows,&nloc,NULL) );
+  CHKERRQ(ISGlobalToLocalMappingApply(A->rmap->mapping,IS_GTOLM_DROP,n,rows,&nloc,NULL));
   PERMON_ASSERT(n==nloc,"n==nloc");
-  TRY( PetscMalloc(n*sizeof(PetscInt),&rows_loc) );
-  TRY( ISGlobalToLocalMappingApply(A->rmap->mapping,IS_GTOLM_DROP,n,rows,NULL,rows_loc) );
+  CHKERRQ(PetscMalloc(n*sizeof(PetscInt),&rows_loc));
+  CHKERRQ(ISGlobalToLocalMappingApply(A->rmap->mapping,IS_GTOLM_DROP,n,rows,NULL,rows_loc));
   if (x) {
-    TRY( VecGetLocalVectorRead(x,xloc) );
+    CHKERRQ(VecGetLocalVectorRead(x,xloc));
   } else {
     xloc = NULL;
   }
   if (b) {
-    TRY( VecGetLocalVector(b,bloc) );
+    CHKERRQ(VecGetLocalVector(b,bloc));
   } else {
     bloc = NULL;
   }
-  TRY( MatZeroRows(Aloc,nloc,rows_loc,diag,xloc,bloc) );
-  if (x) TRY( VecRestoreLocalVectorRead(x,xloc) );
-  if (b) TRY( VecRestoreLocalVector(b,bloc) );
-  TRY( PetscFree(rows_loc) );
+  CHKERRQ(MatZeroRows(Aloc,nloc,rows_loc,diag,xloc,bloc));
+  if (x) CHKERRQ(VecRestoreLocalVectorRead(x,xloc));
+  if (b) CHKERRQ(VecRestoreLocalVector(b,bloc));
+  CHKERRQ(PetscFree(rows_loc));
   PetscFunctionReturn(0);
 }
 
@@ -75,7 +75,7 @@ PetscErrorCode MatZeroEntries_BlockDiag(Mat A)
   Mat_BlockDiag *data = (Mat_BlockDiag*) A->data;
 
   PetscFunctionBegin;
-  TRY( MatZeroEntries(data->localBlock) );
+  CHKERRQ(MatZeroEntries(data->localBlock));
   PetscFunctionReturn(0);
 }
 
@@ -88,17 +88,17 @@ static PetscErrorCode MatConvert_BlockDiag_SeqAIJ(Mat A, MatType newtype, MatReu
   Mat A_loc, B;
   
   PetscFunctionBegin;
-  TRY( PetscObjectGetComm((PetscObject) A, &comm) );
-  TRY( MPI_Comm_size(comm, &size) );
+  CHKERRQ(PetscObjectGetComm((PetscObject) A, &comm));
+  CHKERRQ(MPI_Comm_size(comm, &size));
   if (size > 1) SETERRQ(comm,PETSC_ERR_SUP,"conversion from MPI BlockDiag matrix to sequential matrix not currently implemented");
 
-  TRY( MatGetDiagonalBlock(A, &A_loc) );
-  TRY( MatConvert(A_loc,newtype,MAT_INITIAL_MATRIX,&B) );
+  CHKERRQ(MatGetDiagonalBlock(A, &A_loc));
+  CHKERRQ(MatConvert(A_loc,newtype,MAT_INITIAL_MATRIX,&B));
   if (reuse == MAT_INPLACE_MATRIX) {
 #if PETSC_VERSION_MINOR < 7
-    TRY( MatHeaderReplace(A,B) );
+    CHKERRQ(MatHeaderReplace(A,B));
 #else
-    TRY( MatHeaderReplace(A,&B) );
+    CHKERRQ(MatHeaderReplace(A,&B));
 #endif
   } else {
     *newB = B;
@@ -116,28 +116,28 @@ static PetscErrorCode MatConvert_BlockDiag_MPIAIJ(Mat A, MatType newtype, MatReu
   Mat_MPIAIJ *mpidata;
   
   PetscFunctionBegin;
-  TRY( MPI_Comm_size(PetscObjectComm((PetscObject)A), &size) );
-  TRY( MatGetDiagonalBlock(A, &A_loc) );
+  CHKERRQ(MPI_Comm_size(PetscObjectComm((PetscObject)A), &size));
+  CHKERRQ(MatGetDiagonalBlock(A, &A_loc));
 
-  TRY( MatCreate(PetscObjectComm((PetscObject)A), &B) );
-  TRY( MatSetType(B, newtype) );
-  TRY( MatSetSizes(B, A->rmap->n, A->cmap->n, A->rmap->N, A->cmap->N) );
-  TRY( MatMPIAIJSetPreallocation(B, 0,0,0,0) );
+  CHKERRQ(MatCreate(PetscObjectComm((PetscObject)A), &B));
+  CHKERRQ(MatSetType(B, newtype));
+  CHKERRQ(MatSetSizes(B, A->rmap->n, A->cmap->n, A->rmap->N, A->cmap->N));
+  CHKERRQ(MatMPIAIJSetPreallocation(B, 0,0,0,0));
 
   mpidata = (Mat_MPIAIJ*) B->data;
-  TRY( PetscStrallocpy( ((PetscObject)mpidata->A)->type_name,&loctype) );
-  TRY( MatDestroy(&mpidata->A) );
-  TRY( MatConvert(A_loc,loctype,MAT_INITIAL_MATRIX,&mpidata->A) );
-  TRY( PetscFree(loctype) );
+  CHKERRQ(PetscStrallocpy( ((PetscObject)mpidata->A)->type_name,&loctype));
+  CHKERRQ(MatDestroy(&mpidata->A));
+  CHKERRQ(MatConvert(A_loc,loctype,MAT_INITIAL_MATRIX,&mpidata->A));
+  CHKERRQ(PetscFree(loctype));
 
   /* MatConvert should produce an already assembled matrix so we just set the 'assembled' flag to true */
   B->assembled = PETSC_TRUE;
 
   if (reuse == MAT_INPLACE_MATRIX) {
 #if PETSC_VERSION_MINOR < 7
-    TRY( MatHeaderReplace(A,B) );
+    CHKERRQ(MatHeaderReplace(A,B));
 #else
-    TRY( MatHeaderReplace(A,&B) );
+    CHKERRQ(MatHeaderReplace(A,&B));
 #endif
   } else {
     *newB = B;
@@ -152,11 +152,11 @@ static PetscErrorCode MatConvert_BlockDiag_AIJ(Mat A, MatType newtype, MatReuse 
   PetscMPIInt size;
   
   PetscFunctionBegin;
-  TRY( MPI_Comm_size(PetscObjectComm((PetscObject)A),&size) );
+  CHKERRQ(MPI_Comm_size(PetscObjectComm((PetscObject)A),&size));
   if (size == 1) {
-    TRY( MatConvert_BlockDiag_SeqAIJ(A,newtype,reuse,newB) );    
+    CHKERRQ(MatConvert_BlockDiag_SeqAIJ(A,newtype,reuse,newB));    
   } else {
-    TRY( MatConvert_BlockDiag_MPIAIJ(A,newtype,reuse,newB) );    
+    CHKERRQ(MatConvert_BlockDiag_MPIAIJ(A,newtype,reuse,newB));    
   }
   PetscFunctionReturn(0);
 }
@@ -171,16 +171,16 @@ static PetscErrorCode PermonMatConvertBlocks_BlockDiag(Mat A, MatType newtype, M
 
   PetscFunctionBegin;
   if (reuse == MAT_INPLACE_MATRIX) cblock = data->localBlock;
-  TRY( MatConvert(data->localBlock,newtype,reuse,&cblock) );
-  TRY( MatCreateBlockDiag(PetscObjectComm((PetscObject)A),cblock,&B_) );
+  CHKERRQ(MatConvert(data->localBlock,newtype,reuse,&cblock));
+  CHKERRQ(MatCreateBlockDiag(PetscObjectComm((PetscObject)A),cblock,&B_));
   if (reuse != MAT_INPLACE_MATRIX) {
-    TRY( MatDestroy(&cblock) );
+    CHKERRQ(MatDestroy(&cblock));
     *B = B_;
   } else {
 #if PETSC_VERSION_MINOR < 7
-    TRY( MatHeaderReplace(A,B_) );
+    CHKERRQ(MatHeaderReplace(A,B_));
 #else
-    TRY( MatHeaderReplace(A,&B_) );
+    CHKERRQ(MatHeaderReplace(A,&B_));
 #endif
   }
   PetscFunctionReturn(0);
@@ -192,11 +192,11 @@ PetscErrorCode MatMult_BlockDiag(Mat mat, Vec right, Vec left) {
   Mat_BlockDiag *data = (Mat_BlockDiag*) mat->data;
 
   PetscFunctionBegin;
-  TRY( VecGetLocalVectorRead(right,data->xloc) );
-  TRY( VecGetLocalVector(left,data->yloc) );
-  TRY( MatMult(data->localBlock, data->xloc, data->yloc) );
-  TRY( VecRestoreLocalVectorRead(right,data->xloc) );
-  TRY( VecRestoreLocalVector(left,data->yloc) );
+  CHKERRQ(VecGetLocalVectorRead(right,data->xloc));
+  CHKERRQ(VecGetLocalVector(left,data->yloc));
+  CHKERRQ(MatMult(data->localBlock, data->xloc, data->yloc));
+  CHKERRQ(VecRestoreLocalVectorRead(right,data->xloc));
+  CHKERRQ(VecRestoreLocalVector(left,data->yloc));
   PetscFunctionReturn(0);
 }
 
@@ -206,11 +206,11 @@ PetscErrorCode MatMultTranspose_BlockDiag(Mat mat, Vec right, Vec left) {
   Mat_BlockDiag *data = (Mat_BlockDiag*) mat->data;
 
   PetscFunctionBegin;
-  TRY( VecGetLocalVectorRead(right,data->yloc) );
-  TRY( VecGetLocalVector(left,data->xloc) );
-  TRY( MatMultTranspose(data->localBlock, data->yloc, data->xloc) );
-  TRY( VecRestoreLocalVectorRead(right,data->yloc) );
-  TRY( VecRestoreLocalVector(left,data->xloc) );
+  CHKERRQ(VecGetLocalVectorRead(right,data->yloc));
+  CHKERRQ(VecGetLocalVector(left,data->xloc));
+  CHKERRQ(MatMultTranspose(data->localBlock, data->yloc, data->xloc));
+  CHKERRQ(VecRestoreLocalVectorRead(right,data->yloc));
+  CHKERRQ(VecRestoreLocalVector(left,data->xloc));
   PetscFunctionReturn(0);
 }
 
@@ -221,13 +221,13 @@ PetscErrorCode MatMultAdd_BlockDiag(Mat mat,Vec v1,Vec v2,Vec v3)
   Mat_BlockDiag *data = (Mat_BlockDiag*) mat->data;
 
   PetscFunctionBegin;
-  TRY( VecGetLocalVectorRead(v1,data->xloc) );
-  TRY( VecGetLocalVector(v2,data->yloc1) ); /* v2 can be same as v3 */
-  TRY( VecGetLocalVector(v3,data->yloc) );
-  TRY( MatMultAdd(data->localBlock, data->xloc, data->yloc1, data->yloc) );
-  TRY( VecRestoreLocalVectorRead(v1,data->xloc) );
-  TRY( VecRestoreLocalVector(v2,data->yloc1) );
-  TRY( VecRestoreLocalVector(v3,data->yloc) );
+  CHKERRQ(VecGetLocalVectorRead(v1,data->xloc));
+  CHKERRQ(VecGetLocalVector(v2,data->yloc1)); /* v2 can be same as v3 */
+  CHKERRQ(VecGetLocalVector(v3,data->yloc));
+  CHKERRQ(MatMultAdd(data->localBlock, data->xloc, data->yloc1, data->yloc));
+  CHKERRQ(VecRestoreLocalVectorRead(v1,data->xloc));
+  CHKERRQ(VecRestoreLocalVector(v2,data->yloc1));
+  CHKERRQ(VecRestoreLocalVector(v3,data->yloc));
   PetscFunctionReturn(0);
 }
 
@@ -237,13 +237,13 @@ PetscErrorCode MatMultTransposeAdd_BlockDiag(Mat mat,Vec v1,Vec v2,Vec v3)
 {
   Mat_BlockDiag *data = (Mat_BlockDiag*) mat->data;
   PetscFunctionBegin;
-  TRY( VecGetLocalVectorRead(v1,data->yloc) );
-  TRY( VecGetLocalVector(v2,data->xloc1) ); /* v2 can be same as v3 */
-  TRY( VecGetLocalVector(v3,data->xloc) );
-  TRY( MatMultTransposeAdd(data->localBlock, data->yloc, data->xloc1, data->xloc) );
-  TRY( VecRestoreLocalVectorRead(v1,data->yloc) );
-  TRY( VecRestoreLocalVector(v2,data->xloc1) );
-  TRY( VecRestoreLocalVector(v3,data->xloc) );
+  CHKERRQ(VecGetLocalVectorRead(v1,data->yloc));
+  CHKERRQ(VecGetLocalVector(v2,data->xloc1)); /* v2 can be same as v3 */
+  CHKERRQ(VecGetLocalVector(v3,data->xloc));
+  CHKERRQ(MatMultTransposeAdd(data->localBlock, data->yloc, data->xloc1, data->xloc));
+  CHKERRQ(VecRestoreLocalVectorRead(v1,data->yloc));
+  CHKERRQ(VecRestoreLocalVector(v2,data->xloc1));
+  CHKERRQ(VecRestoreLocalVector(v3,data->xloc));
   PetscFunctionReturn(0);
 }
 
@@ -254,12 +254,12 @@ PetscErrorCode MatMatMult_BlockDiag_BlockDiag(Mat A, Mat B, PetscReal fill, Mat 
   Mat A_loc, B_loc, C_loc;
 
   PetscFunctionBegin;
-  TRY( PetscObjectGetComm((PetscObject) A, &comm) );
-  TRY( MatGetDiagonalBlock_BlockDiag(A, &A_loc) );
-  TRY( MatGetDiagonalBlock_BlockDiag(B, &B_loc) );
-  TRY( MatMatMult(A_loc, B_loc, MAT_INITIAL_MATRIX, fill, &C_loc) );
-  TRY( MatCreateBlockDiag(comm,C_loc,C) );
-  TRY( MatDestroy(&C_loc) );
+  CHKERRQ(PetscObjectGetComm((PetscObject) A, &comm));
+  CHKERRQ(MatGetDiagonalBlock_BlockDiag(A, &A_loc));
+  CHKERRQ(MatGetDiagonalBlock_BlockDiag(B, &B_loc));
+  CHKERRQ(MatMatMult(A_loc, B_loc, MAT_INITIAL_MATRIX, fill, &C_loc));
+  CHKERRQ(MatCreateBlockDiag(comm,C_loc,C));
+  CHKERRQ(MatDestroy(&C_loc));
   PetscFunctionReturn(0);
 }
 
@@ -272,21 +272,21 @@ static PetscErrorCode MatMatMult_BlockDiag_AIJ(Mat A, Mat B, PetscReal fill, Mat
   PetscMPIInt size;
 
   PetscFunctionBegin;
-  TRY( PetscObjectGetComm((PetscObject) A, &comm) );
-  TRY( MPI_Comm_size(comm, &size) );
-  TRY( MatGetDiagonalBlock_BlockDiag(A, &A_loc) );
+  CHKERRQ(PetscObjectGetComm((PetscObject) A, &comm));
+  CHKERRQ(MPI_Comm_size(comm, &size));
+  CHKERRQ(MatGetDiagonalBlock_BlockDiag(A, &A_loc));
   if (size > 1) {
-    TRY( MatMPIAIJGetLocalMat(B, MAT_INITIAL_MATRIX, &B_loc) );
+    CHKERRQ(MatMPIAIJGetLocalMat(B, MAT_INITIAL_MATRIX, &B_loc));
   } else {
     B_loc = B;
-    TRY( PetscObjectReference((PetscObject)B) );
+    CHKERRQ(PetscObjectReference((PetscObject)B));
   }
-  TRY( MatMatMult(A_loc, B_loc, MAT_INITIAL_MATRIX, fill, &C_loc) );
-  TRY( MatDestroy(&B_loc) );
+  CHKERRQ(MatMatMult(A_loc, B_loc, MAT_INITIAL_MATRIX, fill, &C_loc));
+  CHKERRQ(MatDestroy(&B_loc));
 
-  TRY( MatCreateVecs(B, &x, NULL) );
-  TRY( MatMergeAndDestroy(comm, &C_loc, x, C) );
-  TRY( VecDestroy(&x) );
+  CHKERRQ(MatCreateVecs(B, &x, NULL));
+  CHKERRQ(MatMergeAndDestroy(comm, &C_loc, x, C));
+  CHKERRQ(VecDestroy(&x));
   PetscFunctionReturn(0);
 }
 
@@ -297,12 +297,12 @@ PetscErrorCode MatTransposeMatMult_BlockDiag_BlockDiag(Mat A, Mat B, PetscReal f
   Mat A_loc, B_loc, C_loc;
 
   PetscFunctionBegin;
-  TRY( PetscObjectGetComm((PetscObject) A, &comm) );
-  TRY( MatGetDiagonalBlock_BlockDiag(A, &A_loc) );
-  TRY( MatGetDiagonalBlock_BlockDiag(B, &B_loc) );
-  TRY( MatTransposeMatMult(A_loc, B_loc, MAT_INITIAL_MATRIX, fill, &C_loc) );
-  TRY( MatCreateBlockDiag(comm,C_loc,C) );
-  TRY( MatDestroy(&C_loc) );
+  CHKERRQ(PetscObjectGetComm((PetscObject) A, &comm));
+  CHKERRQ(MatGetDiagonalBlock_BlockDiag(A, &A_loc));
+  CHKERRQ(MatGetDiagonalBlock_BlockDiag(B, &B_loc));
+  CHKERRQ(MatTransposeMatMult(A_loc, B_loc, MAT_INITIAL_MATRIX, fill, &C_loc));
+  CHKERRQ(MatCreateBlockDiag(comm,C_loc,C));
+  CHKERRQ(MatDestroy(&C_loc));
   PetscFunctionReturn(0);
 }
 
@@ -315,21 +315,21 @@ static PetscErrorCode MatTransposeMatMult_BlockDiag_AIJ(Mat A, Mat B, PetscReal 
   PetscMPIInt size;
 
   PetscFunctionBegin;
-  TRY( PetscObjectGetComm((PetscObject) A, &comm) );
-  TRY( MPI_Comm_size(comm, &size) );
-  TRY( MatGetDiagonalBlock_BlockDiag(A, &A_loc) );
+  CHKERRQ(PetscObjectGetComm((PetscObject) A, &comm));
+  CHKERRQ(MPI_Comm_size(comm, &size));
+  CHKERRQ(MatGetDiagonalBlock_BlockDiag(A, &A_loc));
   if (size > 1) {
-    TRY( MatMPIAIJGetLocalMat(B, MAT_INITIAL_MATRIX, &B_loc) );
+    CHKERRQ(MatMPIAIJGetLocalMat(B, MAT_INITIAL_MATRIX, &B_loc));
   } else {
     B_loc = B;
-    TRY( PetscObjectReference((PetscObject)B) );
+    CHKERRQ(PetscObjectReference((PetscObject)B));
   }
-  TRY( MatTransposeMatMult(A_loc, B_loc, MAT_INITIAL_MATRIX, fill, &C_loc) );
-  TRY( MatDestroy(&B_loc) );
+  CHKERRQ(MatTransposeMatMult(A_loc, B_loc, MAT_INITIAL_MATRIX, fill, &C_loc));
+  CHKERRQ(MatDestroy(&B_loc));
 
-  TRY( MatCreateVecs(B, &x, NULL) );
-  TRY( MatMergeAndDestroy(comm, &C_loc, x, C) );
-  TRY( VecDestroy(&x) );
+  CHKERRQ(MatCreateVecs(B, &x, NULL));
+  CHKERRQ(MatMergeAndDestroy(comm, &C_loc, x, C));
+  CHKERRQ(VecDestroy(&x));
   PetscFunctionReturn(0);
 }
 
@@ -343,15 +343,15 @@ static PetscErrorCode MatProductNumeric_BlockDiag_AIJ(Mat C)
 
   switch (product->type) {
   case MATPRODUCT_AB:
-    TRY( MatMatMult_BlockDiag_AIJ(A,B,product->fill,&newmat) );
+    CHKERRQ(MatMatMult_BlockDiag_AIJ(A,B,product->fill,&newmat));
     break;
   case MATPRODUCT_AtB:
-    TRY( MatTransposeMatMult_BlockDiag_AIJ(A,B,product->fill,&newmat) );
+    CHKERRQ(MatTransposeMatMult_BlockDiag_AIJ(A,B,product->fill,&newmat));
     break;
   default: SETERRQ(PetscObjectComm((PetscObject)C),PETSC_ERR_SUP,"MATPRODUCT type is not supported");
   }
   C->product = NULL;
-  TRY( MatHeaderReplace(C,&newmat) );
+  CHKERRQ(MatHeaderReplace(C,&newmat));
   C->product = product;
   C->ops->productnumeric = MatProductNumeric_BlockDiag_AIJ;
   PetscFunctionReturn(0);
@@ -385,15 +385,15 @@ static PetscErrorCode MatProductNumeric_BlockDiag(Mat C)
 
   switch (product->type) {
   case MATPRODUCT_AB:
-    TRY( MatMatMult_BlockDiag_BlockDiag(A,B,product->fill,&newmat) );
+    CHKERRQ(MatMatMult_BlockDiag_BlockDiag(A,B,product->fill,&newmat));
     break;
   case MATPRODUCT_AtB:
-    TRY( MatTransposeMatMult_BlockDiag_BlockDiag(A,B,product->fill,&newmat) );
+    CHKERRQ(MatTransposeMatMult_BlockDiag_BlockDiag(A,B,product->fill,&newmat));
     break;
   default: SETERRQ(PetscObjectComm((PetscObject)C),PETSC_ERR_SUP,"MATPRODUCT type is not supported");
   }
   C->product = NULL;
-  TRY( MatHeaderReplace(C,&newmat) );
+  CHKERRQ(MatHeaderReplace(C,&newmat));
   C->product = product;
   C->ops->productnumeric = MatProductNumeric_BlockDiag;
   PetscFunctionReturn(0);
@@ -424,12 +424,12 @@ PetscErrorCode MatDestroy_BlockDiag(Mat mat) {
 
   PetscFunctionBegin;
   data = (Mat_BlockDiag*) mat->data;
-  TRY( MatDestroy(&data->localBlock) );
-  TRY( VecDestroy(&data->xloc) );
-  TRY( VecDestroy(&data->yloc) );
-  TRY( VecDestroy(&data->xloc1) );
-  TRY( VecDestroy(&data->yloc1) );
-  TRY( PetscFree(data) );
+  CHKERRQ(MatDestroy(&data->localBlock));
+  CHKERRQ(VecDestroy(&data->xloc));
+  CHKERRQ(VecDestroy(&data->yloc));
+  CHKERRQ(VecDestroy(&data->xloc1));
+  CHKERRQ(VecDestroy(&data->yloc1));
+  CHKERRQ(PetscFree(data));
   PetscFunctionReturn(0);
 }
 
@@ -443,16 +443,16 @@ PetscErrorCode MatDuplicate_BlockDiag(Mat matin,MatDuplicateOption cpvalues,Mat 
   PetscFunctionBegin;
   datain = (Mat_BlockDiag*) matin->data;
   
-  TRY( MatCreate(((PetscObject)matin)->comm,&matout) );
-  TRY( MatSetSizes(matout,matin->rmap->n,matin->cmap->n,matin->rmap->N,matin->cmap->N) );
-  TRY( MatSetType(matout,((PetscObject)matin)->type_name) );
-  TRY( PetscMemcpy(matout->ops,matin->ops,sizeof(struct _MatOps)) );
+  CHKERRQ(MatCreate(((PetscObject)matin)->comm,&matout));
+  CHKERRQ(MatSetSizes(matout,matin->rmap->n,matin->cmap->n,matin->rmap->N,matin->cmap->N));
+  CHKERRQ(MatSetType(matout,((PetscObject)matin)->type_name));
+  CHKERRQ(PetscMemcpy(matout->ops,matin->ops,sizeof(struct _MatOps)));
   dataout = (Mat_BlockDiag*) matout->data;
   
-  TRY( MatDuplicate(datain->localBlock,cpvalues,&dataout->localBlock) );
-  TRY( VecDuplicate(datain->yloc,&dataout->yloc) );
-  TRY( VecDuplicate(datain->yloc1,&dataout->yloc1) );
-  TRY( VecDuplicate(datain->xloc,&dataout->xloc) );
+  CHKERRQ(MatDuplicate(datain->localBlock,cpvalues,&dataout->localBlock));
+  CHKERRQ(VecDuplicate(datain->yloc,&dataout->yloc));
+  CHKERRQ(VecDuplicate(datain->yloc1,&dataout->yloc1));
+  CHKERRQ(VecDuplicate(datain->xloc,&dataout->xloc));
   *newmat = matout;
   PetscFunctionReturn(0);  
 }
@@ -477,7 +477,7 @@ PetscErrorCode MatGetInfo_BlockDiag(Mat matin,MatInfoType flag,MatInfo *info)
 
   PetscFunctionBegin;
   info->block_size     = 1.0;
-  TRY( MatGetInfo(A,MAT_LOCAL,info) );
+  CHKERRQ(MatGetInfo(A,MAT_LOCAL,info));
   isend[0] = info->nz_used; isend[1] = info->nz_allocated; isend[2] = info->nz_unneeded;
   isend[3] = info->memory;  isend[4] = info->mallocs;
 
@@ -490,7 +490,7 @@ PetscErrorCode MatGetInfo_BlockDiag(Mat matin,MatInfoType flag,MatInfo *info)
       info->mallocs      = isend[4];
       break;
     case MAT_GLOBAL_MAX:
-      TRY( MPI_Allreduce(isend, irecv, 5, MPIU_REAL, MPIU_MAX, ((PetscObject) matin)->comm) );
+      CHKERRQ(MPI_Allreduce(isend, irecv, 5, MPIU_REAL, MPIU_MAX, ((PetscObject) matin)->comm));
       info->nz_used      = irecv[0];
       info->nz_allocated = irecv[1];
       info->nz_unneeded  = irecv[2];
@@ -498,7 +498,7 @@ PetscErrorCode MatGetInfo_BlockDiag(Mat matin,MatInfoType flag,MatInfo *info)
       info->mallocs      = irecv[4];
       break;
     case MAT_GLOBAL_SUM:
-      TRY( MPI_Allreduce(isend, irecv, 5, MPIU_REAL, MPIU_SUM, ((PetscObject) matin)->comm) );
+      CHKERRQ(MPI_Allreduce(isend, irecv, 5, MPIU_REAL, MPIU_SUM, ((PetscObject) matin)->comm));
       info->nz_used      = irecv[0];
       info->nz_allocated = irecv[1];
       info->nz_unneeded  = irecv[2];
@@ -516,7 +516,7 @@ PetscErrorCode MatSetOption_BlockDiag(Mat mat, MatOption op, PetscBool flg)
   Mat_BlockDiag  *bd = (Mat_BlockDiag*) mat->data;
   
   PetscFunctionBegin;
-  TRY( MatSetOption(bd->localBlock, op, flg) );
+  CHKERRQ(MatSetOption(bd->localBlock, op, flg));
   PetscFunctionReturn(0);
 }
 
@@ -527,8 +527,8 @@ PetscErrorCode MatGetDiagonal_BlockDiag(Mat mat,Vec d)
   Mat_BlockDiag  *bd = (Mat_BlockDiag*) mat->data;
   
   PetscFunctionBegin;
-  TRY( MatGetDiagonal(bd->localBlock, bd->yloc) );
-  TRY( VecCopy(bd->yloc, d) );
+  CHKERRQ(MatGetDiagonal(bd->localBlock, bd->yloc));
+  CHKERRQ(VecCopy(bd->yloc, d));
   PetscFunctionReturn(0);
 }
 
@@ -543,32 +543,32 @@ PetscErrorCode MatView_BlockDiag(Mat mat,PetscViewer viewer)
   PetscViewerFormat format;
   
   PetscFunctionBegin;
-  TRY( PetscObjectGetComm((PetscObject)mat,&comm) );
-  TRY( PetscObjectTypeCompare((PetscObject)viewer,PETSCVIEWERASCII,&iascii) );
+  CHKERRQ(PetscObjectGetComm((PetscObject)mat,&comm));
+  CHKERRQ(PetscObjectTypeCompare((PetscObject)viewer,PETSCVIEWERASCII,&iascii));
   if (!iascii) SETERRQ(comm,PETSC_ERR_SUP,"Viewer type %s not supported for matrix type %s",((PetscObject)viewer)->type,((PetscObject)mat)->type_name);
-  TRY( PetscViewerGetFormat(viewer,&format) );
+  CHKERRQ(PetscViewerGetFormat(viewer,&format));
 
   if (format == PETSC_VIEWER_DEFAULT) {
-    TRY( PetscObjectPrintClassNamePrefixType((PetscObject)mat,viewer) );
-    TRY( PetscViewerASCIIPushTab(viewer) );
+    CHKERRQ(PetscObjectPrintClassNamePrefixType((PetscObject)mat,viewer));
+    CHKERRQ(PetscViewerASCIIPushTab(viewer));
   }
 
-  TRY( PetscViewerGetSubViewer(viewer, PETSC_COMM_SELF, &sv) );
+  CHKERRQ(PetscViewerGetSubViewer(viewer, PETSC_COMM_SELF, &sv));
   if (format != PETSC_VIEWER_DEFAULT) {
     PetscMPIInt rank;
-    TRY( MPI_Comm_rank(comm, &rank) );
-    TRY( PetscViewerASCIIPrintf(viewer,"diagonal block on rank 0:\n") );
-    if (!rank) TRY( MatView(bd->localBlock,sv) );
+    CHKERRQ(MPI_Comm_rank(comm, &rank));
+    CHKERRQ(PetscViewerASCIIPrintf(viewer,"diagonal block on rank 0:\n"));
+    if (!rank) CHKERRQ(MatView(bd->localBlock,sv));
   } else {
-    TRY( PetscSequentialPhaseBegin(comm,1) );
-    TRY( PetscViewerASCIIPrintf(viewer,"diagonal blocks:\n") );
-    TRY( MatView(bd->localBlock,sv) );
-    TRY( PetscSequentialPhaseEnd(comm,1) );
+    CHKERRQ(PetscSequentialPhaseBegin(comm,1));
+    CHKERRQ(PetscViewerASCIIPrintf(viewer,"diagonal blocks:\n"));
+    CHKERRQ(MatView(bd->localBlock,sv));
+    CHKERRQ(PetscSequentialPhaseEnd(comm,1));
   }
-  TRY( PetscViewerRestoreSubViewer(viewer, PETSC_COMM_SELF, &sv) );
+  CHKERRQ(PetscViewerRestoreSubViewer(viewer, PETSC_COMM_SELF, &sv));
 
   if (format == PETSC_VIEWER_DEFAULT) {
-    TRY( PetscViewerASCIIPopTab(viewer) );
+    CHKERRQ(PetscViewerASCIIPopTab(viewer));
   }
   PetscFunctionReturn(0);
 }
@@ -580,7 +580,7 @@ PetscErrorCode MatAssemblyBegin_BlockDiag(Mat mat, MatAssemblyType type)
   Mat_BlockDiag  *bd = (Mat_BlockDiag*) mat->data;
   
   PetscFunctionBegin;
-  TRY( MatAssemblyBegin(bd->localBlock, type) );
+  CHKERRQ(MatAssemblyBegin(bd->localBlock, type));
   PetscFunctionReturn(0);
 }
 
@@ -591,7 +591,7 @@ PetscErrorCode MatAssemblyEnd_BlockDiag(Mat mat, MatAssemblyType type)
   Mat_BlockDiag  *bd = (Mat_BlockDiag*) mat->data;
   
   PetscFunctionBegin;
-  TRY( MatAssemblyEnd(bd->localBlock, type) );
+  CHKERRQ(MatAssemblyEnd(bd->localBlock, type));
   PetscFunctionReturn(0);
 }
 
@@ -611,7 +611,7 @@ PetscErrorCode MatSetValuesLocal_BlockDiag(Mat mat,PetscInt nrow,const PetscInt 
   Mat_BlockDiag *data = (Mat_BlockDiag*) mat->data;
   
   PetscFunctionBegin;
-  TRY( MatSetValues(data->localBlock,nrow,irow,ncol,icol,y,addv) );
+  CHKERRQ(MatSetValues(data->localBlock,nrow,irow,ncol,icol,y,addv));
   PetscFunctionReturn(0);
 }
 
@@ -622,7 +622,7 @@ PetscErrorCode MatScale_BlockDiag(Mat mat,PetscScalar a)
   Mat_BlockDiag *data = (Mat_BlockDiag*) mat->data;
 
   PetscFunctionBegin;
-  TRY( MatScale(data->localBlock,a) );
+  CHKERRQ(MatScale(data->localBlock,a));
   PetscFunctionReturn(0);
 }
 
@@ -639,20 +639,20 @@ static PetscErrorCode MatGetColumnVectors_BlockDiag(Mat mat, Vec *cols_new[])
   n = mat->cmap->n;
   N = mat->cmap->N;
   jlo = mat->cmap->rstart;
-  TRY( MatGetColumnVectors(data->localBlock,&n1,&data->cols_loc) );
+  CHKERRQ(MatGetColumnVectors(data->localBlock,&n1,&data->cols_loc));
   PERMON_ASSERT(n==n1,"n==n1");
 
-  TRY( MatCreateVecs(mat, PETSC_IGNORE, &d) );
-  TRY( VecDuplicateVecs(d, N, &cols) );
-  TRY( VecDestroy(&d) );
+  CHKERRQ(MatCreateVecs(mat, PETSC_IGNORE, &d));
+  CHKERRQ(VecDuplicateVecs(d, N, &cols));
+  CHKERRQ(VecDestroy(&d));
 
   for (j=0; j<N; j++) {
-    TRY( VecSet(cols[j],0.0) );
+    CHKERRQ(VecSet(cols[j],0.0));
   }
 
   for (j=0; j<n; j++) {
-    TRY( VecGetArray(data->cols_loc[j],&arr) );
-    TRY( VecPlaceArray(cols[j+jlo],arr) );
+    CHKERRQ(VecGetArray(data->cols_loc[j],&arr));
+    CHKERRQ(VecPlaceArray(cols[j+jlo],arr));
   }
 
   *cols_new=cols;
@@ -672,12 +672,12 @@ static PetscErrorCode MatRestoreColumnVectors_BlockDiag(Mat mat, Vec *cols[])
   jlo = mat->cmap->rstart;
 
   for (j=0; j<n; j++) {
-    TRY( VecRestoreArray(data->cols_loc[j],NULL) );
-    TRY( VecResetArray((*cols)[j+jlo]) );
+    CHKERRQ(VecRestoreArray(data->cols_loc[j],NULL));
+    CHKERRQ(VecResetArray((*cols)[j+jlo]));
   }
 
-  TRY( MatRestoreColumnVectors(data->localBlock,NULL,&data->cols_loc) );
-  TRY( VecDestroyVecs(N,cols) );
+  CHKERRQ(MatRestoreColumnVectors(data->localBlock,NULL,&data->cols_loc));
+  CHKERRQ(VecDestroyVecs(N,cols));
   PetscFunctionReturn(0);
 }
 
@@ -689,11 +689,11 @@ static PetscErrorCode MatOrthColumns_BlockDiag(Mat A, MatOrthType type, MatOrthF
   Mat Q_loc=NULL,S_loc=NULL;
 
   PetscFunctionBegin;
-  TRY( MatOrthColumns(bd->localBlock, type, form, Q_new?(&Q_loc):NULL, S_new?(&S_loc):NULL) );
-  if (Q_new) TRY( MatCreateBlockDiag(PetscObjectComm((PetscObject)A),Q_loc,Q_new) );
-  if (S_new) TRY( MatCreateBlockDiag(PetscObjectComm((PetscObject)A),S_loc,S_new) );
-  TRY( MatDestroy(&Q_loc) );
-  TRY( MatDestroy(&S_loc) );
+  CHKERRQ(MatOrthColumns(bd->localBlock, type, form, Q_new?(&Q_loc):NULL, S_new?(&S_loc):NULL));
+  if (Q_new) CHKERRQ(MatCreateBlockDiag(PetscObjectComm((PetscObject)A),Q_loc,Q_new));
+  if (S_new) CHKERRQ(MatCreateBlockDiag(PetscObjectComm((PetscObject)A),S_loc,S_new));
+  CHKERRQ(MatDestroy(&Q_loc));
+  CHKERRQ(MatDestroy(&S_loc));
   PetscFunctionReturn(0);
 }
 
@@ -703,9 +703,9 @@ FLLOP_EXTERN PetscErrorCode MatCreate_BlockDiag(Mat B) {
   Mat_BlockDiag *data;
 
   PetscFunctionBegin;
-  TRY( PetscObjectChangeTypeName((PetscObject)B,MATBLOCKDIAG) );
+  CHKERRQ(PetscObjectChangeTypeName((PetscObject)B,MATBLOCKDIAG));
 
-  TRY( PetscNewLog(B,&data) );
+  CHKERRQ(PetscNewLog(B,&data));
   B->data                    = (void*) data;
   B->assembled               = PETSC_TRUE;
   B->preallocated            = PETSC_TRUE;
@@ -738,14 +738,14 @@ FLLOP_EXTERN PetscErrorCode MatCreate_BlockDiag(Mat B) {
   B->ops->zerorowscolumns    = MatZeroRowsColumns_BlockDiag;
   B->ops->scale              = MatScale_BlockDiag;
   B->ops->productsetfromoptions = MatProductSetFromOptions_BlockDiag;
-  TRY( PetscObjectComposeFunction((PetscObject)B,"MatGetColumnVectors_C",MatGetColumnVectors_BlockDiag) );
-  TRY( PetscObjectComposeFunction((PetscObject)B,"MatRestoreColumnVectors_C",MatRestoreColumnVectors_BlockDiag) );
-  TRY( PetscObjectComposeFunction((PetscObject)B,"MaProductSetFromOptions_blockdiag_aij_C",MatProductSetFromOptions_BlockDiag_AIJ) );
-  TRY( PetscObjectComposeFunction((PetscObject)B,"MaProductSetFromOptions_blockdiag_seqaij_C",MatProductSetFromOptions_BlockDiag_AIJ) );
-  TRY( PetscObjectComposeFunction((PetscObject)B,"MaProductSetFromOptions_blockdiag_mpiaij",MatProductSetFromOptions_BlockDiag_AIJ) );
-  TRY( PetscObjectComposeFunction((PetscObject)B,"MatConvert_blockdiag_aij_C",MatConvert_BlockDiag_AIJ) );
-  TRY( PetscObjectComposeFunction((PetscObject)B,"MatOrthColumns_C",MatOrthColumns_BlockDiag) );
-  TRY( PetscObjectComposeFunction((PetscObject)B,"PermonMatConvertBlocks_C",PermonMatConvertBlocks_BlockDiag) );
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)B,"MatGetColumnVectors_C",MatGetColumnVectors_BlockDiag));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)B,"MatRestoreColumnVectors_C",MatRestoreColumnVectors_BlockDiag));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)B,"MaProductSetFromOptions_blockdiag_aij_C",MatProductSetFromOptions_BlockDiag_AIJ));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)B,"MaProductSetFromOptions_blockdiag_seqaij_C",MatProductSetFromOptions_BlockDiag_AIJ));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)B,"MaProductSetFromOptions_blockdiag_mpiaij",MatProductSetFromOptions_BlockDiag_AIJ));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)B,"MatConvert_blockdiag_aij_C",MatConvert_BlockDiag_AIJ));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)B,"MatOrthColumns_C",MatOrthColumns_BlockDiag));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)B,"PermonMatConvertBlocks_C",PermonMatConvertBlocks_BlockDiag));
   PetscFunctionReturn(0);
 }
 
@@ -762,38 +762,38 @@ PetscErrorCode MatCreateBlockDiag(MPI_Comm comm, Mat block, Mat *B_new) {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(block,MAT_CLASSID,2);
   PetscValidPointer(B_new,3);
-  TRY( MPI_Comm_size(PetscObjectComm((PetscObject)block),&size) );
+  CHKERRQ(MPI_Comm_size(PetscObjectComm((PetscObject)block),&size));
   if (size > 1) SETERRQ(comm,PETSC_ERR_ARG_WRONG,"block (arg #2) must be sequential");
   
   /* Create matrix. */  
-  TRY( MatCreate(comm, &B) );
-  TRY( MatSetType(B, MATBLOCKDIAG) );
+  CHKERRQ(MatCreate(comm, &B));
+  CHKERRQ(MatSetType(B, MATBLOCKDIAG));
   data = (Mat_BlockDiag*) B->data;
   
   /* Matrix data. */
   if (!block) {
-      TRY( MatCreateSeqDense(PETSC_COMM_SELF,0,0,NULL,&block) );
+      CHKERRQ(MatCreateSeqDense(PETSC_COMM_SELF,0,0,NULL,&block));
   } else {
-      TRY( PetscObjectReference((PetscObject) block) );
+      CHKERRQ(PetscObjectReference((PetscObject) block));
   }
   data->localBlock = block;
 
   /* Set up row layout */
-  TRY( PetscLayoutSetBlockSize(B->rmap,block->rmap->bs) );
-  TRY( PetscLayoutSetLocalSize(B->rmap,block->rmap->n) );
-  TRY( PetscLayoutSetUp(B->rmap) );
-  TRY( PetscLayoutGetRange(B->rmap,&rlo,&rhi) );
+  CHKERRQ(PetscLayoutSetBlockSize(B->rmap,block->rmap->bs));
+  CHKERRQ(PetscLayoutSetLocalSize(B->rmap,block->rmap->n));
+  CHKERRQ(PetscLayoutSetUp(B->rmap));
+  CHKERRQ(PetscLayoutGetRange(B->rmap,&rlo,&rhi));
   
   /* Set up column layout */
-  TRY( PetscLayoutSetBlockSize(B->cmap,block->cmap->bs) );
-  TRY( PetscLayoutSetLocalSize(B->cmap,block->cmap->n) );
-  TRY( PetscLayoutSetUp(B->cmap) );
-  TRY( PetscLayoutGetRange(B->cmap,&clo,&chi) );
+  CHKERRQ(PetscLayoutSetBlockSize(B->cmap,block->cmap->bs));
+  CHKERRQ(PetscLayoutSetLocalSize(B->cmap,block->cmap->n));
+  CHKERRQ(PetscLayoutSetUp(B->cmap));
+  CHKERRQ(PetscLayoutGetRange(B->cmap,&clo,&chi));
   
   /* Intermediate vectors for MatMult. */
-  TRY( MatCreateVecs(block, &data->xloc, &data->yloc) );
-  TRY( VecDuplicate(data->yloc, &data->yloc1));
-  TRY( VecDuplicate(data->xloc, &data->xloc1));
+  CHKERRQ(MatCreateVecs(block, &data->xloc, &data->yloc));
+  CHKERRQ(VecDuplicate(data->yloc, &data->yloc1));
+  CHKERRQ(VecDuplicate(data->xloc, &data->xloc1));
 
   /* TODO: test bs > 1 */
   {
@@ -802,31 +802,31 @@ PetscErrorCode MatCreateBlockDiag(MPI_Comm comm, Mat block, Mat *B_new) {
     ISLocalToGlobalMapping l2gr,l2gc;
 
     if (B->rmap->bs > 1) {
-      TRY( PetscMalloc1(B->rmap->n,&l2grarr) );
+      CHKERRQ(PetscMalloc1(B->rmap->n,&l2grarr));
       for (i = 0; i < B->rmap->n/B->rmap->bs; i++) l2grarr[i] = rlo/B->rmap->bs + i;
-      TRY( ISCreateBlock(comm,B->rmap->bs,B->rmap->n,l2grarr,PETSC_OWN_POINTER,&l2gris) );
+      CHKERRQ(ISCreateBlock(comm,B->rmap->bs,B->rmap->n,l2grarr,PETSC_OWN_POINTER,&l2gris));
     } else {
-      TRY( ISCreateStride(comm,B->rmap->n,rlo,1,&l2gris) );
+      CHKERRQ(ISCreateStride(comm,B->rmap->n,rlo,1,&l2gris));
     }
-    TRY( ISLocalToGlobalMappingCreateIS(l2gris,&l2gr) );
-    TRY( PetscLayoutSetISLocalToGlobalMapping(B->rmap,l2gr) );
-    TRY( ISDestroy(&l2gris) );
-    TRY( ISLocalToGlobalMappingDestroy(&l2gr) );
+    CHKERRQ(ISLocalToGlobalMappingCreateIS(l2gris,&l2gr));
+    CHKERRQ(PetscLayoutSetISLocalToGlobalMapping(B->rmap,l2gr));
+    CHKERRQ(ISDestroy(&l2gris));
+    CHKERRQ(ISLocalToGlobalMappingDestroy(&l2gr));
 
     if (B->cmap->bs > 1) {
-      TRY( PetscMalloc1(B->cmap->n,&l2gcarr) );
+      CHKERRQ(PetscMalloc1(B->cmap->n,&l2gcarr));
       for (i = 0; i < B->cmap->n/B->cmap->bs; i++) l2gcarr[i] = clo/B->cmap->bs + i;
-      TRY( ISCreateBlock(comm,B->cmap->bs,B->cmap->n,l2gcarr,PETSC_OWN_POINTER,&l2gcis) );
+      CHKERRQ(ISCreateBlock(comm,B->cmap->bs,B->cmap->n,l2gcarr,PETSC_OWN_POINTER,&l2gcis));
     } else {
-      TRY( ISCreateStride(comm,B->cmap->n,clo,1,&l2gcis) );
+      CHKERRQ(ISCreateStride(comm,B->cmap->n,clo,1,&l2gcis));
     }
-    TRY( ISLocalToGlobalMappingCreateIS(l2gcis,&l2gc) );
-    TRY( PetscLayoutSetISLocalToGlobalMapping(B->cmap,l2gc) );
-    TRY( ISDestroy(&l2gcis) );
-    TRY( ISLocalToGlobalMappingDestroy(&l2gc) );
+    CHKERRQ(ISLocalToGlobalMappingCreateIS(l2gcis,&l2gc));
+    CHKERRQ(PetscLayoutSetISLocalToGlobalMapping(B->cmap,l2gc));
+    CHKERRQ(ISDestroy(&l2gcis));
+    CHKERRQ(ISLocalToGlobalMappingDestroy(&l2gc));
   }
 
-  TRY( MatInheritSymmetry(block,B) );
+  CHKERRQ(MatInheritSymmetry(block,B));
   *B_new = B;
   PetscFunctionReturn(0);
 }

@@ -33,10 +33,10 @@ PetscErrorCode QPSIsQPCompatible_PCPG(QPS qps,QP qp,PetscBool *flg){
  * */
 PetscErrorCode QPSSetup_PCPG(QPS qps){
   PetscFunctionBegin;
-  TRY( QPSSetWorkVecs(qps,6) );
+  CHKERRQ(QPSSetWorkVecs(qps,6));
   if (qps->solQP->cE) {
-    TRY(QPTHomogenizeEq(qps->solQP));
-    TRY(QPChainGetLast(qps->solQP, &qps->solQP));
+    CHKERRQ(QPTHomogenizeEq(qps->solQP));
+    CHKERRQ(QPChainGetLast(qps->solQP, &qps->solQP));
   }
   PetscFunctionReturn(0);
 }
@@ -66,17 +66,17 @@ PetscErrorCode QPSSolve_PCPG(QPS qps){
   PetscBool pcnone;
 
   PetscFunctionBegin;
-  TRY( QPSGetSolvedQP(qps,&qp) );
+  CHKERRQ(QPSGetSolvedQP(qps,&qp));
  
-  TRY( QPGetOperator(qp, &Amat) );
-  TRY( QPGetQPPF(qp, &cp) );
-  TRY( QPGetPC(qp, &pc) );
-  TRY( PetscObjectTypeCompare((PetscObject)pc, PCNONE, &pcnone) );
+  CHKERRQ(QPGetOperator(qp, &Amat));
+  CHKERRQ(QPGetQPPF(qp, &cp));
+  CHKERRQ(QPGetPC(qp, &pc));
+  CHKERRQ(PetscObjectTypeCompare((PetscObject)pc, PCNONE, &pcnone));
   if (!pcnone) {
-    TRY( PetscObjectTypeCompare((PetscObject)pc, PCDUAL, &pcnone) );
+    CHKERRQ(PetscObjectTypeCompare((PetscObject)pc, PCDUAL, &pcnone));
     if (pcnone) {
       PCDualType type;
-      TRY( PCDualGetType(pc, &type) );
+      CHKERRQ(PCDualGetType(pc, &type));
       if (type == PC_DUAL_NONE) {
         pcnone = PETSC_TRUE;
       }else{
@@ -86,8 +86,8 @@ PetscErrorCode QPSSolve_PCPG(QPS qps){
   }
 
   //initialize
-  TRY( QPGetSolutionVector(qp, &lm) );
-  TRY( QPGetRhs(qp, &rhs) );
+  CHKERRQ(QPGetSolutionVector(qp, &lm));
+  CHKERRQ(QPGetRhs(qp, &rhs));
   p = qps->work[0];
   r = qps->work[1];
   w = qps->work[2];
@@ -95,38 +95,38 @@ PetscErrorCode QPSSolve_PCPG(QPS qps){
   y = qps->work[4];
   Ap = qps->work[5];
 
-  TRY( MatMult(Amat, lm, r) );
-  TRY( VecAYPX(r, -1.0, rhs) );
+  CHKERRQ(MatMult(Amat, lm, r));
+  CHKERRQ(VecAYPX(r, -1.0, rhs));
   
   qps->iteration = 0;
   do {
-    TRY( QPPFApplyP(cp, r, w) );
+    CHKERRQ(QPPFApplyP(cp, r, w));
     
     //convergence test
-    TRY( VecNorm(w, NORM_2, &qps->rnorm) );
-    TRY( (*qps->convergencetest)(qps,&qps->reason) );
+    CHKERRQ(VecNorm(w, NORM_2, &qps->rnorm));
+    CHKERRQ((*qps->convergencetest)(qps,&qps->reason));
     if (qps->reason) break;
     
     if (pcnone) {
       y = w;
     }else{
-      TRY( PCApply(pc, w, z) );
-      TRY( QPPFApplyP(cp, z, y) );
+      CHKERRQ(PCApply(pc, w, z));
+      CHKERRQ(QPPFApplyP(cp, z, y));
     }
     beta2 = beta1;
-    TRY( VecDot(y, w, &beta1) ); // beta1 = (y_{i-1},w_{i-1})
+    CHKERRQ(VecDot(y, w, &beta1)); // beta1 = (y_{i-1},w_{i-1})
     if (!qps->iteration){
       beta = 0;
-      TRY( VecCopy(y, p) );
+      CHKERRQ(VecCopy(y, p));
     }else{
       beta = beta1/beta2; //beta = (y_{i-1},w_{i-1})/(y_{i-2},w_{i-2})
-      TRY( VecAYPX(p, beta, y) ); //p= y + beta*p
+      CHKERRQ(VecAYPX(p, beta, y)); //p= y + beta*p
     }
-    TRY( MatMult(Amat,p, Ap) );
-    TRY( VecDot(p, Ap, &alpha1) );
+    CHKERRQ(MatMult(Amat,p, Ap));
+    CHKERRQ(VecDot(p, Ap, &alpha1));
     alpha = beta1/alpha1;
-    TRY( VecAXPY(lm, alpha, p) );
-    TRY( VecAXPY(r, -alpha, Ap ) );
+    CHKERRQ(VecAXPY(lm, alpha, p));
+    CHKERRQ(VecAXPY(r, -alpha, Ap ));
     
     qps->iteration++;
   } while (qps->iteration < qps->max_it);

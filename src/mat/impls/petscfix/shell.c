@@ -26,8 +26,8 @@ static PetscErrorCode MatMultAdd_ShellPermon(Mat A,Vec x,Vec y,Vec z)
 PetscErrorCode MatCreateShellPermon(MPI_Comm comm,PetscInt m,PetscInt n,PetscInt M,PetscInt N,void *ctx,Mat *A)
 {
   PetscFunctionBegin;
-  TRY( MatCreateShell(comm,m,n,M,N,ctx,A) );
-  TRY( MatShellSetOperation(*A,MATOP_MULT_ADD,(void(*)())MatMultAdd_ShellPermon) );
+  CHKERRQ(MatCreateShell(comm,m,n,M,N,ctx,A));
+  CHKERRQ(MatShellSetOperation(*A,MATOP_MULT_ADD,(void(*)())MatMultAdd_ShellPermon));
   PetscFunctionReturn(0);
 }
 
@@ -37,7 +37,7 @@ PetscErrorCode MatCreateShellPermon(MPI_Comm comm,PetscInt m,PetscInt n,PetscInt
 PetscErrorCode MatCreateDummy(MPI_Comm comm,PetscInt m,PetscInt n,PetscInt M,PetscInt N,void *ctx,Mat *A)
 {
   PetscFunctionBegin;
-  TRY( MatCreateShell(comm,m,n,M,N,ctx,A) );
-  TRY( PetscObjectChangeTypeName((PetscObject)*A,MATDUMMY) );
+  CHKERRQ(MatCreateShell(comm,m,n,M,N,ctx,A));
+  CHKERRQ(PetscObjectChangeTypeName((PetscObject)*A,MATDUMMY));
   PetscFunctionReturn(0);
 }

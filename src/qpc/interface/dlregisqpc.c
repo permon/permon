@@ -12,12 +12,12 @@ PetscErrorCode QPCInitializePackage(void)
   if (QPCPackageInitialized) PetscFunctionReturn(0);
   QPCPackageInitialized = PETSC_TRUE;
   /* Register Classes */
-  TRY( PetscClassIdRegister("QP Constraints",&QPC_CLASSID) );
+  CHKERRQ(PetscClassIdRegister("QP Constraints",&QPC_CLASSID));
   /* Register Constructors */
-  TRY( QPCRegisterAll() );
+  CHKERRQ(QPCRegisterAll());
   /* Process info & summary exclusions */
-  TRY( FllopProcessInfoExclusions(QPC_CLASSID, QPC_CLASS_NAME) );
-  TRY( PetscRegisterFinalize(QPCFinalizePackage) );
+  CHKERRQ(FllopProcessInfoExclusions(QPC_CLASSID, QPC_CLASS_NAME));
+  CHKERRQ(PetscRegisterFinalize(QPCFinalizePackage));
   PetscFunctionReturn(0);
 }
 
@@ -26,7 +26,7 @@ PetscErrorCode QPCInitializePackage(void)
 PetscErrorCode QPCFinalizePackage(void)
 {
   PetscFunctionBegin;
-  TRY( PetscFunctionListDestroy(&QPCList) );
+  CHKERRQ(PetscFunctionListDestroy(&QPCList));
   QPCPackageInitialized = PETSC_FALSE;
   QPCRegisterAllCalled  = PETSC_FALSE;
   PetscFunctionReturn(0);

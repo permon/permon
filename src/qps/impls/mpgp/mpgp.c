@@ -25,14 +25,14 @@ PetscErrorCode QPSMonitorDefault_MPGP(QPS qps,PetscInt n,PetscViewer viewer)
 
    PetscFunctionBegin;
    if (n == 0 && ((PetscObject)qps)->prefix) {
-     TRY( PetscViewerASCIIPrintf(viewer,"  Projected gradient norms for %s solve.\n",((PetscObject)qps)->prefix) );
+     CHKERRQ(PetscViewerASCIIPrintf(viewer,"  Projected gradient norms for %s solve.\n",((PetscObject)qps)->prefix));
    }
 
-   TRY( PetscViewerASCIIPrintf(viewer,"%3D MPGP [%c] ||gp||=%.10e",n,mpgp->currentStepType,(double)qps->rnorm) );
-   TRY( PetscViewerASCIIPrintf(viewer,",\t||gf||=%.10e",(double)mpgp->gfnorm) );
-   TRY( PetscViewerASCIIPrintf(viewer,",\t||gc||=%.10e",(double)mpgp->gcnorm) );
-   TRY( PetscViewerASCIIPrintf(viewer,",\talpha=%.10e",(double)mpgp->alpha) );
-   TRY( PetscViewerASCIIPrintf(viewer,"\n") );
+   CHKERRQ(PetscViewerASCIIPrintf(viewer,"%3D MPGP [%c] ||gp||=%.10e",n,mpgp->currentStepType,(double)qps->rnorm));
+   CHKERRQ(PetscViewerASCIIPrintf(viewer,",\t||gf||=%.10e",(double)mpgp->gfnorm));
+   CHKERRQ(PetscViewerASCIIPrintf(viewer,",\t||gc||=%.10e",(double)mpgp->gcnorm));
+   CHKERRQ(PetscViewerASCIIPrintf(viewer,",\talpha=%.10e",(double)mpgp->alpha));
+   CHKERRQ(PetscViewerASCIIPrintf(viewer,"\n"));
    PetscFunctionReturn(0);
 }
 
@@ -129,18 +129,18 @@ static PetscErrorCode  QPSMPGPUpdateMaxEigenvalue_MPGP(QPS qps, PetscReal maxeig
   if (!qps->setupcalled) SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_WRONGSTATE,"this routine is intended to be called after QPSSetUp");
 
   mpgp->maxeig = maxeig_old*maxeig_update;
-  TRY( PetscInfo(qps,"updating maxeig := %.8e = %.8e * %.8e = maxeig * maxeig_update\n",mpgp->maxeig,maxeig_old,maxeig_update) );
+  CHKERRQ(PetscInfo(qps,"updating maxeig := %.8e = %.8e * %.8e = maxeig * maxeig_update\n",mpgp->maxeig,maxeig_old,maxeig_update));
 
   if (mpgp->alpha_type == QPS_ARG_MULTIPLE) {
     mpgp->alpha = alpha_old/maxeig_update;
-    TRY( PetscInfo(qps,"updating alpha := %.8e = %.8e / %.8e = alpha / maxeig_update\n",mpgp->alpha,alpha_old,maxeig_update) );
+    CHKERRQ(PetscInfo(qps,"updating alpha := %.8e = %.8e / %.8e = alpha / maxeig_update\n",mpgp->alpha,alpha_old,maxeig_update));
   }
 
   //TODO temporary
   if (FllopDebugEnabled) {
     PetscReal lambda;
-    TRY( MatGetMaxEigenvalue(qps->solQP->A,NULL,&lambda,mpgp->maxeig_tol,mpgp->maxeig_iter) );
-    TRY( FllopDebug1("|maxeig_from_power_method - mpgp->maxeig| = %8e\n",PetscAbs(lambda-mpgp->maxeig)) );
+    CHKERRQ(MatGetMaxEigenvalue(qps->solQP->A,NULL,&lambda,mpgp->maxeig_tol,mpgp->maxeig_iter));
+    CHKERRQ(FllopDebug1("|maxeig_from_power_method - mpgp->maxeig| = %8e\n",PetscAbs(lambda-mpgp->maxeig)));
   }
   PetscFunctionReturn(0);
 }
@@ -211,17 +211,17 @@ static PetscErrorCode MPGPGrads(QPS qps, Vec x, Vec g)
   QPS_MPGP          *mpgp = (QPS_MPGP*)qps->data;
 
   PetscFunctionBegin;
-  TRY( QPSGetSolvedQP(qps,&qp) );
-  TRY( QPGetQPC(qp,&qpc) );
+  CHKERRQ(QPSGetSolvedQP(qps,&qp));
+  CHKERRQ(QPGetQPC(qp,&qpc));
 
   gP                = qps->work[0];
   gr                = qps->work[6];
   gf                = qps->work[1];
   gc                = qps->work[2];
 
-  TRY( QPCGrads(qpc,x,g,gf,gc) );
-  TRY( QPCGradReduced(qpc,x,gf,mpgp->alpha,gr) );
-  TRY( VecWAXPY(gP,1.0,gf,gc) );
+  CHKERRQ(QPCGrads(qpc,x,g,gf,gc));
+  CHKERRQ(QPCGradReduced(qpc,x,gf,mpgp->alpha,gr));
+  CHKERRQ(VecWAXPY(gP,1.0,gf,gc));
   PetscFunctionReturn(0);
 }
 
@@ -242,17 +242,17 @@ static PetscErrorCode MPGPExpansionLength(QPS qps)
   QPS_MPGP          *mpgp = (QPS_MPGP*)qps->data;
 
   PetscFunctionBegin;
-  TRY( QPSGetSolvedQP(qps,&qp) );
-  TRY( QPGetOperator(qp, &A) );                   /* get hessian matrix */
+  CHKERRQ(QPSGetSolvedQP(qps,&qp));
+  CHKERRQ(QPGetOperator(qp, &A));                   /* get hessian matrix */
   switch (mpgp->explengthtype) {
     case QPS_MPGP_EXPANSION_LENGTH_FIXED:
       break;
     case QPS_MPGP_EXPANSION_LENGTH_OPT:
       vecs[0] = qps->work[3]; /* g */
       vecs[1] = qps->work[5]; /* Ap  */
-      TRY( MatMult(A,mpgp->explengthvec,vecs[1]) );
+      CHKERRQ(MatMult(A,mpgp->explengthvec,vecs[1]));
       mpgp->nmv++;
-      TRY( VecMDot(mpgp->explengthvec,2,vecs,dots) );
+      CHKERRQ(VecMDot(mpgp->explengthvec,2,vecs,dots));
       if (dots[1] == .0 && mpgp->resetalpha) {  /* TODO dots[1] is tiny? */
         mpgp->alpha = mpgp->alpha/mpgp->maxeig;
       } else {
@@ -262,17 +262,17 @@ static PetscErrorCode MPGPExpansionLength(QPS qps)
     case QPS_MPGP_EXPANSION_LENGTH_OPTAPPROX:
       vecs[0] = qps->work[3]; /* g */
       vecs[1] = mpgp->explengthvec;
-      TRY( VecMDot(mpgp->explengthvec,2,vecs,dots) );
+      CHKERRQ(VecMDot(mpgp->explengthvec,2,vecs,dots));
       mpgp->alpha = mpgp->alpha_user*dots[0]/dots[1];
       mpgp->alpha = mpgp->alpha/mpgp->maxeig;
       break;
     case QPS_MPGP_EXPANSION_LENGTH_BB:
-      TRY( QPGetSolutionVector(qp, &x) );
+      CHKERRQ(QPGetSolutionVector(qp, &x));
       vecs[0] = mpgp->explengthvecold;
       vecs[1] = mpgp->xold;
-      TRY( VecAYPX(vecs[0],-1.0,mpgp->explengthvec) ); /* s_k = x_k - x_{k-1} */
-      TRY( VecAYPX(vecs[1],-1.0,x) ); /* y+k = d_k - d_{k-1} */
-      TRY( VecMDot(vecs[0],2,vecs,dots) );
+      CHKERRQ(VecAYPX(vecs[0],-1.0,mpgp->explengthvec)); /* s_k = x_k - x_{k-1} */
+      CHKERRQ(VecAYPX(vecs[1],-1.0,x)); /* y+k = d_k - d_{k-1} */
+      CHKERRQ(VecMDot(vecs[0],2,vecs,dots));
       if (dots[1] == .0 && mpgp->resetalpha) {  /* TODO dots[1] is tiny? can be skipped?*/
         mpgp->alpha = mpgp->alpha/mpgp->maxeig;
       } else {
@@ -304,19 +304,19 @@ static PetscErrorCode MPGPExpansion_Std(QPS qps, PetscReal afeas, PetscReal acg)
   QPS_MPGP          *mpgp = (QPS_MPGP*)qps->data;
 
   PetscFunctionBegin;
-  TRY( QPSGetSolvedQP(qps,&qp) );
-  TRY( QPGetSolutionVector(qp, &x) );
+  CHKERRQ(QPSGetSolvedQP(qps,&qp));
+  CHKERRQ(QPGetSolutionVector(qp, &x));
   g                 = qps->work[3];
   p                 = qps->work[4];
   Ap                = qps->work[5];
 
   /* make maximal feasible step */
-  TRY( VecAXPY(x, -afeas, p) );             /* x=x-afeas*p*/
-  TRY( VecAXPY(g, -afeas, Ap) );            /* g=g-afeas*Ap    */
-  TRY( MPGPGrads(qps, x, g) );              /* grad. splitting  gP,gf,gc,gr */
+  CHKERRQ(VecAXPY(x, -afeas, p));             /* x=x-afeas*p*/
+  CHKERRQ(VecAXPY(g, -afeas, Ap));            /* g=g-afeas*Ap    */
+  CHKERRQ(MPGPGrads(qps, x, g));              /* grad. splitting  gP,gf,gc,gr */
 
-  TRY( MPGPExpansionLength(qps) );
-  TRY( VecAXPY(x, -mpgp->alpha, mpgp->expdirection) );      /* x=x-abar*direction */
+  CHKERRQ(MPGPExpansionLength(qps));
+  CHKERRQ(VecAXPY(x, -mpgp->alpha, mpgp->expdirection));      /* x=x-abar*direction */
   PetscFunctionReturn(0);
 }
 
@@ -337,12 +337,12 @@ static PetscErrorCode MPGPExpansion_ProjCG(QPS qps, PetscReal afeas, PetscReal a
   Vec               x;
 
   PetscFunctionBegin;
-  TRY( QPSGetSolvedQP(qps,&qp) );
-  TRY( QPGetSolutionVector(qp, &x) );
+  CHKERRQ(QPSGetSolvedQP(qps,&qp));
+  CHKERRQ(QPGetSolutionVector(qp, &x));
   p                 = qps->work[4];
 
   /* make projected CG step */
-  TRY( VecAXPY(x, -acg, p) );               /* x=x-acg*p      */
+  CHKERRQ(VecAXPY(x, -acg, p));               /* x=x-acg*p      */
   PetscFunctionReturn(0);
 }
 
@@ -363,20 +363,20 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
   /* set the number of working vectors */
   if (mpgp->fallback || mpgp->fallback2) {
     if (mpgp->explengthtype != QPS_MPGP_EXPANSION_LENGTH_BB) {
-      TRY( QPSSetWorkVecs(qps,9) );
+      CHKERRQ(QPSSetWorkVecs(qps,9));
     } else {
-      TRY( QPSSetWorkVecs(qps,10) );
+      CHKERRQ(QPSSetWorkVecs(qps,10));
     }
   } else if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
-      TRY( QPSSetWorkVecs(qps,9) );
+      CHKERRQ(QPSSetWorkVecs(qps,9));
   } else {
-    TRY( QPSSetWorkVecs(qps,7) );
+    CHKERRQ(QPSSetWorkVecs(qps,7));
   }
 
-  TRY( QPGetBox(qps->solQP,NULL,&lb,&ub) );
+  CHKERRQ(QPGetBox(qps->solQP,NULL,&lb,&ub));
   if (mpgp->bchop_tol) {
-    if (lb) TRY( VecChop(lb,mpgp->bchop_tol) );
-    if (ub) TRY( VecChop(ub,mpgp->bchop_tol) );
+    if (lb) CHKERRQ(VecChop(lb,mpgp->bchop_tol));
+    if (ub) CHKERRQ(VecChop(ub,mpgp->bchop_tol));
   }
 
   switch (mpgp->exptype) {
@@ -415,18 +415,18 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
   /* initialize alpha */
   if (mpgp->alpha_type == QPS_ARG_MULTIPLE) {
     if (mpgp->maxeig == PETSC_DECIDE) {
-      TRY( MatGetMaxEigenvalue(qps->solQP->A, NULL, &mpgp->maxeig, mpgp->maxeig_tol, mpgp->maxeig_iter) );
+      CHKERRQ(MatGetMaxEigenvalue(qps->solQP->A, NULL, &mpgp->maxeig, mpgp->maxeig_tol, mpgp->maxeig_iter));
     }
     if (mpgp->alpha_user == PETSC_DECIDE) {
       mpgp->alpha_user = 2.0;
     }
-    TRY( PetscInfo(qps,"maxeig     = %.8e\n", mpgp->maxeig) );
-    TRY( PetscInfo(qps,"alpha_user = %.8e\n", mpgp->alpha_user) );
+    CHKERRQ(PetscInfo(qps,"maxeig     = %.8e\n", mpgp->maxeig));
+    CHKERRQ(PetscInfo(qps,"alpha_user = %.8e\n", mpgp->alpha_user));
     mpgp->alpha = mpgp->alpha_user/mpgp->maxeig;
   } else {
     mpgp->alpha = mpgp->alpha_user;
   }
-  TRY( PetscInfo(qps,  "alpha      = %.8e\n", mpgp->alpha) );
+  CHKERRQ(PetscInfo(qps,  "alpha      = %.8e\n", mpgp->alpha));
   PetscFunctionReturn(0);
 }
 
@@ -493,60 +493,60 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   /* set constants of algorithm */
   gamma2            = mpgp->gamma*mpgp->gamma;
 
-  TRY( QPSGetSolvedQP(qps,&qp) );
-  TRY( QPGetQPC(qp,&qpc) );                       /* get constraints */
-  TRY( QPGetSolutionVector(qp, &x) );             /* get the solution vector */
-  TRY( QPGetOperator(qp, &A) );                   /* get hessian matrix */
-  TRY( QPGetRhs(qp, &b) );                        /* get right-hand side vector */
+  CHKERRQ(QPSGetSolvedQP(qps,&qp));
+  CHKERRQ(QPGetQPC(qp,&qpc));                       /* get constraints */
+  CHKERRQ(QPGetSolutionVector(qp, &x));             /* get the solution vector */
+  CHKERRQ(QPGetOperator(qp, &A));                   /* get hessian matrix */
+  CHKERRQ(QPGetRhs(qp, &b));                        /* get right-hand side vector */
 
-  TRY( QPCProject(qpc,x,x) );                     /* project x initial guess to feasible set */
+  CHKERRQ(QPCProject(qpc,x,x));                     /* project x initial guess to feasible set */
 
   /* compute gradient */
-  TRY( MatMult(A, x, g) );                        /* g=A*x */
+  CHKERRQ(MatMult(A, x, g));                        /* g=A*x */
   nmv++;                                          /* matrix multiplication counter */
-  TRY( VecAXPY(g, -1.0, b) );                     /* g=g-b */
+  CHKERRQ(VecAXPY(g, -1.0, b));                     /* g=g-b */
 
-  TRY( MPGPGrads(qps, x, g) );                    /* grad. splitting  gP,gf,gc */
+  CHKERRQ(MPGPGrads(qps, x, g));                    /* grad. splitting  gP,gf,gc */
 
   /* initiate CG method */
-  TRY( VecCopy(gf, p) );                          /* p=gf */
+  CHKERRQ(VecCopy(gf, p));                          /* p=gf */
 
   mpgp->currentStepType = ' ';
   qps->iteration = 0;                             /* main iteration counter */
   while (1)                                       /* main cycle */
   {
     /* compute the norm of projected gradient - stopping criterion */
-    TRY( VecNorm(gP, NORM_2, &qps->rnorm) );      /* qps->rnorm=norm(gP)*/
+    CHKERRQ(VecNorm(gP, NORM_2, &qps->rnorm));      /* qps->rnorm=norm(gP)*/
 
     /* compute dot products to control the proportionality */
-    TRY( VecDot(gc, gc, &gcTgc) );               /* gcTgc=gc'*gc   */
+    CHKERRQ(VecDot(gc, gc, &gcTgc));               /* gcTgc=gc'*gc   */
     /* NOTE: using gf'*gf for proportiong rule instead of gr'*gf
     *  which can lead to more agressive proportioning as
     *  sqrt(g_reduced^T * g_free) <= ||g_free||                    */
-    TRY( VecDot(gf, gf, &gfTgf) );               /* gfTgf=gr'*gf   */
+    CHKERRQ(VecDot(gf, gf, &gfTgf));               /* gfTgf=gr'*gf   */
 
     /* compute norm of gf, gc from computed dot products */
     if (qps->numbermonitors) {
       mpgp->gfnorm =  PetscSqrtScalar(gfTgf);
       mpgp->gcnorm =  PetscSqrtScalar(gcTgc);
-      TRY( QPSMonitor(qps,qps->iteration,qps->rnorm)) ;
+      CHKERRQ(QPSMonitor(qps,qps->iteration,qps->rnorm)) ;
     }
 
     /* test the convergence of algorithm */
-    TRY( (*qps->convergencetest)(qps,&qps->reason) ); /* test for convergence */
+    CHKERRQ((*qps->convergencetest)(qps,&qps->reason)); /* test for convergence */
     if (qps->reason != KSP_CONVERGED_ITERATING) break;
 
     /* proportional condition */
     if (gcTgc <= gamma2*gfTgf)                    /* u is proportional */
     {
-      TRY( MatMult(A, p, Ap) );                   /* Ap=A*p */
+      CHKERRQ(MatMult(A, p, Ap));                   /* Ap=A*p */
       nmv++;                                      /* matrix multiplication counter */
 
       /* compute step-sizes */
-      TRY( VecDot(p, Ap, &pAp) );                 /* pAp=p'*Ap      */
-      TRY( VecDot(g,  p, &acg) );                 /* acg=g'*p       */
+      CHKERRQ(VecDot(p, Ap, &pAp));                 /* pAp=p'*Ap      */
+      CHKERRQ(VecDot(g,  p, &acg));                 /* acg=g'*p       */
       acg  = acg/pAp;                             /* acg=acg/pAp    */
-      TRY( QPCFeas(qpc, x, p, &afeas) );          /* finds max.feas.steplength */
+      CHKERRQ(QPCFeas(qpc, x, p, &afeas));          /* finds max.feas.steplength */
 
       /* decide if it is able to do full CG step */
       if (acg <= afeas)
@@ -556,14 +556,14 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
         mpgp->currentStepType = 'c';
 
         /* make CG step */
-        TRY( VecAXPY(x, -acg, p) );               /* x=x-acg*p      */
-        TRY( VecAXPY(g, -acg, Ap) );              /* g=g-acg*Ap      */
-        TRY( MPGPGrads(qps, x, g) );              /* grad. splitting  gP,gf,gc */
+        CHKERRQ(VecAXPY(x, -acg, p));               /* x=x-acg*p      */
+        CHKERRQ(VecAXPY(g, -acg, Ap));              /* g=g-acg*Ap      */
+        CHKERRQ(MPGPGrads(qps, x, g));              /* grad. splitting  gP,gf,gc */
 
         /* compute orthogonalization parameter and next orthogonal vector */
-        TRY( VecDot(Ap, gf, &bcg) );              /* bcg=Ap'*gf     */
+        CHKERRQ(VecDot(Ap, gf, &bcg));              /* bcg=Ap'*gf     */
         bcg  = bcg/pAp;                           /* bcg=bcg/pAp     */
-        TRY( VecAYPX(p, -bcg, gf) );              /* p=gf-bcg*p     */
+        CHKERRQ(VecAYPX(p, -bcg, gf));              /* p=gf-bcg*p     */
       }
       else                                        /* expansion step  */
       {
@@ -573,34 +573,34 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
 
         /* save old direction vec for BB expansion step length */
         if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB || mpgp->fallback || mpgp->fallback2) {
-          TRY( VecCopy(x,mpgp->xold) );
+          CHKERRQ(VecCopy(x,mpgp->xold));
           if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
-            TRY( VecCopy(mpgp->explengthvec,mpgp->explengthvecold) );
+            CHKERRQ(VecCopy(mpgp->explengthvec,mpgp->explengthvecold));
           }
         }
 
-        TRY( mpgp->expansion(qps,afeas,acg) );
+        CHKERRQ(mpgp->expansion(qps,afeas,acg));
         if (mpgp->expproject) {
-          TRY( QPCProject(qpc, x, x) );             /* project x to feas.set */
+          CHKERRQ(QPCProject(qpc, x, x));             /* project x to feas.set */
         }
 
         /* compute new gradient */
         if (mpgp->fallback || mpgp->fallback2) {
-          TRY( VecCopy(g,gold) );
+          CHKERRQ(VecCopy(g,gold));
         }
-        TRY( MatMult(A, x, g) );                  /* g=A*x */
+        CHKERRQ(MatMult(A, x, g));                  /* g=A*x */
         nmv++;                                    /* matrix multiplication counter */
-        TRY( VecAXPY(g, -1.0, b) );               /* g=g-b           */
+        CHKERRQ(VecAXPY(g, -1.0, b));               /* g=g-b           */
 
         if (mpgp->fallback || mpgp->fallback2) {
-          TRY( QPComputeObjectiveFromGradient(qp, mpgp->xold, gold, &fold) );
-          TRY( QPComputeObjectiveFromGradient(qp, x, g, &f) );
+          CHKERRQ(QPComputeObjectiveFromGradient(qp, mpgp->xold, gold, &fold));
+          CHKERRQ(QPComputeObjectiveFromGradient(qp, x, g, &f));
           if (f>fold) {
             nfinc++;
             if (mpgp->fallback2) {
-              TRY( MPGPGrads(qps, x, g) );              /* grad. splitting  gP,gf,gc */
-              TRY( VecDot(gc, gc, &gcTgc) );               /* gcTgc=gc'*gc   */
-              TRY( VecDot(gf, gf, &gfTgf) );               /* gfTgf=gr'*gf   */
+              CHKERRQ(MPGPGrads(qps, x, g));              /* grad. splitting  gP,gf,gc */
+              CHKERRQ(VecDot(gc, gc, &gcTgc));               /* gcTgc=gc'*gc   */
+              CHKERRQ(VecDot(gf, gf, &gfTgf));               /* gfTgf=gr'*gf   */
               if (gcTgc <= gamma2*gfTgf) {                   /* u is proportional */
                 mpgp->fallback = PETSC_FALSE;
               } else {
@@ -611,23 +611,23 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
             if (mpgp->fallback){
               nfall++;
               mpgp->currentStepType = 'f';
-              TRY( VecCopy(mpgp->xold, x) );
-              TRY( VecCopy(gold, g) );
+              CHKERRQ(VecCopy(mpgp->xold, x));
+              CHKERRQ(VecCopy(gold, g));
               if (mpgp->fallback2) {
-                TRY( MPGPGrads(qps, mpgp->xold, gold) );              /* grad. splitting  gP,gf,gc */
+                CHKERRQ(MPGPGrads(qps, mpgp->xold, gold));              /* grad. splitting  gP,gf,gc */
               }
-              TRY( MPGPExpansion_Std(qps, afeas, acg) );
-              TRY( QPCProject(qpc, x, x) );             /* project x to feas.set */
-              TRY( MatMult(A, x, g) );                  /* g=A*x */
+              CHKERRQ(MPGPExpansion_Std(qps, afeas, acg));
+              CHKERRQ(QPCProject(qpc, x, x));             /* project x to feas.set */
+              CHKERRQ(MatMult(A, x, g));                  /* g=A*x */
               nmv++;                                    /* matrix multiplication counter */
-              TRY( VecAXPY(g, -1.0, b) );               /* g=g-b           */
+              CHKERRQ(VecAXPY(g, -1.0, b));               /* g=g-b           */
             }
           }
         }
 
-        TRY( MPGPGrads(qps, x, g) );              /* grad. splitting  gP,gf,gc */
+        CHKERRQ(MPGPGrads(qps, x, g));              /* grad. splitting  gP,gf,gc */
         /* restart CG method */
-        TRY( VecCopy(gf, p) );                    /* p=gf           */
+        CHKERRQ(VecCopy(gf, p));                    /* p=gf           */
       }
     }
     else                                          /* proportioning step  */
@@ -636,22 +636,22 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
       nprop++;                                    /* increase proportioning step counter */
       mpgp->currentStepType = 'p';
 
-      TRY( VecCopy(gc, p) );                      /* p=gc           */
-      TRY( MatMult(A, p, Ap) );                   /* Ap=A*p */
+      CHKERRQ(VecCopy(gc, p));                      /* p=gc           */
+      CHKERRQ(MatMult(A, p, Ap));                   /* Ap=A*p */
       nmv++;                                      /* matrix multiplication counter */
 
       /* compute step-size */
-      TRY( VecDot(p, Ap, &pAp) );                 /* pAp=p'*Ap       */
-      TRY( VecDot(g,  p, &acg) );                 /* acg=g'*p        */
+      CHKERRQ(VecDot(p, Ap, &pAp));                 /* pAp=p'*Ap       */
+      CHKERRQ(VecDot(g,  p, &acg));                 /* acg=g'*p        */
       acg  = acg/pAp;                             /* acg=acg/pAp     */
 
       /* make a step */
-      TRY( VecAXPY(x, -acg, p) );                 /* x=x-acg*p       */
-      TRY( VecAXPY(g, -acg, Ap) );                /* g=g-acg*Ap      */
-      TRY( MPGPGrads(qps, x, g) );                /* grad. splitting  gP,gf,gc */
+      CHKERRQ(VecAXPY(x, -acg, p));                 /* x=x-acg*p       */
+      CHKERRQ(VecAXPY(g, -acg, Ap));                /* g=g-acg*Ap      */
+      CHKERRQ(MPGPGrads(qps, x, g));                /* grad. splitting  gP,gf,gc */
 
       /* restart CG method */
-      TRY( VecCopy(gf, p) );                      /* p=gf           */
+      CHKERRQ(VecCopy(gf, p));                      /* p=gf           */
     }
     qps->iteration++;
   };
@@ -689,17 +689,17 @@ Parameters:
 PetscErrorCode QPSDestroy_MPGP(QPS qps)
 {
   PetscFunctionBegin;
-  TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetAlpha_MPGP_C",NULL) );
-  TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetAlpha_MPGP_C",NULL) );
-  TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetGamma_MPGP_C",NULL) );
-  TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetGamma_MPGP_C",NULL) );
-  TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetOperatorMaxEigenvalue_MPGP_C",NULL) );
-  TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetOperatorMaxEigenvalue_MPGP_C",NULL) );
-  TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetOperatorMaxEigenvalueTolerance_MPGP_C",NULL) );
-  TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetOperatorMaxEigenvalueTolerance_MPGP_C",NULL) );
-  TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetOperatorMaxEigenvalueIterations_MPGP_C",NULL) );
-  TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetOperatorMaxEigenvalueIterations_MPGP_C",NULL) );
-  TRY( QPSDestroyDefault(qps) );
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetAlpha_MPGP_C",NULL));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetAlpha_MPGP_C",NULL));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetGamma_MPGP_C",NULL));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetGamma_MPGP_C",NULL));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetOperatorMaxEigenvalue_MPGP_C",NULL));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetOperatorMaxEigenvalue_MPGP_C",NULL));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetOperatorMaxEigenvalueTolerance_MPGP_C",NULL));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetOperatorMaxEigenvalueTolerance_MPGP_C",NULL));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetOperatorMaxEigenvalueIterations_MPGP_C",NULL));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetOperatorMaxEigenvalueIterations_MPGP_C",NULL));
+  CHKERRQ(QPSDestroyDefault(qps));
   PetscFunctionReturn(0);
 }
 
@@ -712,13 +712,13 @@ PetscErrorCode QPSIsQPCompatible_MPGP(QPS qps,QP qp,PetscBool *flg)
   QPC qpc;
 
   PetscFunctionBegin;
-  TRY( QPGetEq(qp,&Beq,&ceq) );
-  TRY( QPGetIneq(qp,&Bineq,&cineq) );
-  TRY( QPGetQPC(qp,&qpc) );
+  CHKERRQ(QPGetEq(qp,&Beq,&ceq));
+  CHKERRQ(QPGetIneq(qp,&Bineq,&cineq));
+  CHKERRQ(QPGetQPC(qp,&qpc));
   if (Beq || ceq || Bineq || cineq) {
     *flg = PETSC_FALSE;
   } else {
-    TRY( PetscObjectTypeCompare((PetscObject)qpc,QPCBOX,flg) );
+    CHKERRQ(PetscObjectTypeCompare((PetscObject)qpc,QPCBOX,flg));
   }
   PetscFunctionReturn(0);
 }
@@ -736,24 +736,24 @@ PetscErrorCode QPSSetFromOptions_MPGP(PetscOptionItems *PetscOptionsObject,QPS q
   PetscOptionsHead(PetscOptionsObject,"QPS MPGP options");
 
   alpha_direct = PETSC_FALSE;
-  TRY( PetscOptionsBool("-qps_mpgp_alpha_direct","","QPSMPGPSetAlpha",(PetscBool) mpgp->alpha_type,&alpha_direct,&flg1) );
-  TRY( PetscOptionsReal("-qps_mpgp_alpha","","QPSMPGPSetAlpha",mpgp->alpha_user,&alpha,&flg2) );
-  if (flg1 || flg2) TRY( QPSMPGPSetAlpha(qps,alpha,(QPSScalarArgType) alpha_direct) );
-  TRY( PetscOptionsReal("-qps_mpgp_gamma","","QPSMPGPSetGamma",mpgp->gamma,&gamma,&flg1) );
-  if (flg1) TRY( QPSMPGPSetGamma(qps,gamma) );
-  TRY( PetscOptionsReal("-qps_mpgp_maxeig","Approximate maximum eigenvalue of the Hessian, PETSC_DECIDE means this is automatically computed.","QPSMPGPSetOperatorMaxEigenvalue",mpgp->maxeig,&maxeig,&flg1) );
-  if (flg1) TRY( QPSMPGPSetOperatorMaxEigenvalue(qps,maxeig) );
-  TRY( PetscOptionsReal("-qps_mpgp_maxeig_tol","Relative tolerance to find approximate maximum eigenvalue of the Hessian, PETSC_DECIDE means QPS rtol","QPSMPGPSetOperatorMaxEigenvalueTolerance",mpgp->maxeig_tol,&maxeig_tol,&flg1) );
-  if (flg1) TRY( QPSMPGPSetOperatorMaxEigenvalueTolerance(qps,maxeig_tol) );
-  TRY( PetscOptionsInt("-qps_mpgp_maxeig_iter","Number of iterations to find an approximate maximum eigenvalue of the Hessian","QPSMPGPSetOperatorMaxEigenvalueIterations",mpgp->maxeig_iter,&maxeig_iter,&flg1) );
-  if (flg1) TRY( QPSMPGPSetOperatorMaxEigenvalueIterations(qps,maxeig_iter) );
-  TRY( PetscOptionsReal("-qps_mpgp_btol","Boundary overshoot tolerance; default: 10*PETSC_MACHINE_EPSILON","",mpgp->btol,&mpgp->btol,&flg1) );
-  TRY( PetscOptionsReal("-qps_mpgp_bound_chop_tol","Sets boundary to 0 for |boundary|<tol ; default: 0","",mpgp->bchop_tol,&mpgp->bchop_tol,NULL) );
-  TRY( PetscOptionsEnum("-qps_mpgp_expansion_type","Set expansion step type","",QPSMPGPExpansionTypes,(PetscEnum)mpgp->exptype,(PetscEnum*)&mpgp->exptype,NULL) );
-  TRY( PetscOptionsEnum("-qps_mpgp_expansion_length_type","Set expansion step length type","",QPSMPGPExpansionLengthTypes,(PetscEnum)mpgp->explengthtype,(PetscEnum*)&mpgp->explengthtype,NULL) );
-  TRY( PetscOptionsBool("-qps_mpgp_alpha_reset","If alpha=Nan reset to initial value, otherwise keep last alpaha","QPSMPGPSetAlpha",(PetscBool) mpgp->resetalpha,&mpgp->resetalpha,NULL) );
-  TRY( PetscOptionsBool("-qps_mpgp_fallback","Throw away expansion step if cost function increased and do a std expansion step.","",(PetscBool) mpgp->fallback,&mpgp->fallback,NULL) );
-  TRY( PetscOptionsBool("-qps_mpgp_fallback2","Same as fallback which is done only if the next step is proportioning","",(PetscBool) mpgp->fallback2,&mpgp->fallback2,NULL) );
+  CHKERRQ(PetscOptionsBool("-qps_mpgp_alpha_direct","","QPSMPGPSetAlpha",(PetscBool) mpgp->alpha_type,&alpha_direct,&flg1));
+  CHKERRQ(PetscOptionsReal("-qps_mpgp_alpha","","QPSMPGPSetAlpha",mpgp->alpha_user,&alpha,&flg2));
+  if (flg1 || flg2) CHKERRQ(QPSMPGPSetAlpha(qps,alpha,(QPSScalarArgType) alpha_direct));
+  CHKERRQ(PetscOptionsReal("-qps_mpgp_gamma","","QPSMPGPSetGamma",mpgp->gamma,&gamma,&flg1));
+  if (flg1) CHKERRQ(QPSMPGPSetGamma(qps,gamma));
+  CHKERRQ(PetscOptionsReal("-qps_mpgp_maxeig","Approximate maximum eigenvalue of the Hessian, PETSC_DECIDE means this is automatically computed.","QPSMPGPSetOperatorMaxEigenvalue",mpgp->maxeig,&maxeig,&flg1));
+  if (flg1) CHKERRQ(QPSMPGPSetOperatorMaxEigenvalue(qps,maxeig));
+  CHKERRQ(PetscOptionsReal("-qps_mpgp_maxeig_tol","Relative tolerance to find approximate maximum eigenvalue of the Hessian, PETSC_DECIDE means QPS rtol","QPSMPGPSetOperatorMaxEigenvalueTolerance",mpgp->maxeig_tol,&maxeig_tol,&flg1));
+  if (flg1) CHKERRQ(QPSMPGPSetOperatorMaxEigenvalueTolerance(qps,maxeig_tol));
+  CHKERRQ(PetscOptionsInt("-qps_mpgp_maxeig_iter","Number of iterations to find an approximate maximum eigenvalue of the Hessian","QPSMPGPSetOperatorMaxEigenvalueIterations",mpgp->maxeig_iter,&maxeig_iter,&flg1));
+  if (flg1) CHKERRQ(QPSMPGPSetOperatorMaxEigenvalueIterations(qps,maxeig_iter));
+  CHKERRQ(PetscOptionsReal("-qps_mpgp_btol","Boundary overshoot tolerance; default: 10*PETSC_MACHINE_EPSILON","",mpgp->btol,&mpgp->btol,&flg1));
+  CHKERRQ(PetscOptionsReal("-qps_mpgp_bound_chop_tol","Sets boundary to 0 for |boundary|<tol ; default: 0","",mpgp->bchop_tol,&mpgp->bchop_tol,NULL));
+  CHKERRQ(PetscOptionsEnum("-qps_mpgp_expansion_type","Set expansion step type","",QPSMPGPExpansionTypes,(PetscEnum)mpgp->exptype,(PetscEnum*)&mpgp->exptype,NULL));
+  CHKERRQ(PetscOptionsEnum("-qps_mpgp_expansion_length_type","Set expansion step length type","",QPSMPGPExpansionLengthTypes,(PetscEnum)mpgp->explengthtype,(PetscEnum*)&mpgp->explengthtype,NULL));
+  CHKERRQ(PetscOptionsBool("-qps_mpgp_alpha_reset","If alpha=Nan reset to initial value, otherwise keep last alpaha","QPSMPGPSetAlpha",(PetscBool) mpgp->resetalpha,&mpgp->resetalpha,NULL));
+  CHKERRQ(PetscOptionsBool("-qps_mpgp_fallback","Throw away expansion step if cost function increased and do a std expansion step.","",(PetscBool) mpgp->fallback,&mpgp->fallback,NULL));
+  CHKERRQ(PetscOptionsBool("-qps_mpgp_fallback2","Same as fallback which is done only if the next step is proportioning","",(PetscBool) mpgp->fallback2,&mpgp->fallback2,NULL));
   if (mpgp->fallback2) mpgp->fallback = PETSC_FALSE;
   PetscOptionsTail();
   PetscFunctionReturn(0);
@@ -767,16 +767,16 @@ PetscErrorCode QPSViewConvergence_MPGP(QPS qps, PetscViewer v)
   PetscBool     iascii;
 
   PetscFunctionBegin;
-  TRY( PetscObjectTypeCompare((PetscObject)v,PETSCVIEWERASCII,&iascii) );
+  CHKERRQ(PetscObjectTypeCompare((PetscObject)v,PETSCVIEWERASCII,&iascii));
   if (iascii) {
-    TRY( PetscViewerASCIIPrintf(v,"from the last QPSReset:\n") );
-    TRY( PetscViewerASCIIPrintf(v,"number of Hessian multiplications %d\n",mpgp->nmv) );
-    TRY( PetscViewerASCIIPrintf(v,"number of CG steps %d\n",mpgp->ncg) );
-    TRY( PetscViewerASCIIPrintf(v,"number of expansion steps %d\n",mpgp->nexp) );
-    TRY( PetscViewerASCIIPrintf(v,"number of proportioning steps %d\n",mpgp->nprop) );
+    CHKERRQ(PetscViewerASCIIPrintf(v,"from the last QPSReset:\n"));
+    CHKERRQ(PetscViewerASCIIPrintf(v,"number of Hessian multiplications %d\n",mpgp->nmv));
+    CHKERRQ(PetscViewerASCIIPrintf(v,"number of CG steps %d\n",mpgp->ncg));
+    CHKERRQ(PetscViewerASCIIPrintf(v,"number of expansion steps %d\n",mpgp->nexp));
+    CHKERRQ(PetscViewerASCIIPrintf(v,"number of proportioning steps %d\n",mpgp->nprop));
     if (mpgp->fallback || mpgp->fallback2) {
-      TRY( PetscViewerASCIIPrintf(v,"number of cost function value increases: %d\n",mpgp->nfinc) );
-      TRY( PetscViewerASCIIPrintf(v,"number of fallbacks: %d\n",mpgp->nfall) );
+      CHKERRQ(PetscViewerASCIIPrintf(v,"number of cost function value increases: %d\n",mpgp->nfinc));
+      CHKERRQ(PetscViewerASCIIPrintf(v,"number of fallbacks: %d\n",mpgp->nfall));
     }
   }
   PetscFunctionReturn(0);
@@ -834,7 +834,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
   QPS_MPGP         *mpgp;
 
   PetscFunctionBegin;
-  TRY( PetscNewLog(qps,&mpgp) );
+  CHKERRQ(PetscNewLog(qps,&mpgp));
   qps->data                  = (void*)mpgp;
 
   mpgp->alpha_user           = PETSC_DECIDE;
@@ -868,18 +868,18 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
   qps->ops->monitor          = QPSMonitorDefault_MPGP;
   qps->ops->viewconvergence  = QPSViewConvergence_MPGP;
 
-  TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetCurrentStepType_MPGP_C",QPSMPGPGetCurrentStepType_MPGP) );
-  TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetAlpha_MPGP_C",QPSMPGPGetAlpha_MPGP) );
-  TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetAlpha_MPGP_C",QPSMPGPSetAlpha_MPGP) );
-  TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetGamma_MPGP_C",QPSMPGPGetGamma_MPGP) );
-  TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetGamma_MPGP_C",QPSMPGPSetGamma_MPGP) );
-  TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetOperatorMaxEigenvalue_MPGP_C",QPSMPGPGetOperatorMaxEigenvalue_MPGP) );
-  TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetOperatorMaxEigenvalue_MPGP_C",QPSMPGPSetOperatorMaxEigenvalue_MPGP) );
-  TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetOperatorMaxEigenvalueTolerance_MPGP_C",QPSMPGPSetOperatorMaxEigenvalueTolerance_MPGP) );
-  TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetOperatorMaxEigenvalueTolerance_MPGP_C",QPSMPGPGetOperatorMaxEigenvalueTolerance_MPGP) );
-  TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetOperatorMaxEigenvalueIterations_MPGP_C",QPSMPGPGetOperatorMaxEigenvalueIterations_MPGP) );
-  TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetOperatorMaxEigenvalueIterations_MPGP_C",QPSMPGPSetOperatorMaxEigenvalueIterations_MPGP) );
-  TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPUpdateMaxEigenvalue_MPGP_C",QPSMPGPUpdateMaxEigenvalue_MPGP) );
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetCurrentStepType_MPGP_C",QPSMPGPGetCurrentStepType_MPGP));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetAlpha_MPGP_C",QPSMPGPGetAlpha_MPGP));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetAlpha_MPGP_C",QPSMPGPSetAlpha_MPGP));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetGamma_MPGP_C",QPSMPGPGetGamma_MPGP));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetGamma_MPGP_C",QPSMPGPSetGamma_MPGP));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetOperatorMaxEigenvalue_MPGP_C",QPSMPGPGetOperatorMaxEigenvalue_MPGP));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetOperatorMaxEigenvalue_MPGP_C",QPSMPGPSetOperatorMaxEigenvalue_MPGP));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetOperatorMaxEigenvalueTolerance_MPGP_C",QPSMPGPSetOperatorMaxEigenvalueTolerance_MPGP));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetOperatorMaxEigenvalueTolerance_MPGP_C",QPSMPGPGetOperatorMaxEigenvalueTolerance_MPGP));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetOperatorMaxEigenvalueIterations_MPGP_C",QPSMPGPGetOperatorMaxEigenvalueIterations_MPGP));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetOperatorMaxEigenvalueIterations_MPGP_C",QPSMPGPSetOperatorMaxEigenvalueIterations_MPGP));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPUpdateMaxEigenvalue_MPGP_C",QPSMPGPUpdateMaxEigenvalue_MPGP));
   PetscFunctionReturn(0);
 }
 

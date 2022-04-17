@@ -111,14 +111,14 @@ PetscErrorCode MatMultAdd_Sum(Mat A,Vec x,Vec y,Vec z)
 
   PetscFunctionBegin;
   if (y != z) {
-    TRY( MatMult_Sum(A,x,z) );
-    TRY( VecAXPY(z,1.0,y) );
+    CHKERRQ(MatMult_Sum(A,x,z));
+    CHKERRQ(VecAXPY(z,1.0,y));
   } else {
     if (!shell->rightwork) {
-      TRY( VecDuplicate(z,&shell->rightwork) );
+      CHKERRQ(VecDuplicate(z,&shell->rightwork));
     }
-    TRY( MatMult(A,x,shell->rightwork) );
-    TRY( VecAXPY(z,1.0,shell->rightwork) );
+    CHKERRQ(MatMult(A,x,shell->rightwork));
+    CHKERRQ(VecAXPY(z,1.0,shell->rightwork));
   }
   PetscFunctionReturn(0);
 }
@@ -128,8 +128,8 @@ PetscErrorCode MatMultAdd_Sum(Mat A,Vec x,Vec y,Vec z)
 PetscErrorCode MatMultTransposeAdd_Sum(Mat A,Vec x,Vec y,Vec z)
 {
   PetscFunctionBegin;
-  TRY( MatMultTranspose_Sum(A, x, z) );
-  TRY( VecAXPY(z, 1.0, y) );
+  CHKERRQ(MatMultTranspose_Sum(A, x, z));
+  CHKERRQ(VecAXPY(z, 1.0, y));
   PetscFunctionReturn(0);
 }
 
@@ -145,7 +145,7 @@ FLLOP_EXTERN PetscErrorCode  MatCreate_Sum(Mat A)
   CHKERRQ(createComposite(A));
   composite = (Mat_Composite*)A->data;
 
-  TRY( PetscObjectComposeFunction((PetscObject)A,"MatSumGetMat_Sum_C",MatSumGetMat_Sum) );
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)A,"MatSumGetMat_Sum_C",MatSumGetMat_Sum));
 
   A->ops->mult              = MatMult_Sum;
   A->ops->multtranspose     = MatMultTranspose_Sum;

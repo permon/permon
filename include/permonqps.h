@@ -77,7 +77,7 @@ FLLOP_EXTERN PetscErrorCode QPSMonitorSet(QPS,PetscErrorCode (*)(QPS,PetscInt,Pe
 FLLOP_EXTERN PetscErrorCode QPSMonitorCancel(QPS);
 FLLOP_EXTERN PetscErrorCode QPSGetMonitorContext(QPS,void **);
 FLLOP_EXTERN PetscErrorCode QPSGetResidualHistory(QPS,PetscReal*[],PetscInt *);
-FLLOP_EXTERN PetscErrorCode QPSSetResidualHistory(QPS,PetscReal[],PetscInt,PetscBool );
+FLLOP_EXTERN PetscErrorCode QPSSetResidualHistory(QPS,PetscReal[],PetscInt,PetscBool);
 FLLOP_EXTERN PetscErrorCode QPSMonitorDefault(QPS qps,PetscInt n,PetscReal rnorm,void *dummy);
 FLLOP_EXTERN PetscErrorCode QPSMonitorCostFunction(QPS qps,PetscInt n,PetscReal rnorm,void *dummy);
 

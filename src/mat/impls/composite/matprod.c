@@ -114,13 +114,13 @@ PetscErrorCode MatMultAdd_Prod(Mat A,Vec x,Vec y,Vec z)
 
   PetscFunctionBegin;
   if (y == z) {
-    if (!shell->leftwork) { TRY( VecDuplicate(z,&shell->leftwork) ); }
-    TRY( MatMult_Prod(A,x,shell->leftwork) );
-    TRY( VecCopy(y,z) );
-    TRY( VecAXPY(z,1.0,shell->leftwork) );
+    if (!shell->leftwork) { CHKERRQ(VecDuplicate(z,&shell->leftwork)); }
+    CHKERRQ(MatMult_Prod(A,x,shell->leftwork));
+    CHKERRQ(VecCopy(y,z));
+    CHKERRQ(VecAXPY(z,1.0,shell->leftwork));
   } else {
-    TRY( MatMult_Prod(A,x,z) );
-    TRY( VecAXPY(z,1.0,y) );
+    CHKERRQ(MatMult_Prod(A,x,z));
+    CHKERRQ(VecAXPY(z,1.0,y));
   }
   PetscFunctionReturn(0);
 }
@@ -133,13 +133,13 @@ PetscErrorCode MatMultTransposeAdd_Prod(Mat A,Vec x,Vec y, Vec z)
 
   PetscFunctionBegin;
   if (y == z) {
-    if (!shell->rightwork) { TRY( VecDuplicate(z,&shell->rightwork) ); }
-    TRY( MatMultTranspose_Prod(A,x,shell->rightwork) );
-    TRY( VecCopy(y,z) );
-    TRY( VecAXPY(z,1.0,shell->rightwork) );
+    if (!shell->rightwork) { CHKERRQ(VecDuplicate(z,&shell->rightwork)); }
+    CHKERRQ(MatMultTranspose_Prod(A,x,shell->rightwork));
+    CHKERRQ(VecCopy(y,z));
+    CHKERRQ(VecAXPY(z,1.0,shell->rightwork));
   } else {
-    TRY( MatMultTranspose_Prod(A,x,z) );
-    TRY( VecAXPY(z,1.0,y) );
+    CHKERRQ(MatMultTranspose_Prod(A,x,z));
+    CHKERRQ(VecAXPY(z,1.0,y));
   }
   PetscFunctionReturn(0);
 }
@@ -163,7 +163,7 @@ FLLOP_EXTERN PetscErrorCode  MatCreate_Prod(Mat A)
   A->ops->getdiagonal        = NULL;
   composite->type            = MAT_COMPOSITE_MULTIPLICATIVE;
 
-  TRY( PetscObjectComposeFunction((PetscObject)A,"MatProdGetMat_Prod_C",MatProdGetMat_Prod) );
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)A,"MatProdGetMat_Prod_C",MatProdGetMat_Prod));
 
   composite->type           = MAT_COMPOSITE_MULTIPLICATIVE;
   composite->head           = NULL;

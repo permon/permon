@@ -22,7 +22,7 @@ static PetscErrorCode PCDualSetType_Dual(PC pc,PCDualType type)
 
   PetscFunctionBegin;
   data->pcdualtype = type;
-  TRY( PCReset(pc) );
+  CHKERRQ(PCReset(pc));
   PetscFunctionReturn(0);
 }
 
@@ -66,15 +66,15 @@ static PetscErrorCode PCApply_Dual(PC pc,Vec x,Vec y)
   PC_Dual         *ctx = (PC_Dual*)pc->data;
 
   PetscFunctionBegin;
-  TRY( PetscLogEventBegin(PC_Dual_Apply,pc,x,y,0) );
-  TRY( MatMult(ctx->At,x,ctx->xwork) );
+  CHKERRQ(PetscLogEventBegin(PC_Dual_Apply,pc,x,y,0));
+  CHKERRQ(MatMult(ctx->At,x,ctx->xwork));
 
-  TRY( PetscLogEventBegin(PC_Dual_MatMultSchur,pc,x,y,0) );
-  TRY( MatMult(ctx->C_bb,ctx->xwork,ctx->ywork) );
-  TRY( PetscLogEventEnd(PC_Dual_MatMultSchur,pc,x,y,0) );
+  CHKERRQ(PetscLogEventBegin(PC_Dual_MatMultSchur,pc,x,y,0));
+  CHKERRQ(MatMult(ctx->C_bb,ctx->xwork,ctx->ywork));
+  CHKERRQ(PetscLogEventEnd(PC_Dual_MatMultSchur,pc,x,y,0));
 
-  TRY( MatMultTranspose(ctx->At,ctx->ywork,y) );
-  TRY( PetscLogEventEnd(PC_Dual_Apply,pc,x,y,0) );
+  CHKERRQ(MatMultTranspose(ctx->At,ctx->ywork,y));
+  CHKERRQ(PetscLogEventEnd(PC_Dual_Apply,pc,x,y,0));
   PetscFunctionReturn(0);
 }
 
@@ -83,7 +83,7 @@ static PetscErrorCode PCApply_Dual(PC pc,Vec x,Vec y)
 static PetscErrorCode PCApply_Dual_None(PC pc,Vec x,Vec y)
 {
   PetscFunctionBegin;
-  TRY( VecCopy(x,y) );
+  CHKERRQ(VecCopy(x,y));
   PetscFunctionReturn(0);
 }
 
@@ -96,7 +96,7 @@ static PetscErrorCode PCSetUp_Dual(PC pc)
   Mat Bt, K;
 
   PetscFunctionBegin;
-  TRY( PetscInfo(pc,"using PCDualType %s\n",PCDualTypes[ctx->pcdualtype]) );
+  CHKERRQ(PetscInfo(pc,"using PCDualType %s\n",PCDualTypes[ctx->pcdualtype]));
 
   if (ctx->pcdualtype == PC_DUAL_NONE) {
     pc->ops->apply = PCApply_Dual_None;
@@ -105,15 +105,15 @@ static PetscErrorCode PCSetUp_Dual(PC pc)
 
   pc->ops->apply = PCApply_Dual;
 
-  TRY( PetscObjectQuery((PetscObject)F,"Bt",(PetscObject*)&Bt) );
-  TRY( PetscObjectQuery((PetscObject)F,"K",(PetscObject*)&K) );
+  CHKERRQ(PetscObjectQuery((PetscObject)F,"Bt",(PetscObject*)&Bt));
+  CHKERRQ(PetscObjectQuery((PetscObject)F,"K",(PetscObject*)&K));
 
   if (ctx->pcdualtype == PC_DUAL_LUMPED) {
     ctx->At = Bt;
-    TRY( PetscObjectReference((PetscObject)Bt) );
+    CHKERRQ(PetscObjectReference((PetscObject)Bt));
     ctx->C_bb = K;
-    TRY( PetscObjectReference((PetscObject)K) );
-    TRY( MatCreateVecs(ctx->C_bb,&ctx->xwork,&ctx->ywork) );
+    CHKERRQ(PetscObjectReference((PetscObject)K));
+    CHKERRQ(MatCreateVecs(ctx->C_bb,&ctx->xwork,&ctx->ywork));
   }
   PetscFunctionReturn(0);
 }
@@ -125,10 +125,10 @@ static PetscErrorCode PCReset_Dual(PC pc)
   PC_Dual         *ctx = (PC_Dual*)pc->data;
 
   PetscFunctionBegin;
-  TRY( MatDestroy(&ctx->At) );
-  TRY( MatDestroy(&ctx->C_bb) );
-  TRY( VecDestroy(&ctx->xwork) );
-  TRY( VecDestroy(&ctx->ywork) );
+  CHKERRQ(MatDestroy(&ctx->At));
+  CHKERRQ(MatDestroy(&ctx->C_bb));
+  CHKERRQ(VecDestroy(&ctx->xwork));
+  CHKERRQ(VecDestroy(&ctx->ywork));
   PetscFunctionReturn(0);
 }
 
@@ -140,9 +140,9 @@ static PetscErrorCode PCView_Dual(PC pc,PetscViewer viewer)
   PetscBool       iascii;
 
   PetscFunctionBegin;
-  TRY( PetscObjectTypeCompare((PetscObject)viewer,PETSCVIEWERASCII,&iascii) );
+  CHKERRQ(PetscObjectTypeCompare((PetscObject)viewer,PETSCVIEWERASCII,&iascii));
   if (!iascii) PetscFunctionReturn(0);
-  TRY( PetscViewerASCIIPrintf(viewer,"  PCDualType: %d (%s)\n",ctx->pcdualtype,PCDualTypes[ctx->pcdualtype]) );
+  CHKERRQ(PetscViewerASCIIPrintf(viewer,"  PCDualType: %d (%s)\n",ctx->pcdualtype,PCDualTypes[ctx->pcdualtype]));
   PetscFunctionReturn(0);
 }
 
@@ -153,8 +153,8 @@ static PetscErrorCode PCDestroy_Dual(PC pc)
   //PC_Dual         *ctx = (PC_Dual*)pc->data;
 
   PetscFunctionBegin;
-  TRY( PCReset_Dual(pc) );
-  TRY( PetscFree(pc->data) );
+  CHKERRQ(PCReset_Dual(pc));
+  CHKERRQ(PetscFree(pc->data));
   PetscFunctionReturn(0);
 }
 
@@ -166,7 +166,7 @@ PetscErrorCode PCSetFromOptions_Dual(PetscOptionItems *PetscOptionsObject,PC pc)
 
   PetscFunctionBegin;
   PetscOptionsHead(PetscOptionsObject,"PCDUAL options");
-  TRY( PetscOptionsEnum("-pc_dual_type", "PCDUAL type", "PCDualSetType", PCDualTypes, (PetscEnum)ctx->pcdualtype, (PetscEnum*)&ctx->pcdualtype, NULL) );
+  CHKERRQ(PetscOptionsEnum("-pc_dual_type", "PCDUAL type", "PCDualSetType", PCDualTypes, (PetscEnum)ctx->pcdualtype, (PetscEnum*)&ctx->pcdualtype, NULL));
   PetscOptionsTail();
   ctx->setfromoptionscalled = PETSC_TRUE;
   PetscFunctionReturn(0);
@@ -182,7 +182,7 @@ FLLOP_EXTERN PetscErrorCode PCCreate_Dual(PC pc)
   PetscFunctionBegin;
   /* Create the private data structure for this preconditioner and
      attach it to the PC object.  */
-  TRY( PetscNewLog(pc,&ctx) );
+  CHKERRQ(PetscNewLog(pc,&ctx));
   pc->data = (void*)ctx;
   
   ctx->setfromoptionscalled = PETSC_FALSE;
@@ -197,13 +197,13 @@ FLLOP_EXTERN PetscErrorCode PCCreate_Dual(PC pc)
   pc->ops->view                = PCView_Dual;
 
   /* set type-specific functions */
-  TRY( PetscObjectComposeFunction((PetscObject)pc,"PCDualSetType_Dual_C",PCDualSetType_Dual) );
-  TRY( PetscObjectComposeFunction((PetscObject)pc,"PCDualGetType_Dual_C",PCDualGetType_Dual) );
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)pc,"PCDualSetType_Dual_C",PCDualSetType_Dual));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)pc,"PCDualGetType_Dual_C",PCDualGetType_Dual));
 
   /* prepare log events*/
   if (!registered) {
-    TRY( PetscLogEventRegister("PCdual:Apply", PC_CLASSID, &PC_Dual_Apply) );
-    TRY( PetscLogEventRegister("PCdual:ApplySchur", PC_CLASSID, &PC_Dual_MatMultSchur) );
+    CHKERRQ(PetscLogEventRegister("PCdual:Apply", PC_CLASSID, &PC_Dual_Apply));
+    CHKERRQ(PetscLogEventRegister("PCdual:ApplySchur", PC_CLASSID, &PC_Dual_MatMultSchur));
     registered = PETSC_TRUE;
   }
 

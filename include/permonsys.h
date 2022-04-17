@@ -41,7 +41,6 @@ FLLOP_EXTERN char FLLOP_ObjNameBuffer_Global[FLLOP_MAX_NAME_LEN];
 
 /* BEGIN Function-like Macros */
 FLLOP_EXTERN PetscErrorCode _fllop_ierr;
-#define TRY(f) do {_fllop_ierr = f;CHKERRQ(_fllop_ierr);} while (0)
 #define FLLOP_SETERRQ_WORLD( n,s)                 FLLOP_SETERRQ(PETSC_COMM_WORLD,n,s)
 #define FLLOP_SETERRQ_WORLD1(n,s,a1)              FLLOP_SETERRQ1(PETSC_COMM_WORLD,n,s,a1)
 #define FLLOP_SETERRQ_WORLD2(n,s,a1,a2)           FLLOP_SETERRQ2(PETSC_COMM_WORLD,n,s,a1,a2)
@@ -91,7 +90,7 @@ if (FllopTraceEnabled) {\
     PeFuBe_s_[PeFuBe_i_]=' ';\
     PeFuBe_s_[PeFuBe_i_+1]=0;\
     FLLTIC(&ttttt);\
-    TRY( PetscPrintf(PETSC_COMM_WORLD,"%s%d BEGIN FUNCTION %s\n",PeFuBe_s_,PeFuBe_i_,__FUNCT__) );\
+    CHKERRQ(PetscPrintf(PETSC_COMM_WORLD,"%s%d BEGIN FUNCTION %s\n",PeFuBe_s_,PeFuBe_i_,__FUNCT__));\
     PeFuBe_i_++;\
 }
 
@@ -103,7 +102,7 @@ FllopTraceBegin;
 {\
 if (FllopTraceEnabled) {\
     FLLTOC(&ttttt);\
-    TRY( PetscPrintf(PETSC_COMM_WORLD,"%s%d END   FUNCTION %s (%2.2f s)\n",PeFuBe_s_,--PeFuBe_i_,__FUNCT__,ttttt) );\
+    CHKERRQ(PetscPrintf(PETSC_COMM_WORLD,"%s%d END   FUNCTION %s (%2.2f s)\n",PeFuBe_s_,--PeFuBe_i_,__FUNCT__,ttttt));\
     PeFuBe_s_[PeFuBe_i_]=0;\
     PetscFunctionReturn(rrrrr);\
 } else {\

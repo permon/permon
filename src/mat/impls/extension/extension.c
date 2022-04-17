@@ -41,7 +41,7 @@ static PetscErrorCode MatExtensionSetColumnIS_Extension(Mat TA,IS cis)
   PetscFunctionBegin;
   if (data->setupcalled) SETERRQ(PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONGSTATE,"cannot alter inner data after first MatMult* call");
   data->cis = cis;
-  TRY( PetscObjectReference((PetscObject)cis) );
+  CHKERRQ(PetscObjectReference((PetscObject)cis));
   PetscFunctionReturn(0);
 }
 
@@ -113,7 +113,7 @@ static PetscErrorCode MatExtensionSetRowIS_Extension(Mat TA,IS ris,PetscBool row
   } else {
     data->ris_local = ris;
   }
-  TRY( PetscObjectReference((PetscObject)ris) );
+  CHKERRQ(PetscObjectReference((PetscObject)ris));
   data->rows_use_global_numbering = rows_use_global_numbering;
   PetscFunctionReturn(0);
 }
@@ -159,9 +159,9 @@ static PetscErrorCode MatExtensionCreateCondensedRows_Extension(Mat TA,Mat *A,IS
   Mat_Extension *data = (Mat_Extension*) TA->data;
 
   PetscFunctionBegin;
-  TRY( MatExtensionSetUp(TA) );
-  TRY( MatCreateExtension(PetscObjectComm((PetscObject)TA),data->A->rmap->n,TA->cmap->n,PETSC_DECIDE,TA->cmap->N,data->A,NULL,PETSC_TRUE,data->cis,A) );
-  if (ris_local) TRY( ISDuplicate(data->ris_local,ris_local) );
+  CHKERRQ(MatExtensionSetUp(TA));
+  CHKERRQ(MatCreateExtension(PetscObjectComm((PetscObject)TA),data->A->rmap->n,TA->cmap->n,PETSC_DECIDE,TA->cmap->N,data->A,NULL,PETSC_TRUE,data->cis,A));
+  if (ris_local) CHKERRQ(ISDuplicate(data->ris_local,ris_local));
   PetscFunctionReturn(0);
 }
 
@@ -184,10 +184,10 @@ static PetscErrorCode MatExtensionCreateLocalMat_Extension(Mat TA,Mat *A)
   IS ris,cis;
 
   PetscFunctionBegin;
-  TRY( MatExtensionSetUp(TA) );
-  TRY( ISOnComm(data->ris_local,PETSC_COMM_SELF,PETSC_COPY_VALUES,&ris) );
-  TRY( ISOnComm(data->cis,PETSC_COMM_SELF,PETSC_COPY_VALUES,&cis) );
-  TRY( MatCreateExtension(PETSC_COMM_SELF,TA->rmap->n,TA->cmap->N,TA->rmap->n,TA->cmap->N,data->A,ris,PETSC_TRUE,cis,A) );
+  CHKERRQ(MatExtensionSetUp(TA));
+  CHKERRQ(ISOnComm(data->ris_local,PETSC_COMM_SELF,PETSC_COPY_VALUES,&ris));
+  CHKERRQ(ISOnComm(data->cis,PETSC_COMM_SELF,PETSC_COPY_VALUES,&cis));
+  CHKERRQ(MatCreateExtension(PETSC_COMM_SELF,TA->rmap->n,TA->cmap->N,TA->rmap->n,TA->cmap->N,data->A,ris,PETSC_TRUE,cis,A));
   PetscFunctionReturn(0);
 }
 
@@ -211,10 +211,10 @@ static PetscErrorCode MatExtensionSetCondensed_Extension(Mat TA,Mat A)
 
   PetscFunctionBegin;
   if (data->setupcalled) SETERRQ(PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONGSTATE,"cannot alter inner data after first MatMult* call");
-  TRY( MPI_Comm_size(PetscObjectComm((PetscObject)A),&commsize) );
+  CHKERRQ(MPI_Comm_size(PetscObjectComm((PetscObject)A),&commsize));
   if (commsize > 1) SETERRQ(PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONG,"inner matrix must be sequential");
   data->A = A;
-  TRY( PetscObjectReference((PetscObject)A) );
+  CHKERRQ(PetscObjectReference((PetscObject)A));
   PetscFunctionReturn(0);
 }
 
@@ -239,33 +239,33 @@ static PetscErrorCode MatExtensionSetUp_Extension(Mat TA)
 
   PetscFunctionBegin;
   if (data->setupcalled) PetscFunctionReturn(0);
-  TRY( PetscLayoutSetUp(TA->rmap) );
-  TRY( PetscLayoutSetUp(TA->cmap) );
+  CHKERRQ(PetscLayoutSetUp(TA->rmap));
+  CHKERRQ(PetscLayoutSetUp(TA->cmap));
   lo = TA->rmap->rstart;
 
   if (!data->cis) {
-    TRY( MatGetOwnershipIS(TA,NULL,&data->cis) );
+    CHKERRQ(MatGetOwnershipIS(TA,NULL,&data->cis));
   }
 
   if (data->ris_local && !data->ris) {
-    TRY( ISAdd(data->ris_local,lo,&data->ris) );
+    CHKERRQ(ISAdd(data->ris_local,lo,&data->ris));
   }
 
   if (!data->ris) {
-    TRY( MatGetOwnershipIS(TA,&data->ris,NULL) );
-    TRY( ISCreateStride(PETSC_COMM_SELF,TA->rmap->n,0,1,&data->ris_local) );
+    CHKERRQ(MatGetOwnershipIS(TA,&data->ris,NULL));
+    CHKERRQ(ISCreateStride(PETSC_COMM_SELF,TA->rmap->n,0,1,&data->ris_local));
   }
 
   if (!data->ris_local) {
-    TRY( ISAdd(data->ris,-lo,&data->ris_local) );
+    CHKERRQ(ISAdd(data->ris,-lo,&data->ris_local));
   }
 
-  TRY( MatCreateVecs(data->A,&data->cwork,&data->rwork) );
-  TRY( MatCreateVecs(TA,&c,&r) );
-  TRY( VecScatterCreate(c,data->cis,data->cwork,NULL,&data->cscatter) );
-  TRY( VecScatterCreate(data->rwork,NULL,r,data->ris,&data->rscatter) );
-  TRY( VecDestroy(&c) );
-  TRY( VecDestroy(&r) );
+  CHKERRQ(MatCreateVecs(data->A,&data->cwork,&data->rwork));
+  CHKERRQ(MatCreateVecs(TA,&c,&r));
+  CHKERRQ(VecScatterCreate(c,data->cis,data->cwork,NULL,&data->cscatter));
+  CHKERRQ(VecScatterCreate(data->rwork,NULL,r,data->ris,&data->rscatter));
+  CHKERRQ(VecDestroy(&c));
+  CHKERRQ(VecDestroy(&r));
   data->setupcalled = PETSC_TRUE;
   PetscFunctionReturn(0);
 }
@@ -290,43 +290,43 @@ PetscErrorCode MatConvertFrom_Extension(Mat A,MatType type,MatReuse reuse,Mat *n
   Mat B;
 
   PetscFunctionBeginI;
-  TRY( PermonMatGetLocalMat(A,&Aloc) );
+  CHKERRQ(PermonMatGetLocalMat(A,&Aloc));
 
-  TRY( MatFindNonzeroRows(Aloc,&ris) );
+  CHKERRQ(MatFindNonzeroRows(Aloc,&ris));
   if (!ris) {
-    TRY( MatGetOwnershipIS(Aloc,&ris,NULL) );
+    CHKERRQ(MatGetOwnershipIS(Aloc,&ris,NULL));
   }
-  TRY( MatCreateSubMatrix(Aloc,ris,NULL,MAT_INITIAL_MATRIX,&As) );
-  TRY( MatDestroy(&Aloc) );
+  CHKERRQ(MatCreateSubMatrix(Aloc,ris,NULL,MAT_INITIAL_MATRIX,&As));
+  CHKERRQ(MatDestroy(&Aloc));
 
-  TRY( ISAdd(ris,A->rmap->rstart,&tempis) );
-  TRY( ISDestroy(&ris) );
+  CHKERRQ(ISAdd(ris,A->rmap->rstart,&tempis));
+  CHKERRQ(ISDestroy(&ris));
   ris = tempis;
 
-  TRY( MatTranspose(As,MAT_INITIAL_MATRIX,&Ast) );
-  TRY( MatDestroy(&As) );
+  CHKERRQ(MatTranspose(As,MAT_INITIAL_MATRIX,&Ast));
+  CHKERRQ(MatDestroy(&As));
 
-  TRY( MatFindNonzeroRows(Ast,&cis) );
+  CHKERRQ(MatFindNonzeroRows(Ast,&cis));
   if (!cis) {
-    TRY( MatGetOwnershipIS(Ast,&cis,NULL) );
+    CHKERRQ(MatGetOwnershipIS(Ast,&cis,NULL));
   }
-  TRY( MatCreateSubMatrix(Ast,cis,NULL,MAT_INITIAL_MATRIX,&Asts) );
-  TRY( MatDestroy(&Ast) );
+  CHKERRQ(MatCreateSubMatrix(Ast,cis,NULL,MAT_INITIAL_MATRIX,&Asts));
+  CHKERRQ(MatDestroy(&Ast));
 
-  TRY( MatTranspose(Asts,MAT_INITIAL_MATRIX,&As) );
-  TRY( FllopPetscObjectInheritName((PetscObject)As,(PetscObject)A,"_cond") );
-  TRY( MatDestroy(&Asts) );
+  CHKERRQ(MatTranspose(Asts,MAT_INITIAL_MATRIX,&As));
+  CHKERRQ(FllopPetscObjectInheritName((PetscObject)As,(PetscObject)A,"_cond"));
+  CHKERRQ(MatDestroy(&Asts));
 
-  TRY( MatCreateExtension(PetscObjectComm((PetscObject)A),A->rmap->n,A->cmap->n,A->rmap->N,A->cmap->N,As,ris,PETSC_TRUE,cis,&B) );
-  TRY( ISDestroy(&ris) );
-  TRY( ISDestroy(&cis) );
-  TRY( MatDestroy(&As) );
+  CHKERRQ(MatCreateExtension(PetscObjectComm((PetscObject)A),A->rmap->n,A->cmap->n,A->rmap->N,A->cmap->N,As,ris,PETSC_TRUE,cis,&B));
+  CHKERRQ(ISDestroy(&ris));
+  CHKERRQ(ISDestroy(&cis));
+  CHKERRQ(MatDestroy(&As));
 
   if (reuse == MAT_INPLACE_MATRIX) {
 #if PETSC_VERSION_MINOR < 7
-    TRY( MatHeaderReplace(A,B) );
+    CHKERRQ(MatHeaderReplace(A,B));
 #else
-    TRY( MatHeaderReplace(A,&B) );
+    CHKERRQ(MatHeaderReplace(A,&B));
 #endif
   } else {
     *newmat = B;
@@ -352,36 +352,36 @@ PETSC_EXTERN PetscErrorCode MatConvert_NestPermon_Extension(Mat A,MatType type,M
   PetscMPIInt commsize;
 
   PetscFunctionBeginI;
-  TRY( PetscObjectGetComm((PetscObject)A,&comm) );
-  TRY( MPI_Comm_size(comm,&commsize) );
+  CHKERRQ(PetscObjectGetComm((PetscObject)A,&comm));
+  CHKERRQ(MPI_Comm_size(comm,&commsize));
 
-  TRY( MatNestGetSubMats(A,&Mn,&Nn,&mats_in) );
+  CHKERRQ(MatNestGetSubMats(A,&Mn,&Nn,&mats_in));
 
-  TRY( PetscMalloc1(Mn,&ris_arr) );
-  TRY( PetscMalloc1(Nn,&cis_arr) );
-  TRY( PetscMalloc1(Mn*Nn,&mats_out) );
+  CHKERRQ(PetscMalloc1(Mn,&ris_arr));
+  CHKERRQ(PetscMalloc1(Nn,&cis_arr));
+  CHKERRQ(PetscMalloc1(Mn*Nn,&mats_out));
   
-  TRY( PetscMalloc1(Mn,&rows) );
-  TRY( MatNestGetISs(A,rows,NULL) );
-  TRY( MatNestPermonGetColumnISs(A,&cols) );
+  CHKERRQ(PetscMalloc1(Mn,&rows));
+  CHKERRQ(MatNestGetISs(A,rows,NULL));
+  CHKERRQ(MatNestPermonGetColumnISs(A,&cols));
 
   for (i=0; i<Mn; i++) {
-    TRY( ISCreateStride(PETSC_COMM_SELF,0,0,0,&risi) );
+    CHKERRQ(ISCreateStride(PETSC_COMM_SELF,0,0,0,&risi));
 
     for (j=0; j<Nn; j++) {
-      TRY( PermonMatGetLocalMat(mats_in[i][j],&Aloc) );
+      CHKERRQ(PermonMatGetLocalMat(mats_in[i][j],&Aloc));
 
-      TRY( MatFindNonzeroRows(Aloc,&risij) );
+      CHKERRQ(MatFindNonzeroRows(Aloc,&risij));
       if (!risij) {
-        TRY( MatGetOwnershipIS(Aloc,&risij,NULL) );
+        CHKERRQ(MatGetOwnershipIS(Aloc,&risij,NULL));
       }
 
       /* risi = union(risi,risij) */
       tempis = NULL;
-      TRY( ISSum(risi,risij,&tempis) );
-      TRY( ISDestroy(&risij) );
+      CHKERRQ(ISSum(risi,risij,&tempis));
+      CHKERRQ(ISDestroy(&risij));
       if (tempis) {
-        TRY( ISDestroy(&risi)  );
+        CHKERRQ(ISDestroy(&risi) );
         risi = tempis;
       }
 
@@ -391,45 +391,45 @@ PETSC_EXTERN PetscErrorCode MatConvert_NestPermon_Extension(Mat A,MatType type,M
     for (j=0; j<Nn; j++) {
       Aloc = mats_out[i*Nn+j];
 
-      TRY( MatCreateSubMatrix(Aloc,risi,NULL,MAT_INITIAL_MATRIX,&As) );
-      TRY( MatDestroy(&Aloc) );
+      CHKERRQ(MatCreateSubMatrix(Aloc,risi,NULL,MAT_INITIAL_MATRIX,&As));
+      CHKERRQ(MatDestroy(&Aloc));
 
-      TRY( MatTranspose(As,MAT_INITIAL_MATRIX,&Ast) );
-      TRY( MatDestroy(&As) );
+      CHKERRQ(MatTranspose(As,MAT_INITIAL_MATRIX,&Ast));
+      CHKERRQ(MatDestroy(&As));
 
       mats_out[i*Nn+j] = Ast;
     }
 
-    TRY( ISLocalToGlobalMappingCreateIS(rows[i],&l2g) );
-    TRY( ISLocalToGlobalMappingApplyIS(l2g,risi,&ris_arr[i]) );
-    TRY( ISLocalToGlobalMappingDestroy(&l2g) );
+    CHKERRQ(ISLocalToGlobalMappingCreateIS(rows[i],&l2g));
+    CHKERRQ(ISLocalToGlobalMappingApplyIS(l2g,risi,&ris_arr[i]));
+    CHKERRQ(ISLocalToGlobalMappingDestroy(&l2g));
 
-    TRY( ISDestroy(&risi) );
+    CHKERRQ(ISDestroy(&risi));
   }
 
-  TRY( ISConcatenate(PETSC_COMM_SELF,Mn,ris_arr,&ris) );
+  CHKERRQ(ISConcatenate(PETSC_COMM_SELF,Mn,ris_arr,&ris));
   for (i=0; i<Mn; i++) {
-    TRY( ISDestroy(&ris_arr[i]) );
+    CHKERRQ(ISDestroy(&ris_arr[i]));
   }
-  TRY( PetscFree(ris_arr) );
+  CHKERRQ(PetscFree(ris_arr));
 
   for (j=0; j<Nn; j++) {
-    TRY( ISCreateStride(PETSC_COMM_SELF,0,0,0,&cis_arr[j]) );
+    CHKERRQ(ISCreateStride(PETSC_COMM_SELF,0,0,0,&cis_arr[j]));
 
     for (i=0; i<Mn; i++) {
       Ast = mats_out[i*Nn+j];
 
-      TRY( MatFindNonzeroRows(Ast,&cisij) );
+      CHKERRQ(MatFindNonzeroRows(Ast,&cisij));
       if (!cisij) {
-        TRY( MatGetOwnershipIS(Ast,&cisij,NULL) );
+        CHKERRQ(MatGetOwnershipIS(Ast,&cisij,NULL));
       }
 
       /* cis_arr[j] = union(cis_arr[j],cisij) */
       tempis = NULL;
-      TRY( ISSum(cis_arr[j],cisij,&tempis) );
-      TRY( ISDestroy(&cisij) );
+      CHKERRQ(ISSum(cis_arr[j],cisij,&tempis));
+      CHKERRQ(ISDestroy(&cisij));
       if (tempis) {
-        TRY( ISDestroy(&cis_arr[j])  );
+        CHKERRQ(ISDestroy(&cis_arr[j]) );
         cis_arr[j] = tempis;
       }
     }
@@ -437,56 +437,56 @@ PETSC_EXTERN PetscErrorCode MatConvert_NestPermon_Extension(Mat A,MatType type,M
     for (i=0; i<Mn; i++) {
       Ast = mats_out[i*Nn+j];
 
-      TRY( MatCreateSubMatrix(Ast,cis_arr[j],NULL,MAT_INITIAL_MATRIX,&Asts) );
-      TRY( MatDestroy(&Ast) );
+      CHKERRQ(MatCreateSubMatrix(Ast,cis_arr[j],NULL,MAT_INITIAL_MATRIX,&Asts));
+      CHKERRQ(MatDestroy(&Ast));
 
-      TRY( MatTranspose(Asts,MAT_INITIAL_MATRIX,&As) );
-      TRY( MatDestroy(&Asts) );
+      CHKERRQ(MatTranspose(Asts,MAT_INITIAL_MATRIX,&As));
+      CHKERRQ(MatDestroy(&Asts));
 
-      TRY( FllopPetscObjectInheritName((PetscObject)As,(PetscObject)mats_in[i][j],"_cond") );
+      CHKERRQ(FllopPetscObjectInheritName((PetscObject)As,(PetscObject)mats_in[i][j],"_cond"));
       mats_out[i*Nn+j] = As;
     }
 
-    TRY( ISLocalToGlobalMappingCreateIS(cols[j],&l2g) );
-    TRY( ISLocalToGlobalMappingApplyIS(l2g,cis_arr[j],&tempis) );
-    TRY( ISLocalToGlobalMappingDestroy(&l2g) );
-    TRY( ISDestroy(&cis_arr[j]) );
+    CHKERRQ(ISLocalToGlobalMappingCreateIS(cols[j],&l2g));
+    CHKERRQ(ISLocalToGlobalMappingApplyIS(l2g,cis_arr[j],&tempis));
+    CHKERRQ(ISLocalToGlobalMappingDestroy(&l2g));
+    CHKERRQ(ISDestroy(&cis_arr[j]));
     cis_arr[j] = tempis;
   }
 
-  TRY( ISConcatenate(PETSC_COMM_SELF,Nn,cis_arr,&cis) );
+  CHKERRQ(ISConcatenate(PETSC_COMM_SELF,Nn,cis_arr,&cis));
 
   for (j=0; j<Nn; j++) {
-    TRY( ISDestroy(&cis_arr[j]) );
+    CHKERRQ(ISDestroy(&cis_arr[j]));
   }
-  TRY( PetscFree(cis_arr) );
+  CHKERRQ(PetscFree(cis_arr));
   
-  TRY( MatCreateNestPermon(PETSC_COMM_SELF,Mn,NULL,Nn,NULL,mats_out,&As) );
-  TRY( FllopPetscObjectInheritName((PetscObject)As,(PetscObject)A,"_cond") );
-  TRY( MatCreateExtension(comm,A->rmap->n,A->cmap->n,A->rmap->N,A->cmap->N,As,ris,PETSC_TRUE,cis,&B) );
+  CHKERRQ(MatCreateNestPermon(PETSC_COMM_SELF,Mn,NULL,Nn,NULL,mats_out,&As));
+  CHKERRQ(FllopPetscObjectInheritName((PetscObject)As,(PetscObject)A,"_cond"));
+  CHKERRQ(MatCreateExtension(comm,A->rmap->n,A->cmap->n,A->rmap->N,A->cmap->N,As,ris,PETSC_TRUE,cis,&B));
 
   for (i=0; i<Mn; i++) {
     for (j=0; j<Nn; j++) {
-      TRY( MatDestroy(&mats_out[i*Nn+j]) );
+      CHKERRQ(MatDestroy(&mats_out[i*Nn+j]));
     }
   }
-  TRY( PetscFree(mats_out) );
+  CHKERRQ(PetscFree(mats_out));
 
-  TRY( ISDestroy(&ris) );
-  TRY( ISDestroy(&cis) );
-  TRY( MatDestroy(&As) );
-  TRY( PetscFree(rows) );
+  CHKERRQ(ISDestroy(&ris));
+  CHKERRQ(ISDestroy(&cis));
+  CHKERRQ(MatDestroy(&As));
+  CHKERRQ(PetscFree(rows));
 
   for (j=0; j<Nn; j++) {
-    TRY( ISDestroy(&cols[j]) );
+    CHKERRQ(ISDestroy(&cols[j]));
   }
-  TRY( PetscFree(cols) );
+  CHKERRQ(PetscFree(cols));
 
   if (reuse == MAT_INPLACE_MATRIX) {
 #if PETSC_VERSION_MINOR < 7
-    TRY( MatHeaderReplace(A,B) );
+    CHKERRQ(MatHeaderReplace(A,B));
 #else
-    TRY( MatHeaderReplace(A,&B) );
+    CHKERRQ(MatHeaderReplace(A,&B));
 #endif
   } else {
     *newmat = B;
@@ -500,13 +500,13 @@ PetscErrorCode MatMult_Extension(Mat TA, Vec c, Vec r) {
   Mat_Extension *data = (Mat_Extension*) TA->data;
 
   PetscFunctionBegin;
-  TRY( MatExtensionSetUp(TA) );
-  TRY( VecZeroEntries(r) );
-  TRY( VecScatterBegin(data->cscatter,c,data->cwork,INSERT_VALUES,SCATTER_FORWARD) );
-  TRY( VecScatterEnd(  data->cscatter,c,data->cwork,INSERT_VALUES,SCATTER_FORWARD) );
-  TRY( MatMult(data->A,data->cwork,data->rwork) );
-  TRY( VecScatterBegin(data->rscatter,data->rwork,r,ADD_VALUES,SCATTER_FORWARD) );
-  TRY( VecScatterEnd(  data->rscatter,data->rwork,r,ADD_VALUES,SCATTER_FORWARD) );
+  CHKERRQ(MatExtensionSetUp(TA));
+  CHKERRQ(VecZeroEntries(r));
+  CHKERRQ(VecScatterBegin(data->cscatter,c,data->cwork,INSERT_VALUES,SCATTER_FORWARD));
+  CHKERRQ(VecScatterEnd(  data->cscatter,c,data->cwork,INSERT_VALUES,SCATTER_FORWARD));
+  CHKERRQ(MatMult(data->A,data->cwork,data->rwork));
+  CHKERRQ(VecScatterBegin(data->rscatter,data->rwork,r,ADD_VALUES,SCATTER_FORWARD));
+  CHKERRQ(VecScatterEnd(  data->rscatter,data->rwork,r,ADD_VALUES,SCATTER_FORWARD));
   PetscFunctionReturn(0);
 }
 
@@ -516,13 +516,13 @@ PetscErrorCode MatMultAdd_Extension(Mat TA, Vec c, Vec r1, Vec r) {
   Mat_Extension *data = (Mat_Extension*) TA->data;
 
   PetscFunctionBegin;
-  TRY( MatExtensionSetUp(TA) );
-  TRY( VecCopy(r1,r) );
-  TRY( VecScatterBegin(data->cscatter,c,data->cwork,INSERT_VALUES,SCATTER_FORWARD) );
-  TRY( VecScatterEnd(  data->cscatter,c,data->cwork,INSERT_VALUES,SCATTER_FORWARD) );
-  TRY( MatMult(data->A,data->cwork,data->rwork) );
-  TRY( VecScatterBegin(data->rscatter,data->rwork,r,ADD_VALUES,SCATTER_FORWARD) );
-  TRY( VecScatterEnd(  data->rscatter,data->rwork,r,ADD_VALUES,SCATTER_FORWARD) );
+  CHKERRQ(MatExtensionSetUp(TA));
+  CHKERRQ(VecCopy(r1,r));
+  CHKERRQ(VecScatterBegin(data->cscatter,c,data->cwork,INSERT_VALUES,SCATTER_FORWARD));
+  CHKERRQ(VecScatterEnd(  data->cscatter,c,data->cwork,INSERT_VALUES,SCATTER_FORWARD));
+  CHKERRQ(MatMult(data->A,data->cwork,data->rwork));
+  CHKERRQ(VecScatterBegin(data->rscatter,data->rwork,r,ADD_VALUES,SCATTER_FORWARD));
+  CHKERRQ(VecScatterEnd(  data->rscatter,data->rwork,r,ADD_VALUES,SCATTER_FORWARD));
   PetscFunctionReturn(0);
 }
 
@@ -532,13 +532,13 @@ PetscErrorCode MatMultTranspose_Extension(Mat TA, Vec r, Vec c) {
   Mat_Extension *data = (Mat_Extension*) TA->data;
 
   PetscFunctionBegin;
-  TRY( MatExtensionSetUp(TA) );
-  TRY( VecZeroEntries(c) );
-  TRY( VecScatterBegin(data->rscatter,r,data->rwork,INSERT_VALUES,SCATTER_REVERSE) );
-  TRY( VecScatterEnd(  data->rscatter,r,data->rwork,INSERT_VALUES,SCATTER_REVERSE) );
-  TRY( MatMultTranspose(data->A,data->rwork,data->cwork) );
-  TRY( VecScatterBegin(data->cscatter,data->cwork,c,ADD_VALUES,SCATTER_REVERSE) );
-  TRY( VecScatterEnd(  data->cscatter,data->cwork,c,ADD_VALUES,SCATTER_REVERSE) );
+  CHKERRQ(MatExtensionSetUp(TA));
+  CHKERRQ(VecZeroEntries(c));
+  CHKERRQ(VecScatterBegin(data->rscatter,r,data->rwork,INSERT_VALUES,SCATTER_REVERSE));
+  CHKERRQ(VecScatterEnd(  data->rscatter,r,data->rwork,INSERT_VALUES,SCATTER_REVERSE));
+  CHKERRQ(MatMultTranspose(data->A,data->rwork,data->cwork));
+  CHKERRQ(VecScatterBegin(data->cscatter,data->cwork,c,ADD_VALUES,SCATTER_REVERSE));
+  CHKERRQ(VecScatterEnd(  data->cscatter,data->cwork,c,ADD_VALUES,SCATTER_REVERSE));
   PetscFunctionReturn(0);
 }
 
@@ -548,13 +548,13 @@ PetscErrorCode MatMultTransposeAdd_Extension(Mat TA, Vec r, Vec c1, Vec c) {
   Mat_Extension *data = (Mat_Extension*) TA->data;
 
   PetscFunctionBegin;
-  TRY( MatExtensionSetUp(TA) );
-  TRY( VecCopy(c1,c) );
-  TRY( VecScatterBegin(data->rscatter,r,data->rwork,INSERT_VALUES,SCATTER_REVERSE) );
-  TRY( VecScatterEnd(  data->rscatter,r,data->rwork,INSERT_VALUES,SCATTER_REVERSE) );
-  TRY( MatMultTranspose(data->A,data->rwork,data->cwork) );
-  TRY( VecScatterBegin(data->cscatter,data->cwork,c,ADD_VALUES,SCATTER_REVERSE) );
-  TRY( VecScatterEnd(  data->cscatter,data->cwork,c,ADD_VALUES,SCATTER_REVERSE) );
+  CHKERRQ(MatExtensionSetUp(TA));
+  CHKERRQ(VecCopy(c1,c));
+  CHKERRQ(VecScatterBegin(data->rscatter,r,data->rwork,INSERT_VALUES,SCATTER_REVERSE));
+  CHKERRQ(VecScatterEnd(  data->rscatter,r,data->rwork,INSERT_VALUES,SCATTER_REVERSE));
+  CHKERRQ(MatMultTranspose(data->A,data->rwork,data->cwork));
+  CHKERRQ(VecScatterBegin(data->cscatter,data->cwork,c,ADD_VALUES,SCATTER_REVERSE));
+  CHKERRQ(VecScatterEnd(  data->cscatter,data->cwork,c,ADD_VALUES,SCATTER_REVERSE));
   PetscFunctionReturn(0);
 }
 
@@ -574,41 +574,41 @@ PetscErrorCode MatTransposeMatMult_BlockDiag_Extension_2extension(Mat B, Mat TA,
   //TA = B^T
 
   PetscFunctionBegin;
-  TRY( MatExtensionSetUp(TA) );
-  TRY( MatGetDiagonalBlock(B, &B_loc) );
-  TRY( MatGetSize(B, NULL, &M) );
-  TRY( MatGetSize(TA, NULL, &N) );
-  TRY( MatGetLocalSize(B, NULL, &M_loc) );
-  TRY( MatGetLocalSize(TA, NULL, &N_loc) );
-  TRY( ISGetLocalSize(data->cis, &rnnz) );
-  TRY( ISOnComm(data->ris_local,PETSC_COMM_SELF,PETSC_USE_POINTER,&is_self) );
-  TRY( MatGetColumnVectors(B_loc,&n,&cols) );
+  CHKERRQ(MatExtensionSetUp(TA));
+  CHKERRQ(MatGetDiagonalBlock(B, &B_loc));
+  CHKERRQ(MatGetSize(B, NULL, &M));
+  CHKERRQ(MatGetSize(TA, NULL, &N));
+  CHKERRQ(MatGetLocalSize(B, NULL, &M_loc));
+  CHKERRQ(MatGetLocalSize(TA, NULL, &N_loc));
+  CHKERRQ(ISGetLocalSize(data->cis, &rnnz));
+  CHKERRQ(ISOnComm(data->ris_local,PETSC_COMM_SELF,PETSC_USE_POINTER,&is_self));
+  CHKERRQ(MatGetColumnVectors(B_loc,&n,&cols));
  
-  TRY( MatCreateDensePermon(PETSC_COMM_SELF, M_loc, rnnz, M_loc, rnnz, NULL, &C_loc) );
+  CHKERRQ(MatCreateDensePermon(PETSC_COMM_SELF, M_loc, rnnz, M_loc, rnnz, NULL, &C_loc));
   
-  TRY( ISCreateStride(PETSC_COMM_SELF, M_loc, 0, 1, &is_rows) ); //all rows of B
-  TRY( ISCreateStride(PETSC_COMM_SELF, rnnz, 0, 1, &is_cols) ); //all cols of TA
-  TRY( ISGetIndices(is_cols, &isCols) );
+  CHKERRQ(ISCreateStride(PETSC_COMM_SELF, M_loc, 0, 1, &is_rows)); //all rows of B
+  CHKERRQ(ISCreateStride(PETSC_COMM_SELF, rnnz, 0, 1, &is_cols)); //all cols of TA
+  CHKERRQ(ISGetIndices(is_cols, &isCols));
   if (rnnz) {
     for (i = 0; i < n; i++){
-      TRY( VecGetSubVector(cols[i], is_self, &colExt) );
-      TRY( MatMultTranspose(data->A, colExt, data->cwork) );
-      TRY( VecRestoreSubVector(cols[i], is_self, &colExt) );
-      TRY( VecGetArray(data->cwork, &row) );
-      TRY( MatSetValues(C_loc, 1, &i, rnnz, isCols, row, INSERT_VALUES) );
-      TRY( VecRestoreArray(data->cwork, &row) );
+      CHKERRQ(VecGetSubVector(cols[i], is_self, &colExt));
+      CHKERRQ(MatMultTranspose(data->A, colExt, data->cwork));
+      CHKERRQ(VecRestoreSubVector(cols[i], is_self, &colExt));
+      CHKERRQ(VecGetArray(data->cwork, &row));
+      CHKERRQ(MatSetValues(C_loc, 1, &i, rnnz, isCols, row, INSERT_VALUES));
+      CHKERRQ(VecRestoreArray(data->cwork, &row));
     }
   }
-  TRY( ISRestoreIndices(is_cols, &isCols) );
-  TRY( MatRestoreColumnVectors(B_loc,&n,&cols) );
-  TRY( MatAssemblyBegin(C_loc, MAT_FINAL_ASSEMBLY) );
-  TRY( MatAssemblyEnd(C_loc, MAT_FINAL_ASSEMBLY) );
-  TRY( MatCreateExtension(PetscObjectComm((PetscObject)B),M_loc,N_loc,M,N,C_loc,is_rows,PETSC_FALSE,data->cis,&C_out) );
+  CHKERRQ(ISRestoreIndices(is_cols, &isCols));
+  CHKERRQ(MatRestoreColumnVectors(B_loc,&n,&cols));
+  CHKERRQ(MatAssemblyBegin(C_loc, MAT_FINAL_ASSEMBLY));
+  CHKERRQ(MatAssemblyEnd(C_loc, MAT_FINAL_ASSEMBLY));
+  CHKERRQ(MatCreateExtension(PetscObjectComm((PetscObject)B),M_loc,N_loc,M,N,C_loc,is_rows,PETSC_FALSE,data->cis,&C_out));
   
-  TRY( ISDestroy(&is_self) );
-  TRY( ISDestroy(&is_rows) );
-  TRY( ISDestroy(&is_cols) );
-  TRY( MatDestroy(&C_loc) );
+  CHKERRQ(ISDestroy(&is_self));
+  CHKERRQ(ISDestroy(&is_rows));
+  CHKERRQ(ISDestroy(&is_cols));
+  CHKERRQ(MatDestroy(&C_loc));
   *C = C_out;
   PetscFunctionReturn(0);
 }
@@ -627,18 +627,18 @@ PetscErrorCode MatTransposeMatMult_BlockDiag_Extension_2MPIAIJ(Mat B, Mat TA, Ma
   MPI_Comm comm;
 
   PetscFunctionBegin;
-  TRY( PetscObjectGetComm((PetscObject)B, &comm) );
-  TRY( MatExtensionSetUp(TA) );
-  TRY( MatGetDiagonalBlock(B, &B_loc) );
-  TRY( MatGetSize(B, NULL, &M) );
-  TRY( MatGetSize(TA, NULL, &N) );
-  TRY( MatGetLocalSize(B, NULL, &M_loc) );
-  TRY( MatGetLocalSize(TA, NULL, &N_loc) );
-  TRY( ISGetLocalSize(data->cis, &rnnz) );
-  TRY( ISGetIndices(data->cis, &isCols) );
+  CHKERRQ(PetscObjectGetComm((PetscObject)B, &comm));
+  CHKERRQ(MatExtensionSetUp(TA));
+  CHKERRQ(MatGetDiagonalBlock(B, &B_loc));
+  CHKERRQ(MatGetSize(B, NULL, &M));
+  CHKERRQ(MatGetSize(TA, NULL, &N));
+  CHKERRQ(MatGetLocalSize(B, NULL, &M_loc));
+  CHKERRQ(MatGetLocalSize(TA, NULL, &N_loc));
+  CHKERRQ(ISGetLocalSize(data->cis, &rnnz));
+  CHKERRQ(ISGetIndices(data->cis, &isCols));
   
   //compute number of nnz in DIAG part
-  TRY( MPI_Scan(&N_loc, &nHigh, 1, MPIU_INT, MPI_SUM, comm) );
+  CHKERRQ(MPI_Scan(&N_loc, &nHigh, 1, MPIU_INT, MPI_SUM, comm));
   rnnz_diag = 0;
   for (i = 0; i < rnnz; i++) {
     if ( isCols[i] >= nHigh - N_loc && isCols[i] < nHigh ){
@@ -647,36 +647,36 @@ PetscErrorCode MatTransposeMatMult_BlockDiag_Extension_2MPIAIJ(Mat B, Mat TA, Ma
   }
 
   if ( scall == MAT_INITIAL_MATRIX){
-    TRY( MatCreate(comm, &C_out ) );
-    TRY( MatSetSizes(C_out, M_loc, N_loc, M, N) );
-    TRY( MatSetFromOptions(C_out) );
-    TRY( MatSeqAIJSetPreallocation(C_out, rnnz_diag, NULL) );
-    TRY( MatMPIAIJSetPreallocation(C_out, rnnz_diag, NULL, rnnz - rnnz_diag, NULL) );
+    CHKERRQ(MatCreate(comm, &C_out ));
+    CHKERRQ(MatSetSizes(C_out, M_loc, N_loc, M, N));
+    CHKERRQ(MatSetFromOptions(C_out));
+    CHKERRQ(MatSeqAIJSetPreallocation(C_out, rnnz_diag, NULL));
+    CHKERRQ(MatMPIAIJSetPreallocation(C_out, rnnz_diag, NULL, rnnz - rnnz_diag, NULL));
   } else{
     SETERRQ(comm,PETSC_ERR_ARG_WRONG,"scall must be MAT_INITIAL_MATRIX");
   }
-  TRY( MatGetOwnershipRange(C_out, &ilo, NULL) );
+  CHKERRQ(MatGetOwnershipRange(C_out, &ilo, NULL));
 
-  TRY( ISOnComm(data->ris_local,PETSC_COMM_SELF,PETSC_USE_POINTER,&is_self) );
+  CHKERRQ(ISOnComm(data->ris_local,PETSC_COMM_SELF,PETSC_USE_POINTER,&is_self));
     
-  TRY( MatGetColumnVectors(B_loc,&n, &cols) );
+  CHKERRQ(MatGetColumnVectors(B_loc,&n, &cols));
   for (i = 0; i < n; i++){
-    TRY( VecGetSubVector(cols[i], is_self, &colExt) );
-    TRY( MatMultTranspose(data->A, colExt, data->cwork) );
-    TRY( VecRestoreSubVector(cols[i], is_self, &colExt) );
-    TRY( VecGetArray(data->cwork, &row) );
+    CHKERRQ(VecGetSubVector(cols[i], is_self, &colExt));
+    CHKERRQ(MatMultTranspose(data->A, colExt, data->cwork));
+    CHKERRQ(VecRestoreSubVector(cols[i], is_self, &colExt));
+    CHKERRQ(VecGetArray(data->cwork, &row));
     rInd = i + ilo;
-    TRY( MatSetValues(C_out, 1, &rInd, rnnz, isCols, row, INSERT_VALUES) );
-    TRY( VecRestoreArray(data->cwork, &row) );
+    CHKERRQ(MatSetValues(C_out, 1, &rInd, rnnz, isCols, row, INSERT_VALUES));
+    CHKERRQ(VecRestoreArray(data->cwork, &row));
   }
-  TRY( MatRestoreColumnVectors(B_loc,&n, &cols) );
+  CHKERRQ(MatRestoreColumnVectors(B_loc,&n, &cols));
 
-  TRY( MatAssemblyBegin(C_out, MAT_FINAL_ASSEMBLY) );
-  TRY( MatAssemblyEnd(C_out, MAT_FINAL_ASSEMBLY) );
+  CHKERRQ(MatAssemblyBegin(C_out, MAT_FINAL_ASSEMBLY));
+  CHKERRQ(MatAssemblyEnd(C_out, MAT_FINAL_ASSEMBLY));
 
   *C = C_out;
-  TRY( ISRestoreIndices(data->cis, &isCols) );
-  TRY( ISDestroy(&is_self) );
+  CHKERRQ(ISRestoreIndices(data->cis, &isCols));
+  CHKERRQ(ISDestroy(&is_self));
   PetscFunctionReturn(0);
 }
 
@@ -692,18 +692,18 @@ static PetscErrorCode MatProductNumeric_BlockDiag_Extension(Mat C)
   switch (product->type) {
   case MATPRODUCT_AtB:
     PetscObjectOptionsBegin((PetscObject)C);
-    TRY( PetscOptionsBool("-MatTrMatMult_2extension","MatTransposeMatMult_BlockDiag_Extension_2extension","Mat type of resulting matrix will be extension",flg,&flg,NULL) );
+    CHKERRQ(PetscOptionsBool("-MatTrMatMult_2extension","MatTransposeMatMult_BlockDiag_Extension_2extension","Mat type of resulting matrix will be extension",flg,&flg,NULL));
     PetscOptionsEnd();
     if (flg){
-      TRY( MatTransposeMatMult_BlockDiag_Extension_2extension(A, B, MAT_INITIAL_MATRIX, product->fill, &newmat) );
+      CHKERRQ(MatTransposeMatMult_BlockDiag_Extension_2extension(A, B, MAT_INITIAL_MATRIX, product->fill, &newmat));
     }else{
-      TRY( MatTransposeMatMult_BlockDiag_Extension_2MPIAIJ(A, B, MAT_INITIAL_MATRIX, product->fill, &newmat) );
+      CHKERRQ(MatTransposeMatMult_BlockDiag_Extension_2MPIAIJ(A, B, MAT_INITIAL_MATRIX, product->fill, &newmat));
     }
     break;
   default: SETERRQ(PetscObjectComm((PetscObject)C),PETSC_ERR_SUP,"MATPRODUCT type is not supported");
   }
   C->product = NULL;
-  TRY( MatHeaderReplace(C,&newmat) );
+  CHKERRQ(MatHeaderReplace(C,&newmat));
   C->product = product;
   C->ops->productnumeric = MatProductNumeric_BlockDiag_Extension;
   PetscFunctionReturn(0);
@@ -753,18 +753,18 @@ PetscErrorCode MatMatTransposeMult_Extension_Extension_same(Mat A, Mat B, MatReu
   MPI_Comm comm;
 
   PetscFunctionBeginI;
-  TRY( PetscObjectGetComm((PetscObject)B,&comm) );
-  TRY( MPI_Comm_rank(comm,&mpiRank) );
-  TRY( MatExtensionSetUp(A) );//TODO remove?
-  TRY( MatGetSize(A,&M,NULL) );
-  TRY( MatGetLocalSize(A,&M_loc,NULL) );
-  TRY( ISGetLocalSize(dataA->cis,&nnz) );
-  TRY( ISGetIndices(dataA->cis,&iLocCol) );
+  CHKERRQ(PetscObjectGetComm((PetscObject)B,&comm));
+  CHKERRQ(MPI_Comm_rank(comm,&mpiRank));
+  CHKERRQ(MatExtensionSetUp(A));//TODO remove?
+  CHKERRQ(MatGetSize(A,&M,NULL));
+  CHKERRQ(MatGetLocalSize(A,&M_loc,NULL));
+  CHKERRQ(ISGetLocalSize(dataA->cis,&nnz));
+  CHKERRQ(ISGetIndices(dataA->cis,&iLocCol));
   
-  TRY( PetscObjectQuery((PetscObject)A,"myneighbors",(PetscObject*)&myneighbors) );
+  CHKERRQ(PetscObjectQuery((PetscObject)A,"myneighbors",(PetscObject*)&myneighbors));
   if (myneighbors) {
-    TRY( ISGetLocalSize(myneighbors,&allNeighbors) );
-    TRY( ISGetIndices(myneighbors,&iNeighbors) ); /* ranks of all neighbors */
+    CHKERRQ(ISGetLocalSize(myneighbors,&allNeighbors));
+    CHKERRQ(ISGetIndices(myneighbors,&iNeighbors)); /* ranks of all neighbors */
     for (i = 0; iNeighbors[i] < mpiRank && i < mpiRank; i++);
     neighborsGt = allNeighbors-i-1;
     neighborsLt = i;
@@ -773,21 +773,21 @@ PetscErrorCode MatMatTransposeMult_Extension_Extension_same(Mat A, Mat B, MatReu
   if ( scall == MAT_INITIAL_MATRIX) {
 #if defined(PETSC_USE_DEBUG)
     int M_max;
-    TRY( MPI_Allreduce(&M_loc,&M_max,1,MPIU_INT,MPI_MAX,comm) );
+    CHKERRQ(MPI_Allreduce(&M_loc,&M_max,1,MPIU_INT,MPI_MAX,comm));
     if (M_loc != M_max) {
       SETERRQ(comm,PETSC_ERR_ARG_SIZ,"implemented only for matrices with same local row dimension");
     }
 #endif
     if (!mattype) {
-      TRY( MatCreate(comm,&C_out) );
-      TRY( MatSetSizes(C_out,M_loc,M_loc,M,M) );
-      TRY( MatSetFromOptions(C_out) );
-      TRY( MatSeqAIJSetPreallocation(C_out,M_loc,NULL) );
-      TRY( MatMPIAIJSetPreallocation(C_out,M_loc,NULL,M_loc*(allNeighbors-1),NULL) );
+      CHKERRQ(MatCreate(comm,&C_out));
+      CHKERRQ(MatSetSizes(C_out,M_loc,M_loc,M,M));
+      CHKERRQ(MatSetFromOptions(C_out));
+      CHKERRQ(MatSeqAIJSetPreallocation(C_out,M_loc,NULL));
+      CHKERRQ(MatMPIAIJSetPreallocation(C_out,M_loc,NULL,M_loc*(allNeighbors-1),NULL));
     } else if(mattype == 1) {
-        TRY( MatCreateBAIJ(comm,M_loc,M_loc,M_loc,M,M,M_loc,NULL,M_loc*(allNeighbors-1),NULL,&C_out) );
+        CHKERRQ(MatCreateBAIJ(comm,M_loc,M_loc,M_loc,M,M,M_loc,NULL,M_loc*(allNeighbors-1),NULL,&C_out));
     } else {
-      TRY( MatCreateSBAIJ(comm,M_loc,M_loc,M_loc,M,M,M_loc,NULL,M_loc*neighborsGt,NULL,&C_out) );
+      CHKERRQ(MatCreateSBAIJ(comm,M_loc,M_loc,M_loc,M,M,M_loc,NULL,M_loc*neighborsGt,NULL,&C_out));
       isSym = PETSC_TRUE;
     }
   } else {
@@ -795,45 +795,45 @@ PetscErrorCode MatMatTransposeMult_Extension_Extension_same(Mat A, Mat B, MatReu
   }
   
   /* get number of indices to recv from neigbours */
-  TRY( PetscMalloc1(allNeighbors-1,&mpiRequests) );
-  TRY( PetscMalloc1(neighborsLt,&nnzNeighbors) );
-  TRY( PetscMalloc1(neighborsLt,&nElemR) );
+  CHKERRQ(PetscMalloc1(allNeighbors-1,&mpiRequests));
+  CHKERRQ(PetscMalloc1(neighborsLt,&nnzNeighbors));
+  CHKERRQ(PetscMalloc1(neighborsLt,&nElemR));
   for (i = 0; i < neighborsLt; i++) {
-    TRY( MPI_Irecv(&nnzNeighbors[i],1,MPIU_INT,iNeighbors[i],0,comm,&mpiRequests[i]) );
+    CHKERRQ(MPI_Irecv(&nnzNeighbors[i],1,MPIU_INT,iNeighbors[i],0,comm,&mpiRequests[i]));
   }
   for (i = neighborsLt+1; i <allNeighbors; i++) {
-    TRY( MPI_Isend(&nnz,1,MPIU_INT,iNeighbors[i],0,comm,&mpiRequests[i-1]) );
+    CHKERRQ(MPI_Isend(&nnz,1,MPIU_INT,iNeighbors[i],0,comm,&mpiRequests[i-1]));
   }
-  TRY( MPI_Waitall(allNeighbors-1,mpiRequests,MPI_STATUSES_IGNORE) );
+  CHKERRQ(MPI_Waitall(allNeighbors-1,mpiRequests,MPI_STATUSES_IGNORE));
 
   /* recv indices from Lt neighbors */
   for (i = 0; i < neighborsLt; i++) {
     nnzAllLtNeighbors += nnzNeighbors[i];
   }
-  TRY( PetscMalloc1(nnzAllLtNeighbors, &iNeighbor) );
+  CHKERRQ(PetscMalloc1(nnzAllLtNeighbors, &iNeighbor));
   for (i = 0; i < neighborsLt; i++) {
-    TRY( MPI_Irecv(iNeighbor,nnzNeighbors[i],MPIU_INT,iNeighbors[i],1,comm,&mpiRequests[i]) ); 
+    CHKERRQ(MPI_Irecv(iNeighbor,nnzNeighbors[i],MPIU_INT,iNeighbors[i],1,comm,&mpiRequests[i])); 
     iNeighbor += nnzNeighbors[i];
   }
   for (i = neighborsLt+1; i <allNeighbors; i++) {
-    TRY( MPI_Isend((PetscInt*)iLocCol,nnz,MPIU_INT,iNeighbors[i],1,comm,&mpiRequests[i-1]) );
+    CHKERRQ(MPI_Isend((PetscInt*)iLocCol,nnz,MPIU_INT,iNeighbors[i],1,comm,&mpiRequests[i-1]));
   }
-  TRY( MPI_Waitall(allNeighbors-1,mpiRequests,MPI_STATUSES_IGNORE) );
+  CHKERRQ(MPI_Waitall(allNeighbors-1,mpiRequests,MPI_STATUSES_IGNORE));
   iNeighbor -= nnzAllLtNeighbors;
 
   /* compute indices intersection and send number of elements */
-  TRY( PetscMalloc1(neighborsLt,&iscol) );
-  TRY( PetscMalloc1(nnzAllLtNeighbors, &iNeighborRemote) );
-  TRY( PetscMalloc1(nnz,&iIntersection) );
-  TRY( PetscMalloc1(nnz,&iLocSort) );
-  TRY( PetscMemcpy(iLocSort,iLocCol,nnz*sizeof(PetscInt)) );
-  TRY( PetscSortInt(nnz,iLocSort) );
+  CHKERRQ(PetscMalloc1(neighborsLt,&iscol));
+  CHKERRQ(PetscMalloc1(nnzAllLtNeighbors, &iNeighborRemote));
+  CHKERRQ(PetscMalloc1(nnz,&iIntersection));
+  CHKERRQ(PetscMalloc1(nnz,&iLocSort));
+  CHKERRQ(PetscMemcpy(iLocSort,iLocCol,nnz*sizeof(PetscInt)));
+  CHKERRQ(PetscSortInt(nnz,iLocSort));
   for (i = 0; i < neighborsLt; i++) {
 
-    TRY( PetscMalloc1(nnzNeighbors[i],&iRemSort) );
-    TRY( PetscMemcpy(iRemSort,iNeighbor,nnzNeighbors[i]*sizeof(PetscInt)) );
-    TRY( PetscSortInt(nnzNeighbors[i],iRemSort) );
-    TRY( PetscMalloc1(nnzNeighbors[i],&iNeighborInter) );
+    CHKERRQ(PetscMalloc1(nnzNeighbors[i],&iRemSort));
+    CHKERRQ(PetscMemcpy(iRemSort,iNeighbor,nnzNeighbors[i]*sizeof(PetscInt)));
+    CHKERRQ(PetscSortInt(nnzNeighbors[i],iRemSort));
+    CHKERRQ(PetscMalloc1(nnzNeighbors[i],&iNeighborInter));
     j = 0; 
     k = 0;
     l = 0;
@@ -867,38 +867,38 @@ PetscErrorCode MatMatTransposeMult_Extension_Extension_same(Mat A, Mat B, MatReu
     }
     iNeighbor += nnzNeighbors[i];
     iNeighborRemote += nnzNeighbors[i];
-    TRY( MPI_Isend(&nElemR[i],1,MPIU_INT,iNeighbors[i],2,comm,&mpiRequests[i]) );
-    TRY( ISCreateGeneral(PETSC_COMM_SELF,nElemR[i],iNeighborInter,PETSC_COPY_VALUES,&iscol[i]) );
-    TRY( PetscFree(iNeighborInter) );
-    TRY( PetscFree(iRemSort) );
+    CHKERRQ(MPI_Isend(&nElemR[i],1,MPIU_INT,iNeighbors[i],2,comm,&mpiRequests[i]));
+    CHKERRQ(ISCreateGeneral(PETSC_COMM_SELF,nElemR[i],iNeighborInter,PETSC_COPY_VALUES,&iscol[i]));
+    CHKERRQ(PetscFree(iNeighborInter));
+    CHKERRQ(PetscFree(iRemSort));
   }
   iNeighborRemote -= nnzAllLtNeighbors;
-  TRY( PetscFree(iIntersection) );
-  TRY( PetscFree(iLocSort) );
-  TRY( ISRestoreIndices(dataA->cis,&iLocCol) );
+  CHKERRQ(PetscFree(iIntersection));
+  CHKERRQ(PetscFree(iLocSort));
+  CHKERRQ(ISRestoreIndices(dataA->cis,&iLocCol));
 
   /* recv number of elements */
-  TRY( PetscMalloc1(neighborsGt,&nElem) );
+  CHKERRQ(PetscMalloc1(neighborsGt,&nElem));
   j = 0;
   for (i = neighborsLt+1; i <allNeighbors; i++) {
-    TRY( MPI_Irecv(&nElem[j],1,MPIU_INT,iNeighbors[i],2,comm,&mpiRequests[i-1]) );
+    CHKERRQ(MPI_Irecv(&nElem[j],1,MPIU_INT,iNeighbors[i],2,comm,&mpiRequests[i-1]));
     j += 1;
   }
 
   iNeighbor -= nnzAllLtNeighbors;
-  TRY( PetscFree(iNeighbor) );
+  CHKERRQ(PetscFree(iNeighbor));
   
   /* get submats */
-  TRY( ISCreateStride(PETSC_COMM_SELF,M_loc,0,1,&isrow) );
-  TRY( PetscMalloc1(neighborsLt,&submats) );
-  TRY( PetscMalloc1(neighborsLt,&data) );
+  CHKERRQ(ISCreateStride(PETSC_COMM_SELF,M_loc,0,1,&isrow));
+  CHKERRQ(PetscMalloc1(neighborsLt,&submats));
+  CHKERRQ(PetscMalloc1(neighborsLt,&data));
   for (i=0; i < neighborsLt; i++) {
-    TRY( MatCreateSubMatrix(dataA->A,isrow,iscol[i],MAT_INITIAL_MATRIX,&submats[i]) );
-    TRY( MatDenseGetArray(submats[i], &data[i]) );
-    TRY( ISDestroy(&iscol[i]) );
+    CHKERRQ(MatCreateSubMatrix(dataA->A,isrow,iscol[i],MAT_INITIAL_MATRIX,&submats[i]));
+    CHKERRQ(MatDenseGetArray(submats[i], &data[i]));
+    CHKERRQ(ISDestroy(&iscol[i]));
   }
-  TRY( PetscFree(iscol) );
-  TRY( MPI_Waitall(allNeighbors-1,mpiRequests,MPI_STATUSES_IGNORE) ); /* wait for number of elements/indices */
+  CHKERRQ(PetscFree(iscol));
+  CHKERRQ(MPI_Waitall(allNeighbors-1,mpiRequests,MPI_STATUSES_IGNORE)); /* wait for number of elements/indices */
   
   /* send remote ind */
   j = 0;
@@ -906,31 +906,31 @@ PetscErrorCode MatMatTransposeMult_Extension_Extension_same(Mat A, Mat B, MatReu
     nnzElem += nElem[j];
     j += 1;
   }
-  TRY( PetscMalloc1(nnzElem, &iElem) );
+  CHKERRQ(PetscMalloc1(nnzElem, &iElem));
   for (i = 0; i < neighborsLt; i++){
-    TRY( MPI_Isend(iNeighborRemote,nElemR[i],MPIU_INT,iNeighbors[i],3,comm,&mpiRequests[i]) );
+    CHKERRQ(MPI_Isend(iNeighborRemote,nElemR[i],MPIU_INT,iNeighbors[i],3,comm,&mpiRequests[i]));
     iNeighborRemote += nnzNeighbors[i];
   }
   iNeighborRemote -= nnzAllLtNeighbors;
-  TRY( PetscFree(nnzNeighbors) );
+  CHKERRQ(PetscFree(nnzNeighbors));
   j = 0;
   for (i = neighborsLt+1; i <allNeighbors; i++) {
-    TRY( MPI_Irecv(iElem,nElem[j],MPIU_INT,iNeighbors[i],3,comm,&mpiRequests[i-1]) ); 
+    CHKERRQ(MPI_Irecv(iElem,nElem[j],MPIU_INT,iNeighbors[i],3,comm,&mpiRequests[i-1])); 
     iElem += nElem[j];
     j += 1;
   }
   iElem -= nnzElem;
 
   /* send data */
-  TRY( PetscMalloc1(allNeighbors-1,&mpiRequests2) );
-  TRY( PetscMalloc1(M_loc*nnzElem, &dataElem) );
+  CHKERRQ(PetscMalloc1(allNeighbors-1,&mpiRequests2));
+  CHKERRQ(PetscMalloc1(M_loc*nnzElem, &dataElem));
   for (i = 0; i < neighborsLt; i++) {
-    TRY( MPI_Isend(data[i],M_loc*nElemR[i],MPIU_SCALAR,iNeighbors[i],4,comm,&mpiRequests2[i]) );
+    CHKERRQ(MPI_Isend(data[i],M_loc*nElemR[i],MPIU_SCALAR,iNeighbors[i],4,comm,&mpiRequests2[i]));
   }
-  TRY( PetscFree(nElemR) );
+  CHKERRQ(PetscFree(nElemR));
   j = 0;
   for (i = neighborsLt+1; i <allNeighbors; i++) {
-    TRY( MPI_Irecv(dataElem,M_loc*nElem[j],MPIU_SCALAR,iNeighbors[i],4,comm,&mpiRequests2[i-1]) ); 
+    CHKERRQ(MPI_Irecv(dataElem,M_loc*nElem[j],MPIU_SCALAR,iNeighbors[i],4,comm,&mpiRequests2[i-1])); 
     dataElem += M_loc*nElem[j];
     j += 1;
   }
@@ -938,66 +938,66 @@ PetscErrorCode MatMatTransposeMult_Extension_Extension_same(Mat A, Mat B, MatReu
   
 
   /* compute local product */
-  TRY( PetscMalloc1(M_loc,&iRow) );
-  TRY( PetscMalloc1(M_loc,&iCol) );
+  CHKERRQ(PetscMalloc1(M_loc,&iRow));
+  CHKERRQ(PetscMalloc1(M_loc,&iCol));
   for (i = 0; i<M_loc; i++){
     iRow[i] = mpiRank*M_loc +i;
     iCol[i] = mpiRank*M_loc +i;
   }
   if (nnz) {
     /* PETSC BUG (MatMatTransposeMult) workaround
-    TRY( MatMatTransposeMult(dataA->A,dataA->A,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&C_loc) );
-    TRY( MatDenseGetArray(C_loc,&arr) );
-    TRY( MatSetValuesBlockedLocal(C_out,M_loc,iRow,M_loc,iCol,arr,INSERT_VALUES) );
-    TRY( MatDenseRestoreArray(C_loc,&arr) );
-    TRY( MatDestroy(&C_loc) );*/
+    CHKERRQ(MatMatTransposeMult(dataA->A,dataA->A,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&C_loc));
+    CHKERRQ(MatDenseGetArray(C_loc,&arr));
+    CHKERRQ(MatSetValuesBlockedLocal(C_out,M_loc,iRow,M_loc,iCol,arr,INSERT_VALUES));
+    CHKERRQ(MatDenseRestoreArray(C_loc,&arr));
+    CHKERRQ(MatDestroy(&C_loc));*/
 
-    TRY( PermonMatTranspose(dataA->A,MAT_TRANSPOSE_CHEAPEST,&A_loc) );
-    TRY( PermonMatMatMult(dataA->A,A_loc,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&C_loc) );
-    TRY( MatDenseGetArray(C_loc,&arr) );
+    CHKERRQ(PermonMatTranspose(dataA->A,MAT_TRANSPOSE_CHEAPEST,&A_loc));
+    CHKERRQ(PermonMatMatMult(dataA->A,A_loc,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&C_loc));
+    CHKERRQ(MatDenseGetArray(C_loc,&arr));
     /* PETSC BUG
-    TRY( MatSetValuesBlocked(C_out,M_loc,iRow,M_loc,iCol,arr,INSERT_VALUES) ); */
-    TRY( MatSetValues(C_out,M_loc,iRow,M_loc,iCol,arr,INSERT_VALUES) );
-    TRY( MatDenseRestoreArray(C_loc,&arr) );
-    TRY( MatDestroy(&C_loc) );
-    TRY( MatDestroy(&A_loc) );
+    CHKERRQ(MatSetValuesBlocked(C_out,M_loc,iRow,M_loc,iCol,arr,INSERT_VALUES)); */
+    CHKERRQ(MatSetValues(C_out,M_loc,iRow,M_loc,iCol,arr,INSERT_VALUES));
+    CHKERRQ(MatDenseRestoreArray(C_loc,&arr));
+    CHKERRQ(MatDestroy(&C_loc));
+    CHKERRQ(MatDestroy(&A_loc));
   }
 
   /* compute off-diag products */
-  TRY( PetscMalloc1(neighborsGt,&iscolLoc) );
-  TRY( PetscMalloc1(neighborsGt,&submatsLoc) );
-  TRY( PetscMalloc1(neighborsGt,&dataLoc) );
-  TRY( MPI_Waitall(allNeighbors-1,mpiRequests,MPI_STATUSES_IGNORE) ); /* wait for indices */
-  TRY( PetscFree(iNeighborRemote) );
-  TRY( PetscFree(mpiRequests) );
+  CHKERRQ(PetscMalloc1(neighborsGt,&iscolLoc));
+  CHKERRQ(PetscMalloc1(neighborsGt,&submatsLoc));
+  CHKERRQ(PetscMalloc1(neighborsGt,&dataLoc));
+  CHKERRQ(MPI_Waitall(allNeighbors-1,mpiRequests,MPI_STATUSES_IGNORE)); /* wait for indices */
+  CHKERRQ(PetscFree(iNeighborRemote));
+  CHKERRQ(PetscFree(mpiRequests));
   j = 0;
   for (i = neighborsLt+1; i <allNeighbors; i++) {
-    TRY( ISCreateGeneral(PETSC_COMM_SELF,nElem[j],iElem,PETSC_USE_POINTER,&iscolLoc[j]) );
+    CHKERRQ(ISCreateGeneral(PETSC_COMM_SELF,nElem[j],iElem,PETSC_USE_POINTER,&iscolLoc[j]));
     iElem += nElem[j];
-    TRY( MatCreateSubMatrix(dataA->A,isrow,iscolLoc[j],MAT_INITIAL_MATRIX,&submatsLoc[j]) );
-    TRY( MatDenseGetArray(submatsLoc[j],&dataLoc[j]) );
-    TRY( ISDestroy(&iscolLoc[j]) );
+    CHKERRQ(MatCreateSubMatrix(dataA->A,isrow,iscolLoc[j],MAT_INITIAL_MATRIX,&submatsLoc[j]));
+    CHKERRQ(MatDenseGetArray(submatsLoc[j],&dataLoc[j]));
+    CHKERRQ(ISDestroy(&iscolLoc[j]));
     j += 1;
   }
   iElem -= nnzElem;
-  TRY( PetscFree(iElem) );
-  TRY( PetscFree(iscolLoc) );
-  TRY( ISDestroy(&isrow) );
-  TRY( PetscMalloc1(M_loc*M_loc,&arr) );
-  TRY( MPI_Waitall(allNeighbors-1,mpiRequests2,MPI_STATUSES_IGNORE) ); /* wait for data */
+  CHKERRQ(PetscFree(iElem));
+  CHKERRQ(PetscFree(iscolLoc));
+  CHKERRQ(ISDestroy(&isrow));
+  CHKERRQ(PetscMalloc1(M_loc*M_loc,&arr));
+  CHKERRQ(MPI_Waitall(allNeighbors-1,mpiRequests2,MPI_STATUSES_IGNORE)); /* wait for data */
 
-  TRY( PetscFree(mpiRequests2) );
+  CHKERRQ(PetscFree(mpiRequests2));
   j = 0;
   for (i = neighborsLt+1; i <allNeighbors; i++) {
     for (k = 0; k<M_loc; k++){
       iCol[k] = iNeighbors[i]*M_loc +k;
     }
-    TRY( PetscBLASIntCast(M_loc,&bm) );
-    TRY( PetscBLASIntCast(nElem[j],&bk) );
+    CHKERRQ(PetscBLASIntCast(M_loc,&bm));
+    CHKERRQ(PetscBLASIntCast(nElem[j],&bk));
     PetscStackCallBLAS("BLASgemm",BLASgemm_("N","T",&bm,&bm,&bk,&_DOne,dataLoc[j],&bm,dataElem,&bm,&_DZero,arr,&bm));
     dataElem += nElem[j]*M_loc;
     if (!isSym){
-      TRY( MatSetValues(C_out,M_loc,iCol,M_loc,iRow,arr,INSERT_VALUES) );
+      CHKERRQ(MatSetValues(C_out,M_loc,iCol,M_loc,iRow,arr,INSERT_VALUES));
     }
     PetscScalar val;
     for (l=0;l<M_loc;l++) {
@@ -1007,38 +1007,38 @@ PetscErrorCode MatMatTransposeMult_Extension_Extension_same(Mat A, Mat B, MatReu
         arr[m*M_loc+l] = val;
       }
     }
-    TRY( MatSetValues(C_out,M_loc,iRow,M_loc,iCol,arr,INSERT_VALUES) );
+    CHKERRQ(MatSetValues(C_out,M_loc,iRow,M_loc,iCol,arr,INSERT_VALUES));
     /* PETSC BUG
-    TRY( MatSetValuesBlocked(C_out, M_loc, iRow, M_loc, &i, arr, INSERT_VALUES) ); */
+    CHKERRQ(MatSetValuesBlocked(C_out, M_loc, iRow, M_loc, &i, arr, INSERT_VALUES)); */
     j += 1;
   }
   dataElem -= nnzElem*M_loc;
 
-  TRY( PetscFree(dataElem) );
-  TRY( PetscFree(arr) );
-  TRY( PetscFree(iRow) );
-  TRY( PetscFree(iCol) );
+  CHKERRQ(PetscFree(dataElem));
+  CHKERRQ(PetscFree(arr));
+  CHKERRQ(PetscFree(iRow));
+  CHKERRQ(PetscFree(iCol));
   if(myneighbors){
-    TRY( ISRestoreIndices(myneighbors,&iNeighbors) );
+    CHKERRQ(ISRestoreIndices(myneighbors,&iNeighbors));
   }
   j = 0;
   for (i = neighborsLt+1; i <allNeighbors; i++) {
-    TRY( MatDenseRestoreArray(submatsLoc[j],&dataLoc[j]) );
-    TRY( MatDestroy(&submatsLoc[j]) );
+    CHKERRQ(MatDenseRestoreArray(submatsLoc[j],&dataLoc[j]));
+    CHKERRQ(MatDestroy(&submatsLoc[j]));
     j += 1;
   }
-  TRY( PetscFree(submatsLoc) );
-  TRY( PetscFree(dataLoc) );
+  CHKERRQ(PetscFree(submatsLoc));
+  CHKERRQ(PetscFree(dataLoc));
   for (i=0; i < neighborsLt; i++) {
-    TRY( MatDenseRestoreArray(submats[i],&data[i]) );
-    TRY( MatDestroy(&submats[i]) );
+    CHKERRQ(MatDenseRestoreArray(submats[i],&data[i]));
+    CHKERRQ(MatDestroy(&submats[i]));
   }
-  TRY( PetscFree(submats) );
-  TRY( PetscFree(data) );
-  TRY( PetscFree(nElem) );
+  CHKERRQ(PetscFree(submats));
+  CHKERRQ(PetscFree(data));
+  CHKERRQ(PetscFree(nElem));
 
-  TRY( MatAssemblyBegin(C_out,MAT_FINAL_ASSEMBLY) );
-  TRY( MatAssemblyEnd(C_out,MAT_FINAL_ASSEMBLY) );
+  CHKERRQ(MatAssemblyBegin(C_out,MAT_FINAL_ASSEMBLY));
+  CHKERRQ(MatAssemblyEnd(C_out,MAT_FINAL_ASSEMBLY));
   *C = C_out;
   PetscFunctionReturnI(0);
 }
@@ -1060,14 +1060,14 @@ static PetscErrorCode MatProductNumeric_Extension(Mat C)
       SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_WRONG,"implemented only for A=B");
     }
     PetscObjectOptionsBegin((PetscObject)C);
-    TRY( PetscOptionsEList("-MatMatMultExt_mattype","MatMatMultExt_mattype","Set type of resulting matrix when assembling from extension type",allowedMats,3,MATAIJ,&mattype,NULL) );
+    CHKERRQ(PetscOptionsEList("-MatMatMultExt_mattype","MatMatMultExt_mattype","Set type of resulting matrix when assembling from extension type",allowedMats,3,MATAIJ,&mattype,NULL));
     PetscOptionsEnd();
-    TRY( MatMatTransposeMult_Extension_Extension_same(A,B,MAT_INITIAL_MATRIX,product->fill,mattype,&newmat) );
+    CHKERRQ(MatMatTransposeMult_Extension_Extension_same(A,B,MAT_INITIAL_MATRIX,product->fill,mattype,&newmat));
     break;
   default: SETERRQ(PetscObjectComm((PetscObject)C),PETSC_ERR_SUP,"MATPRODUCT type is not supported");
   }
   C->product = NULL;
-  TRY( MatHeaderReplace(C,&newmat) );
+  CHKERRQ(MatHeaderReplace(C,&newmat));
   C->product = product;
   C->ops->productnumeric = MatProductNumeric_Extension;
   PetscFunctionReturn(0);
@@ -1096,15 +1096,15 @@ PetscErrorCode MatDestroy_Extension(Mat TA) {
   Mat_Extension *data = (Mat_Extension*) TA->data;
 
   PetscFunctionBegin;
-  TRY( MatDestroy(&data->A) );
-  TRY( ISDestroy(&data->cis) );
-  TRY( ISDestroy(&data->ris) );
-  TRY( ISDestroy(&data->ris_local) );
-  TRY( VecDestroy(&data->cwork) );
-  TRY( VecDestroy(&data->rwork) );
-  TRY( VecScatterDestroy(&data->cscatter) );
-  TRY( VecScatterDestroy(&data->rscatter) );
-  TRY( PetscFree(data) );
+  CHKERRQ(MatDestroy(&data->A));
+  CHKERRQ(ISDestroy(&data->cis));
+  CHKERRQ(ISDestroy(&data->ris));
+  CHKERRQ(ISDestroy(&data->ris_local));
+  CHKERRQ(VecDestroy(&data->cwork));
+  CHKERRQ(VecDestroy(&data->rwork));
+  CHKERRQ(VecScatterDestroy(&data->cscatter));
+  CHKERRQ(VecScatterDestroy(&data->rscatter));
+  CHKERRQ(PetscFree(data));
   PetscFunctionReturn(0);
 }
 
@@ -1115,9 +1115,9 @@ FLLOP_EXTERN PetscErrorCode MatCreate_Extension(Mat TA)
   Mat_Extension *data;
 
   PetscFunctionBegin;
-  TRY( PetscObjectChangeTypeName((PetscObject)TA,MATEXTENSION) );
+  CHKERRQ(PetscObjectChangeTypeName((PetscObject)TA,MATEXTENSION));
 
-  TRY( PetscNewLog(TA,&data) );
+  CHKERRQ(PetscNewLog(TA,&data));
 
   /* initialize general inner data */
   TA->data                    = (void*) data;
@@ -1146,18 +1146,18 @@ FLLOP_EXTERN PetscErrorCode MatCreate_Extension(Mat TA)
   TA->ops->productsetfromoptions = MatProductSetFromOptions_Extension;
 
   /* set type-specific methods */
-  TRY( PetscObjectComposeFunction((PetscObject)TA,"MatConvert_nestpermon_extension_C", MatConvert_NestPermon_Extension) );
-  TRY( PetscObjectComposeFunction((PetscObject)TA,"MatExtensionCreateCondensedRows_Extension_C",MatExtensionCreateCondensedRows_Extension) );
-  TRY( PetscObjectComposeFunction((PetscObject)TA,"MatExtensionCreateLocalMat_Extension_C",MatExtensionCreateLocalMat_Extension) );
-  TRY( PetscObjectComposeFunction((PetscObject)TA,"MatExtensionGetColumnIS_Extension_C",MatExtensionGetColumnIS_Extension) );
-  TRY( PetscObjectComposeFunction((PetscObject)TA,"MatExtensionSetColumnIS_Extension_C",MatExtensionSetColumnIS_Extension) );
-  TRY( PetscObjectComposeFunction((PetscObject)TA,"MatExtensionGetRowIS_Extension_C",MatExtensionGetRowIS_Extension) );
-  TRY( PetscObjectComposeFunction((PetscObject)TA,"MatExtensionGetRowISLocal_Extension_C",MatExtensionGetRowISLocal_Extension) );
-  TRY( PetscObjectComposeFunction((PetscObject)TA,"MatExtensionSetRowIS_Extension_C",MatExtensionSetRowIS_Extension) );
-  TRY( PetscObjectComposeFunction((PetscObject)TA,"MatExtensionGetCondensed_Extension_C",MatExtensionGetCondensed_Extension) );
-  TRY( PetscObjectComposeFunction((PetscObject)TA,"MatExtensionSetCondensed_Extension_C",MatExtensionSetCondensed_Extension) );
-  TRY( PetscObjectComposeFunction((PetscObject)TA,"MatExtensionSetUp_Extension_C",MatExtensionSetUp_Extension) );
-  TRY( PetscObjectComposeFunction((PetscObject)TA,"MatProductSetFromOptions_blockdiag_extension_C",MatProductSetFromOptions_BlockDiag_Extension) );
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)TA,"MatConvert_nestpermon_extension_C", MatConvert_NestPermon_Extension));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)TA,"MatExtensionCreateCondensedRows_Extension_C",MatExtensionCreateCondensedRows_Extension));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)TA,"MatExtensionCreateLocalMat_Extension_C",MatExtensionCreateLocalMat_Extension));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)TA,"MatExtensionGetColumnIS_Extension_C",MatExtensionGetColumnIS_Extension));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)TA,"MatExtensionSetColumnIS_Extension_C",MatExtensionSetColumnIS_Extension));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)TA,"MatExtensionGetRowIS_Extension_C",MatExtensionGetRowIS_Extension));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)TA,"MatExtensionGetRowISLocal_Extension_C",MatExtensionGetRowISLocal_Extension));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)TA,"MatExtensionSetRowIS_Extension_C",MatExtensionSetRowIS_Extension));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)TA,"MatExtensionGetCondensed_Extension_C",MatExtensionGetCondensed_Extension));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)TA,"MatExtensionSetCondensed_Extension_C",MatExtensionSetCondensed_Extension));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)TA,"MatExtensionSetUp_Extension_C",MatExtensionSetUp_Extension));
+  CHKERRQ(PetscObjectComposeFunction((PetscObject)TA,"MatProductSetFromOptions_blockdiag_extension_C",MatProductSetFromOptions_BlockDiag_Extension));
   PetscFunctionReturn(0);
 }
 
@@ -1173,25 +1173,25 @@ PetscErrorCode MatCreateExtension(MPI_Comm comm, PetscInt m, PetscInt n, PetscIn
   if (ris) PetscValidHeaderSpecific(ris,IS_CLASSID,4);
   if (cis) PetscValidHeaderSpecific(cis,IS_CLASSID,6);
   PetscValidPointer(TA_new,7);
-  TRY( MatCreate(comm,&TA) );
-  TRY( MatSetType(TA,MATEXTENSION) );
-  TRY( MatSetSizes(TA,m,n,M,N) );
+  CHKERRQ(MatCreate(comm,&TA));
+  CHKERRQ(MatSetType(TA,MATEXTENSION));
+  CHKERRQ(MatSetSizes(TA,m,n,M,N));
 
   /* (Permon) seqdense empty matrix MatMult workaround */
-  TRY( MatGetSize(A,&cnnz,&rnnz) );
+  CHKERRQ(MatGetSize(A,&cnnz,&rnnz));
   if (!rnnz || !cnnz) {
-    TRY( MatCreateSeqAIJ(PETSC_COMM_SELF, cnnz, rnnz, 0, NULL, &A_empty) );
-    TRY( MatAssemblyBegin(A_empty, MAT_FINAL_ASSEMBLY) );
-    TRY( MatAssemblyEnd(A_empty, MAT_FINAL_ASSEMBLY) );
-    TRY( MatExtensionSetCondensed(TA,A_empty) );
-    TRY( MatDestroy(&A_empty) );
+    CHKERRQ(MatCreateSeqAIJ(PETSC_COMM_SELF, cnnz, rnnz, 0, NULL, &A_empty));
+    CHKERRQ(MatAssemblyBegin(A_empty, MAT_FINAL_ASSEMBLY));
+    CHKERRQ(MatAssemblyEnd(A_empty, MAT_FINAL_ASSEMBLY));
+    CHKERRQ(MatExtensionSetCondensed(TA,A_empty));
+    CHKERRQ(MatDestroy(&A_empty));
   } else {
-    TRY( MatExtensionSetCondensed(TA,A) );
+    CHKERRQ(MatExtensionSetCondensed(TA,A));
   }
 
-  TRY( MatExtensionSetRowIS(TA,ris,rows_use_global_numbering) );
-  TRY( MatExtensionSetColumnIS(TA,cis) );
-  TRY( MatExtensionSetUp(TA) );
+  CHKERRQ(MatExtensionSetRowIS(TA,ris,rows_use_global_numbering));
+  CHKERRQ(MatExtensionSetColumnIS(TA,cis));
+  CHKERRQ(MatExtensionSetUp(TA));
   *TA_new = TA;
   PetscFunctionReturn(0);
 }

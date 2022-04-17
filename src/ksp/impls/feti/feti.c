@@ -176,7 +176,7 @@ FLLOP_EXTERN PetscErrorCode KSPCreate_FETI(KSP ksp)
   ksp->data = (void*)feti;
 
   //TODO norms
-  TRY( KSPSetSupportedNorm(ksp,KSP_NORM_UNPRECONDITIONED,PC_LEFT,2) );
+  CHKERRQ(KSPSetSupportedNorm(ksp,KSP_NORM_UNPRECONDITIONED,PC_LEFT,2));
 
   ksp->ops->setup          = KSPSetUp_FETI;
   ksp->ops->solve          = KSPSolve_FETI;

@@ -12,21 +12,21 @@ PetscErrorCode QPPFInitializePackage()
   if (QPPFPackageInitialized) PetscFunctionReturn(0);
   QPPFPackageInitialized = PETSC_TRUE;
   /* Register Classes */
-  TRY( PetscClassIdRegister("QP Projector Factory",&QPPF_CLASSID) );
+  CHKERRQ(PetscClassIdRegister("QP Projector Factory",&QPPF_CLASSID));
   /* Register Events */
-  TRY( PetscLogEventRegister("QPPFSetUp",       QPPF_CLASSID, &QPPF_SetUp) );
-  TRY( PetscLogEventRegister("QPPFSetUp:Gt",    QPPF_CLASSID, &QPPF_SetUp_Gt) );
-  TRY( PetscLogEventRegister("QPPFSetUp:GGt",   QPPF_CLASSID, &QPPF_SetUp_GGt) );
-  TRY( PetscLogEventRegister("QPPFSetUp:GGtinv",QPPF_CLASSID, &QPPF_SetUp_GGtinv) );
-  TRY( PetscLogEventRegister("QPPFApplyCP",     QPPF_CLASSID, &QPPF_ApplyCP) );
-  TRY( PetscLogEventRegister("QPPFApplyCP:gt",  QPPF_CLASSID, &QPPF_ApplyCP_gt) );
-  TRY( PetscLogEventRegister("QPPFApplyCP:sc",  QPPF_CLASSID, &QPPF_ApplyCP_sc) );
-  TRY( PetscLogEventRegister("QPPFApplyP",      QPPF_CLASSID, &QPPF_ApplyP) );
-  TRY( PetscLogEventRegister("QPPFApplyQ",      QPPF_CLASSID, &QPPF_ApplyQ) );
-  TRY( PetscLogEventRegister("QPPFApplyHalfQ",  QPPF_CLASSID, &QPPF_ApplyHalfQ) );
-  TRY( PetscLogEventRegister("QPPFApplyG",      QPPF_CLASSID, &QPPF_ApplyG) );
-  TRY( PetscLogEventRegister("QPPFApplyGt",     QPPF_CLASSID, &QPPF_ApplyGt) );
+  CHKERRQ(PetscLogEventRegister("QPPFSetUp",       QPPF_CLASSID, &QPPF_SetUp));
+  CHKERRQ(PetscLogEventRegister("QPPFSetUp:Gt",    QPPF_CLASSID, &QPPF_SetUp_Gt));
+  CHKERRQ(PetscLogEventRegister("QPPFSetUp:GGt",   QPPF_CLASSID, &QPPF_SetUp_GGt));
+  CHKERRQ(PetscLogEventRegister("QPPFSetUp:GGtinv",QPPF_CLASSID, &QPPF_SetUp_GGtinv));
+  CHKERRQ(PetscLogEventRegister("QPPFApplyCP",     QPPF_CLASSID, &QPPF_ApplyCP));
+  CHKERRQ(PetscLogEventRegister("QPPFApplyCP:gt",  QPPF_CLASSID, &QPPF_ApplyCP_gt));
+  CHKERRQ(PetscLogEventRegister("QPPFApplyCP:sc",  QPPF_CLASSID, &QPPF_ApplyCP_sc));
+  CHKERRQ(PetscLogEventRegister("QPPFApplyP",      QPPF_CLASSID, &QPPF_ApplyP));
+  CHKERRQ(PetscLogEventRegister("QPPFApplyQ",      QPPF_CLASSID, &QPPF_ApplyQ));
+  CHKERRQ(PetscLogEventRegister("QPPFApplyHalfQ",  QPPF_CLASSID, &QPPF_ApplyHalfQ));
+  CHKERRQ(PetscLogEventRegister("QPPFApplyG",      QPPF_CLASSID, &QPPF_ApplyG));
+  CHKERRQ(PetscLogEventRegister("QPPFApplyGt",     QPPF_CLASSID, &QPPF_ApplyGt));
   /* Process info & summary exclusions */
-  TRY( FllopProcessInfoExclusions(QPPF_CLASSID, QPPF_CLASS_NAME) );
+  CHKERRQ(FllopProcessInfoExclusions(QPPF_CLASSID, QPPF_CLASS_NAME));
   PetscFunctionReturn(0);
 }

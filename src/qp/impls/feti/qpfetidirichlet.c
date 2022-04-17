@@ -8,9 +8,9 @@ PetscErrorCode QPFetiDirichletCreate(IS dbcis, QPFetiNumberingType numtype, Pets
   QPFetiDirichlet dbc;
 
   PetscFunctionBegin;
-  TRY( PetscNew(&dbc) );
+  CHKERRQ(PetscNew(&dbc));
   dbc->is = dbcis;
-  TRY( PetscObjectReference((PetscObject)dbcis) );
+  CHKERRQ(PetscObjectReference((PetscObject)dbcis));
   dbc->numtype = numtype;
   dbc->enforce_by_B = enforce_by_B;
   *dbc_new = dbc;
@@ -23,8 +23,8 @@ PetscErrorCode  QPFetiDirichletDestroy(QPFetiDirichlet *dbc)
 {
   PetscFunctionBegin;
   if (!*dbc) PetscFunctionReturn(0);
-  TRY( ISDestroy(&(*dbc)->is) );
-  TRY( PetscFree(*dbc) );
+  CHKERRQ(ISDestroy(&(*dbc)->is));
+  CHKERRQ(PetscFree(*dbc));
   PetscFunctionReturn(0);
 }
 
