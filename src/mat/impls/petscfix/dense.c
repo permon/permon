@@ -140,7 +140,6 @@ PETSC_EXTERN PetscErrorCode MatCreate_SeqDensePermon(Mat mat)
 #define __FUNCT__ "MatCreateDensePermon"
 PetscErrorCode MatCreateDensePermon(MPI_Comm comm,PetscInt m,PetscInt n,PetscInt M,PetscInt N,PetscScalar *data,Mat *A)
 {
-  PetscErrorCode ierr;
   PetscMPIInt    size;
 
   PetscFunctionBegin;

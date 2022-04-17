@@ -42,7 +42,6 @@ PetscErrorCode MatMult_Prod(Mat A,Vec x,Vec y)
 {
   Mat_Composite     *shell = (Mat_Composite*)A->data;  
   Mat_CompositeLink next = shell->head;
-  PetscErrorCode    ierr;
   Vec               in,out;
 
   PetscFunctionBegin;
@@ -78,7 +77,6 @@ PetscErrorCode MatMultTranspose_Prod(Mat A,Vec x,Vec y)
 {
   Mat_Composite     *shell = (Mat_Composite*)A->data;  
   Mat_CompositeLink tail = shell->tail;
-  PetscErrorCode    ierr;
   Vec               in,out;
 
   PetscFunctionBegin;
@@ -150,7 +148,6 @@ PetscErrorCode MatMultTransposeAdd_Prod(Mat A,Vec x,Vec y, Vec z)
 #define __FUNCT__ "MatCreate_Prod"
 FLLOP_EXTERN PetscErrorCode  MatCreate_Prod(Mat A)
 {
-  PetscErrorCode ierr;
   PetscErrorCode (*createComposite)(Mat);
   Mat_Composite  *composite;
 
@@ -211,7 +208,6 @@ $       MatAssemblyEnd(mat,MAT_FINAL_ASSEMBLY);
 @*/
 PetscErrorCode  MatCreateProd(MPI_Comm comm,PetscInt nmat,const Mat *mats,Mat *mat)
 {
-  PetscErrorCode ierr;
   PetscInt       m,n,M,N,i;
   
   PetscFunctionBegin;

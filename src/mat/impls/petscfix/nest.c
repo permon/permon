@@ -276,7 +276,6 @@ static PetscErrorCode MatNestPermonGetVecs_NestPermon(Mat A,Vec *right,Vec *left
   Vec            *L,*R;
   MPI_Comm       comm;
   PetscInt       i,j;
-  PetscErrorCode ierr;
 
   PetscFunctionBegin;
   CHKERRQ(PetscObjectGetComm((PetscObject)A,&comm));
@@ -335,7 +334,6 @@ static PetscErrorCode MatNestPermonGetVecs_NestPermon(Mat A,Vec *right,Vec *left
 #define __FUNCT__ "MatNestSetVecType_NestPermon"
 static PetscErrorCode  MatNestSetVecType_NestPermon(Mat A,VecType vtype)
 {
-  PetscErrorCode ierr;
   PetscBool      flg;
 
   PetscFunctionBegin;
@@ -511,7 +509,6 @@ static PetscErrorCode MatDuplicate_NestPermon(Mat A,MatDuplicateOption op,Mat *B
   Mat_Nest       *bA = (Mat_Nest*)A->data;
   Mat            *b;
   PetscInt       i,j,nr = bA->nr,nc = bA->nc;
-  PetscErrorCode ierr;
 
   PetscFunctionBegin;
   CHKERRQ(PetscMalloc1(nr*nc,&b));

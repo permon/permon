@@ -325,7 +325,6 @@ PetscErrorCode MatCreateOperatorFromUpperTriangular(Mat U, Mat *A)
 #define __FUNCT__ "MatMultEqualTol_Private"
 static PetscErrorCode MatMultEqualTol_Private(Mat A,PetscBool transpose,Mat B,PetscInt n,PetscReal tol,PetscBool  *flg)
 {
-  PetscErrorCode ierr;
   Vec            x,s1,s2;
   PetscRandom    rctx;
   PetscReal      r1,r2;
@@ -996,7 +995,6 @@ PetscErrorCode PermonMatConvertBlocks(Mat A, MatType newtype,MatReuse reuse,Mat 
 #define __FUNCT__ "MatTransposeMatMultWorks"
 PetscErrorCode  MatTransposeMatMultWorks(Mat A,Mat B,PetscBool *flg)
 {
-  PetscErrorCode ierr;
   PetscErrorCode (*fA)(Mat,Mat,Mat);
   PetscErrorCode (*fB)(Mat,Mat,Mat);
   PetscErrorCode (*transposematmult)(Mat,Mat,Mat) = NULL;
@@ -1068,7 +1066,6 @@ PetscErrorCode  MatTransposeMatMultWorks(Mat A,Mat B,PetscBool *flg)
 @*/
 PetscErrorCode  PermonMatSetFromOptions(Mat B)
 {
-  PetscErrorCode ierr;
   const char     *deft = MATAIJ;
   char           type[256];
   PetscBool      flg,set;
@@ -1143,7 +1140,7 @@ PetscErrorCode PermonMatCopyProperties(Mat A,Mat B)
 #define __FUNCT__ "PermonMatConvertInplace"
 PetscErrorCode PermonMatConvertInplace(Mat A, MatType type)
 {
-  PetscErrorCode   ierr,ierr1;
+  PetscErrorCode   ierr;
   PetscBool        sametype,issame;
   PetscInt         refct;
   PetscObjectState state;
@@ -1167,13 +1164,13 @@ PetscErrorCode PermonMatConvertInplace(Mat A, MatType type)
   CHKERRQ(PermonMatCopyProperties(A,tmp));
 
   CHKERRQ(PetscPushErrorHandler(PetscReturnErrorHandler,NULL));
-  ierr1 = MatConvert(A,type,MAT_INPLACE_MATRIX,&A);
+  ierr = MatConvert(A,type,MAT_INPLACE_MATRIX,&A);
   CHKERRQ(PetscPopErrorHandler());
-  if (ierr1 == PETSC_ERR_SUP) {
+  if (ierr == PETSC_ERR_SUP) {
     CHKERRQ(PetscInfo(fllop,"matrix type not supported, trying to convert to MATAIJ first\n"));
     CHKERRQ(MatConvert(A,MATAIJ,MAT_INPLACE_MATRIX,&A));
     CHKERRQ(MatConvert(A,type,MAT_INPLACE_MATRIX,&A));
-  } else if (ierr1) {
+  } else if (ierr) {
     /* re-throw error in other error cases */
     CHKERRQ(MatConvert(A,type,MAT_INPLACE_MATRIX,&A));
   }
@@ -1227,7 +1224,6 @@ PetscErrorCode MatRedistributeRows(Mat mat_from,IS rowperm,PetscInt base,Mat mat
   Vec             v_from,v_to;
   IS              is_to;
   VecScatter      sc;
-  PetscErrorCode  ierr;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(mat_from,MAT_CLASSID,1);

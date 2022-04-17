@@ -17,8 +17,6 @@ PetscBool  QPSRegisterAllCalled = PETSC_FALSE;
 #define __FUNCT__ "QPSRegisterAll"
 PetscErrorCode  QPSRegisterAll(void)
 {
-  PetscErrorCode ierr;
-
   PetscFunctionBegin;
   QPSRegisterAllCalled = PETSC_TRUE;
   CHKERRQ(QPSRegister(QPSKSP,      QPSCreate_KSP));
@@ -33,8 +31,6 @@ PetscErrorCode  QPSRegisterAll(void)
 #define __FUNCT__ "QPSRegister"
 PetscErrorCode QPSRegister(const char sname[],PetscErrorCode (*function)(QPS))
 {
-  PetscErrorCode ierr;
-
   PetscFunctionBegin;
   CHKERRQ(PetscFunctionListAdd(&QPSList,sname,function));
   PetscFunctionReturn(0);

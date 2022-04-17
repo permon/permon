@@ -3,8 +3,6 @@
 
 int main(int argc,char **args)
 {
-  PetscErrorCode ierr;
-
   CHKERRQ(PermonInitialize(&argc,&args,(char *)0,(char *)0));
   CHKERRQ(PermonFinalize());
   return 0;

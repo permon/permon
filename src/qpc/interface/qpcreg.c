@@ -13,8 +13,6 @@ PetscBool  QPCRegisterAllCalled = PETSC_FALSE;
 #define __FUNCT__ "QPCRegisterAll"
 PetscErrorCode  QPCRegisterAll(void)
 {
-  PetscErrorCode ierr;
-
   PetscFunctionBegin;
   QPCRegisterAllCalled = PETSC_TRUE;
   CHKERRQ(QPCRegister(QPCBOX,      QPCCreate_Box));
@@ -25,8 +23,6 @@ PetscErrorCode  QPCRegisterAll(void)
 #define __FUNCT__ "QPCRegister"
 PetscErrorCode QPCRegister(const char sname[],PetscErrorCode (*function)(QPC))
 {
-  PetscErrorCode ierr;
-
   PetscFunctionBegin;
   CHKERRQ(PetscFunctionListAdd(&QPCList,sname,function));
   PetscFunctionReturn(0);

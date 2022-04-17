@@ -1065,8 +1065,6 @@ PetscErrorCode QPSGetVecs(QPS qps,PetscInt rightn, Vec **right,PetscInt leftn,Ve
 */
 PetscErrorCode QPSSetWorkVecs(QPS qps,PetscInt nw)
 {
-  PetscErrorCode ierr;
-
   PetscFunctionBegin;
   CHKERRQ(VecDestroyVecs(qps->nwork,&qps->work));
   CHKERRQ(PetscFree(qps->work_state));

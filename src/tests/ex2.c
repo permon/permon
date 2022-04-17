@@ -13,7 +13,6 @@ int main(int argc,char **args)
   PetscViewerFormat format;
   PetscRandom       rand;
   MPI_Comm          comm;
-  PetscErrorCode    ierr;
 
   CHKERRQ(PermonInitialize(&argc,&args,(char *)0,(char *)0));
   comm = PETSC_COMM_WORLD;

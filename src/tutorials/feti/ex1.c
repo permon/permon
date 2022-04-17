@@ -28,7 +28,6 @@ int main(int argc,char **args)
   IS dirichletIS;
   PetscBool dirInHess = PETSC_FALSE; /* Enforce Dirichlet BC in Hessian? */
   KSPConvergedReason reason;
-  PetscErrorCode ierr;
 
   /* Init PERMON */
   CHKERRQ(PermonInitialize(&argc,&args,(char*)0,help));

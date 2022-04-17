@@ -91,7 +91,6 @@ static PetscErrorCode ProcessOptions(MPI_Comm comm, AppCtx *options)
 {
   const char    *pdeTypes[2] = {"Poisson", "Elasticity"};
   PetscInt       n,pde;
-  PetscErrorCode ierr;
 
   PetscFunctionBeginUser;
   options->pde       = PDE_POISSON;
@@ -180,23 +179,23 @@ int main(int argc,char **args)
   CHKERRQ(ProcessOptions(PETSC_COMM_WORLD,&user));
   switch (user.dim) {
   case 3:
-    CHKERRQ(DMDACreate3d(PETSC_COMM_WORLD,user.per[0] ? DM_BOUNDARY_PERIODIC : DM_BOUNDARY_NONE,
+    ierr = DMDACreate3d(PETSC_COMM_WORLD,user.per[0] ? DM_BOUNDARY_PERIODIC : DM_BOUNDARY_NONE,
                                          user.per[1] ? DM_BOUNDARY_PERIODIC : DM_BOUNDARY_NONE,
                                          user.per[2] ? DM_BOUNDARY_PERIODIC : DM_BOUNDARY_NONE,
                                          DMDA_STENCIL_BOX,user.cells[0]+1,user.cells[1]+1,user.cells[2]+1,
                                          PETSC_DECIDE,PETSC_DECIDE,PETSC_DECIDE,user.dof,
-                                         1,PETSC_NULL,PETSC_NULL,PETSC_NULL,&da));
+                                         1,PETSC_NULL,PETSC_NULL,PETSC_NULL,&da);CHKERRQ(ierr);
     break;
   case 2:
-    CHKERRQ(DMDACreate2d(PETSC_COMM_WORLD,user.per[0] ? DM_BOUNDARY_PERIODIC : DM_BOUNDARY_NONE,
+    ierr = DMDACreate2d(PETSC_COMM_WORLD,user.per[0] ? DM_BOUNDARY_PERIODIC : DM_BOUNDARY_NONE,
                                          user.per[1] ? DM_BOUNDARY_PERIODIC : DM_BOUNDARY_NONE,
                                          DMDA_STENCIL_BOX,user.cells[0]+1,user.cells[1]+1,
                                          PETSC_DECIDE,PETSC_DECIDE,user.dof,
-                                         1,PETSC_NULL,PETSC_NULL,&da));
+                                         1,PETSC_NULL,PETSC_NULL,&da);CHKERRQ(ierr);
     break;
   case 1:
-    CHKERRQ(DMDACreate1d(PETSC_COMM_WORLD,user.per[0] ? DM_BOUNDARY_PERIODIC : DM_BOUNDARY_NONE,
-                                         user.cells[0]+1,user.dof,1,PETSC_NULL,&da);
+    ierr = DMDACreate1d(PETSC_COMM_WORLD,user.per[0] ? DM_BOUNDARY_PERIODIC : DM_BOUNDARY_NONE,
+                                         user.cells[0]+1,user.dof,1,PETSC_NULL,&da);CHKERRQ(ierr);
     break;
   default: SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Unsupported dimension %D",user.dim);
   }

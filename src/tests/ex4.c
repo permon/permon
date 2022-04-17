@@ -7,7 +7,6 @@ int main(int argc,char **args)
   Vec            v;
   PetscInt       n = 4;
   PetscBool      flg;
-  PetscErrorCode ierr;
 
   CHKERRQ(PermonInitialize(&argc,&args,(char *)0,(char *)0));
 

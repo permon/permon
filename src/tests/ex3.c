@@ -8,8 +8,6 @@ int main(int argc,char **args)
   PetscInt       i,n = 5,row[2],col[2],rstart,rend;
   PetscReal      val[] = {1.0, -1.0, -1.0, 1.0};
 
-  PetscErrorCode ierr;
-
   CHKERRQ(PermonInitialize(&argc,&args,(char *)0,(char *)0));
   CHKERRQ(PetscOptionsGetInt(NULL,NULL,"-n",&n,NULL));
 

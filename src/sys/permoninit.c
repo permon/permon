@@ -36,7 +36,6 @@ FLLOP   fllop;
 @*/
 PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], const char help[])
 {
-  PetscErrorCode ierr;
   PetscBool flg=PETSC_FALSE;
   char pfile[PETSC_MAX_PATH_LEN];
 
@@ -107,8 +106,6 @@ PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], cons
 @*/
 PetscErrorCode PermonFinalize()
 {
-  PetscErrorCode ierr;
-
   PetscFunctionBegin;
   if (!FllopInitializeCalled) {
     PetscFunctionReturn(0);
@@ -134,8 +131,6 @@ PetscErrorCode PermonFinalize()
 #define __FUNCT__ "PetscDLLibraryRegister_permon"
 PetscErrorCode PetscDLLibraryRegister_permon()
 {
-  PetscErrorCode ierr;
-
   PetscFunctionBegin;
   CHKERRQ(QPPFInitializePackage());
   CHKERRQ(QPInitializePackage());

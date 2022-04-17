@@ -27,9 +27,8 @@ Input parameters include:\n\
 PetscErrorCode viewDraw(Vec x) {
   PetscViewer    v1;
   PetscDraw      draw;
-  PetscErrorCode ierr;
-
   PetscFunctionBeginUser;
+
   CHKERRQ(PetscViewerDrawOpen(PETSC_COMM_WORLD,0,"",80,380,400,160,&v1));
   CHKERRQ(PetscViewerDrawGetDraw(v1,0,&draw));
   CHKERRQ(PetscDrawSetDoubleBuffer(draw));
@@ -54,7 +53,6 @@ int main(int argc,char **args)
   PetscInt       i,n = 10,col[3],rstart,rend;
   PetscReal      h,value[3];
   PetscBool      converged,viewSol=PETSC_FALSE;
-  PetscErrorCode ierr;
 
   CHKERRQ(PermonInitialize(&argc,&args,(char *)0,help));
   CHKERRQ(PetscOptionsGetInt(NULL,NULL,"-n",&n,NULL));

@@ -42,8 +42,6 @@ static PetscErrorCode KSPFETISetDirichlet_FETI(KSP ksp,IS isDir,QPFetiNumberingT
 #define __FUNCT__ "KSPFETISetDirichlet"
 PetscErrorCode KSPFETISetDirichlet(KSP ksp,IS isDir,QPFetiNumberingType numtype,PetscBool enforce_by_B)
 {
-  PetscErrorCode ierr;
-
   PetscFunctionBegin;
   PetscValidHeaderSpecific(ksp,KSP_CLASSID,1);
   if (isDir) PetscValidHeaderSpecific(isDir,IS_CLASSID,2);
@@ -59,7 +57,6 @@ PetscErrorCode KSPFETISetDirichlet(KSP ksp,IS isDir,QPFetiNumberingType numtype,
 static PetscErrorCode KSPQPSSetUp(KSP ksp)
 {
   KSP_FETI *feti = (KSP_FETI*)ksp->data;
-  PetscErrorCode ierr;
 
   PetscFunctionBegin;
   CHKERRQ(QPSCreate(PetscObjectComm((PetscObject)ksp),&feti->qps));
@@ -74,7 +71,6 @@ static PetscErrorCode KSPQPSSetUp(KSP ksp)
 static PetscErrorCode KSPFETISetUp(KSP ksp)
 {
   KSP_FETI *feti = (KSP_FETI*)ksp->data;
-  PetscErrorCode ierr;
 
   PetscFunctionBegin;
   //CHKERRQ(VecDuplicate(ksp->vec_sol,&feti->x));
@@ -104,7 +100,6 @@ PetscErrorCode KSPSetUp_FETI(KSP ksp)
   KSP_FETI *feti = (KSP_FETI*)ksp->data;
   Mat A;
   PetscBool ismatis;
-  PetscErrorCode ierr;
 
   PetscFunctionBegin;
   CHKERRQ(KSPGetOperators(ksp,&A,NULL));
@@ -129,7 +124,6 @@ PetscErrorCode KSPSetUp_FETI(KSP ksp)
 PetscErrorCode KSPDestroy_FETI(KSP ksp)
 {
   KSP_FETI *feti = (KSP_FETI*)ksp->data;
-  PetscErrorCode ierr;
 
   PetscFunctionBegin;
   //CHKERRQ(VecDestroy(&feti->b));
@@ -147,7 +141,6 @@ PetscErrorCode KSPDestroy_FETI(KSP ksp)
 PetscErrorCode KSPSolve_FETI(KSP ksp)
 {
   KSP_FETI *feti = (KSP_FETI*)ksp->data;
-  PetscErrorCode ierr;
 
   PetscFunctionBegin;
   CHKERRQ(KSPFETISetUp(ksp));
@@ -177,7 +170,6 @@ M*/
 FLLOP_EXTERN PetscErrorCode KSPCreate_FETI(KSP ksp)
 {
   KSP_FETI *feti;
-  PetscErrorCode ierr;
 
   PetscFunctionBegin;
   CHKERRQ(PetscNewLog(ksp,&feti));

@@ -7,7 +7,6 @@
 static PetscErrorCode MatMultAdd_ShellPermon(Mat A,Vec x,Vec y,Vec z)
 {
   Mat_Shell      *shell = (Mat_Shell*)A->data;
-  PetscErrorCode ierr;
 
   PetscFunctionBegin;
   if (y == z) {

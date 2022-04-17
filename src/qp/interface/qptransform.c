@@ -651,13 +651,13 @@ PetscErrorCode QPTOrthonormalizeEqFromOptions(QP qp)
 
   PetscFunctionBeginI;
   TRY( QPChainGetLast(qp,&last) );
-  _fllop_ierr = PetscObjectOptionsBegin((PetscObject)last);CHKERRQ(_fllop_ierr);
+  PetscObjectOptionsBegin((PetscObject)last);
   TRY( PetscOptionsEnum("-qp_E_orth_type","type of eq. con. orthonormalization","QPTOrthonormalizeEq",MatOrthTypes,(PetscEnum)eq_orth_type,(PetscEnum*)&eq_orth_type,NULL) );
   TRY( PetscOptionsEnum("-qp_E_orth_form","form of eq. con. orthonormalization","QPTOrthonormalizeEq",MatOrthForms,(PetscEnum)eq_orth_form,(PetscEnum*)&eq_orth_form,NULL) );
   TRY( PetscInfo(qp, "-qp_E_orth_type %s\n",MatOrthTypes[eq_orth_type]) );
   TRY( PetscInfo(qp, "-qp_E_orth_form %s\n",MatOrthForms[eq_orth_form]) );
   TRY( QPTOrthonormalizeEq(last,eq_orth_type,eq_orth_form) );
-  _fllop_ierr = PetscOptionsEnd();CHKERRQ(_fllop_ierr);
+  PetscOptionsEnd();
   PetscFunctionReturnI(0);
 }
 

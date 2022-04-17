@@ -38,7 +38,6 @@ int main(int argc,char **args)
   PetscInt       i,n = 10,col[3],isn,rstart,rend;
   PetscReal      h,value[3];
   PetscBool      converged,infinite=PETSC_FALSE;
-  PetscErrorCode ierr;
 
   CHKERRQ(PermonInitialize(&argc,&args,(char *)0,help));
   CHKERRQ(PetscOptionsGetInt(NULL,NULL,"-n",&n,NULL));

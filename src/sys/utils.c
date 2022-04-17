@@ -170,7 +170,6 @@ PetscErrorCode FllopSetFromOptions()
   PetscBool      flg=PETSC_FALSE;
   PetscBool      info, excl, fllop_info;
   char           logname[PETSC_MAX_PATH_LEN];
-  PetscErrorCode ierr;
   
   PetscFunctionBegin;
   logname[0] = 0;
@@ -237,7 +236,6 @@ PetscErrorCode FllopEventRegLogGetEvent(PetscEventRegLog eventLog, const char na
 {
   PetscBool      match;
   int            e;
-  PetscErrorCode ierr;
 
   PetscFunctionBegin;
   PetscValidCharPointer(name,2);
@@ -261,7 +259,6 @@ PetscErrorCode FllopEventRegLogGetEvent(PetscEventRegLog eventLog, const char na
 PetscErrorCode  FllopPetscLogEventGetId(const char name[], PetscLogEvent *event, PetscBool *exists)
 {
   PetscStageLog  stageLog;
-  PetscErrorCode ierr;
 
   PetscFunctionBegin;
   CHKERRQ(PetscLogGetStageLog(&stageLog));

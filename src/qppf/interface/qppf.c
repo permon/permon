@@ -221,6 +221,7 @@ static PetscErrorCode QPPFSetUpGGt_Private(QPPF cp, Mat *newGGt)
   MPI_Comm comm;
   Mat GGt=NULL;
   PetscBool GGt_explicit = PETSC_TRUE;
+  PetscErrorCode ierr;
 
   PetscFunctionBeginI;
   TRY( PetscObjectGetComm((PetscObject) cp, &comm) );
@@ -274,9 +275,9 @@ static PetscErrorCode QPPFSetUpGGt_Private(QPPF cp, Mat *newGGt)
     /* ignore PETSC_ERR_SUP - setting option missing in the mat format*/
     /* TODO add this as a macro TRYIGNOREERR*/
     TRY( PetscPushErrorHandler(PetscReturnErrorHandler,NULL) );
-    _fllop_ierr =  MatSetOption(GGt, MAT_SPD, PETSC_TRUE);
+    ierr =  MatSetOption(GGt, MAT_SPD, PETSC_TRUE);
     TRY( PetscPopErrorHandler() );
-    if (_fllop_ierr != PETSC_ERR_SUP) {
+    if (ierr != PETSC_ERR_SUP) {
       TRY( MatSetOption(GGt, MAT_SPD, PETSC_TRUE) );
     }
     TRY( FllopDebug("assert GGt always PSD (MAT_SYMMETRIC=1, MAT_SYMMETRIC_ETERNAL=1, MAT_SPD=1)\n") );
