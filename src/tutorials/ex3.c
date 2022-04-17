@@ -39,91 +39,91 @@ int main(int argc,char **args)
   PetscReal      h,value[3];
   PetscBool      converged,spd=PETSC_FALSE,empty_nullsp=PETSC_FALSE;
 
-  CHKERRQ(PermonInitialize(&argc,&args,(char *)0,help));
-  CHKERRQ(PetscOptionsGetInt(NULL,NULL,"-n",&n,NULL));
-  CHKERRQ(PetscOptionsGetBool(NULL,NULL,"-empty_nullsp",&empty_nullsp,NULL));
-  CHKERRQ(PetscOptionsGetBool(NULL,NULL,"-spd",&spd,NULL));
+  PetscCall(PermonInitialize(&argc,&args,(char *)0,help));
+  PetscCall(PetscOptionsGetInt(NULL,NULL,"-n",&n,NULL));
+  PetscCall(PetscOptionsGetBool(NULL,NULL,"-empty_nullsp",&empty_nullsp,NULL));
+  PetscCall(PetscOptionsGetBool(NULL,NULL,"-spd",&spd,NULL));
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   * Setup matrices and vectors
   *  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   h = 1./(n-1);
-  CHKERRQ(MatCreate(PETSC_COMM_WORLD,&A));
-  CHKERRQ(MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,n,n));
-  CHKERRQ(MatSetFromOptions(A));
-  CHKERRQ(MatSetUp(A));
-  CHKERRQ(MatGetOwnershipRange(A,&rstart,&rend));
-  CHKERRQ(MatCreateVecs(A,&x,&b));
-  CHKERRQ(VecDuplicate(x,&c));
+  PetscCall(MatCreate(PETSC_COMM_WORLD,&A));
+  PetscCall(MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,n,n));
+  PetscCall(MatSetFromOptions(A));
+  PetscCall(MatSetUp(A));
+  PetscCall(MatGetOwnershipRange(A,&rstart,&rend));
+  PetscCall(MatCreateVecs(A,&x,&b));
+  PetscCall(VecDuplicate(x,&c));
 
   if (!rstart) {
     rstart = 1;
     i      = 0; value[0] = 1.0;
-    CHKERRQ(MatSetValues(A,1,&i,1,&i,value,INSERT_VALUES));
-    CHKERRQ(VecSetValue(b,i,0,INSERT_VALUES));
+    PetscCall(MatSetValues(A,1,&i,1,&i,value,INSERT_VALUES));
+    PetscCall(VecSetValue(b,i,0,INSERT_VALUES));
   }
   if (rend == n) {
     rend = n-1;
     i    = n-1; value[0] = 1.0;
-    CHKERRQ(MatSetValues(A,1,&i,1,&i,value,INSERT_VALUES));
-    CHKERRQ(VecSetValue(b,i,0,INSERT_VALUES));
+    PetscCall(MatSetValues(A,1,&i,1,&i,value,INSERT_VALUES));
+    PetscCall(VecSetValue(b,i,0,INSERT_VALUES));
   }
   value[0] = -1.0; value[1] = 2.0; value[2] = -1.0;
   for (i=rstart; i<rend; i++) {
     col[0] = i-1; col[1] = i; col[2] = i+1;
     if (i == 1)   col[0] = -1; /* ignore the first value in the second row (Dirichlet BC) */
     if (i == n-2) col[2] = -1; /* ignore the third value in the second to last row (Dirichlet BC) */
-    CHKERRQ(MatSetValues(A,1,&i,3,col,value,INSERT_VALUES));
-    CHKERRQ(VecSetValue(b,i,-15*h*h*2,INSERT_VALUES));
-    CHKERRQ(VecSetValue(c,i,fobst(i,n),INSERT_VALUES));
+    PetscCall(MatSetValues(A,1,&i,3,col,value,INSERT_VALUES));
+    PetscCall(VecSetValue(b,i,-15*h*h*2,INSERT_VALUES));
+    PetscCall(VecSetValue(c,i,fobst(i,n),INSERT_VALUES));
   }
-  CHKERRQ(MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY));
-  CHKERRQ(MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY));
-  CHKERRQ(VecAssemblyBegin(b));
-  CHKERRQ(VecAssemblyEnd(b));
-  CHKERRQ(VecAssemblyBegin(c));
-  CHKERRQ(VecAssemblyEnd(c));
+  PetscCall(MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY));
+  PetscCall(MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY));
+  PetscCall(VecAssemblyBegin(b));
+  PetscCall(VecAssemblyEnd(b));
+  PetscCall(VecAssemblyBegin(c));
+  PetscCall(VecAssemblyEnd(c));
 
-  CHKERRQ(MatCreateAIJ(PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,n,n,1,NULL,0,NULL,&B));
-  CHKERRQ(MatAssemblyBegin(B,MAT_FINAL_ASSEMBLY));
-  CHKERRQ(MatAssemblyEnd(B,MAT_FINAL_ASSEMBLY));
-  CHKERRQ(MatShift(B,1.0));
+  PetscCall(MatCreateAIJ(PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,n,n,1,NULL,0,NULL,&B));
+  PetscCall(MatAssemblyBegin(B,MAT_FINAL_ASSEMBLY));
+  PetscCall(MatAssemblyEnd(B,MAT_FINAL_ASSEMBLY));
+  PetscCall(MatShift(B,1.0));
 
   if (empty_nullsp) {
     /* NOT RECOMMENDED: Empty null space matrix for dualization */
-    CHKERRQ(MatCreateAIJ(PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,n,0,0,NULL,0,NULL,&R));
-    CHKERRQ(MatAssemblyBegin(R,MAT_FINAL_ASSEMBLY));
-    CHKERRQ(MatAssemblyEnd(R,MAT_FINAL_ASSEMBLY));
+    PetscCall(MatCreateAIJ(PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,n,0,0,NULL,0,NULL,&R));
+    PetscCall(MatAssemblyBegin(R,MAT_FINAL_ASSEMBLY));
+    PetscCall(MatAssemblyEnd(R,MAT_FINAL_ASSEMBLY));
   }
   if (spd) {
     /* RECOMMENDED: Mark Hessian SPD - will skip nullspace computation in QPTDualize */
-    CHKERRQ(MatSetOption(A,MAT_SPD,PETSC_TRUE));
+    PetscCall(MatSetOption(A,MAT_SPD,PETSC_TRUE));
   }
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   * Setup QP: argmin 1/2 x'Ax -x'b s.t. c <= I*x
   *  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  CHKERRQ(QPCreate(PETSC_COMM_WORLD,&qp));
+  PetscCall(QPCreate(PETSC_COMM_WORLD,&qp));
   /* Set matrix representing QP operator */
-  CHKERRQ(QPSetOperator(qp,A));
+  PetscCall(QPSetOperator(qp,A));
 
   /* Set right hand side */
-  CHKERRQ(QPSetRhs(qp,b));
+  PetscCall(QPSetRhs(qp,b));
   /* Set initial guess.
   * THIS VECTOR WILL ALSO HOLD THE SOLUTION OF QP */
-  CHKERRQ(QPSetInitialVector(qp,x));
+  PetscCall(QPSetInitialVector(qp,x));
   /* Set inequality constraint c <= Bx in the form -c >= -Bx*/
-  CHKERRQ(VecScale(c,-1.0));
-  CHKERRQ(MatScale(B,-1.0));
-  CHKERRQ(QPSetIneq(qp,B,c));
+  PetscCall(VecScale(c,-1.0));
+  PetscCall(MatScale(B,-1.0));
+  PetscCall(QPSetIneq(qp,B,c));
   if (empty_nullsp) {
-    CHKERRQ(QPSetOperatorNullSpace(qp,R));
+    PetscCall(QPSetOperatorNullSpace(qp,R));
   }
   /* Dualize QP */
-  CHKERRQ(QPTDualize(qp,MAT_INV_MONOLITHIC,MAT_REG_NONE));
+  PetscCall(QPTDualize(qp,MAT_INV_MONOLITHIC,MAT_REG_NONE));
   /* Set runtime options, e.g
   *   -qp_chain_view_kkt */
-  CHKERRQ(QPSetFromOptions(qp));
+  PetscCall(QPSetFromOptions(qp));
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   * Setup QPS, i.e. QP Solver
@@ -131,31 +131,31 @@ int main(int argc,char **args)
   *   We could specify the comm explicitly, in this case PETSC_COMM_WORLD.
   *   Also, all PERMON objects are PETSc objects as well :)
   *  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  CHKERRQ(QPSCreate(PetscObjectComm((PetscObject)qp),&qps));
+  PetscCall(QPSCreate(PetscObjectComm((PetscObject)qp),&qps));
   /* Set QP to solve */
-  CHKERRQ(QPSSetQP(qps,qp));
+  PetscCall(QPSSetQP(qps,qp));
   /* Set runtime options for solver, e.g,
   *   -qps_type <type> -qps_rtol <relative tolerance> -qps_view_convergence */
-  CHKERRQ(QPSSetFromOptions(qps));
+  PetscCall(QPSSetFromOptions(qps));
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   * Solve QP
   *  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  CHKERRQ(QPSSolve(qps));
+  PetscCall(QPSSolve(qps));
 
   /* Check that QPS converged */
-  CHKERRQ(QPIsSolved(qp,&converged));
+  PetscCall(QPIsSolved(qp,&converged));
   if (!converged) PetscPrintf(PETSC_COMM_WORLD,"QPS did not converge!\n");
 
-  CHKERRQ(QPSDestroy(&qps));
-  CHKERRQ(QPDestroy(&qp));
-  CHKERRQ(VecDestroy(&x));
-  CHKERRQ(VecDestroy(&c));
-  CHKERRQ(VecDestroy(&b));
-  CHKERRQ(MatDestroy(&R));
-  CHKERRQ(MatDestroy(&B));
-  CHKERRQ(MatDestroy(&A));
-  CHKERRQ(PermonFinalize());
+  PetscCall(QPSDestroy(&qps));
+  PetscCall(QPDestroy(&qp));
+  PetscCall(VecDestroy(&x));
+  PetscCall(VecDestroy(&c));
+  PetscCall(VecDestroy(&b));
+  PetscCall(MatDestroy(&R));
+  PetscCall(MatDestroy(&B));
+  PetscCall(MatDestroy(&A));
+  PetscCall(PermonFinalize());
   return 0;
 }
 

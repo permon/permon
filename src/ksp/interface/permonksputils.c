@@ -17,7 +17,7 @@ PetscErrorCode KSPViewBriefInfo(KSP ksp, PetscViewer viewer)
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(ksp,KSP_CLASSID,1);
-  CHKERRQ(PetscObjectGetComm((PetscObject)ksp, &comm));
+  PetscCall(PetscObjectGetComm((PetscObject)ksp, &comm));
   if (!viewer) {
     viewer = PETSC_VIEWER_STDOUT_(comm);
   } else {
@@ -25,22 +25,22 @@ PetscErrorCode KSPViewBriefInfo(KSP ksp, PetscViewer viewer)
     PetscCheckSameComm(ksp,1,viewer,2);
   }
 
-  CHKERRQ(KSPGetTolerances(ksp, &rtol,&dtol,&atol,&maxit ));
-  CHKERRQ(KSPGetType(ksp, &ksptype));
-  CHKERRQ(KSPGetPC(ksp, &pc));
-  CHKERRQ(PCGetType(pc, &pctype));
-  CHKERRQ(PCFactorGetMatSolverType(pc, &pcpkg));
-  CHKERRQ(PCGetOperators(pc, &mat, NULL));
-  CHKERRQ(MatGetType(mat, &mattype));
+  PetscCall(KSPGetTolerances(ksp, &rtol,&dtol,&atol,&maxit ));
+  PetscCall(KSPGetType(ksp, &ksptype));
+  PetscCall(KSPGetPC(ksp, &pc));
+  PetscCall(PCGetType(pc, &pctype));
+  PetscCall(PCFactorGetMatSolverType(pc, &pcpkg));
+  PetscCall(PCGetOperators(pc, &mat, NULL));
+  PetscCall(MatGetType(mat, &mattype));
   
-  CHKERRQ(PetscObjectPrintClassNamePrefixType((PetscObject)ksp, viewer));
-  CHKERRQ(PetscViewerASCIIPushTab(viewer));
-  CHKERRQ(PetscViewerASCIIPrintf(viewer,"KSPType:          %s\n",ksptype));
-  CHKERRQ(PetscViewerASCIIPrintf(viewer,"PCType:           %s\n",pctype));
-  CHKERRQ(PetscViewerASCIIPrintf(viewer,"MatSolverType:    %s\n",pcpkg));
-  CHKERRQ(PetscViewerASCIIPrintf(viewer,"MatType:          %s\n",mattype));
-  CHKERRQ(PetscViewerASCIIPrintf(viewer,"(rtol, dtol, atol, maxit) = (%.1e, %.1e, %.1e, %d)\n",rtol,dtol,atol,maxit));
-  CHKERRQ(PetscViewerASCIIPopTab(viewer));
+  PetscCall(PetscObjectPrintClassNamePrefixType((PetscObject)ksp, viewer));
+  PetscCall(PetscViewerASCIIPushTab(viewer));
+  PetscCall(PetscViewerASCIIPrintf(viewer,"KSPType:          %s\n",ksptype));
+  PetscCall(PetscViewerASCIIPrintf(viewer,"PCType:           %s\n",pctype));
+  PetscCall(PetscViewerASCIIPrintf(viewer,"MatSolverType:    %s\n",pcpkg));
+  PetscCall(PetscViewerASCIIPrintf(viewer,"MatType:          %s\n",mattype));
+  PetscCall(PetscViewerASCIIPrintf(viewer,"(rtol, dtol, atol, maxit) = (%.1e, %.1e, %.1e, %d)\n",rtol,dtol,atol,maxit));
+  PetscCall(PetscViewerASCIIPopTab(viewer));
   PetscFunctionReturn(0);
 }
 

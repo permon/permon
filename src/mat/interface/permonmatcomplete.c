@@ -9,12 +9,12 @@ PetscErrorCode MatMult_Complete(Mat A, Vec x, Vec y)
   PetscContainer container;
   
   PetscFunctionBegin;
-  CHKERRQ(PetscObjectQuery((PetscObject)A, "fllop_mat_complete_ctx", (PetscObject*)&container));
-  CHKERRQ(PetscContainerGetPointer(container, (void**)&ctx));
-  CHKERRQ(VecPointwiseMult(y,x,ctx->d));
-  CHKERRQ(VecScale(y, -1.0));
-  CHKERRQ((ctx->multadd)(A,x,y,y));
-  CHKERRQ((ctx->multtransposeadd)(A,x,y,y));
+  PetscCall(PetscObjectQuery((PetscObject)A, "fllop_mat_complete_ctx", (PetscObject*)&container));
+  PetscCall(PetscContainerGetPointer(container, (void**)&ctx));
+  PetscCall(VecPointwiseMult(y,x,ctx->d));
+  PetscCall(VecScale(y, -1.0));
+  PetscCall((ctx->multadd)(A,x,y,y));
+  PetscCall((ctx->multtransposeadd)(A,x,y,y));
   PetscFunctionReturn(0);
 }
 
@@ -26,13 +26,13 @@ PetscErrorCode MatMultAdd_Complete(Mat A, Vec x, Vec x1, Vec y)
   PetscContainer container;
   
   PetscFunctionBegin;
-  CHKERRQ(PetscObjectQuery((PetscObject)A, "fllop_mat_complete_ctx", (PetscObject*)&container));
-  CHKERRQ(PetscContainerGetPointer(container, (void**)&ctx));
-  CHKERRQ(VecPointwiseMult(y,x,ctx->d));
-  CHKERRQ(VecScale(y, -1.0));
-  CHKERRQ((ctx->multadd)(A,x,y,y));
-  CHKERRQ((ctx->multtransposeadd)(A,x,y,y));
-  CHKERRQ(VecAXPY(y, 1.0, x1));
+  PetscCall(PetscObjectQuery((PetscObject)A, "fllop_mat_complete_ctx", (PetscObject*)&container));
+  PetscCall(PetscContainerGetPointer(container, (void**)&ctx));
+  PetscCall(VecPointwiseMult(y,x,ctx->d));
+  PetscCall(VecScale(y, -1.0));
+  PetscCall((ctx->multadd)(A,x,y,y));
+  PetscCall((ctx->multtransposeadd)(A,x,y,y));
+  PetscCall(VecAXPY(y, 1.0, x1));
   PetscFunctionReturn(0);
 }
 
@@ -45,9 +45,9 @@ PetscErrorCode MatDuplicate_Complete(Mat A,MatDuplicateOption op,Mat *M)
   Mat _M;
   
   PetscFunctionBegin;
-  CHKERRQ(PetscObjectQuery((PetscObject)A, "fllop_mat_complete_ctx", (PetscObject*)&container));
-  CHKERRQ(PetscContainerGetPointer(container, (void**)&ctx));
-  CHKERRQ((ctx->duplicate)(A,op,&_M));
+  PetscCall(PetscObjectQuery((PetscObject)A, "fllop_mat_complete_ctx", (PetscObject*)&container));
+  PetscCall(PetscContainerGetPointer(container, (void**)&ctx));
+  PetscCall((ctx->duplicate)(A,op,&_M));
   _M->ops->mult              = ctx->mult;
   _M->ops->multtranspose     = ctx->multtranspose;
   _M->ops->multadd           = ctx->multadd;
@@ -63,14 +63,14 @@ PetscErrorCode MatCompleteCtxCreate(Mat A, MatCompleteCtx *ctxout)
 {
   MatCompleteCtx ctx;
   PetscFunctionBegin;
-  CHKERRQ(PetscNew(&ctx));
+  PetscCall(PetscNew(&ctx));
   ctx->mult             = A->ops->mult;
   ctx->multtranspose    = A->ops->multtranspose;
   ctx->multadd          = A->ops->multadd;
   ctx->multtransposeadd = A->ops->multtransposeadd;
   ctx->duplicate        = A->ops->duplicate;
-  CHKERRQ(MatCreateVecs(A, NULL, &ctx->d));
-  CHKERRQ(MatGetDiagonal(A, ctx->d));
+  PetscCall(MatCreateVecs(A, NULL, &ctx->d));
+  PetscCall(MatGetDiagonal(A, ctx->d));
   *ctxout = ctx;
   PetscFunctionReturn(0);
 }
@@ -80,8 +80,8 @@ PetscErrorCode MatCompleteCtxCreate(Mat A, MatCompleteCtx *ctxout)
 PetscErrorCode MatCompleteCtxDestroy(MatCompleteCtx ctx)
 {
   PetscFunctionBegin;
-  CHKERRQ(VecDestroy(&ctx->d));
-  CHKERRQ(PetscFree(ctx));
+  PetscCall(VecDestroy(&ctx->d));
+  PetscCall(PetscFree(ctx));
   PetscFunctionReturn(0);
 }
 
@@ -95,24 +95,24 @@ PetscErrorCode MatCompleteFromUpperTriangular(Mat A)
   PetscBool flg;
   
   PetscFunctionBegin;
-  CHKERRQ(PetscObjectQuery((PetscObject)A, "fllop_mat_complete_ctx", (PetscObject*)&container));
+  PetscCall(PetscObjectQuery((PetscObject)A, "fllop_mat_complete_ctx", (PetscObject*)&container));
   if (container) PetscFunctionReturn(0);
 
-  CHKERRQ(MatIsSymmetricByType(A, &flg));
+  PetscCall(MatIsSymmetricByType(A, &flg));
   if (flg) {
-    CHKERRQ(PetscInfo(fllop, "A is symmetric by type\n"));
+    PetscCall(PetscInfo(fllop, "A is symmetric by type\n"));
     PetscFunctionReturn(0);
   } else {
-    CHKERRQ(PetscInfo(fllop, "A is NOT symmetric by type\n"));
+    PetscCall(PetscInfo(fllop, "A is NOT symmetric by type\n"));
   }
 
-  CHKERRQ(PetscObjectGetComm((PetscObject)A, &comm));
-  CHKERRQ(MatCompleteCtxCreate(A, &ctx));
-  CHKERRQ(PetscContainerCreate(comm, &container));
-  CHKERRQ(PetscContainerSetPointer(container, ctx));
-  CHKERRQ(PetscContainerSetUserDestroy(container, (PetscErrorCode (*)(void*))MatCompleteCtxDestroy));
-  CHKERRQ(PetscObjectCompose((PetscObject)A, "fllop_mat_complete_ctx", (PetscObject)container));
-  CHKERRQ(PetscContainerDestroy(&container));
+  PetscCall(PetscObjectGetComm((PetscObject)A, &comm));
+  PetscCall(MatCompleteCtxCreate(A, &ctx));
+  PetscCall(PetscContainerCreate(comm, &container));
+  PetscCall(PetscContainerSetPointer(container, ctx));
+  PetscCall(PetscContainerSetUserDestroy(container, (PetscErrorCode (*)(void*))MatCompleteCtxDestroy));
+  PetscCall(PetscObjectCompose((PetscObject)A, "fllop_mat_complete_ctx", (PetscObject)container));
+  PetscCall(PetscContainerDestroy(&container));
   A->ops->mult              = MatMult_Complete;
   A->ops->multtranspose     = MatMult_Complete;
   A->ops->multadd           = MatMultAdd_Complete;

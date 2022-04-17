@@ -23,7 +23,7 @@ PetscErrorCode FllopCreate(MPI_Comm comm,FLLOP *fllop_new)
 
   PetscFunctionBegin;
   PetscValidPointer(fllop_new,2);
-  CHKERRQ(PetscHeaderCreate(fllop,FLLOP_CLASSID,"FLLOP","FLLOP","FLLOP",comm,0,0));
+  PetscCall(PetscHeaderCreate(fllop,FLLOP_CLASSID,"FLLOP","FLLOP","FLLOP",comm,0,0));
   *fllop_new = fllop;
   PetscFunctionReturn(0);
 }
@@ -39,7 +39,7 @@ PetscErrorCode FllopDestroy(FLLOP *fllop)
     *fllop = 0;
     PetscFunctionReturn(0);
   }
-  CHKERRQ(PetscHeaderDestroy(fllop));
+  PetscCall(PetscHeaderDestroy(fllop));
   PetscFunctionReturn(0);
 }
 
@@ -53,8 +53,8 @@ PetscErrorCode FllopMakePath(const char *dir, mode_t mode)
     PetscBool flg;
     
     PetscFunctionBegin;
-    CHKERRQ(PetscSNPrintf(tmp, FLLOP_MAX_PATH_LEN, "%s", dir));
-    CHKERRQ(PetscStrlen(tmp, &len));
+    PetscCall(PetscSNPrintf(tmp, FLLOP_MAX_PATH_LEN, "%s", dir));
+    PetscCall(PetscStrlen(tmp, &len));
 
     if (tmp[len - 1] == '/')
         tmp[len - 1] = 0;
@@ -68,7 +68,7 @@ PetscErrorCode FllopMakePath(const char *dir, mode_t mode)
 
     mkdir(tmp, mode);
     
-    CHKERRQ(PetscTestDirectory(dir, 'x', &flg));    
+    PetscCall(PetscTestDirectory(dir, 'x', &flg));    
     if (!flg) SETERRQ(PETSC_COMM_SELF, PETSC_ERR_FILE_WRITE, "Directory %s was not created properly.", dir);
     PetscFunctionReturn(0);
 }
@@ -83,25 +83,25 @@ PetscErrorCode FllopProcessInfoExclusions(PetscClassId classid, const char *clas
 
   PetscFunctionBegin;
   if (FllopInfoEnabled) {
-    CHKERRQ(PetscInfoActivateClass(classid));
+    PetscCall(PetscInfoActivateClass(classid));
   } else {
-    CHKERRQ(PetscInfoDeactivateClass(classid));
+    PetscCall(PetscInfoDeactivateClass(classid));
   }
   
   /* Process info exclusions */
-  CHKERRQ(PetscOptionsGetString(NULL,NULL, "-info_exclude", logList, 256, &opt));
+  PetscCall(PetscOptionsGetString(NULL,NULL, "-info_exclude", logList, 256, &opt));
   if (opt) {
-    CHKERRQ(PetscStrstr(logList, classname, &str));
+    PetscCall(PetscStrstr(logList, classname, &str));
     if (str) {
-      CHKERRQ(PetscInfoDeactivateClass(classid));
+      PetscCall(PetscInfoDeactivateClass(classid));
     }
   }
   /* Process summary exclusions */
-  CHKERRQ(PetscOptionsGetString(NULL,NULL, "-log_summary_exclude", logList, 256, &opt));
+  PetscCall(PetscOptionsGetString(NULL,NULL, "-log_summary_exclude", logList, 256, &opt));
   if (opt) {
-    CHKERRQ(PetscStrstr(logList, classname, &str));
+    PetscCall(PetscStrstr(logList, classname, &str));
     if (str) {
-      CHKERRQ(PetscLogEventDeactivateClass(classid));
+      PetscCall(PetscLogEventDeactivateClass(classid));
     }
   }  
   
@@ -142,8 +142,8 @@ PetscErrorCode FllopPetscInfoDeactivateAll()
   PetscInt i;
 
   PetscFunctionBegin;
-  for (i = PETSC_SMALLEST_CLASSID+1; i < PETSC_SMALLEST_CLASSID+60; i++) CHKERRQ(PetscInfoDeactivateClass(i));
-  CHKERRQ(PetscInfoDeactivateClass(0));
+  for (i = PETSC_SMALLEST_CLASSID+1; i < PETSC_SMALLEST_CLASSID+60; i++) PetscCall(PetscInfoDeactivateClass(i));
+  PetscCall(PetscInfoDeactivateClass(0));
   PetscFunctionReturn(0);
 }
 
@@ -176,17 +176,17 @@ PetscErrorCode FllopSetFromOptions()
   PetscOptionsBegin(PETSC_COMM_WORLD, NULL, "FLLOP options", NULL);
   {
     flg = PETSC_FALSE;
-    CHKERRQ(PetscOptionsBool("-fllop_object_info", "print one-line info messages about matrices and vectors", NULL, PETSC_FALSE, &flg, NULL));
-    CHKERRQ(FllopSetObjectInfo(flg));
+    PetscCall(PetscOptionsBool("-fllop_object_info", "print one-line info messages about matrices and vectors", NULL, PETSC_FALSE, &flg, NULL));
+    PetscCall(FllopSetObjectInfo(flg));
     flg = PETSC_FALSE;
-    CHKERRQ(PetscOptionsBool("-fllop_trace",       "trace crucial FLLOP functions",                           NULL, PETSC_FALSE, &flg, NULL));
-    CHKERRQ(FllopSetTrace(flg));
+    PetscCall(PetscOptionsBool("-fllop_trace",       "trace crucial FLLOP functions",                           NULL, PETSC_FALSE, &flg, NULL));
+    PetscCall(FllopSetTrace(flg));
     flg = PETSC_FALSE;
-    CHKERRQ(PetscOptionsBool("-fllop_debug",       "enable FLLOP debug messages",                             NULL, PETSC_FALSE, &flg, NULL));
-    CHKERRQ(FllopSetDebug(flg));    
+    PetscCall(PetscOptionsBool("-fllop_debug",       "enable FLLOP debug messages",                             NULL, PETSC_FALSE, &flg, NULL));
+    PetscCall(FllopSetDebug(flg));    
     flg = PETSC_FALSE;
 #if defined (PETSC_USE_INFO)
-    CHKERRQ(PetscOptionsString("-fllop_info",      "enable info messages only from FLLOP",                    NULL, NULL, logname, 256, &fllop_info));
+    PetscCall(PetscOptionsString("-fllop_info",      "enable info messages only from FLLOP",                    NULL, NULL, logname, 256, &fllop_info));
 #endif     
   }
   PetscOptionsEnd();
@@ -194,35 +194,35 @@ PetscErrorCode FllopSetFromOptions()
 #if defined (PETSC_USE_INFO)
   {
     info = PETSC_FALSE;
-    CHKERRQ(PetscOptionsGetString(NULL,NULL, "-info", logname, 256, &info));
-    CHKERRQ(PetscOptionsGetString(NULL,NULL, "-info_exclude", logList, 256, &excl));
+    PetscCall(PetscOptionsGetString(NULL,NULL, "-info", logname, 256, &info));
+    PetscCall(PetscOptionsGetString(NULL,NULL, "-info_exclude", logList, 256, &excl));
     
     if (fllop_info || info) {
       FllopInfoEnabled = PETSC_TRUE;
-      CHKERRQ(PetscInfoAllow(PETSC_TRUE));
+      PetscCall(PetscInfoAllow(PETSC_TRUE));
       if (logname[0]) {
-        CHKERRQ(PetscInfoSetFile(logname,"w"));
+        PetscCall(PetscInfoSetFile(logname,"w"));
       }
     }
     
     if (!info) {
-      CHKERRQ(FllopPetscInfoDeactivateAll());
+      PetscCall(FllopPetscInfoDeactivateAll());
     }    
 
     if (excl) {
-      CHKERRQ(PetscStrstr(logList, "petsc", &className));
+      PetscCall(PetscStrstr(logList, "petsc", &className));
       if (className) {
-        CHKERRQ(FllopPetscInfoDeactivateAll());
+        PetscCall(FllopPetscInfoDeactivateAll());
       }
 
-      CHKERRQ(PetscStrstr(logList, "fllop", &className));
+      PetscCall(PetscStrstr(logList, "fllop", &className));
       if (className) FllopInfoEnabled = PETSC_FALSE;
     }
 
     if (FllopInfoEnabled) {
-      CHKERRQ(PetscInfoActivateClass(FLLOP_CLASSID));
+      PetscCall(PetscInfoActivateClass(FLLOP_CLASSID));
     } else {
-      CHKERRQ(PetscInfoDeactivateClass(FLLOP_CLASSID));
+      PetscCall(PetscInfoDeactivateClass(FLLOP_CLASSID));
     }
   }
 #endif
@@ -243,7 +243,7 @@ PetscErrorCode FllopEventRegLogGetEvent(PetscEventRegLog eventLog, const char na
   *event = -1;
   *exists = PETSC_FALSE;
   for (e = 0; e < eventLog->numEvents; e++) {
-    CHKERRQ(PetscStrcasecmp(eventLog->eventInfo[e].name, name, &match));
+    PetscCall(PetscStrcasecmp(eventLog->eventInfo[e].name, name, &match));
     if (match) {
       *event = e;
       *exists = PETSC_TRUE;
@@ -261,8 +261,8 @@ PetscErrorCode  FllopPetscLogEventGetId(const char name[], PetscLogEvent *event,
   PetscStageLog  stageLog;
 
   PetscFunctionBegin;
-  CHKERRQ(PetscLogGetStageLog(&stageLog));
-  CHKERRQ(FllopEventRegLogGetEvent(stageLog->eventLog, name, event, exists));
+  PetscCall(PetscLogGetStageLog(&stageLog));
+  PetscCall(FllopEventRegLogGetEvent(stageLog->eventLog, name, event, exists));
   PetscFunctionReturn(0);
 }
 
@@ -277,14 +277,14 @@ PetscErrorCode FllopPetscObjectInheritName(PetscObject obj,PetscObject orig,cons
   PetscValidHeader(obj,1);
   PetscValidHeader(orig,2);
   if (suffix) PetscValidCharPointer(suffix,3);
-  CHKERRQ(PetscObjectName((PetscObject)orig));
+  PetscCall(PetscObjectName((PetscObject)orig));
   if (obj==orig && !suffix) PetscFunctionReturn(0);
-  CHKERRQ(PetscStrlen(orig->name,&len1));
-  CHKERRQ(PetscStrlen(suffix,&len2));
-  CHKERRQ(PetscMalloc((1+len1+len2)*sizeof(char),&name));
-  CHKERRQ(PetscStrcpy(name,orig->name));
-  CHKERRQ(PetscStrcat(name,suffix));
-  CHKERRQ(PetscFree(obj->name));
+  PetscCall(PetscStrlen(orig->name,&len1));
+  PetscCall(PetscStrlen(suffix,&len2));
+  PetscCall(PetscMalloc((1+len1+len2)*sizeof(char),&name));
+  PetscCall(PetscStrcpy(name,orig->name));
+  PetscCall(PetscStrcat(name,suffix));
+  PetscCall(PetscFree(obj->name));
   obj->name = name;
   PetscFunctionReturn(0);
 }
@@ -299,18 +299,18 @@ PetscErrorCode FllopPetscObjectInheritPrefix(PetscObject obj,PetscObject orig,co
   PetscValidHeader(obj,1);
   PetscValidHeader(orig,2);
   if (suffix) PetscValidCharPointer(suffix,3);
-  CHKERRQ(PetscFree(obj->prefix));
+  PetscCall(PetscFree(obj->prefix));
 
   if (!orig->prefix) {
-    CHKERRQ(PetscStrallocpy(suffix,&obj->prefix));
+    PetscCall(PetscStrallocpy(suffix,&obj->prefix));
     PetscFunctionReturn(0);
   }
 
-  CHKERRQ(PetscStrlen(orig->prefix,&len1));
-  CHKERRQ(PetscStrlen(suffix,&len2));
-  CHKERRQ(PetscMalloc((1+len1+len2)*sizeof(char),&obj->prefix));
-  CHKERRQ(PetscStrcpy(obj->prefix,orig->prefix));
-  CHKERRQ(PetscStrcat(obj->prefix,suffix));
+  PetscCall(PetscStrlen(orig->prefix,&len1));
+  PetscCall(PetscStrlen(suffix,&len2));
+  PetscCall(PetscMalloc((1+len1+len2)*sizeof(char),&obj->prefix));
+  PetscCall(PetscStrcpy(obj->prefix,orig->prefix));
+  PetscCall(PetscStrcat(obj->prefix,suffix));
   PetscFunctionReturn(0);
 }
 
@@ -323,6 +323,6 @@ PetscErrorCode FllopPetscObjectInheritPrefixIfNotSet(PetscObject obj,PetscObject
   PetscValidHeader(orig,2);
   if (suffix) PetscValidCharPointer(suffix,3);
   if (obj->prefix) PetscFunctionReturn(0);
-  CHKERRQ(FllopPetscObjectInheritPrefix(obj,orig,suffix));
+  PetscCall(FllopPetscObjectInheritPrefix(obj,orig,suffix));
   PetscFunctionReturn(0);
 }

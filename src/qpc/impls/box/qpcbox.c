@@ -11,7 +11,7 @@ PetscErrorCode QPCSetUp_Box(QPC qpc)
 
   /* prepare lambdawork vector based on the layout of lb */
   lb = ctx->lb;
-  CHKERRQ(VecDuplicate(lb,&(qpc->lambdawork)));
+  PetscCall(VecDuplicate(lb,&(qpc->lambdawork)));
 
   // TODO: verify layout of ub somewhere in setup or in create function
 
@@ -31,13 +31,13 @@ static PetscErrorCode QPCGrads_Box(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
   PetscFunctionBegin;
   lb = ctx->lb;
   ub = ctx->ub;
-  CHKERRQ(VecGetLocalSize(x,&n_local));
-  CHKERRQ(VecGetArray(x, &x_a));
-  if (lb) CHKERRQ(VecGetArray(lb, &lb_a));
-  if (ub) CHKERRQ(VecGetArray(ub, &ub_a));
-  CHKERRQ(VecGetArray(g, &g_a));
-  CHKERRQ(VecGetArray(gf, &gf_a));
-  CHKERRQ(VecGetArray(gc, &gc_a));
+  PetscCall(VecGetLocalSize(x,&n_local));
+  PetscCall(VecGetArray(x, &x_a));
+  if (lb) PetscCall(VecGetArray(lb, &lb_a));
+  if (ub) PetscCall(VecGetArray(ub, &ub_a));
+  PetscCall(VecGetArray(g, &g_a));
+  PetscCall(VecGetArray(gf, &gf_a));
+  PetscCall(VecGetArray(gc, &gc_a));
 
   /* TODO create free/active IS? */
   for (i = 0; i < n_local; i++){
@@ -56,12 +56,12 @@ static PetscErrorCode QPCGrads_Box(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
     }
   }
 
-  CHKERRQ(VecRestoreArray(x, &x_a));
-  if (lb) CHKERRQ(VecRestoreArray(lb, &lb_a));
-  if (ub) CHKERRQ(VecRestoreArray(ub, &ub_a));
-  CHKERRQ(VecRestoreArray(g, &g_a));
-  CHKERRQ(VecRestoreArray(gf, &gf_a));
-  CHKERRQ(VecRestoreArray(gc, &gc_a));
+  PetscCall(VecRestoreArray(x, &x_a));
+  if (lb) PetscCall(VecRestoreArray(lb, &lb_a));
+  if (ub) PetscCall(VecRestoreArray(ub, &ub_a));
+  PetscCall(VecRestoreArray(g, &g_a));
+  PetscCall(VecRestoreArray(gf, &gf_a));
+  PetscCall(VecRestoreArray(gc, &gc_a));
   PetscFunctionReturn(0);
 }
 
@@ -78,12 +78,12 @@ static PetscErrorCode QPCGradReduced_Box(QPC qpc, Vec x, Vec gf, PetscReal alpha
   PetscFunctionBegin;
   lb = ctx->lb;
   ub = ctx->ub;
-  CHKERRQ(VecGetLocalSize(x,&n_local));
-  CHKERRQ(VecGetArray(x, &x_a));
-  if (lb) CHKERRQ(VecGetArray(lb, &lb_a));
-  if (ub) CHKERRQ(VecGetArray(ub, &ub_a));
-  CHKERRQ(VecGetArray(gf, &gf_a));
-  CHKERRQ(VecGetArray(gr, &gr_a));
+  PetscCall(VecGetLocalSize(x,&n_local));
+  PetscCall(VecGetArray(x, &x_a));
+  if (lb) PetscCall(VecGetArray(lb, &lb_a));
+  if (ub) PetscCall(VecGetArray(ub, &ub_a));
+  PetscCall(VecGetArray(gf, &gf_a));
+  PetscCall(VecGetArray(gr, &gr_a));
 
   for (i = 0; i < n_local; i++){
     if (lb && gf_a[i] > 0.0) {
@@ -93,11 +93,11 @@ static PetscErrorCode QPCGradReduced_Box(QPC qpc, Vec x, Vec gf, PetscReal alpha
     }
   }
 
-  CHKERRQ(VecRestoreArray(x, &x_a));
-  if (lb) CHKERRQ(VecRestoreArray(lb, &lb_a));
-  if (ub) CHKERRQ(VecRestoreArray(ub, &ub_a));
-  CHKERRQ(VecRestoreArray(gf, &gf_a));
-  CHKERRQ(VecRestoreArray(gr, &gr_a));
+  PetscCall(VecRestoreArray(x, &x_a));
+  if (lb) PetscCall(VecRestoreArray(lb, &lb_a));
+  if (ub) PetscCall(VecRestoreArray(ub, &ub_a));
+  PetscCall(VecRestoreArray(gf, &gf_a));
+  PetscCall(VecRestoreArray(gr, &gr_a));
   PetscFunctionReturn(0);
 }
 
@@ -118,11 +118,11 @@ static PetscErrorCode QPCFeas_Box(QPC qpc,Vec x, Vec d, PetscScalar *alpha)
 
   alpha_temp = PETSC_INFINITY;
 
-  CHKERRQ(VecGetLocalSize(x,&n_local));
-  CHKERRQ(VecGetArray(x,&x_a));
-  CHKERRQ(VecGetArray(d,&d_a));
-  if (lb) CHKERRQ(VecGetArray(lb,&lb_a));
-  if (ub) CHKERRQ(VecGetArray(ub,&ub_a));
+  PetscCall(VecGetLocalSize(x,&n_local));
+  PetscCall(VecGetArray(x,&x_a));
+  PetscCall(VecGetArray(d,&d_a));
+  if (lb) PetscCall(VecGetArray(lb,&lb_a));
+  if (ub) PetscCall(VecGetArray(ub,&ub_a));
 
   for(i=0;i < n_local;i++){
     if(d_a[i] > 0 && lb && lb_a[i] > PETSC_NINFINITY) {
@@ -144,10 +144,10 @@ static PetscErrorCode QPCFeas_Box(QPC qpc,Vec x, Vec d, PetscScalar *alpha)
   }
   *alpha = alpha_temp;
 
-  CHKERRQ(VecRestoreArray(x,&x_a));
-  CHKERRQ(VecRestoreArray(d,&d_a));
-  if (lb) CHKERRQ(VecRestoreArray(lb,&lb_a));
-  if (ub) CHKERRQ(VecRestoreArray(ub,&ub_a));
+  PetscCall(VecRestoreArray(x,&x_a));
+  PetscCall(VecRestoreArray(d,&d_a));
+  if (lb) PetscCall(VecRestoreArray(lb,&lb_a));
+  if (ub) PetscCall(VecRestoreArray(ub,&ub_a));
   PetscFunctionReturn(0);
 }
 
@@ -158,22 +158,22 @@ static PetscErrorCode QPCBoxSet_Box(QPC qpc,Vec lb, Vec ub)
   QPC_Box         *ctx = (QPC_Box*)qpc->data;
 
   PetscFunctionBegin;
-  CHKERRQ(VecDestroy(&ctx->lb));
-  CHKERRQ(VecDestroy(&ctx->ub));
-  CHKERRQ(VecDestroy(&ctx->llb));
-  CHKERRQ(VecDestroy(&ctx->lub));
+  PetscCall(VecDestroy(&ctx->lb));
+  PetscCall(VecDestroy(&ctx->ub));
+  PetscCall(VecDestroy(&ctx->llb));
+  PetscCall(VecDestroy(&ctx->lub));
   ctx->lb = lb;
   ctx->ub = ub;
   if (lb) {
-    CHKERRQ(VecDuplicate(lb,&ctx->llb));
-    CHKERRQ(VecInvalidate(ctx->llb));
+    PetscCall(VecDuplicate(lb,&ctx->llb));
+    PetscCall(VecInvalidate(ctx->llb));
   }
   if (ub) {
-    CHKERRQ(VecDuplicate(ub,&ctx->lub));
-    CHKERRQ(VecInvalidate(ctx->lub));
+    PetscCall(VecDuplicate(ub,&ctx->lub));
+    PetscCall(VecInvalidate(ctx->lub));
   }
-  CHKERRQ(PetscObjectReference((PetscObject)lb));
-  CHKERRQ(PetscObjectReference((PetscObject)ub));
+  PetscCall(PetscObjectReference((PetscObject)lb));
+  PetscCall(PetscObjectReference((PetscObject)ub));
   PetscFunctionReturn(0);
 }
 
@@ -239,12 +239,12 @@ PetscErrorCode QPCGetNumberOfConstraints_Box(QPC qpc, PetscInt *num)
 
   if(qpc->is){
         /* IS is present, return the size of IS */
-        CHKERRQ(ISGetSize(qpc->is,&size));
-        CHKERRQ(QPCGetBlockSize(qpc,&bs));
+        PetscCall(ISGetSize(qpc->is,&size));
+        PetscCall(QPCGetBlockSize(qpc,&bs));
         *num = size/bs;
   } else {
         /* IS is not present, all components are constrained */
-        CHKERRQ(VecGetSize(ctx->lb,&size)); /* = size of ub */
+        PetscCall(VecGetSize(ctx->lb,&size)); /* = size of ub */
         *num = size;
   }
 
@@ -264,11 +264,11 @@ PetscErrorCode QPCGetConstraintFunction_Box(QPC qpc, Vec x_sub, Vec *hx_out)
   PetscFunctionBegin;
   lb = ctx->lb;
   ub = ctx->ub;
-  CHKERRQ(VecGetLocalSize(qpc->lambdawork,&m));
-  CHKERRQ(VecGetArray(x_sub,&x_a));
-  CHKERRQ(VecGetArray(qpc->lambdawork,&hx_a));
-  if (lb) CHKERRQ(VecGetArray(lb,&lb_a));
-  if (ub) CHKERRQ(VecGetArray(ub,&ub_a));
+  PetscCall(VecGetLocalSize(qpc->lambdawork,&m));
+  PetscCall(VecGetArray(x_sub,&x_a));
+  PetscCall(VecGetArray(qpc->lambdawork,&hx_a));
+  if (lb) PetscCall(VecGetArray(lb,&lb_a));
+  if (ub) PetscCall(VecGetArray(ub,&ub_a));
 
   for(i = 0; i< m; i++){
       // TODO: verify the access to arrays, with correct layout, it should be fine..
@@ -284,10 +284,10 @@ PetscErrorCode QPCGetConstraintFunction_Box(QPC qpc, Vec x_sub, Vec *hx_out)
   }
 
   /* restore local arrays */
-  CHKERRQ(VecRestoreArray(x_sub, &x_a));
-  CHKERRQ(VecRestoreArray(qpc->lambdawork,&hx_a));
-  if (lb) CHKERRQ(VecRestoreArray(lb,&lb_a));
-  if (ub) CHKERRQ(VecRestoreArray(ub,&ub_a));
+  PetscCall(VecRestoreArray(x_sub, &x_a));
+  PetscCall(VecRestoreArray(qpc->lambdawork,&hx_a));
+  if (lb) PetscCall(VecRestoreArray(lb,&lb_a));
+  if (ub) PetscCall(VecRestoreArray(ub,&ub_a));
 
   *hx_out = qpc->lambdawork;
   PetscFunctionReturn(0);
@@ -304,10 +304,10 @@ PetscErrorCode QPCProject_Box(QPC qpc, Vec x, Vec Px)
   lb = ctx->lb;
   ub = ctx->ub;
   if (lb) {
-    CHKERRQ(VecPointwiseMax(Px,x,lb));
-    if (ub) CHKERRQ(VecPointwiseMin(Px,Px,ub));
+    PetscCall(VecPointwiseMax(Px,x,lb));
+    if (ub) PetscCall(VecPointwiseMin(Px,Px,ub));
   } else {
-    CHKERRQ(VecPointwiseMin(Px,x,ub));
+    PetscCall(VecPointwiseMin(Px,x,ub));
   }
   PetscFunctionReturn(0);
 }
@@ -321,17 +321,17 @@ PetscErrorCode QPCView_Box(QPC qpc, PetscViewer viewer)
   PetscFunctionBegin;
   /* print lb */
   if (ctx->lb) {
-    CHKERRQ(PetscViewerASCIIPrintf(viewer, "lb:\n"));
-    CHKERRQ(PetscViewerASCIIPushTab(viewer));
-    CHKERRQ(VecView(ctx->lb,viewer));
-    CHKERRQ(PetscViewerASCIIPopTab(viewer));
+    PetscCall(PetscViewerASCIIPrintf(viewer, "lb:\n"));
+    PetscCall(PetscViewerASCIIPushTab(viewer));
+    PetscCall(VecView(ctx->lb,viewer));
+    PetscCall(PetscViewerASCIIPopTab(viewer));
   }
   /* print ub */
   if (ctx->ub) {
-    CHKERRQ(PetscViewerASCIIPrintf(viewer, "ub:\n"));
-    CHKERRQ(PetscViewerASCIIPushTab(viewer));
-    CHKERRQ(VecView(ctx->ub,viewer));
-    CHKERRQ(PetscViewerASCIIPopTab(viewer));
+    PetscCall(PetscViewerASCIIPrintf(viewer, "ub:\n"));
+    PetscCall(PetscViewerASCIIPushTab(viewer));
+    PetscCall(VecView(ctx->ub,viewer));
+    PetscCall(PetscViewerASCIIPopTab(viewer));
   }
   PetscFunctionReturn(0);
 }
@@ -350,83 +350,83 @@ PetscErrorCode QPCViewKKT_Box(QPC qpc, Vec x, PetscReal normb, PetscViewer v)
   llb = ctx->llb;
   lub = ctx->lub;
   if (lb) {
-    CHKERRQ(VecDuplicate(x,&o));
-    CHKERRQ(VecDuplicate(x,&r));
+    PetscCall(VecDuplicate(x,&o));
+    PetscCall(VecDuplicate(x,&r));
 
     /* rI = norm(min(x-lb,0)) */
-    CHKERRQ(VecSet(o,0.0));                                   /* o = zeros(size(r)) */
-    CHKERRQ(VecWAXPY(r, -1.0, lb, x));                        /* r = x - lb       */
-    CHKERRQ(VecPointwiseMin(r,r,o));                          /* r = min(r,o)     */
-    CHKERRQ(VecNorm(r,NORM_2,&norm));                         /* norm = norm(r)     */
-    CHKERRQ(PetscViewerASCIIPrintf(v,"r = ||min(x-lb,0)||      = %.2e    r/||b|| = %.2e\n",norm,norm/normb));
+    PetscCall(VecSet(o,0.0));                                   /* o = zeros(size(r)) */
+    PetscCall(VecWAXPY(r, -1.0, lb, x));                        /* r = x - lb       */
+    PetscCall(VecPointwiseMin(r,r,o));                          /* r = min(r,o)     */
+    PetscCall(VecNorm(r,NORM_2,&norm));                         /* norm = norm(r)     */
+    PetscCall(PetscViewerASCIIPrintf(v,"r = ||min(x-lb,0)||      = %.2e    r/||b|| = %.2e\n",norm,norm/normb));
 
     /* lambda >= o  =>  examine min(lambda,o) */
-    CHKERRQ(VecSet(o,0.0));                                   /* o = zeros(size(r)) */
-    CHKERRQ(VecPointwiseMin(r,llb,o));
-    CHKERRQ(VecNorm(r,NORM_2,&norm));                         /* norm = ||min(lambda,o)|| */
-    CHKERRQ(PetscViewerASCIIPrintf(v,"r = ||min(lambda_lb,0)|| = %.2e    r/||b|| = %.2e\n",norm,norm/normb));
+    PetscCall(VecSet(o,0.0));                                   /* o = zeros(size(r)) */
+    PetscCall(VecPointwiseMin(r,llb,o));
+    PetscCall(VecNorm(r,NORM_2,&norm));                         /* norm = ||min(lambda,o)|| */
+    PetscCall(PetscViewerASCIIPrintf(v,"r = ||min(lambda_lb,0)|| = %.2e    r/||b|| = %.2e\n",norm,norm/normb));
 
     /* lambda'*(lb-x) = 0 */
-    CHKERRQ(VecCopy(lb,r));
-    CHKERRQ(VecAXPY(r,-1.0,x));
+    PetscCall(VecCopy(lb,r));
+    PetscCall(VecAXPY(r,-1.0,x));
     {
       PetscInt i,n;
       PetscScalar *rarr;
       const PetscScalar *larr;
-      CHKERRQ(VecGetLocalSize(r,&n));
-      CHKERRQ(VecGetArray(r,&rarr));
-      CHKERRQ(VecGetArrayRead(lb,&larr));
+      PetscCall(VecGetLocalSize(r,&n));
+      PetscCall(VecGetArray(r,&rarr));
+      PetscCall(VecGetArrayRead(lb,&larr));
       for (i=0; i<n; i++) if (larr[i]<=PETSC_NINFINITY) rarr[i]=-1.0;
-      CHKERRQ(VecRestoreArray(r,&rarr));
-      CHKERRQ(VecRestoreArrayRead(lb,&larr));
+      PetscCall(VecRestoreArray(r,&rarr));
+      PetscCall(VecRestoreArrayRead(lb,&larr));
     }
-    CHKERRQ(VecDot(llb,r,&dot));
+    PetscCall(VecDot(llb,r,&dot));
     dot = PetscAbs(dot);
-    CHKERRQ(PetscViewerASCIIPrintf(v,"r = |lambda_lb'*(lb-x)|  = %.2e    r/||b|| = %.2e\n",dot,dot/normb));
+    PetscCall(PetscViewerASCIIPrintf(v,"r = |lambda_lb'*(lb-x)|  = %.2e    r/||b|| = %.2e\n",dot,dot/normb));
 
-    CHKERRQ(VecDestroy(&o));
-    CHKERRQ(VecDestroy(&r));
+    PetscCall(VecDestroy(&o));
+    PetscCall(VecDestroy(&r));
   }
 
   if (ub) {
-    CHKERRQ(VecDuplicate(x,&o));
-    CHKERRQ(VecDuplicate(x,&r));
+    PetscCall(VecDuplicate(x,&o));
+    PetscCall(VecDuplicate(x,&r));
 
     /* rI = norm(max(x-ub,0)) */
-    CHKERRQ(VecDuplicate(x,&r));
-    CHKERRQ(VecDuplicate(x,&o));
-    CHKERRQ(VecSet(o,0.0));                                   /* o = zeros(size(r)) */
-    CHKERRQ(VecWAXPY(r, -1.0, ub, x));                        /* r = x - ub       */
-    CHKERRQ(VecPointwiseMax(r,r,o));                          /* r = max(r,o)     */
-    CHKERRQ(VecNorm(r,NORM_2,&norm));                         /* norm = norm(r)     */
-    CHKERRQ(PetscViewerASCIIPrintf(v,"r = ||max(x-ub,0)||      = %.2e    r/||b|| = %.2e\n",norm,norm/normb));
+    PetscCall(VecDuplicate(x,&r));
+    PetscCall(VecDuplicate(x,&o));
+    PetscCall(VecSet(o,0.0));                                   /* o = zeros(size(r)) */
+    PetscCall(VecWAXPY(r, -1.0, ub, x));                        /* r = x - ub       */
+    PetscCall(VecPointwiseMax(r,r,o));                          /* r = max(r,o)     */
+    PetscCall(VecNorm(r,NORM_2,&norm));                         /* norm = norm(r)     */
+    PetscCall(PetscViewerASCIIPrintf(v,"r = ||max(x-ub,0)||      = %.2e    r/||b|| = %.2e\n",norm,norm/normb));
 
     /* lambda >= o  =>  examine min(lambda,o) */
-    CHKERRQ(VecSet(o,0.0));                                   /* o = zeros(size(r)) */
-    CHKERRQ(VecPointwiseMin(r,lub,o));
-    CHKERRQ(VecNorm(r,NORM_2,&norm));                         /* norm = ||min(lambda,o)|| */
-    CHKERRQ(PetscViewerASCIIPrintf(v,"r = ||min(lambda_ub,0)|| = %.2e    r/||b|| = %.2e\n",norm,norm/normb));
+    PetscCall(VecSet(o,0.0));                                   /* o = zeros(size(r)) */
+    PetscCall(VecPointwiseMin(r,lub,o));
+    PetscCall(VecNorm(r,NORM_2,&norm));                         /* norm = ||min(lambda,o)|| */
+    PetscCall(PetscViewerASCIIPrintf(v,"r = ||min(lambda_ub,0)|| = %.2e    r/||b|| = %.2e\n",norm,norm/normb));
 
     /* lambda'*(x-ub) = 0 */
-    CHKERRQ(VecCopy(ub,r));
-    CHKERRQ(VecAYPX(r,-1.0,x));
+    PetscCall(VecCopy(ub,r));
+    PetscCall(VecAYPX(r,-1.0,x));
     {
       PetscInt i,n;
       PetscScalar *rarr;
       const PetscScalar *uarr;
-      CHKERRQ(VecGetLocalSize(r,&n));
-      CHKERRQ(VecGetArray(r,&rarr));
-      CHKERRQ(VecGetArrayRead(ub,&uarr));
+      PetscCall(VecGetLocalSize(r,&n));
+      PetscCall(VecGetArray(r,&rarr));
+      PetscCall(VecGetArrayRead(ub,&uarr));
       for (i=0; i<n; i++) if (uarr[i]>=PETSC_INFINITY) rarr[i]=1.0;
-      CHKERRQ(VecRestoreArray(r,&rarr));
-      CHKERRQ(VecRestoreArrayRead(ub,&uarr));
+      PetscCall(VecRestoreArray(r,&rarr));
+      PetscCall(VecRestoreArrayRead(ub,&uarr));
     }
-    CHKERRQ(VecDot(lub,r,&dot));
+    PetscCall(VecDot(lub,r,&dot));
     dot = PetscAbs(dot);
-    CHKERRQ(PetscViewerASCIIPrintf(v,"r = |lambda_ub'*(x-ub)|  = %.2e    r/||b|| = %.2e\n",dot,dot/normb));
+    PetscCall(PetscViewerASCIIPrintf(v,"r = |lambda_ub'*(x-ub)|  = %.2e    r/||b|| = %.2e\n",dot,dot/normb));
 
-    CHKERRQ(VecDestroy(&o));
-    CHKERRQ(VecDestroy(&r));
+    PetscCall(VecDestroy(&o));
+    PetscCall(VecDestroy(&r));
   }
   PetscFunctionReturn(0);
 }
@@ -439,12 +439,12 @@ PetscErrorCode QPCDestroy_Box(QPC qpc)
 
   PetscFunctionBegin;
   if (ctx->lb) {
-    CHKERRQ(VecDestroy(&ctx->lb));
-    CHKERRQ(VecDestroy(&ctx->llb));
+    PetscCall(VecDestroy(&ctx->lb));
+    PetscCall(VecDestroy(&ctx->llb));
   }
   if (ctx->ub) {
-    CHKERRQ(VecDestroy(&ctx->ub));
-    CHKERRQ(VecDestroy(&ctx->lub));
+    PetscCall(VecDestroy(&ctx->ub));
+    PetscCall(VecDestroy(&ctx->lub));
   }
   PetscFunctionReturn(0);
 }
@@ -456,7 +456,7 @@ FLLOP_EXTERN PetscErrorCode QPCCreate_Box(QPC qpc)
   QPC_Box      *ctx;
 
   PetscFunctionBegin;
-  CHKERRQ(PetscNewLog(qpc,&ctx));
+  PetscCall(PetscNewLog(qpc,&ctx));
   qpc->data = (void*)ctx;
 
   /* set general QPC functions already implemented for this QPC type */
@@ -475,9 +475,9 @@ FLLOP_EXTERN PetscErrorCode QPCCreate_Box(QPC qpc)
   qpc->ops->gradreduced                 = QPCGradReduced_Box;
 
   /* set type-specific functions */
-  CHKERRQ(PetscObjectComposeFunction((PetscObject)qpc,"QPCBoxSet_Box_C",QPCBoxSet_Box));
-  CHKERRQ(PetscObjectComposeFunction((PetscObject)qpc,"QPCBoxGet_Box_C",QPCBoxGet_Box));
-  CHKERRQ(PetscObjectComposeFunction((PetscObject)qpc,"QPCBoxGetMultipliers_Box_C",QPCBoxGetMultipliers_Box));
+  PetscCall(PetscObjectComposeFunction((PetscObject)qpc,"QPCBoxSet_Box_C",QPCBoxSet_Box));
+  PetscCall(PetscObjectComposeFunction((PetscObject)qpc,"QPCBoxGet_Box_C",QPCBoxGet_Box));
+  PetscCall(PetscObjectComposeFunction((PetscObject)qpc,"QPCBoxGetMultipliers_Box_C",QPCBoxGetMultipliers_Box));
 
   /* initialize type-specific inner data */
   ctx->lb                         = NULL;
@@ -502,12 +502,12 @@ PetscErrorCode QPCBoxSet(QPC qpc,Vec lb, Vec ub)
     Vec diff;
     PetscReal min;
 
-    CHKERRQ(VecDuplicate(lb,&diff));
-    CHKERRQ(VecWAXPY(diff,-1.0,lb,ub));
-    CHKERRQ(VecMin(diff,NULL,&min));
+    PetscCall(VecDuplicate(lb,&diff));
+    PetscCall(VecWAXPY(diff,-1.0,lb,ub));
+    PetscCall(VecMin(diff,NULL,&min));
     /* TODO verify that algorithms work with min = 0 */
     if (min < 0.0) SETERRQ(PetscObjectComm((PetscObject)qpc),PETSC_ERR_ARG_INCOMP,"lb components must be smaller than ub components");
-    CHKERRQ(VecDestroy(&diff));
+    PetscCall(VecDestroy(&diff));
   }
 #endif
 
@@ -566,10 +566,10 @@ PetscErrorCode QPCCreateBox(MPI_Comm comm,IS is,Vec lb,Vec ub,QPC *qpc_out)
   if (ub) PetscValidHeaderSpecific(ub,VEC_CLASSID,4);
   PetscValidPointer(qpc_out,5);
 
-  CHKERRQ(QPCCreate(comm,&qpc));
-  CHKERRQ(QPCSetIS(qpc,is));
-  CHKERRQ(QPCSetType(qpc,QPCBOX));
-  CHKERRQ(QPCBoxSet(qpc,lb,ub));
+  PetscCall(QPCCreate(comm,&qpc));
+  PetscCall(QPCSetIS(qpc,is));
+  PetscCall(QPCSetType(qpc,QPCBOX));
+  PetscCall(QPCBoxSet(qpc,lb,ub));
   *qpc_out = qpc;
   PetscFunctionReturn(0);
 }

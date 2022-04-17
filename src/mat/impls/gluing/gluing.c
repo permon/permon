@@ -18,32 +18,32 @@ static PetscErrorCode FllopMatGetLocalMat_Gluing(Mat A,Mat *Aloc)
 
   PetscFunctionBegin;
 
-  CHKERRQ(MatGetSize(A, NULL, &N_col));
-  CHKERRQ(MatGetLocalSize(A, &n_row, &n_col));
-  CHKERRQ(MatGetOwnershipRangeColumn(A, &start_col, NULL));
-  CHKERRQ(PetscMalloc(data->n_leaves*sizeof(PetscInt), &leafdata));
-  CHKERRQ(PetscMalloc(n_col*sizeof(PetscInt), &rootdata));
+  PetscCall(MatGetSize(A, NULL, &N_col));
+  PetscCall(MatGetLocalSize(A, &n_row, &n_col));
+  PetscCall(MatGetOwnershipRangeColumn(A, &start_col, NULL));
+  PetscCall(PetscMalloc(data->n_leaves*sizeof(PetscInt), &leafdata));
+  PetscCall(PetscMalloc(n_col*sizeof(PetscInt), &rootdata));
 
   for (i=0; i<n_col; i++) {
     rootdata[i]=start_col + i;
   }
-  CHKERRQ(PetscSFBcastBegin(data->SF, MPIU_INT, rootdata, leafdata, MPI_REPLACE));
-  CHKERRQ(PetscSFBcastEnd(data->SF, MPIU_INT, rootdata, leafdata, MPI_REPLACE));
+  PetscCall(PetscSFBcastBegin(data->SF, MPIU_INT, rootdata, leafdata, MPI_REPLACE));
+  PetscCall(PetscSFBcastEnd(data->SF, MPIU_INT, rootdata, leafdata, MPI_REPLACE));
 
-  CHKERRQ(PetscLayoutCreate(PETSC_COMM_SELF, &links));
-  CHKERRQ(PetscLayoutSetBlockSize(links, 1));
-  CHKERRQ(PetscLayoutSetSize(links, N_col));
-  CHKERRQ(PetscLayoutSetUp(links));
+  PetscCall(PetscLayoutCreate(PETSC_COMM_SELF, &links));
+  PetscCall(PetscLayoutSetBlockSize(links, 1));
+  PetscCall(PetscLayoutSetSize(links, N_col));
+  PetscCall(PetscLayoutSetUp(links));
 
-  CHKERRQ(PetscSFCreate(PETSC_COMM_SELF, &SF));
-  CHKERRQ(PetscSFSetGraphLayout(SF, links, data->n_leaves, NULL, PETSC_COPY_VALUES, leafdata));
-  CHKERRQ(PetscSFSetRankOrder(SF, PETSC_TRUE));
+  PetscCall(PetscSFCreate(PETSC_COMM_SELF, &SF));
+  PetscCall(PetscSFSetGraphLayout(SF, links, data->n_leaves, NULL, PETSC_COPY_VALUES, leafdata));
+  PetscCall(PetscSFSetRankOrder(SF, PETSC_TRUE));
 
-  CHKERRQ( MatCreateGluing(PETSC_COMM_SELF, n_row, data->n_nonzeroRow, N_col, data->leaves_row, data->leaves_sign, SF, Aloc));
+  PetscCall( MatCreateGluing(PETSC_COMM_SELF, n_row, data->n_nonzeroRow, N_col, data->leaves_row, data->leaves_sign, SF, Aloc));
 
-  CHKERRQ(PetscFree(leafdata));
-  CHKERRQ(PetscFree(rootdata));
-  CHKERRQ(PetscLayoutDestroy(&links));
+  PetscCall(PetscFree(leafdata));
+  PetscCall(PetscFree(rootdata));
+  PetscCall(PetscLayoutDestroy(&links));
 
   PetscFunctionReturn(0);
 }
@@ -61,30 +61,30 @@ PetscErrorCode MatMult_Gluing(Mat mat, Vec right, Vec left)
   PetscFunctionBegin;
   //right=lambda left=x
 
-  CHKERRQ(VecGetArray(right, &lambda_root));
-  CHKERRQ(VecGetOwnershipRange(left, &start,NULL));
-  CHKERRQ(PetscMalloc(data->n_leaves*sizeof(PetscScalar), &lambda_onleaves));
+  PetscCall(VecGetArray(right, &lambda_root));
+  PetscCall(VecGetOwnershipRange(left, &start,NULL));
+  PetscCall(PetscMalloc(data->n_leaves*sizeof(PetscScalar), &lambda_onleaves));
 
-  CHKERRQ(PetscSFBcastBegin(data->SF, MPIU_SCALAR, lambda_root, lambda_onleaves, MPI_REPLACE));
-  CHKERRQ(PetscMalloc(data->n_leaves*sizeof(PetscInt), &idxX));
-  CHKERRQ(PetscMalloc(data->n_leaves*sizeof(PetscScalar), &x_onleaves));
-  CHKERRQ(VecZeroEntries(left));
-  CHKERRQ(PetscSFBcastEnd(data->SF, MPIU_SCALAR, lambda_root, lambda_onleaves, MPI_REPLACE));
-  CHKERRQ(VecRestoreArray(right,  &lambda_root));
+  PetscCall(PetscSFBcastBegin(data->SF, MPIU_SCALAR, lambda_root, lambda_onleaves, MPI_REPLACE));
+  PetscCall(PetscMalloc(data->n_leaves*sizeof(PetscInt), &idxX));
+  PetscCall(PetscMalloc(data->n_leaves*sizeof(PetscScalar), &x_onleaves));
+  PetscCall(VecZeroEntries(left));
+  PetscCall(PetscSFBcastEnd(data->SF, MPIU_SCALAR, lambda_root, lambda_onleaves, MPI_REPLACE));
+  PetscCall(VecRestoreArray(right,  &lambda_root));
 
   for (i=0; i<data->n_leaves; i++) {
     idxX[i]= start + data->leaves_row[i];
     x_onleaves[i ] = lambda_onleaves[i] *data->leaves_sign[i];
   }
 
-  CHKERRQ(VecZeroEntries( left ));
-  CHKERRQ(VecSetValues(left, data->n_leaves, idxX, x_onleaves, ADD_VALUES););
-  CHKERRQ(VecAssemblyBegin(left));
-  CHKERRQ(VecAssemblyEnd(left));
+  PetscCall(VecZeroEntries( left ));
+  PetscCall(VecSetValues(left, data->n_leaves, idxX, x_onleaves, ADD_VALUES););
+  PetscCall(VecAssemblyBegin(left));
+  PetscCall(VecAssemblyEnd(left));
 
-  CHKERRQ(PetscFree(idxX));
-  CHKERRQ(PetscFree(x_onleaves));
-  CHKERRQ(PetscFree(lambda_onleaves));
+  PetscCall(PetscFree(idxX));
+  PetscCall(PetscFree(x_onleaves));
+  PetscCall(PetscFree(lambda_onleaves));
 
   PetscFunctionReturn(0);
 }
@@ -100,32 +100,32 @@ PetscErrorCode MatMultAdd_Gluing(Mat mat, Vec right, Vec add, Vec left) {
   PetscFunctionBegin; 
    //right=lambda left=x
 
-  CHKERRQ(VecGetArray(right, &lambda_root));
-  CHKERRQ(VecGetOwnershipRange(left, &start,NULL));    
-  CHKERRQ(PetscMalloc(data->n_leaves*sizeof(PetscScalar), &lambda_onleaves));
+  PetscCall(VecGetArray(right, &lambda_root));
+  PetscCall(VecGetOwnershipRange(left, &start,NULL));    
+  PetscCall(PetscMalloc(data->n_leaves*sizeof(PetscScalar), &lambda_onleaves));
   
-  CHKERRQ(PetscSFBcastBegin(data->SF, MPIU_SCALAR, lambda_root, lambda_onleaves, MPI_REPLACE));
-  CHKERRQ(PetscMalloc(data->n_leaves*sizeof(PetscInt), &idxX));
-  CHKERRQ(PetscMalloc(data->n_leaves*sizeof(PetscScalar), &x_onleaves));
-  CHKERRQ(VecZeroEntries(left));
-  CHKERRQ(PetscSFBcastEnd(data->SF, MPIU_SCALAR, lambda_root, lambda_onleaves, MPI_REPLACE));
-  CHKERRQ(VecRestoreArray(right,  &lambda_root));
+  PetscCall(PetscSFBcastBegin(data->SF, MPIU_SCALAR, lambda_root, lambda_onleaves, MPI_REPLACE));
+  PetscCall(PetscMalloc(data->n_leaves*sizeof(PetscInt), &idxX));
+  PetscCall(PetscMalloc(data->n_leaves*sizeof(PetscScalar), &x_onleaves));
+  PetscCall(VecZeroEntries(left));
+  PetscCall(PetscSFBcastEnd(data->SF, MPIU_SCALAR, lambda_root, lambda_onleaves, MPI_REPLACE));
+  PetscCall(VecRestoreArray(right,  &lambda_root));
   
   for (i=0; i<data->n_leaves; i++) {
     idxX[i]= start + data->leaves_row[i];
     x_onleaves[i ] = lambda_onleaves[i] *data->leaves_sign[i];
   } 
   
-  CHKERRQ(VecZeroEntries( left ));
-  CHKERRQ(VecSetValues(left, data->n_leaves, idxX, x_onleaves, ADD_VALUES););
-  CHKERRQ(VecAssemblyBegin(left));
-  CHKERRQ(VecAssemblyEnd(left)); 
+  PetscCall(VecZeroEntries( left ));
+  PetscCall(VecSetValues(left, data->n_leaves, idxX, x_onleaves, ADD_VALUES););
+  PetscCall(VecAssemblyBegin(left));
+  PetscCall(VecAssemblyEnd(left)); 
   
-  CHKERRQ(PetscFree(idxX)); 
-  CHKERRQ(PetscFree(x_onleaves)); 
-  CHKERRQ(PetscFree(lambda_onleaves));  
+  PetscCall(PetscFree(idxX)); 
+  PetscCall(PetscFree(x_onleaves)); 
+  PetscCall(PetscFree(lambda_onleaves));  
   
-  CHKERRQ(VecAXPY(left, 1, add));
+  PetscCall(VecAXPY(left, 1, add));
   
   PetscFunctionReturn(0);
 }
@@ -140,12 +140,12 @@ PetscErrorCode MatMultTranspose_Gluing(Mat mat, Vec right, Vec left)
 
   PetscFunctionBegin;
   //right=x left=lambda
-  CHKERRQ(VecGetArray(right, &x));
-  CHKERRQ(VecGetOwnershipRange(left, &start,NULL));
-  CHKERRQ(MatGetLocalSize(mat, NULL, &n_col));
+  PetscCall(VecGetArray(right, &x));
+  PetscCall(VecGetOwnershipRange(left, &start,NULL));
+  PetscCall(MatGetLocalSize(mat, NULL, &n_col));
 
-  CHKERRQ(PetscMalloc(n_col*sizeof(PetscScalar), &lambda_onroot));
-  CHKERRQ(PetscMalloc(data->n_leaves*sizeof(PetscScalar), &lambda_onleaves));
+  PetscCall(PetscMalloc(n_col*sizeof(PetscScalar), &lambda_onroot));
+  PetscCall(PetscMalloc(data->n_leaves*sizeof(PetscScalar), &lambda_onleaves));
 
   for (i=0; i<n_col; i++) {
     lambda_onroot[i]=0;
@@ -155,22 +155,22 @@ PetscErrorCode MatMultTranspose_Gluing(Mat mat, Vec right, Vec left)
     lambda_onleaves[i]= x[ data->leaves_row[i] ] * data->leaves_sign[i];
   }
 
-  CHKERRQ(PetscSFReduceBegin(data->SF, MPIU_SCALAR, lambda_onleaves, lambda_onroot, MPI_SUM));
-  CHKERRQ(PetscMalloc(n_col*sizeof(PetscInt), &idxL));
+  PetscCall(PetscSFReduceBegin(data->SF, MPIU_SCALAR, lambda_onleaves, lambda_onroot, MPI_SUM));
+  PetscCall(PetscMalloc(n_col*sizeof(PetscInt), &idxL));
   for (i=0; i<n_col; i++) {
     idxL[i]=start+i;
   }
-  CHKERRQ(PetscSFReduceEnd(data->SF, MPIU_SCALAR, lambda_onleaves, lambda_onroot, MPI_SUM));
+  PetscCall(PetscSFReduceEnd(data->SF, MPIU_SCALAR, lambda_onleaves, lambda_onroot, MPI_SUM));
 
-  CHKERRQ(VecZeroEntries( left ));
-  CHKERRQ(VecSetValues(left, n_col, idxL, lambda_onroot, INSERT_VALUES));
-  CHKERRQ(VecAssemblyBegin(left));
-  CHKERRQ(VecAssemblyEnd(left));
+  PetscCall(VecZeroEntries( left ));
+  PetscCall(VecSetValues(left, n_col, idxL, lambda_onroot, INSERT_VALUES));
+  PetscCall(VecAssemblyBegin(left));
+  PetscCall(VecAssemblyEnd(left));
 
-  CHKERRQ(VecRestoreArray(right, &x));
-  CHKERRQ(PetscFree(lambda_onroot));
-  CHKERRQ(PetscFree(lambda_onleaves));
-  CHKERRQ(PetscFree(idxL));
+  PetscCall(VecRestoreArray(right, &x));
+  PetscCall(PetscFree(lambda_onroot));
+  PetscCall(PetscFree(lambda_onleaves));
+  PetscCall(PetscFree(idxL));
 
   PetscFunctionReturn(0);
 }
@@ -186,12 +186,12 @@ PetscErrorCode MatMultTransposeAdd_Gluing(Mat mat, Vec right, Vec add, Vec left)
 
   PetscFunctionBegin;
   //right=x left=lambda
-  CHKERRQ(VecGetArray(right, &x));
-  CHKERRQ(VecGetOwnershipRange(left, &start,NULL));
-  CHKERRQ(MatGetLocalSize(mat, NULL, &n_col));
+  PetscCall(VecGetArray(right, &x));
+  PetscCall(VecGetOwnershipRange(left, &start,NULL));
+  PetscCall(MatGetLocalSize(mat, NULL, &n_col));
 
-  CHKERRQ(PetscMalloc(n_col*sizeof(PetscScalar), &lambda_onroot));
-  CHKERRQ(PetscMalloc(data->n_leaves*sizeof(PetscScalar), &lambda_onleaves));
+  PetscCall(PetscMalloc(n_col*sizeof(PetscScalar), &lambda_onroot));
+  PetscCall(PetscMalloc(data->n_leaves*sizeof(PetscScalar), &lambda_onleaves));
 
   for (i=0; i<n_col; i++) {
     lambda_onroot[i]=0;
@@ -201,23 +201,23 @@ PetscErrorCode MatMultTransposeAdd_Gluing(Mat mat, Vec right, Vec add, Vec left)
     lambda_onleaves[i]= x[ data->leaves_row[i] ] * data->leaves_sign[i];
   }
 
-  CHKERRQ(PetscSFReduceBegin(data->SF, MPIU_SCALAR, lambda_onleaves, lambda_onroot, MPI_SUM));
-  CHKERRQ(PetscMalloc(n_col*sizeof(PetscInt), &idxL));
+  PetscCall(PetscSFReduceBegin(data->SF, MPIU_SCALAR, lambda_onleaves, lambda_onroot, MPI_SUM));
+  PetscCall(PetscMalloc(n_col*sizeof(PetscInt), &idxL));
   for (i=0; i<n_col; i++) {
     idxL[i]=start+i;
   }
-  CHKERRQ(PetscSFReduceEnd(data->SF, MPIU_SCALAR, lambda_onleaves, lambda_onroot, MPI_SUM));
-  CHKERRQ(VecZeroEntries( left ));
-  CHKERRQ(VecSetValues(left, n_col, idxL, lambda_onroot, ADD_VALUES));
-  CHKERRQ(VecAssemblyBegin(left));
-  CHKERRQ(VecAssemblyEnd(left));
+  PetscCall(PetscSFReduceEnd(data->SF, MPIU_SCALAR, lambda_onleaves, lambda_onroot, MPI_SUM));
+  PetscCall(VecZeroEntries( left ));
+  PetscCall(VecSetValues(left, n_col, idxL, lambda_onroot, ADD_VALUES));
+  PetscCall(VecAssemblyBegin(left));
+  PetscCall(VecAssemblyEnd(left));
 
-  CHKERRQ(VecRestoreArray(right, &x));
-  CHKERRQ(PetscFree(lambda_onroot));
-  CHKERRQ(PetscFree(lambda_onleaves));
-  CHKERRQ(PetscFree(idxL));
+  PetscCall(VecRestoreArray(right, &x));
+  PetscCall(PetscFree(lambda_onroot));
+  PetscCall(PetscFree(lambda_onleaves));
+  PetscCall(PetscFree(idxL));
 
-  CHKERRQ(VecAXPY(left, 1, add));
+  PetscCall(VecAXPY(left, 1, add));
 
   PetscFunctionReturn(0);
 }
@@ -229,10 +229,10 @@ PetscErrorCode MatDestroy_Gluing(Mat mat)
 {
   PetscFunctionBegin;
   Mat_Gluing *data = (Mat_Gluing*) mat->data;
-  CHKERRQ(PetscSFDestroy(&data->SF));  
-  CHKERRQ(PetscFree(data->leaves_row));
-  CHKERRQ(PetscFree(data->leaves_sign));
-  CHKERRQ(PetscFree(data));
+  PetscCall(PetscSFDestroy(&data->SF));  
+  PetscCall(PetscFree(data->leaves_row));
+  PetscCall(PetscFree(data->leaves_sign));
+  PetscCall(PetscFree(data));
   PetscFunctionReturn(0);
 }
 
@@ -250,17 +250,17 @@ PetscErrorCode MatCreateGluing(MPI_Comm comm, PetscInt n_x_localRow, PetscInt n_
   PetscValidPointer(B_out,7);
 
   /* Create matrix. */
-  CHKERRQ(MatCreate(comm, &B));
-  CHKERRQ(MatSetType(B, MATGLUING));
+  PetscCall(MatCreate(comm, &B));
+  PetscCall(MatSetType(B, MATGLUING));
   data = (Mat_Gluing*) B->data;
   
- CHKERRQ(PetscSFGetLeafRange(SF,NULL,&n_l));    
+ PetscCall(PetscSFGetLeafRange(SF,NULL,&n_l));    
  
-  CHKERRQ(PetscMalloc1(n_l+1,&lr));
-  CHKERRQ(PetscMemcpy(lr,leaves_row,(n_l+1)*sizeof(PetscInt)));
-  CHKERRQ(PetscMalloc1(n_l+1,&ls));
-  CHKERRQ(PetscMemcpy(ls,leaves_sign,(n_l+1)*sizeof(PetscReal)));  
-  CHKERRQ(PetscObjectReference((PetscObject)SF));
+  PetscCall(PetscMalloc1(n_l+1,&lr));
+  PetscCall(PetscMemcpy(lr,leaves_row,(n_l+1)*sizeof(PetscInt)));
+  PetscCall(PetscMalloc1(n_l+1,&ls));
+  PetscCall(PetscMemcpy(ls,leaves_sign,(n_l+1)*sizeof(PetscReal)));  
+  PetscCall(PetscObjectReference((PetscObject)SF));
   
   data->n_leaves=n_l+1;
   data->n_nonzeroRow=n_nonzeroRow;
@@ -269,14 +269,14 @@ PetscErrorCode MatCreateGluing(MPI_Comm comm, PetscInt n_x_localRow, PetscInt n_
   data->leaves_sign = ls;  
    
   /* Set up row layout */
-  CHKERRQ(PetscLayoutSetLocalSize(B->rmap, n_x_localRow));
-  CHKERRQ(PetscLayoutSetUp(B->rmap));
-  CHKERRQ(PetscLayoutGetRange(B->rmap,&rlo,&rhi));
+  PetscCall(PetscLayoutSetLocalSize(B->rmap, n_x_localRow));
+  PetscCall(PetscLayoutSetUp(B->rmap));
+  PetscCall(PetscLayoutGetRange(B->rmap,&rlo,&rhi));
 
   /* Set up column layout */
-  CHKERRQ(PetscLayoutSetLocalSize(B->cmap,n_l_localcol));
-  CHKERRQ(PetscLayoutSetUp(B->cmap));
-  CHKERRQ(PetscLayoutGetRange(B->cmap,&clo,&chi));
+  PetscCall(PetscLayoutSetLocalSize(B->cmap,n_l_localcol));
+  PetscCall(PetscLayoutSetUp(B->cmap));
+  PetscCall(PetscLayoutGetRange(B->cmap,&clo,&chi));
     
   *B_out = B;
   PetscFunctionReturn(0);
@@ -289,8 +289,8 @@ FLLOP_EXTERN PetscErrorCode MatCreate_Gluing(Mat B) {
   Mat_Gluing *data;
 
   PetscFunctionBegin;
-  CHKERRQ(PetscNew(&data));
-  CHKERRQ(PetscObjectChangeTypeName((PetscObject)B, MATGLUING));
+  PetscCall(PetscNew(&data));
+  PetscCall(PetscObjectChangeTypeName((PetscObject)B, MATGLUING));
   B->data                = (void*) data;
   B->assembled           = PETSC_TRUE;
   B->preallocated        = PETSC_TRUE;
@@ -307,7 +307,7 @@ FLLOP_EXTERN PetscErrorCode MatCreate_Gluing(Mat B) {
   B->ops->multtranspose      = MatMultTranspose_Gluing;
   B->ops->multadd            = MatMultAdd_Gluing;
   B->ops->multtransposeadd   = MatMultTransposeAdd_Gluing;
-  CHKERRQ(PetscObjectComposeFunction((PetscObject)B,"FllopMatGetLocalMat_C",FllopMatGetLocalMat_Gluing));
+  PetscCall(PetscObjectComposeFunction((PetscObject)B,"FllopMatGetLocalMat_C",FllopMatGetLocalMat_Gluing));
  
   PetscFunctionReturn(0);
 } 

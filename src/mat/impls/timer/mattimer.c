@@ -6,10 +6,10 @@
 PetscErrorCode MatMult_Timer(Mat W, Vec x, Vec y) {
     Mat_Timer *ctx;
     PetscFunctionBegin;
-    CHKERRQ(MatShellGetContext(W, (void*) &ctx));
-    CHKERRQ(PetscLogEventBegin(ctx->events[MATOP_MULT],ctx->A,x,y,0));
-    CHKERRQ(MatMult(ctx->A,x,y));
-    CHKERRQ(PetscLogEventEnd(  ctx->events[MATOP_MULT],ctx->A,x,y,0));
+    PetscCall(MatShellGetContext(W, (void*) &ctx));
+    PetscCall(PetscLogEventBegin(ctx->events[MATOP_MULT],ctx->A,x,y,0));
+    PetscCall(MatMult(ctx->A,x,y));
+    PetscCall(PetscLogEventEnd(  ctx->events[MATOP_MULT],ctx->A,x,y,0));
     PetscFunctionReturn(0);
 }
 
@@ -18,10 +18,10 @@ PetscErrorCode MatMult_Timer(Mat W, Vec x, Vec y) {
 PetscErrorCode MatMultAdd_Timer(Mat W, Vec x, Vec y, Vec z) {
     Mat_Timer *ctx;
     PetscFunctionBegin;
-    CHKERRQ(MatShellGetContext(W, (void*) &ctx));
-    CHKERRQ(PetscLogEventBegin(ctx->events[MATOP_MULT_ADD],ctx->A,x,y,0));
-    CHKERRQ(MatMultAdd(ctx->A,x,y,z));
-    CHKERRQ(PetscLogEventEnd(  ctx->events[MATOP_MULT_ADD],ctx->A,x,y,0));
+    PetscCall(MatShellGetContext(W, (void*) &ctx));
+    PetscCall(PetscLogEventBegin(ctx->events[MATOP_MULT_ADD],ctx->A,x,y,0));
+    PetscCall(MatMultAdd(ctx->A,x,y,z));
+    PetscCall(PetscLogEventEnd(  ctx->events[MATOP_MULT_ADD],ctx->A,x,y,0));
     PetscFunctionReturn(0);
 }
 
@@ -30,10 +30,10 @@ PetscErrorCode MatMultAdd_Timer(Mat W, Vec x, Vec y, Vec z) {
 PetscErrorCode MatMultTranspose_Timer(Mat W, Vec x, Vec y) {
     Mat_Timer *ctx;
     PetscFunctionBegin;
-    CHKERRQ(MatShellGetContext(W, (void*) &ctx));
-    CHKERRQ(PetscLogEventBegin(ctx->events[MATOP_MULT_TRANSPOSE],ctx->A,x,y,0));
-    CHKERRQ(MatMultTranspose(ctx->A,x,y));
-    CHKERRQ(PetscLogEventEnd(  ctx->events[MATOP_MULT_TRANSPOSE],ctx->A,x,y,0));
+    PetscCall(MatShellGetContext(W, (void*) &ctx));
+    PetscCall(PetscLogEventBegin(ctx->events[MATOP_MULT_TRANSPOSE],ctx->A,x,y,0));
+    PetscCall(MatMultTranspose(ctx->A,x,y));
+    PetscCall(PetscLogEventEnd(  ctx->events[MATOP_MULT_TRANSPOSE],ctx->A,x,y,0));
     PetscFunctionReturn(0);
 }
 
@@ -42,10 +42,10 @@ PetscErrorCode MatMultTranspose_Timer(Mat W, Vec x, Vec y) {
 PetscErrorCode MatMultTransposeAdd_Timer(Mat W, Vec x, Vec y, Vec z) {
     Mat_Timer *ctx;
     PetscFunctionBegin;
-    CHKERRQ(MatShellGetContext(W, (void*) &ctx));
-    CHKERRQ(PetscLogEventBegin(ctx->events[MATOP_MULT_TRANSPOSE_ADD],ctx->A,x,y,0));
-    CHKERRQ(MatMultTransposeAdd(ctx->A,x,y,z));
-    CHKERRQ(PetscLogEventEnd(  ctx->events[MATOP_MULT_TRANSPOSE_ADD],ctx->A,x,y,0));
+    PetscCall(MatShellGetContext(W, (void*) &ctx));
+    PetscCall(PetscLogEventBegin(ctx->events[MATOP_MULT_TRANSPOSE_ADD],ctx->A,x,y,0));
+    PetscCall(MatMultTransposeAdd(ctx->A,x,y,z));
+    PetscCall(PetscLogEventEnd(  ctx->events[MATOP_MULT_TRANSPOSE_ADD],ctx->A,x,y,0));
     PetscFunctionReturn(0);
 }
 
@@ -54,10 +54,10 @@ PetscErrorCode MatMultTransposeAdd_Timer(Mat W, Vec x, Vec y, Vec z) {
 PetscErrorCode MatDestroy_Timer(Mat W) {
     Mat_Timer *ctx;
     PetscFunctionBegin;
-    CHKERRQ(MatShellGetContext(W, (void*) &ctx));
-    CHKERRQ(MatDestroy(&ctx->A));
-    CHKERRQ(PetscFree(ctx));
-    CHKERRQ(MatShellSetContext(W, NULL));
+    PetscCall(MatShellGetContext(W, (void*) &ctx));
+    PetscCall(MatDestroy(&ctx->A));
+    PetscCall(PetscFree(ctx));
+    PetscCall(MatShellSetContext(W, NULL));
     PetscFunctionReturn(0);
 }
 
@@ -83,18 +83,18 @@ PetscErrorCode MatCreateTimer(Mat A, Mat *B) {
     Mat W;
     
     PetscFunctionBegin;
-    CHKERRQ(PetscMalloc(sizeof(Mat_Timer),&ctx));
+    PetscCall(PetscMalloc(sizeof(Mat_Timer),&ctx));
     ctx->A = A;
-    CHKERRQ(PetscObjectReference((PetscObject)A));
+    PetscCall(PetscObjectReference((PetscObject)A));
     
-    CHKERRQ(MatCreateShellPermon(PetscObjectComm((PetscObject)A), A->rmap->n,A->cmap->n,A->rmap->N,A->cmap->N, ctx,&W));
-    CHKERRQ(FllopPetscObjectInheritName((PetscObject)W,(PetscObject)A,NULL));
+    PetscCall(MatCreateShellPermon(PetscObjectComm((PetscObject)A), A->rmap->n,A->cmap->n,A->rmap->N,A->cmap->N, ctx,&W));
+    PetscCall(FllopPetscObjectInheritName((PetscObject)W,(PetscObject)A,NULL));
 
-    CHKERRQ(MatShellSetOperation(W,MATOP_DESTROY,(void(*)(void))MatDestroy_Timer));
-    CHKERRQ(MatTimerSetOperation(W,MATOP_MULT,"MatMult",(void(*)(void))MatMult_Timer));
-    CHKERRQ(MatTimerSetOperation(W,MATOP_MULT_ADD,"MatMultAdd",(void(*)(void))MatMultAdd_Timer));
-    CHKERRQ(MatTimerSetOperation(W,MATOP_MULT_TRANSPOSE,"MatMultTr",(void(*)(void))MatMultTranspose_Timer));
-    CHKERRQ(MatTimerSetOperation(W,MATOP_MULT_TRANSPOSE_ADD,"MatMultTrAdd",(void(*)(void))MatMultTransposeAdd_Timer));
+    PetscCall(MatShellSetOperation(W,MATOP_DESTROY,(void(*)(void))MatDestroy_Timer));
+    PetscCall(MatTimerSetOperation(W,MATOP_MULT,"MatMult",(void(*)(void))MatMult_Timer));
+    PetscCall(MatTimerSetOperation(W,MATOP_MULT_ADD,"MatMultAdd",(void(*)(void))MatMultAdd_Timer));
+    PetscCall(MatTimerSetOperation(W,MATOP_MULT_TRANSPOSE,"MatMultTr",(void(*)(void))MatMultTranspose_Timer));
+    PetscCall(MatTimerSetOperation(W,MATOP_MULT_TRANSPOSE_ADD,"MatMultTrAdd",(void(*)(void))MatMultTransposeAdd_Timer));
     
     *B = W;
     PetscFunctionReturn(0);
@@ -111,18 +111,18 @@ PetscErrorCode MatTimerSetOperation(Mat mat, MatOperation op, const char *opname
   PetscBool exists;
   
   PetscFunctionBegin;
-  CHKERRQ(MatShellGetContext(mat,(void*)&ctx));
-  CHKERRQ(PetscObjectGetName((PetscObject)ctx->A,&name));
+  PetscCall(MatShellGetContext(mat,(void*)&ctx));
+  PetscCall(PetscObjectGetName((PetscObject)ctx->A,&name));
 
-  CHKERRQ(PetscStrcpy(eventName, opname));
-  CHKERRQ(PetscStrcat(eventName, "_"));
-  CHKERRQ(PetscStrcat(eventName, name));
+  PetscCall(PetscStrcpy(eventName, opname));
+  PetscCall(PetscStrcat(eventName, "_"));
+  PetscCall(PetscStrcat(eventName, name));
 
-  CHKERRQ(FllopPetscLogEventGetId(eventName,&event,&exists));
-  if (!exists) CHKERRQ(PetscLogEventRegister(eventName, MAT_CLASSID, &event));
+  PetscCall(FllopPetscLogEventGetId(eventName,&event,&exists));
+  if (!exists) PetscCall(PetscLogEventRegister(eventName, MAT_CLASSID, &event));
   ctx->events[op] = event;
 
-  CHKERRQ(MatShellSetOperation(mat,op,opf));
+  PetscCall(MatShellSetOperation(mat,op,opf));
   PetscFunctionReturn(0);
 }
 
@@ -131,7 +131,7 @@ PetscErrorCode MatTimerSetOperation(Mat mat, MatOperation op, const char *opname
 PetscErrorCode MatTimerGetMat(Mat W, Mat *A) {
     Mat_Timer *ctx;
     PetscFunctionBegin;
-    CHKERRQ(MatShellGetContext(W,(void*)&ctx));
+    PetscCall(MatShellGetContext(W,(void*)&ctx));
     *A = ctx->A;
     PetscFunctionReturn(0);
 }

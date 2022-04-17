@@ -9,7 +9,7 @@ PetscErrorCode MatIsImplicitTranspose(Mat A,PetscBool *flg)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
   PetscValidPointer(flg,2);
-  CHKERRQ(PetscObjectTypeCompare((PetscObject)A,MATTRANSPOSEMAT,flg));
+  PetscCall(PetscObjectTypeCompare((PetscObject)A,MATTRANSPOSEMAT,flg));
   PetscFunctionReturn(0);
 }
 
@@ -23,14 +23,14 @@ static PetscErrorCode PermonMatTranspose_Transpose(Mat A,MatTransposeType type,M
   switch (type) {
     default: /* MAT_TRANSPOSE_CHEAPEST */
     case MAT_TRANSPOSE_EXPLICIT:
-      CHKERRQ(MatTransposeGetMat(A,&At));
-      CHKERRQ(PetscObjectReference((PetscObject)At));
+      PetscCall(MatTransposeGetMat(A,&At));
+      PetscCall(PetscObjectReference((PetscObject)At));
       break;
     case MAT_TRANSPOSE_IMPLICIT:
-      CHKERRQ(MatTransposeGetMat(A,&Ate));
-      CHKERRQ(MatTranspose(Ate,MAT_INITIAL_MATRIX,&Ae));
-      CHKERRQ(MatCreateTransposePermon(Ae,&At));
-      CHKERRQ(MatDestroy(&Ae));
+      PetscCall(MatTransposeGetMat(A,&Ate));
+      PetscCall(MatTranspose(Ate,MAT_INITIAL_MATRIX,&Ae));
+      PetscCall(MatCreateTransposePermon(Ae,&At));
+      PetscCall(MatDestroy(&Ae));
   }
   *At_out = At;
   PetscFunctionReturn(0);
@@ -45,11 +45,11 @@ static PetscErrorCode PermonMatTranspose_Default(Mat A,MatTransposeType type,Mat
   PetscFunctionBegin;
   switch (type) {
     case MAT_TRANSPOSE_EXPLICIT:
-      CHKERRQ(MatTranspose(A,MAT_INITIAL_MATRIX,&At));
+      PetscCall(MatTranspose(A,MAT_INITIAL_MATRIX,&At));
       break;
     default: /* MAT_TRANSPOSE_CHEAPEST */
     case MAT_TRANSPOSE_IMPLICIT:
-      CHKERRQ(MatCreateTransposePermon(A,&At));
+      PetscCall(MatCreateTransposePermon(A,&At));
   }
   *At_out = At;
   PetscFunctionReturn(0);
@@ -62,7 +62,7 @@ PetscErrorCode MatDiagonalScale_TransposePermon(Mat At,Vec l,Vec r)
   Mat_Transpose *data = (Mat_Transpose*)At->data;
 
   PetscFunctionBegin;
-  CHKERRQ(MatDiagonalScale(data->A,r,l));
+  PetscCall(MatDiagonalScale(data->A,r,l));
   PetscFunctionReturn(0);
 }
 
@@ -74,10 +74,10 @@ PetscErrorCode MatDuplicate_TransposePermon(Mat mat,MatDuplicateOption op,Mat *M
   Mat A1;
 
   PetscFunctionBegin;
-  CHKERRQ(MatDuplicate(A,op,&A1));
-  CHKERRQ(FllopPetscObjectInheritName((PetscObject)A1,(PetscObject)A,NULL));
-  CHKERRQ(MatCreateTransposePermon(A1,M));
-  CHKERRQ(MatDestroy(&A1));
+  PetscCall(MatDuplicate(A,op,&A1));
+  PetscCall(FllopPetscObjectInheritName((PetscObject)A1,(PetscObject)A,NULL));
+  PetscCall(MatCreateTransposePermon(A1,M));
+  PetscCall(MatDestroy(&A1));
   PetscFunctionReturn(0);
 }
 
@@ -86,7 +86,7 @@ PetscErrorCode MatDuplicate_TransposePermon(Mat mat,MatDuplicateOption op,Mat *M
 PetscErrorCode MatCreateTransposePermon(Mat A,Mat *At)
 {
   PetscFunctionBegin;
-  CHKERRQ(MatCreateTranspose(A,At));
+  PetscCall(MatCreateTranspose(A,At));
   (*At)->ops->diagonalscale = MatDiagonalScale_TransposePermon;
   (*At)->ops->duplicate     = MatDuplicate_TransposePermon;
   PetscFunctionReturn(0);
@@ -105,11 +105,11 @@ PetscErrorCode PermonMatTranspose(Mat A,MatTransposeType type,Mat *At_out)
   PetscValidPointer(At_out,3);
 
   /* try to find a type-specific implementation */
-  CHKERRQ(PetscObjectQueryFunction((PetscObject)A,"PermonMatTranspose_C",&f));
+  PetscCall(PetscObjectQueryFunction((PetscObject)A,"PermonMatTranspose_C",&f));
 
   /* work-around for MATTRANSPOSE to avoid need of a new constructor */
   if (!f) {
-    CHKERRQ(PetscObjectTypeCompare((PetscObject)A,MATTRANSPOSEMAT,&flg));
+    PetscCall(PetscObjectTypeCompare((PetscObject)A,MATTRANSPOSEMAT,&flg));
     if (flg) f = PermonMatTranspose_Transpose;
   }
   
@@ -117,10 +117,10 @@ PetscErrorCode PermonMatTranspose(Mat A,MatTransposeType type,Mat *At_out)
   if (!f) f = PermonMatTranspose_Default;
   
   /* call the implementation */
-  CHKERRQ((*f)(A,type,At_out));
+  PetscCall((*f)(A,type,At_out));
 
   if (!((PetscObject)(*At_out))->name) {
-    CHKERRQ(FllopPetscObjectInheritName((PetscObject)*At_out,(PetscObject)A,"_T"));
+    PetscCall(FllopPetscObjectInheritName((PetscObject)*At_out,(PetscObject)A,"_T"));
   }
   PetscFunctionReturn(0);
 }

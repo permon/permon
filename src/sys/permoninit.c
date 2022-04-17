@@ -40,18 +40,18 @@ PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], cons
   char pfile[PETSC_MAX_PATH_LEN];
 
   if (FllopInitializeCalled) {
-    CHKERRQ(PetscInfo(0,"FLLOP already initialized, skipping initialization.\n"));
+    PetscCall(PetscInfo(0,"FLLOP already initialized, skipping initialization.\n"));
     return(0);
   }
 
   if (!PetscInitializeCalled) {
     if (argc&&args) {
-      CHKERRQ(PetscInitialize(argc,args,file,help));
+      PetscCall(PetscInitialize(argc,args,file,help));
     } else {
-      CHKERRQ(PetscInitialize(&fllop_one,&fllop_executablePtr,file,help));
+      PetscCall(PetscInitialize(&fllop_one,&fllop_executablePtr,file,help));
     }
     FllopBeganPetsc=PETSC_TRUE;
-    CHKERRQ(PetscInfo(0,"FLLOP successfully started PETSc.\n"));
+    PetscCall(PetscInfo(0,"FLLOP successfully started PETSc.\n"));
   }
   
   if (!PetscInitializeCalled) {
@@ -59,39 +59,39 @@ PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], cons
     exit(1);
   }
 
-  CHKERRQ(PetscClassIdRegister("FLLOP",&FLLOP_CLASSID));
-  CHKERRQ(FllopCreate(PETSC_COMM_WORLD,&fllop));
+  PetscCall(PetscClassIdRegister("FLLOP",&FLLOP_CLASSID));
+  PetscCall(FllopCreate(PETSC_COMM_WORLD,&fllop));
 
-  CHKERRQ(PetscOptionsGetBool(NULL,NULL,"-skip_flloprc",&flg,NULL));
+  PetscCall(PetscOptionsGetBool(NULL,NULL,"-skip_flloprc",&flg,NULL));
   if (!flg) {
-    CHKERRQ(PetscGetHomeDirectory(pfile,PETSC_MAX_PATH_LEN-16));
+    PetscCall(PetscGetHomeDirectory(pfile,PETSC_MAX_PATH_LEN-16));
     /* warning: assumes all processes have a home directory or none, but nothing in between */
     if (pfile[0]) {
-      CHKERRQ(PetscStrcat(pfile,"/.flloprc"));
-      CHKERRQ(PetscOptionsInsertFile(PETSC_COMM_WORLD,NULL,pfile,PETSC_FALSE));
+      PetscCall(PetscStrcat(pfile,"/.flloprc"));
+      PetscCall(PetscOptionsInsertFile(PETSC_COMM_WORLD,NULL,pfile,PETSC_FALSE));
     }
-    CHKERRQ(PetscOptionsInsertFile(PETSC_COMM_WORLD,NULL, "flloprc", PETSC_FALSE));
-    CHKERRQ(PetscOptionsInsertFile(PETSC_COMM_WORLD,NULL, ".flloprc", PETSC_FALSE));
+    PetscCall(PetscOptionsInsertFile(PETSC_COMM_WORLD,NULL, "flloprc", PETSC_FALSE));
+    PetscCall(PetscOptionsInsertFile(PETSC_COMM_WORLD,NULL, ".flloprc", PETSC_FALSE));
     /* override by petsc options - flloprc currently takes the lowest precedence */
-    CHKERRQ(PetscOptionsInsert(NULL,argc,args,file));
+    PetscCall(PetscOptionsInsert(NULL,argc,args,file));
   } else {
-    CHKERRQ(PetscInfo(fllop,"skipping flloprc due to -skip_flloprc\n"));
+    PetscCall(PetscInfo(fllop,"skipping flloprc due to -skip_flloprc\n"));
   }
 
-  CHKERRQ(FllopSetFromOptions());
+  PetscCall(FllopSetFromOptions());
 
   flg = PETSC_FALSE;
-  CHKERRQ(PetscOptionsGetBool(NULL,NULL,"-options_view",&flg,NULL));
-  if (!flg)CHKERRQ(PetscOptionsGetBool(NULL,NULL,"-options_table",&flg,NULL));
-  if (flg) CHKERRQ(PetscOptionsView(NULL,PETSC_VIEWER_STDOUT_WORLD));
+  PetscCall(PetscOptionsGetBool(NULL,NULL,"-options_view",&flg,NULL));
+  if (!flg)PetscCall(PetscOptionsGetBool(NULL,NULL,"-options_table",&flg,NULL));
+  if (flg) PetscCall(PetscOptionsView(NULL,PETSC_VIEWER_STDOUT_WORLD));
 
   /* register all PERMON implementations of PETSc classes */
-  CHKERRQ(PermonMatRegisterAll());
-  CHKERRQ(FllopPCRegisterAll());
-  CHKERRQ(PermonKSPRegisterAll());
+  PetscCall(PermonMatRegisterAll());
+  PetscCall(FllopPCRegisterAll());
+  PetscCall(PermonKSPRegisterAll());
   
   FllopInitializeCalled = PETSC_TRUE;
-  CHKERRQ(PetscInfo(fllop,"FLLOP successfully initialized.\n"));
+  PetscCall(PetscInfo(fllop,"FLLOP successfully initialized.\n"));
   return 0;
 }
 
@@ -110,8 +110,8 @@ PetscErrorCode PermonFinalize()
   if (!FllopInitializeCalled) {
     PetscFunctionReturn(0);
   }
-  CHKERRQ(PetscInfo(fllop,"FllopFinalize() called\n"));  
-  CHKERRQ(FllopDestroy(&fllop));
+  PetscCall(PetscInfo(fllop,"FllopFinalize() called\n"));  
+  PetscCall(FllopDestroy(&fllop));
 
   if (FllopBeganPetsc) {
     PetscFinalize();
@@ -132,9 +132,9 @@ PetscErrorCode PermonFinalize()
 PetscErrorCode PetscDLLibraryRegister_permon()
 {
   PetscFunctionBegin;
-  CHKERRQ(QPPFInitializePackage());
-  CHKERRQ(QPInitializePackage());
-  CHKERRQ(QPSInitializePackage());
+  PetscCall(QPPFInitializePackage());
+  PetscCall(QPInitializePackage());
+  PetscCall(QPSInitializePackage());
   PetscFunctionReturn(0);
 }
 #endif /* PETSC_HAVE_DYNAMIC_LIBRARIES */

@@ -8,6 +8,6 @@ PETSC_EXTERN PetscErrorCode KSPCreate_FETI(KSP);
 PetscErrorCode PermonKSPRegisterAll()
 {
   PetscFunctionBegin;
-  CHKERRQ(KSPRegister(KSPFETI, KSPCreate_FETI));
+  PetscCall(KSPRegister(KSPFETI, KSPCreate_FETI));
   PetscFunctionReturn(0);
 }

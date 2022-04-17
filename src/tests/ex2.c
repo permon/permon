@@ -14,28 +14,28 @@ int main(int argc,char **args)
   PetscRandom       rand;
   MPI_Comm          comm;
 
-  CHKERRQ(PermonInitialize(&argc,&args,(char *)0,(char *)0));
+  PetscCall(PermonInitialize(&argc,&args,(char *)0,(char *)0));
   comm = PETSC_COMM_WORLD;
-  CHKERRQ(MPI_Comm_rank(comm,&rank));
-  CHKERRQ(MPI_Comm_size(comm,&size));
-  CHKERRQ(PetscOptionsGetInt(NULL,NULL,"-nloc",&n,NULL));
-  CHKERRQ(PetscOptionsGetViewer(comm,NULL,NULL,"-view",&viewer,&format,NULL));
+  PetscCallMPI(MPI_Comm_rank(comm,&rank));
+  PetscCallMPI(MPI_Comm_size(comm,&size));
+  PetscCall(PetscOptionsGetInt(NULL,NULL,"-nloc",&n,NULL));
+  PetscCall(PetscOptionsGetViewer(comm,NULL,NULL,"-view",&viewer,&format,NULL));
 
-  CHKERRQ(PetscRandomCreate(comm,&rand));
-  CHKERRQ(PetscRandomSetInterval(rand,0.0,10.0));
+  PetscCall(PetscRandomCreate(comm,&rand));
+  PetscCall(PetscRandomSetInterval(rand,0.0,10.0));
 
-  CHKERRQ(MatCreateDense(comm,n,n,PETSC_DECIDE,PETSC_DECIDE,NULL,&A));
-  CHKERRQ(MatGetSize(A,&N,NULL));
-  CHKERRQ(MatSetRandom(A,rand));
+  PetscCall(MatCreateDense(comm,n,n,PETSC_DECIDE,PETSC_DECIDE,NULL,&A));
+  PetscCall(MatGetSize(A,&N,NULL));
+  PetscCall(MatSetRandom(A,rand));
 
-  CHKERRQ(MatGetOwnershipRange(A,&rstart,NULL));
-  CHKERRQ(ISCreateStride(comm,n,N-rstart,-1,&rperm));
+  PetscCall(MatGetOwnershipRange(A,&rstart,NULL));
+  PetscCall(ISCreateStride(comm,n,N-rstart,-1,&rperm));
 
   if (viewer) {
-    CHKERRQ(PetscViewerPushFormat(viewer,format));
-    CHKERRQ(MatView(A,viewer));
-    CHKERRQ(ISView(rperm,viewer));
-    CHKERRQ(PetscViewerPopFormat(viewer));
+    PetscCall(PetscViewerPushFormat(viewer,format));
+    PetscCall(MatView(A,viewer));
+    PetscCall(ISView(rperm,viewer));
+    PetscCall(PetscViewerPopFormat(viewer));
   }
 
   if (!rank) {
@@ -43,46 +43,46 @@ int main(int argc,char **args)
   } else {
     nB = n - 1;
   }
-  CHKERRQ(MatCreateDense(comm,nB,nB,N,N,NULL,&B));
-  CHKERRQ(MatRedistributeRows(A,rperm,1,B));
+  PetscCall(MatCreateDense(comm,nB,nB,N,N,NULL,&B));
+  PetscCall(MatRedistributeRows(A,rperm,1,B));
 
   if (viewer) {
     IS isr,isrg;
 
-    CHKERRQ(PetscViewerPushFormat(viewer,format));
-    CHKERRQ(MatView(B,viewer));
-    CHKERRQ(MatGetOwnershipIS(B,&isr,NULL));
-    CHKERRQ(ISOnComm(isr,comm,PETSC_USE_POINTER,&isrg));
-    CHKERRQ(ISView(isrg,viewer));
-    CHKERRQ(ISDestroy(&isr));
-    CHKERRQ(ISDestroy(&isrg));
-    CHKERRQ(PetscViewerPopFormat(viewer));
+    PetscCall(PetscViewerPushFormat(viewer,format));
+    PetscCall(MatView(B,viewer));
+    PetscCall(MatGetOwnershipIS(B,&isr,NULL));
+    PetscCall(ISOnComm(isr,comm,PETSC_USE_POINTER,&isrg));
+    PetscCall(ISView(isrg,viewer));
+    PetscCall(ISDestroy(&isr));
+    PetscCall(ISDestroy(&isrg));
+    PetscCall(PetscViewerPopFormat(viewer));
   }
 
-  CHKERRQ(ISDestroy(&rperm));
+  PetscCall(ISDestroy(&rperm));
 
-  CHKERRQ(MatGetOwnershipRange(B,&rstart,NULL));
-  CHKERRQ(ISCreateStride(comm,nB,N-rstart,-1,&rperm));
+  PetscCall(MatGetOwnershipRange(B,&rstart,NULL));
+  PetscCall(ISCreateStride(comm,nB,N-rstart,-1,&rperm));
 
-  CHKERRQ(MatCreateDense(comm,n,n,N,N,NULL,&C));
-  CHKERRQ(MatRedistributeRows(B,rperm,1,C));
+  PetscCall(MatCreateDense(comm,n,n,N,N,NULL,&C));
+  PetscCall(MatRedistributeRows(B,rperm,1,C));
 
   if (viewer) {
-    CHKERRQ(PetscViewerPushFormat(viewer,format));
-    CHKERRQ(ISView(rperm,PETSC_VIEWER_STDOUT_WORLD));
-    CHKERRQ(MatView(C,viewer));
-    CHKERRQ(PetscViewerPopFormat(viewer));
+    PetscCall(PetscViewerPushFormat(viewer,format));
+    PetscCall(ISView(rperm,PETSC_VIEWER_STDOUT_WORLD));
+    PetscCall(MatView(C,viewer));
+    PetscCall(PetscViewerPopFormat(viewer));
   }
 
-  CHKERRQ(MatEqual(A,C,&flg));
+  PetscCall(MatEqual(A,C,&flg));
   if (!flg) SETERRQ(comm, PETSC_ERR_PLIB, "C != A");
 
-  CHKERRQ(PetscRandomDestroy(&rand));
-  CHKERRQ(ISDestroy(&rperm));
-  CHKERRQ(MatDestroy(&A));
-  CHKERRQ(MatDestroy(&B));
-  CHKERRQ(MatDestroy(&C));
-  CHKERRQ(PermonFinalize());
+  PetscCall(PetscRandomDestroy(&rand));
+  PetscCall(ISDestroy(&rperm));
+  PetscCall(MatDestroy(&A));
+  PetscCall(MatDestroy(&B));
+  PetscCall(MatDestroy(&C));
+  PetscCall(PermonFinalize());
   return 0;
 }
 

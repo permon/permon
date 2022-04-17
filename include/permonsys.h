@@ -78,7 +78,7 @@ if (FllopTraceEnabled) {\
     PeFuBe_s_[PeFuBe_i_]=' ';\
     PeFuBe_s_[PeFuBe_i_+1]=0;\
     FLLTIC(&ttttt);\
-    CHKERRQ(PetscPrintf(PETSC_COMM_WORLD,"%s%d BEGIN FUNCTION %s\n",PeFuBe_s_,PeFuBe_i_,__FUNCT__));\
+    PetscCall(PetscPrintf(PETSC_COMM_WORLD,"%s%d BEGIN FUNCTION %s\n",PeFuBe_s_,PeFuBe_i_,__FUNCT__));\
     PeFuBe_i_++;\
 }
 
@@ -90,7 +90,7 @@ FllopTraceBegin;
 {\
 if (FllopTraceEnabled) {\
     FLLTOC(&ttttt);\
-    CHKERRQ(PetscPrintf(PETSC_COMM_WORLD,"%s%d END   FUNCTION %s (%2.2f s)\n",PeFuBe_s_,--PeFuBe_i_,__FUNCT__,ttttt));\
+    PetscCall(PetscPrintf(PETSC_COMM_WORLD,"%s%d END   FUNCTION %s (%2.2f s)\n",PeFuBe_s_,--PeFuBe_i_,__FUNCT__,ttttt));\
     PeFuBe_s_[PeFuBe_i_]=0;\
     PetscFunctionReturn(rrrrr);\
 } else {\

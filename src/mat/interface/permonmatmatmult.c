@@ -21,24 +21,24 @@ static PetscErrorCode MatGetColumnVectors_Default(Mat A, Vec *cols_new[])
 
   PetscFunctionBegin;
   N = A->cmap->N;
-  CHKERRQ(MatCreateVecs(A, PETSC_IGNORE, &d));
-  CHKERRQ(VecDuplicateVecs(d, N, &cols));
-  CHKERRQ(VecDestroy(&d));
+  PetscCall(MatCreateVecs(A, PETSC_IGNORE, &d));
+  PetscCall(VecDuplicateVecs(d, N, &cols));
+  PetscCall(VecDestroy(&d));
 
   for (j=0; j<N; j++) {
-    CHKERRQ(VecZeroEntries(cols[j]));
+    PetscCall(VecZeroEntries(cols[j]));
   }
 
-  CHKERRQ(MatGetOwnershipRange(A, &ilo, &ihi));
-  CHKERRQ(VecGetArrays(cols, N, &A_cols_arrs));
+  PetscCall(MatGetOwnershipRange(A, &ilo, &ihi));
+  PetscCall(VecGetArrays(cols, N, &A_cols_arrs));
   for (i=ilo; i<ihi; i++) {
-    CHKERRQ(MatGetRow(A, i, &nnz, &nzi, &vals));
+    PetscCall(MatGetRow(A, i, &nnz, &nzi, &vals));
     for (j=0; j<nnz; j++) {
       A_cols_arrs[nzi[j]][i-ilo] = vals[j];
     }
-    CHKERRQ(MatRestoreRow(A, i, &nnz, &nzi, &vals));
+    PetscCall(MatRestoreRow(A, i, &nnz, &nzi, &vals));
   }
-  CHKERRQ(VecRestoreArrays(cols, N, &A_cols_arrs));
+  PetscCall(VecRestoreArrays(cols, N, &A_cols_arrs));
 
   *cols_new=cols;
   PetscFunctionReturn(0);
@@ -50,7 +50,7 @@ static PetscErrorCode MatGetColumnVectors_Default(Mat A, Vec *cols_new[])
 static PetscErrorCode MatRestoreColumnVectors_Default(Mat A, Vec *cols[])
 {
   PetscFunctionBegin;
-  CHKERRQ(VecDestroyVecs(A->cmap->N,cols));
+  PetscCall(VecDestroyVecs(A->cmap->N,cols));
   PetscFunctionReturn(0);
 }
 
@@ -66,7 +66,7 @@ PetscErrorCode MatGetColumnVectors(Mat A, PetscInt *ncols, Vec *cols_new[])
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
   PetscValidPointer(cols_new,3);
   if (!registered) {
-    CHKERRQ(PetscLogEventRegister("MatGetColVecs",MAT_CLASSID,&Mat_GetColumnVectors));
+    PetscCall(PetscLogEventRegister("MatGetColVecs",MAT_CLASSID,&Mat_GetColumnVectors));
     registered = PETSC_TRUE;
   }
   if (ncols) *ncols = A->cmap->N;
@@ -74,12 +74,12 @@ PetscErrorCode MatGetColumnVectors(Mat A, PetscInt *ncols, Vec *cols_new[])
     *cols_new = NULL;
     PetscFunctionReturn(0);
   }
-  CHKERRQ(PetscObjectQueryFunction((PetscObject)A,"MatGetColumnVectors_C",&f));
+  PetscCall(PetscObjectQueryFunction((PetscObject)A,"MatGetColumnVectors_C",&f));
   if (!f) f = MatGetColumnVectors_Default;
 
-  CHKERRQ(PetscLogEventBegin(Mat_GetColumnVectors,A,0,0,0));
-  CHKERRQ((*f)(A,cols_new));
-  CHKERRQ(PetscLogEventEnd(  Mat_GetColumnVectors,A,0,0,0));
+  PetscCall(PetscLogEventBegin(Mat_GetColumnVectors,A,0,0,0));
+  PetscCall((*f)(A,cols_new));
+  PetscCall(PetscLogEventEnd(  Mat_GetColumnVectors,A,0,0,0));
   PetscFunctionReturn(0);
 }
 
@@ -95,7 +95,7 @@ PetscErrorCode MatRestoreColumnVectors(Mat A, PetscInt *ncols, Vec *cols_new[])
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
   PetscValidPointer(cols_new,3);
   if (!registered) {
-    CHKERRQ(PetscLogEventRegister("MatResColVecs",MAT_CLASSID,&Mat_RestoreColumnVectors));
+    PetscCall(PetscLogEventRegister("MatResColVecs",MAT_CLASSID,&Mat_RestoreColumnVectors));
     registered = PETSC_TRUE;
   }
   if (ncols) *ncols = 0;
@@ -103,12 +103,12 @@ PetscErrorCode MatRestoreColumnVectors(Mat A, PetscInt *ncols, Vec *cols_new[])
     *cols_new = NULL;
     PetscFunctionReturn(0);
   }
-  CHKERRQ(PetscObjectQueryFunction((PetscObject)A,"MatRestoreColumnVectors_C",&f));
+  PetscCall(PetscObjectQueryFunction((PetscObject)A,"MatRestoreColumnVectors_C",&f));
   if (!f) f = MatRestoreColumnVectors_Default;
 
-  CHKERRQ(PetscLogEventBegin(Mat_RestoreColumnVectors,A,0,0,0));
-  CHKERRQ((*f)(A,cols_new));
-  CHKERRQ(PetscLogEventEnd(  Mat_RestoreColumnVectors,A,0,0,0));
+  PetscCall(PetscLogEventBegin(Mat_RestoreColumnVectors,A,0,0,0));
+  PetscCall((*f)(A,cols_new));
+  PetscCall(PetscLogEventEnd(  Mat_RestoreColumnVectors,A,0,0,0));
   *cols_new = NULL;
   PetscFunctionReturn(0);
 }
@@ -125,17 +125,17 @@ static inline PetscErrorCode MatMatMultByColumns_MatMult_Private(Mat A, PetscBoo
   f = A_transpose ? MatMultTranspose : MatMult;
   N = B->cmap->N;
   
-  CHKERRQ(MatGetColumnVectors(B,&N1,&B_cols)); PERMON_ASSERT(N1==N,"N1==N (%d != %d)",N1,N);
-  CHKERRQ(MatGetColumnVectors(C,&N1,&C_cols)); PERMON_ASSERT(N1==N,"N1==N (%d != %d)",N1,N);
+  PetscCall(MatGetColumnVectors(B,&N1,&B_cols)); PERMON_ASSERT(N1==N,"N1==N (%d != %d)",N1,N);
+  PetscCall(MatGetColumnVectors(C,&N1,&C_cols)); PERMON_ASSERT(N1==N,"N1==N (%d != %d)",N1,N);
   
   for (j=0; j<N; j++) {
-    CHKERRQ(f(A,B_cols[j],C_cols[j]));
+    PetscCall(f(A,B_cols[j],C_cols[j]));
   }
 
-  CHKERRQ(MatRestoreColumnVectors(B,&N1,&B_cols));
-  CHKERRQ(MatRestoreColumnVectors(C,&N1,&C_cols));
-  CHKERRQ(MatAssemblyBegin(C,MAT_FINAL_ASSEMBLY));
-  CHKERRQ(MatAssemblyEnd(C,MAT_FINAL_ASSEMBLY));
+  PetscCall(MatRestoreColumnVectors(B,&N1,&B_cols));
+  PetscCall(MatRestoreColumnVectors(C,&N1,&C_cols));
+  PetscCall(MatAssemblyBegin(C,MAT_FINAL_ASSEMBLY));
+  PetscCall(MatAssemblyEnd(C,MAT_FINAL_ASSEMBLY));
   PetscFunctionReturnI(0);
 }
 
@@ -148,8 +148,8 @@ static inline PetscErrorCode MatMatMultByColumns_MatFilterZeros_Private(Mat *C,P
   FllopTracedFunctionBegin;
   if (filter) {
     FllopTraceBegin;
-    CHKERRQ(MatFilterZeros(*C,PETSC_MACHINE_EPSILON,&C_new));
-    CHKERRQ(MatDestroy(C));
+    PetscCall(MatFilterZeros(*C,PETSC_MACHINE_EPSILON,&C_new));
+    PetscCall(MatDestroy(C));
     *C = C_new;
     PetscFunctionReturnI(0);
   }
@@ -169,37 +169,37 @@ static PetscErrorCode MatMatBlockDiagMultByColumns_Private(Mat B, PetscBool B_tr
   
   PetscFunctionBeginI;
   /* get diagonal block */
-  CHKERRQ(MatGetDiagonalBlock(R, &R_loc));
+  PetscCall(MatGetDiagonalBlock(R, &R_loc));
 
   if (B_transpose) {
     /* B_transpose is true => B is in fact B' */
     Bt = B;
   } else {
     /* transpose matrix B */
-    CHKERRQ(PermonMatTranspose(B, MAT_TRANSPOSE_EXPLICIT, &Bt));
+    PetscCall(PermonMatTranspose(B, MAT_TRANSPOSE_EXPLICIT, &Bt));
   }
-  CHKERRQ(MatNestPermonGetVecs(Bt,&lambda,NULL));
+  PetscCall(MatNestPermonGetVecs(Bt,&lambda,NULL));
 
   /* get "local" part of matrix Bt */
-  CHKERRQ(PermonMatGetLocalMat(Bt, &Bt_loc));
+  PetscCall(PermonMatGetLocalMat(Bt, &Bt_loc));
   
   /* multiply Bt_loc' * R_loc = Gt_loc */
-  CHKERRQ(MatMatMultByColumns_Private(Bt_loc, PETSC_TRUE, R_loc, PETSC_FALSE, &Gt_loc));
+  PetscCall(MatMatMultByColumns_Private(Bt_loc, PETSC_TRUE, R_loc, PETSC_FALSE, &Gt_loc));
 
-  CHKERRQ(MatDestroy(&Bt_loc));
-  if (!B_transpose) CHKERRQ(MatDestroy(&Bt));
+  PetscCall(MatDestroy(&Bt_loc));
+  if (!B_transpose) PetscCall(MatDestroy(&Bt));
   
   /* create global distributed G by vertical concatenating local sequential G_loc=Gt_loc' */
-  CHKERRQ(PermonMatTranspose(Gt_loc, MAT_TRANSPOSE_EXPLICIT, &G_loc));
-  CHKERRQ(MatMatMultByColumns_MatFilterZeros_Private(&G_loc,filter));
-  CHKERRQ(MatMergeAndDestroy(PetscObjectComm((PetscObject)B), &G_loc, lambda, &G));
+  PetscCall(PermonMatTranspose(Gt_loc, MAT_TRANSPOSE_EXPLICIT, &G_loc));
+  PetscCall(MatMatMultByColumns_MatFilterZeros_Private(&G_loc,filter));
+  PetscCall(MatMergeAndDestroy(PetscObjectComm((PetscObject)B), &G_loc, lambda, &G));
 
   /* return Gt as implicit transpose of G */
-  CHKERRQ(PermonMatTranspose(G, MAT_TRANSPOSE_CHEAPEST, Gt_new));
-  CHKERRQ(MatDestroy(&G));
+  PetscCall(PermonMatTranspose(G, MAT_TRANSPOSE_CHEAPEST, Gt_new));
+  PetscCall(MatDestroy(&G));
 
-  CHKERRQ(VecDestroy(&lambda));
-  CHKERRQ(MatDestroy(&Gt_loc));
+  PetscCall(VecDestroy(&lambda));
+  PetscCall(MatDestroy(&Gt_loc));
   PetscFunctionReturnI(0);
 }
 
@@ -210,13 +210,13 @@ static inline PetscErrorCode MatMatMultByColumns_Private(Mat A, PetscBool A_tran
   PetscBool flg;
 
   PetscFunctionBeginI;
-  CHKERRQ(PetscObjectTypeCompare((PetscObject)B,MATBLOCKDIAG,&flg));
+  PetscCall(PetscObjectTypeCompare((PetscObject)B,MATBLOCKDIAG,&flg));
   if (flg) {
-    CHKERRQ(MatMatBlockDiagMultByColumns_Private(A,A_transpose,B,filter,C_new));
+    PetscCall(MatMatBlockDiagMultByColumns_Private(A,A_transpose,B,filter,C_new));
   } else {
-    CHKERRQ(PermonMatCreateDenseProductMatrix(A,A_transpose,B,C_new));
-    CHKERRQ(MatMatMultByColumns_MatMult_Private(A,A_transpose,B,*C_new));
-    CHKERRQ(MatMatMultByColumns_MatFilterZeros_Private(C_new,filter));
+    PetscCall(PermonMatCreateDenseProductMatrix(A,A_transpose,B,C_new));
+    PetscCall(MatMatMultByColumns_MatMult_Private(A,A_transpose,B,*C_new));
+    PetscCall(MatMatMultByColumns_MatFilterZeros_Private(C_new,filter));
   }
   PetscFunctionReturnI(0);
 }
@@ -233,12 +233,12 @@ PetscErrorCode MatMatMultByColumns(Mat A, Mat B, PetscBool filter, Mat *C_new)
   PetscValidLogicalCollectiveBool(A,filter,3);
   PetscValidPointer(C_new,4);
   if (!registered) {
-    CHKERRQ(PetscLogEventRegister("MatMatMultByCols",MAT_CLASSID,&Mat_MatMultByColumns));
+    PetscCall(PetscLogEventRegister("MatMatMultByCols",MAT_CLASSID,&Mat_MatMultByColumns));
     registered = PETSC_TRUE;
   }
-  CHKERRQ(PetscLogEventBegin(Mat_MatMultByColumns,A,0,0,0));
-  CHKERRQ(MatMatMultByColumns_Private(A,PETSC_FALSE,B,filter,C_new));
-  CHKERRQ(PetscLogEventEnd(  Mat_MatMultByColumns,A,0,0,0));
+  PetscCall(PetscLogEventBegin(Mat_MatMultByColumns,A,0,0,0));
+  PetscCall(MatMatMultByColumns_Private(A,PETSC_FALSE,B,filter,C_new));
+  PetscCall(PetscLogEventEnd(  Mat_MatMultByColumns,A,0,0,0));
   PetscFunctionReturnI(0);
 }
 
@@ -254,12 +254,12 @@ PetscErrorCode MatTransposeMatMultByColumns(Mat A, Mat B, PetscBool filter, Mat 
   PetscValidLogicalCollectiveBool(A,filter,3);
   PetscValidPointer(C_new,4);
   if (!registered) {
-    CHKERRQ(PetscLogEventRegister("MatTrMatMultByCo",MAT_CLASSID,&Mat_TransposeMatMultByColumns));
+    PetscCall(PetscLogEventRegister("MatTrMatMultByCo",MAT_CLASSID,&Mat_TransposeMatMultByColumns));
     registered = PETSC_TRUE;
   }
-  CHKERRQ(PetscLogEventBegin(Mat_TransposeMatMultByColumns,A,0,0,0));
-  CHKERRQ(MatMatMultByColumns_Private(A,PETSC_TRUE,B,filter,C_new));
-  CHKERRQ(PetscLogEventEnd(  Mat_TransposeMatMultByColumns,A,0,0,0));
+  PetscCall(PetscLogEventBegin(Mat_TransposeMatMultByColumns,A,0,0,0));
+  PetscCall(MatMatMultByColumns_Private(A,PETSC_TRUE,B,filter,C_new));
+  PetscCall(PetscLogEventEnd(  Mat_TransposeMatMultByColumns,A,0,0,0));
   PetscFunctionReturnI(0);
 }
 

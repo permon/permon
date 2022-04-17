@@ -14,10 +14,10 @@ PetscErrorCode MatMult_Penalized(Mat Arho,Vec x,Vec y)
 {
   Mat_Penalized *ctx;
   PetscFunctionBegin;
-  CHKERRQ(MatShellGetContext(Arho,(void*)&ctx));
-  CHKERRQ(MatMult(ctx->BtB,x,y));
-  CHKERRQ(VecScale(y,ctx->rho));
-  CHKERRQ(MatMultAdd(ctx->A,x,y,y));
+  PetscCall(MatShellGetContext(Arho,(void*)&ctx));
+  PetscCall(MatMult(ctx->BtB,x,y));
+  PetscCall(VecScale(y,ctx->rho));
+  PetscCall(MatMultAdd(ctx->A,x,y,y));
   PetscFunctionReturn(0);
 }
 
@@ -27,10 +27,10 @@ PetscErrorCode MatMultTranspose_Penalized(Mat Arho,Vec x,Vec y)
 {
   Mat_Penalized *ctx;
   PetscFunctionBegin;
-  CHKERRQ(MatShellGetContext(Arho,(void*)&ctx));
-  CHKERRQ(MatMult(ctx->BtB,x,y));
-  CHKERRQ(VecScale(y,ctx->rho));
-  CHKERRQ(MatMultTransposeAdd(ctx->A,x,y,y));
+  PetscCall(MatShellGetContext(Arho,(void*)&ctx));
+  PetscCall(MatMult(ctx->BtB,x,y));
+  PetscCall(VecScale(y,ctx->rho));
+  PetscCall(MatMultTransposeAdd(ctx->A,x,y,y));
   PetscFunctionReturn(0);
 }
 
@@ -40,17 +40,17 @@ PetscErrorCode MatMultAdd_Penalized(Mat Arho,Vec x,Vec x2,Vec y)
 {
   Mat_Penalized *ctx;
   PetscFunctionBegin;
-  CHKERRQ(MatShellGetContext(Arho,(void*)&ctx));
+  PetscCall(MatShellGetContext(Arho,(void*)&ctx));
   if (x2 != y) {
-    CHKERRQ(MatMult(ctx->BtB,x,y));
-    CHKERRQ(VecAYPX(y,ctx->rho,x2));
+    PetscCall(MatMult(ctx->BtB,x,y));
+    PetscCall(VecAYPX(y,ctx->rho,x2));
   } else {
-    if (!ctx->xwork) CHKERRQ(VecDuplicate(y,&ctx->xwork));
-    CHKERRQ(MatMult(ctx->BtB,x,ctx->xwork));
-    CHKERRQ(VecScale(ctx->xwork,ctx->rho));
-    CHKERRQ(VecAXPY(y,1.0,ctx->xwork));
+    if (!ctx->xwork) PetscCall(VecDuplicate(y,&ctx->xwork));
+    PetscCall(MatMult(ctx->BtB,x,ctx->xwork));
+    PetscCall(VecScale(ctx->xwork,ctx->rho));
+    PetscCall(VecAXPY(y,1.0,ctx->xwork));
   }
-  CHKERRQ(MatMultAdd(ctx->A,x,y,y));
+  PetscCall(MatMultAdd(ctx->A,x,y,y));
   PetscFunctionReturn(0);
 }
 
@@ -60,17 +60,17 @@ PetscErrorCode MatMultTransposeAdd_Penalized(Mat Arho,Vec x,Vec x2,Vec y)
 {
   Mat_Penalized *ctx;
   PetscFunctionBegin;
-  CHKERRQ(MatShellGetContext(Arho,(void*)&ctx));
+  PetscCall(MatShellGetContext(Arho,(void*)&ctx));
   if (x2 != y) {
-    CHKERRQ(MatMult(ctx->BtB,x,y));
-    CHKERRQ(VecAYPX(y,ctx->rho,x2));
+    PetscCall(MatMult(ctx->BtB,x,y));
+    PetscCall(VecAYPX(y,ctx->rho,x2));
   } else {
-    if (!ctx->xwork) CHKERRQ(VecDuplicate(y,&ctx->xwork));
-    CHKERRQ(MatMult(ctx->BtB,x,ctx->xwork));
-    CHKERRQ(VecScale(ctx->xwork,ctx->rho));
-    CHKERRQ(VecAXPY(y,1.0,ctx->xwork));
+    if (!ctx->xwork) PetscCall(VecDuplicate(y,&ctx->xwork));
+    PetscCall(MatMult(ctx->BtB,x,ctx->xwork));
+    PetscCall(VecScale(ctx->xwork,ctx->rho));
+    PetscCall(VecAXPY(y,1.0,ctx->xwork));
   }
-  CHKERRQ(MatMultTransposeAdd(ctx->A,x,y,y));
+  PetscCall(MatMultTransposeAdd(ctx->A,x,y,y));
   PetscFunctionReturn(0);
 }
 
@@ -80,11 +80,11 @@ PetscErrorCode MatGetDiagonal_Penalized(Mat Arho,Vec d)
 {
   Mat_Penalized *ctx;
   PetscFunctionBegin;
-  CHKERRQ(MatShellGetContext(Arho,(void*)&ctx));
-  CHKERRQ(MatGetDiagonal(ctx->A,d));
-  if (!ctx->xwork) CHKERRQ(VecDuplicate(d,&ctx->xwork));
-  CHKERRQ(MatGetDiagonal(ctx->BtB,ctx->xwork));
-  CHKERRQ(VecAXPY(d,1.0,ctx->xwork));
+  PetscCall(MatShellGetContext(Arho,(void*)&ctx));
+  PetscCall(MatGetDiagonal(ctx->A,d));
+  if (!ctx->xwork) PetscCall(VecDuplicate(d,&ctx->xwork));
+  PetscCall(MatGetDiagonal(ctx->BtB,ctx->xwork));
+  PetscCall(VecAXPY(d,1.0,ctx->xwork));
   PetscFunctionReturn(0);
 }
 
@@ -93,12 +93,12 @@ PetscErrorCode MatGetDiagonal_Penalized(Mat Arho,Vec d)
 PetscErrorCode MatDestroy_Penalized(Mat Arho) {
   Mat_Penalized *ctx;
   PetscFunctionBegin;
-  CHKERRQ(MatShellGetContext(Arho,(void*)&ctx));
-  CHKERRQ(MatDestroy(&ctx->A));
-  CHKERRQ(MatDestroy(&ctx->BtB));
-  CHKERRQ(VecDestroy(&ctx->xwork));
-  CHKERRQ(PetscFree(ctx));
-  CHKERRQ(MatShellSetContext(Arho, NULL));
+  PetscCall(MatShellGetContext(Arho,(void*)&ctx));
+  PetscCall(MatDestroy(&ctx->A));
+  PetscCall(MatDestroy(&ctx->BtB));
+  PetscCall(VecDestroy(&ctx->xwork));
+  PetscCall(PetscFree(ctx));
+  PetscCall(MatShellSetContext(Arho, NULL));
   PetscFunctionReturn(0);
 }
 
@@ -108,7 +108,7 @@ static PetscErrorCode MatPenalizedSetPenalty_Penalty(Mat Arho,PetscReal rho)
 {
   Mat_Penalized *ctx;
   PetscFunctionBegin;
-  CHKERRQ(MatShellGetContext(Arho,(void*)&ctx));
+  PetscCall(MatShellGetContext(Arho,(void*)&ctx));
   ctx->rho = rho;
   PetscFunctionReturn(0);
 }
@@ -121,9 +121,9 @@ static PetscErrorCode MatPenalizedUpdatePenalty_Penalty(Mat Arho,PetscReal rho_u
   PetscReal rho_new;
 
   PetscFunctionBegin;
-  CHKERRQ(MatShellGetContext(Arho,(void*)&ctx));
+  PetscCall(MatShellGetContext(Arho,(void*)&ctx));
   rho_new = ctx->rho * rho_update;
-  CHKERRQ(PetscInfo(fllop,"updating rho := %.4e*%.4e = %.4e\n",ctx->rho,rho_update,rho_new));
+  PetscCall(PetscInfo(fllop,"updating rho := %.4e*%.4e = %.4e\n",ctx->rho,rho_update,rho_new));
   ctx->rho = rho_new;
   PetscFunctionReturn(0);
 }
@@ -134,7 +134,7 @@ static PetscErrorCode MatPenalizedGetPenalty_Penalty(Mat Arho,PetscReal *rho)
 {
   Mat_Penalized *ctx;
   PetscFunctionBegin;
-  CHKERRQ(MatShellGetContext(Arho,(void*)&ctx));
+  PetscCall(MatShellGetContext(Arho,(void*)&ctx));
   *rho = ctx->rho;
   PetscFunctionReturn(0);
 }
@@ -145,7 +145,7 @@ static PetscErrorCode MatPenalizedGetPenalizedTerm_Penalty(Mat Arho,Mat *BtB)
 {
   Mat_Penalized *ctx;
   PetscFunctionBegin;
-  CHKERRQ(MatShellGetContext(Arho,(void*)&ctx));
+  PetscCall(MatShellGetContext(Arho,(void*)&ctx));
   *BtB = ctx->BtB;
   PetscFunctionReturn(0);
 }
@@ -204,26 +204,26 @@ PetscErrorCode MatCreatePenalized(QP qp,PetscReal rho,Mat *Arho_new)
   QPPF pf;
 
   PetscFunctionBegin;
-  CHKERRQ(QPGetOperator(qp,&A));
-  CHKERRQ(QPGetQPPF(qp,&pf));
+  PetscCall(QPGetOperator(qp,&A));
+  PetscCall(QPGetQPPF(qp,&pf));
   PERMON_ASSERT(A,"A specified");
 
-  CHKERRQ(PetscMalloc(sizeof(Mat_Penalized),&ctx));
-  ctx->A = A; CHKERRQ(PetscObjectReference((PetscObject)A));
-  CHKERRQ(QPPFCreateGtG(pf,&ctx->BtB));
+  PetscCall(PetscMalloc(sizeof(Mat_Penalized),&ctx));
+  ctx->A = A; PetscCall(PetscObjectReference((PetscObject)A));
+  PetscCall(QPPFCreateGtG(pf,&ctx->BtB));
   ctx->rho = rho;
   ctx->xwork = NULL;
-  CHKERRQ(MatCreateShellPermon(PetscObjectComm((PetscObject)qp), A->rmap->n,A->cmap->n,A->rmap->N,A->cmap->N, ctx,&Arho));
-  CHKERRQ(MatShellSetOperation(Arho,MATOP_DESTROY,(void(*)(void))MatDestroy_Penalized));
-  CHKERRQ(MatShellSetOperation(Arho,MATOP_MULT,(void(*)(void))MatMult_Penalized));
-  CHKERRQ(MatShellSetOperation(Arho,MATOP_MULT_ADD,(void(*)(void))MatMultAdd_Penalized));
-  CHKERRQ(MatShellSetOperation(Arho,MATOP_MULT_TRANSPOSE,(void(*)(void))MatMultTranspose_Penalized));
-  CHKERRQ(MatShellSetOperation(Arho,MATOP_MULT_TRANSPOSE_ADD,(void(*)(void))MatMultTransposeAdd_Penalized));
-  CHKERRQ(MatShellSetOperation(Arho,MATOP_GET_DIAGONAL,(void(*)(void))MatGetDiagonal_Penalized));
-  CHKERRQ(PetscObjectComposeFunction((PetscObject)Arho,"MatPenalizedGetPenalty_Penalty_C",MatPenalizedGetPenalty_Penalty));
-  CHKERRQ(PetscObjectComposeFunction((PetscObject)Arho,"MatPenalizedSetPenalty_Penalty_C",MatPenalizedSetPenalty_Penalty));
-  CHKERRQ(PetscObjectComposeFunction((PetscObject)Arho,"MatPenalizedUpdatePenalty_Penalty_C",MatPenalizedUpdatePenalty_Penalty));
-  CHKERRQ(PetscObjectComposeFunction((PetscObject)Arho,"MatPenalizedGetPenalizedTerm_Penalty_C",MatPenalizedGetPenalizedTerm_Penalty));
+  PetscCall(MatCreateShellPermon(PetscObjectComm((PetscObject)qp), A->rmap->n,A->cmap->n,A->rmap->N,A->cmap->N, ctx,&Arho));
+  PetscCall(MatShellSetOperation(Arho,MATOP_DESTROY,(void(*)(void))MatDestroy_Penalized));
+  PetscCall(MatShellSetOperation(Arho,MATOP_MULT,(void(*)(void))MatMult_Penalized));
+  PetscCall(MatShellSetOperation(Arho,MATOP_MULT_ADD,(void(*)(void))MatMultAdd_Penalized));
+  PetscCall(MatShellSetOperation(Arho,MATOP_MULT_TRANSPOSE,(void(*)(void))MatMultTranspose_Penalized));
+  PetscCall(MatShellSetOperation(Arho,MATOP_MULT_TRANSPOSE_ADD,(void(*)(void))MatMultTransposeAdd_Penalized));
+  PetscCall(MatShellSetOperation(Arho,MATOP_GET_DIAGONAL,(void(*)(void))MatGetDiagonal_Penalized));
+  PetscCall(PetscObjectComposeFunction((PetscObject)Arho,"MatPenalizedGetPenalty_Penalty_C",MatPenalizedGetPenalty_Penalty));
+  PetscCall(PetscObjectComposeFunction((PetscObject)Arho,"MatPenalizedSetPenalty_Penalty_C",MatPenalizedSetPenalty_Penalty));
+  PetscCall(PetscObjectComposeFunction((PetscObject)Arho,"MatPenalizedUpdatePenalty_Penalty_C",MatPenalizedUpdatePenalty_Penalty));
+  PetscCall(PetscObjectComposeFunction((PetscObject)Arho,"MatPenalizedGetPenalizedTerm_Penalty_C",MatPenalizedGetPenalizedTerm_Penalty));
   *Arho_new = Arho;
   PetscFunctionReturn(0);
 }

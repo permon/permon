@@ -79,21 +79,21 @@ int main( int argc, char **argv )
   TaoConvergedReason reason;
 
   /* Initialize PETSC and PERMON */
-  CHKERRQ(PermonInitialize(&argc, &argv, (char*)0, help));
+  PetscCall(PermonInitialize(&argc, &argv, (char*)0, help));
 
   /* Set the default values for the problem parameters */
   user.nx = 50; user.ny = 50; user.ecc = 0.1; user.b = 10.0;
   testgetdiag = PETSC_FALSE;
 
   /* Check for any command line arguments that override defaults */
-  CHKERRQ(PetscOptionsGetInt(NULL,NULL,"-mx",&user.nx,&flg));
-  CHKERRQ(PetscOptionsGetInt(NULL,NULL,"-my",&user.ny,&flg));
-  CHKERRQ(PetscOptionsGetReal(NULL,NULL,"-ecc",&user.ecc,&flg));
-  CHKERRQ(PetscOptionsGetReal(NULL,NULL,"-b",&user.b,&flg));
-  CHKERRQ(PetscOptionsGetBool(NULL,NULL,"-test_getdiagonal",&testgetdiag,NULL));
+  PetscCall(PetscOptionsGetInt(NULL,NULL,"-mx",&user.nx,&flg));
+  PetscCall(PetscOptionsGetInt(NULL,NULL,"-my",&user.ny,&flg));
+  PetscCall(PetscOptionsGetReal(NULL,NULL,"-ecc",&user.ecc,&flg));
+  PetscCall(PetscOptionsGetReal(NULL,NULL,"-b",&user.b,&flg));
+  PetscCall(PetscOptionsGetBool(NULL,NULL,"-test_getdiagonal",&testgetdiag,NULL));
 
-  CHKERRQ(PetscPrintf(PETSC_COMM_WORLD,"\n---- Journal Bearing Problem SHB-----\n"));
-  CHKERRQ(PetscPrintf(PETSC_COMM_WORLD,"mx: %D,  my: %D,  ecc: %g \n\n",user.nx,user.ny,(double)user.ecc));
+  PetscCall(PetscPrintf(PETSC_COMM_WORLD,"\n---- Journal Bearing Problem SHB-----\n"));
+  PetscCall(PetscPrintf(PETSC_COMM_WORLD,"mx: %D,  my: %D,  ecc: %g \n\n",user.nx,user.ny,(double)user.ecc));
 
   /* Let Petsc determine the grid division */
   Nx = PETSC_DECIDE; Ny = PETSC_DECIDE;
@@ -103,9 +103,9 @@ int main( int argc, char **argv )
      which derives from an elliptic PDE on two dimensional domain.  From
      the distributed array, Create the vectors.
   */
-  CHKERRQ(DMDACreate2d(PETSC_COMM_WORLD,DM_BOUNDARY_NONE,DM_BOUNDARY_NONE,DMDA_STENCIL_STAR,user.nx,user.ny,Nx,Ny,1,1,NULL,NULL,&user.dm));
-  CHKERRQ(DMSetFromOptions(user.dm));
-  CHKERRQ(DMSetUp(user.dm));
+  PetscCall(DMDACreate2d(PETSC_COMM_WORLD,DM_BOUNDARY_NONE,DM_BOUNDARY_NONE,DMDA_STENCIL_STAR,user.nx,user.ny,Nx,Ny,1,1,NULL,NULL,&user.dm));
+  PetscCall(DMSetFromOptions(user.dm));
+  PetscCall(DMSetUp(user.dm));
 
   /*
      Extract global and local vectors from DM; the vector user.B is
@@ -113,20 +113,20 @@ int main( int argc, char **argv )
      gradient, and Hessian.  Duplicate for remaining vectors that are
      the same types.
   */
-  CHKERRQ(DMCreateGlobalVector(user.dm,&x)); /* Solution */
-  CHKERRQ(VecDuplicate(x,&user.B)); /* Linear objective */
+  PetscCall(DMCreateGlobalVector(user.dm,&x)); /* Solution */
+  PetscCall(VecDuplicate(x,&user.B)); /* Linear objective */
 
 
   /*  Create matrix user.A to store quadratic, Create a local ordering scheme. */
-  CHKERRQ(VecGetLocalSize(x,&m));
-  CHKERRQ(DMCreateMatrix(user.dm,&user.A));
+  PetscCall(VecGetLocalSize(x,&m));
+  PetscCall(DMCreateMatrix(user.dm,&user.A));
 
   if (testgetdiag) {
-    CHKERRQ(MatSetOperation(user.A,MATOP_GET_DIAGONAL,NULL));
+    PetscCall(MatSetOperation(user.A,MATOP_GET_DIAGONAL,NULL));
   }
 
   /* User defined function -- compute linear term of quadratic */
-  CHKERRQ(ComputeB(&user));
+  PetscCall(ComputeB(&user));
 
   /* The TAO code begins here */
 
@@ -134,63 +134,63 @@ int main( int argc, char **argv )
      Create the TAO optimization solver
      Suitable methods: TAOGPCG, TAOBQPIP, TAOTRON, TAOBLMVM
   */
-  CHKERRQ(TaoCreate(PETSC_COMM_WORLD,&tao));
+  PetscCall(TaoCreate(PETSC_COMM_WORLD,&tao));
 
   /* Set the initial vector */
-  CHKERRQ(VecSet(x, zero));
-  CHKERRQ(TaoSetSolution(tao,x));
+  PetscCall(VecSet(x, zero));
+  PetscCall(TaoSetSolution(tao,x));
 
   /* Set the user function, gradient, hessian evaluation routines and data structures */
-  CHKERRQ(TaoSetObjectiveAndGradient(tao,NULL,FormFunctionGradient,(void*) &user));
+  PetscCall(TaoSetObjectiveAndGradient(tao,NULL,FormFunctionGradient,(void*) &user));
 
-  CHKERRQ(TaoSetHessian(tao,user.A,user.A,FormHessian,(void*)&user));
+  PetscCall(TaoSetHessian(tao,user.A,user.A,FormHessian,(void*)&user));
 
   /* Set a routine that defines the bounds */
-  CHKERRQ(VecDuplicate(x,&user.xl));
-  CHKERRQ(VecDuplicate(x,&user.xu));
-  CHKERRQ(VecSet(user.xl, zero));
-  CHKERRQ(VecSet(user.xu, d1000));
-  CHKERRQ(TaoSetVariableBounds(tao,user.xl,user.xu));
+  PetscCall(VecDuplicate(x,&user.xl));
+  PetscCall(VecDuplicate(x,&user.xu));
+  PetscCall(VecSet(user.xl, zero));
+  PetscCall(VecSet(user.xu, d1000));
+  PetscCall(TaoSetVariableBounds(tao,user.xl,user.xu));
 
-  CHKERRQ(TaoGetKSP(tao,&ksp));
+  PetscCall(TaoGetKSP(tao,&ksp));
   if (ksp) {
-    CHKERRQ(KSPSetType(ksp,KSPCG));
+    PetscCall(KSPSetType(ksp,KSPCG));
   }
 
-  CHKERRQ(PetscOptionsHasName(NULL,NULL,"-testmonitor",&flg));
+  PetscCall(PetscOptionsHasName(NULL,NULL,"-testmonitor",&flg));
   if (flg) {
-    CHKERRQ(TaoSetMonitor(tao,Monitor,&user,NULL));
+    PetscCall(TaoSetMonitor(tao,Monitor,&user,NULL));
   }
-  CHKERRQ(PetscOptionsHasName(NULL,NULL,"-testconvergence",&flg));
+  PetscCall(PetscOptionsHasName(NULL,NULL,"-testconvergence",&flg));
   if (flg) {
-    CHKERRQ(TaoSetConvergenceTest(tao,ConvergenceTest,&user));
+    PetscCall(TaoSetConvergenceTest(tao,ConvergenceTest,&user));
   }
 
   /* Set default. Check for any TAO command line options. */
   /* Note PERMON/KSP rtol is equivalent to TAO gttol. */
   /* TAO grtol currently has not counterpart in PERMON, so we deactivate it by setting ridiculously small value. */
-  CHKERRQ(TaoSetType(tao,TAOTRON));
-  CHKERRQ(TaoSetTolerances(tao,1e-8,1e-50,1e-8));
-  CHKERRQ(TaoSetFromOptions(tao));
+  PetscCall(TaoSetType(tao,TAOTRON));
+  PetscCall(TaoSetTolerances(tao,1e-8,1e-50,1e-8));
+  PetscCall(TaoSetFromOptions(tao));
 
   /* Solve the bound constrained problem */
-  CHKERRQ(TaoSolve(tao));
-  CHKERRQ(TaoGetConvergedReason(tao, &reason));
+  PetscCall(TaoSolve(tao));
+  PetscCall(TaoGetConvergedReason(tao, &reason));
   if (reason < 0) SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_NOT_CONVERGED, "TAO diverged, reason %D (%s)", reason, TaoConvergedReasons[reason]);
   
   /* Call PERMON solver and compare results */
-  CHKERRQ(CallPermonAndCompareResults(tao, &user));
+  PetscCall(CallPermonAndCompareResults(tao, &user));
 
   /* Free PETSc data structures */
-  CHKERRQ(VecDestroy(&x));
-  CHKERRQ(VecDestroy(&user.xl));
-  CHKERRQ(VecDestroy(&user.xu));
-  CHKERRQ(MatDestroy(&user.A));
-  CHKERRQ(VecDestroy(&user.B));
-  CHKERRQ(TaoDestroy(&tao));
-  CHKERRQ(DMDestroy(&user.dm));
+  PetscCall(VecDestroy(&x));
+  PetscCall(VecDestroy(&user.xl));
+  PetscCall(VecDestroy(&user.xu));
+  PetscCall(MatDestroy(&user.A));
+  PetscCall(VecDestroy(&user.B));
+  PetscCall(TaoDestroy(&tao));
+  PetscCall(DMDestroy(&user.dm));
 
-  CHKERRQ(PermonFinalize());
+  PetscCall(PermonFinalize());
   return 0;
 }
 
@@ -222,11 +222,11 @@ PetscErrorCode ComputeB(AppCtx* user)
   /*
      Get local grid boundaries
   */
-  CHKERRQ(DMDAGetCorners(user->dm,&xs,&ys,NULL,&xm,&ym,NULL));
-  CHKERRQ(DMDAGetGhostCorners(user->dm,&gxs,&gys,NULL,&gxm,&gym,NULL));
+  PetscCall(DMDAGetCorners(user->dm,&xs,&ys,NULL,&xm,&ym,NULL));
+  PetscCall(DMDAGetGhostCorners(user->dm,&gxs,&gys,NULL,&gxm,&gym,NULL));
 
   /* Compute the linear term in the objective function */
-  CHKERRQ(VecGetArray(user->B,&b));
+  PetscCall(VecGetArray(user->B,&b));
   for (i=xs; i<xs+xm; i++){
     temp=PetscSinScalar((i+1)*hx);
     for (j=ys; j<ys+ym; j++){
@@ -234,8 +234,8 @@ PetscErrorCode ComputeB(AppCtx* user)
       b[k]=  - ehxhy*temp;
     }
   }
-  CHKERRQ(VecRestoreArray(user->B,&b));
-  CHKERRQ(PetscLogFlops(5*xm*ym+3*xm));
+  PetscCall(VecRestoreArray(user->B,&b));
+  PetscCall(PetscLogFlops(5*xm*ym+3*xm));
 
   return 0;
 }
@@ -264,20 +264,20 @@ PetscErrorCode FormFunctionGradient(Tao tao, Vec X, PetscReal *fcn,Vec G,void *p
   hxhx=one/(hx*hx);
   hyhy=one/(hy*hy);
 
-  CHKERRQ(DMGetLocalVector(user->dm,&localX));
+  PetscCall(DMGetLocalVector(user->dm,&localX));
 
-  CHKERRQ(DMGlobalToLocalBegin(user->dm,X,INSERT_VALUES,localX));
-  CHKERRQ(DMGlobalToLocalEnd(user->dm,X,INSERT_VALUES,localX));
+  PetscCall(DMGlobalToLocalBegin(user->dm,X,INSERT_VALUES,localX));
+  PetscCall(DMGlobalToLocalEnd(user->dm,X,INSERT_VALUES,localX));
 
-  CHKERRQ(VecSet(G, zero));
+  PetscCall(VecSet(G, zero));
   /*
     Get local grid boundaries
   */
-  CHKERRQ(DMDAGetCorners(user->dm,&xs,&ys,NULL,&xm,&ym,NULL));
-  CHKERRQ(DMDAGetGhostCorners(user->dm,&gxs,&gys,NULL,&gxm,&gym,NULL));
+  PetscCall(DMDAGetCorners(user->dm,&xs,&ys,NULL,&xm,&ym,NULL));
+  PetscCall(DMDAGetGhostCorners(user->dm,&gxs,&gys,NULL,&gxm,&gym,NULL));
 
-  CHKERRQ(VecGetArray(localX,&x));
-  CHKERRQ(VecGetArray(G,&g));
+  PetscCall(VecGetArray(localX,&x));
+  PetscCall(VecGetArray(G,&g));
 
   for (i=xs; i< xs+xm; i++){
     xi=(i+1)*hx;
@@ -328,18 +328,18 @@ PetscErrorCode FormFunctionGradient(Tao tao, Vec X, PetscReal *fcn,Vec G,void *p
 
   }
 
-  CHKERRQ(VecRestoreArray(localX,&x));
-  CHKERRQ(VecRestoreArray(G,&g));
+  PetscCall(VecRestoreArray(localX,&x));
+  PetscCall(VecRestoreArray(G,&g));
 
-  CHKERRQ(DMRestoreLocalVector(user->dm,&localX));
+  PetscCall(DMRestoreLocalVector(user->dm,&localX));
 
-  CHKERRQ(VecDot(X,G,&f1));
-  CHKERRQ(VecDot(user->B,X,&f2));
-  CHKERRQ(VecAXPY(G, one, user->B));
+  PetscCall(VecDot(X,G,&f1));
+  PetscCall(VecDot(user->B,X,&f2));
+  PetscCall(VecAXPY(G, one, user->B));
   *fcn = f1/2.0 + f2;
 
 
-  CHKERRQ(PetscLogFlops((91 + 10*ym) * xm));
+  PetscCall(PetscLogFlops((91 + 10*ym) * xm));
   return 0;
 
 }
@@ -375,10 +375,10 @@ PetscErrorCode FormHessian(Tao tao,Vec X,Mat hes, Mat Hpre, void *ptr)
   /*
     Get local grid boundaries
   */
-  CHKERRQ(DMDAGetCorners(user->dm,&xs,&ys,NULL,&xm,&ym,NULL));
-  CHKERRQ(DMDAGetGhostCorners(user->dm,&gxs,&gys,NULL,&gxm,&gym,NULL));
-  CHKERRQ(MatAssembled(hes,&assembled));
-  if (assembled)CHKERRQ(MatZeroEntries(hes));
+  PetscCall(DMDAGetCorners(user->dm,&xs,&ys,NULL,&xm,&ym,NULL));
+  PetscCall(DMDAGetGhostCorners(user->dm,&gxs,&gys,NULL,&gxm,&gym,NULL));
+  PetscCall(MatAssembled(hes,&assembled));
+  if (assembled)PetscCall(MatZeroEntries(hes));
 
   for (i=xs; i< xs+xm; i++){
     xi=(i+1)*hx;
@@ -417,7 +417,7 @@ PetscErrorCode FormHessian(Tao tao,Vec X,Mat hes, Mat Hpre, void *ptr)
       if (j+1 <gys+gym){
         v[k]= vup; col[k] = row+gxm; k++;
       }
-      CHKERRQ(MatSetValuesLocal(hes,1,&row,k,col,v,INSERT_VALUES));
+      PetscCall(MatSetValuesLocal(hes,1,&row,k,col,v,INSERT_VALUES));
 
     }
 
@@ -429,18 +429,18 @@ PetscErrorCode FormHessian(Tao tao,Vec X,Mat hes, Mat Hpre, void *ptr)
      By placing code between these two statements, computations can be
      done while messages are in transition.
   */
-  CHKERRQ(MatAssemblyBegin(hes,MAT_FINAL_ASSEMBLY));
-  CHKERRQ(MatAssemblyEnd(hes,MAT_FINAL_ASSEMBLY));
+  PetscCall(MatAssemblyBegin(hes,MAT_FINAL_ASSEMBLY));
+  PetscCall(MatAssemblyEnd(hes,MAT_FINAL_ASSEMBLY));
 
   /*
     Tell the matrix we will never add a new nonzero location to the
     matrix. If we do it will generate an error.
   */
-  CHKERRQ(MatSetOption(hes,MAT_NEW_NONZERO_LOCATION_ERR,PETSC_TRUE));
-  CHKERRQ(MatSetOption(hes,MAT_SYMMETRIC,PETSC_TRUE));
+  PetscCall(MatSetOption(hes,MAT_NEW_NONZERO_LOCATION_ERR,PETSC_TRUE));
+  PetscCall(MatSetOption(hes,MAT_SYMMETRIC,PETSC_TRUE));
 
-  CHKERRQ(PetscLogFlops(9*xm*ym+49*xm));
-  CHKERRQ(MatNorm(hes,NORM_1,&hx));
+  PetscCall(PetscLogFlops(9*xm*ym+49*xm));
+  PetscCall(MatNorm(hes,NORM_1,&hx));
   return 0;
 }
 
@@ -453,9 +453,9 @@ PetscErrorCode Monitor(Tao tao, void *ctx)
   TaoConvergedReason reason;
 
   PetscFunctionBegin;
-  CHKERRQ(TaoGetSolutionStatus(tao, &its, &f, &gnorm, &cnorm, &xdiff, &reason));
+  PetscCall(TaoGetSolutionStatus(tao, &its, &f, &gnorm, &cnorm, &xdiff, &reason));
   if (!(its%5)) {
-    CHKERRQ(PetscPrintf(PETSC_COMM_WORLD,"iteration=%D\tf=%g\n",its,(double)f));
+    PetscCall(PetscPrintf(PETSC_COMM_WORLD,"iteration=%D\tf=%g\n",its,(double)f));
   }
   PetscFunctionReturn(0);
 }
@@ -469,9 +469,9 @@ PetscErrorCode ConvergenceTest(Tao tao, void *ctx)
   TaoConvergedReason reason;
 
   PetscFunctionBegin;
-  CHKERRQ(TaoGetSolutionStatus(tao, &its, &f, &gnorm, &cnorm, &xdiff, &reason));
+  PetscCall(TaoGetSolutionStatus(tao, &its, &f, &gnorm, &cnorm, &xdiff, &reason));
   if (its == 100) {
-    CHKERRQ(TaoSetConvergedReason(tao,TAO_DIVERGED_MAXITS));
+    PetscCall(TaoSetConvergedReason(tao,TAO_DIVERGED_MAXITS));
   }
   PetscFunctionReturn(0);
 
@@ -497,64 +497,64 @@ PetscErrorCode CallPermonAndCompareResults(Tao tao, void *ctx)
   
   PetscFunctionBeginI;
   /* Compute Hessian */
-  CHKERRQ(FormHessian(tao, NULL, user->A, NULL, (void*) user));
+  PetscCall(FormHessian(tao, NULL, user->A, NULL, (void*) user));
   
   /* Prescribe the QP problem. */
-  CHKERRQ(QPCreate(PETSC_COMM_WORLD, &qp));
-  CHKERRQ(QPSetOperator(qp, user->A));
-  CHKERRQ(QPSetRhsPlus(qp, user->B));
-  CHKERRQ(QPSetBox(qp, NULL, user->xl, user->xu));
-  CHKERRQ(VecDuplicate(user->B,&x_diff));
+  PetscCall(QPCreate(PETSC_COMM_WORLD, &qp));
+  PetscCall(QPSetOperator(qp, user->A));
+  PetscCall(QPSetRhsPlus(qp, user->B));
+  PetscCall(QPSetBox(qp, NULL, user->xl, user->xu));
+  PetscCall(VecDuplicate(user->B,&x_diff));
   
   /* Create the QP solver (QPS). */
-  CHKERRQ(QPSCreate(PETSC_COMM_WORLD, &qps));
+  PetscCall(QPSCreate(PETSC_COMM_WORLD, &qps));
   
   /* Set QPS type to TAO within QPS TAO wrapper. */
-  CHKERRQ(QPSSetType(qps,QPSTAO));
-  CHKERRQ(QPSTaoSetType(qps,TAOBLMVM));
+  PetscCall(QPSSetType(qps,QPSTAO));
+  PetscCall(QPSTaoSetType(qps,TAOBLMVM));
 
   /* Insert the QP problem into the solver. */
-  CHKERRQ(QPSSetQP(qps, qp));
+  PetscCall(QPSSetQP(qps, qp));
   
   /* Get Tao tolerances */
-  CHKERRQ(TaoGetTolerances(tao, &gatol, &grtol, &gttol));
-  CHKERRQ(PetscPrintf(PETSC_COMM_WORLD,"TAO tolerances are gatol = %e, grtol =  %e, gttol = %e\n",gatol, grtol, gttol));
+  PetscCall(TaoGetTolerances(tao, &gatol, &grtol, &gttol));
+  PetscCall(PetscPrintf(PETSC_COMM_WORLD,"TAO tolerances are gatol = %e, grtol =  %e, gttol = %e\n",gatol, grtol, gttol));
 
   /* Set default QPS options. */
-  CHKERRQ(PetscPrintf(PETSC_COMM_WORLD,"Setting PERMON rtol = gttol, atol = gatol\n"));
+  PetscCall(PetscPrintf(PETSC_COMM_WORLD,"Setting PERMON rtol = gttol, atol = gatol\n"));
   rtol  = gttol;
   atol  = gatol;
   dtol  = PETSC_DEFAULT;
   maxit = PETSC_DEFAULT;
-  CHKERRQ(QPSSetTolerances(qps, rtol, atol, dtol, maxit));  
+  PetscCall(QPSSetTolerances(qps, rtol, atol, dtol, maxit));  
 
   /* Set the QPS monitor */
-  CHKERRQ(QPSMonitorSet(qps,QPSMonitorDefault,NULL,0));
+  PetscCall(QPSMonitorSet(qps,QPSMonitorDefault,NULL,0));
           
   /* Set QPS options from the options database (overriding the defaults). */
-  CHKERRQ(QPSSetFromOptions(qps));  
+  PetscCall(QPSSetFromOptions(qps));  
 
   /* Solve the QP */
-  CHKERRQ(QPSSolve(qps));  
-  CHKERRQ(QPSGetConvergedReason(qps, &reason));
+  PetscCall(QPSSolve(qps));  
+  PetscCall(QPSGetConvergedReason(qps, &reason));
   if (reason < 0) SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_NOT_CONVERGED, "QPS diverged, reason %D (%s)", reason, KSPConvergedReasons[reason]);
 
   /* Get the solution vector */
-  CHKERRQ(QPGetSolutionVector(qp, &x_qp));
-  CHKERRQ(TaoGetSolution(tao,&x_tao));
+  PetscCall(QPGetSolutionVector(qp, &x_qp));
+  PetscCall(TaoGetSolution(tao,&x_tao));
   
   /* Difference of results from TAO and QP */
-  CHKERRQ(VecNorm(user->B, NORM_2, &rhs_norm));
+  PetscCall(VecNorm(user->B, NORM_2, &rhs_norm));
   tao_diff_tol = 1e1 * PetscMax(rtol*rhs_norm,atol); /* 10 times the tolerance for the default convergence test */
-  CHKERRQ(PetscOptionsGetReal(NULL, NULL, "-tao_diff_tol", &tao_diff_tol, NULL));
-  CHKERRQ(VecCopy(x_tao, x_diff));
-  CHKERRQ(VecAXPY(x_diff, -1.0, x_qp));
-  CHKERRQ(VecNorm(x_diff, NORM_2, &x_diff_norm));
-  CHKERRQ(PetscPrintf(PetscObjectComm((PetscObject)qps),"Norm of difference of results from TAO and QP = %e %s %e = tolerance\n",x_diff_norm, (x_diff_norm <= tao_diff_tol) ? "<=" : ">", tao_diff_tol));
+  PetscCall(PetscOptionsGetReal(NULL, NULL, "-tao_diff_tol", &tao_diff_tol, NULL));
+  PetscCall(VecCopy(x_tao, x_diff));
+  PetscCall(VecAXPY(x_diff, -1.0, x_qp));
+  PetscCall(VecNorm(x_diff, NORM_2, &x_diff_norm));
+  PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps),"Norm of difference of results from TAO and QP = %e %s %e = tolerance\n",x_diff_norm, (x_diff_norm <= tao_diff_tol) ? "<=" : ">", tao_diff_tol));
   if (x_diff_norm > tao_diff_tol) SETERRQ(PetscObjectComm((PetscObject)qps), PETSC_ERR_PLIB, "PERMON and TAO yield different results!");
-  CHKERRQ(QPSDestroy(&qps));
-  CHKERRQ(QPDestroy(&qp));
-  CHKERRQ(VecDestroy(&x_diff));
+  PetscCall(QPSDestroy(&qps));
+  PetscCall(QPDestroy(&qp));
+  PetscCall(VecDestroy(&x_diff));
   PetscFunctionReturnI(0);
   
 }

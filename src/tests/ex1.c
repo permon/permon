@@ -3,8 +3,8 @@
 
 int main(int argc,char **args)
 {
-  CHKERRQ(PermonInitialize(&argc,&args,(char *)0,(char *)0));
-  CHKERRQ(PermonFinalize());
+  PetscCall(PermonInitialize(&argc,&args,(char *)0,(char *)0));
+  PetscCall(PermonFinalize());
   return 0;
 }
 

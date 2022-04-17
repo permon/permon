@@ -13,10 +13,10 @@ static PetscErrorCode QPSetFromOptions_Private(QP qp);
   PetscReal max,min,norm;\
   PetscInt  imax,imin;\
   const char *name = (iname);\
-  CHKERRQ(VecNorm(x,NORM_2,&norm));\
-  CHKERRQ(VecMax(x,&imax,&max));\
-  CHKERRQ(VecMin(x,&imin,&min));\
-  CHKERRQ(PetscViewerASCIIPrintf(v, "||%2s|| = %.8e    max(%2s) = %.2e = %2s(%d)    min(%2s) = %.2e = %2s(%d)    %x\n",name,norm,name,max,name,imax,name,min,name,imin,x));\
+  PetscCall(VecNorm(x,NORM_2,&norm));\
+  PetscCall(VecMax(x,&imax,&max));\
+  PetscCall(VecMin(x,&imin,&min));\
+  PetscCall(PetscViewerASCIIPrintf(v, "||%2s|| = %.8e    max(%2s) = %.2e = %2s(%d)    min(%2s) = %.2e = %2s(%d)    %x\n",name,norm,name,max,name,imax,name,min,name,imin,x));\
 }
 
 #undef __FUNCT__
@@ -29,16 +29,16 @@ static PetscErrorCode QPInitializeInitialVector_Private(QP qp)
   if (qp->x) PetscFunctionReturn(0);
   if (!qp->parent) {
     /* if no initial guess exists, just set it to a zero vector */
-    CHKERRQ(MatCreateVecs(qp->A,&qp->x,NULL));
-    CHKERRQ(VecZeroEntries(qp->x)); // TODO: is it in the feasible set?
+    PetscCall(MatCreateVecs(qp->A,&qp->x,NULL));
+    PetscCall(VecZeroEntries(qp->x)); // TODO: is it in the feasible set?
     PetscFunctionReturn(0);
   }
-  CHKERRQ(QPGetSolutionVector(qp->parent, &xp));
+  PetscCall(QPGetSolutionVector(qp->parent, &xp));
   if (xp) {
-    CHKERRQ(VecDuplicate(xp, &xc));
-    CHKERRQ(VecCopy(xp, xc));
-    CHKERRQ(QPSetInitialVector(qp, xc));
-    CHKERRQ(VecDestroy(&xc));
+    PetscCall(VecDuplicate(xp, &xc));
+    PetscCall(VecCopy(xp, xc));
+    PetscCall(QPSetInitialVector(qp, xc));
+    PetscCall(VecDestroy(&xc));
   }
   PetscFunctionReturn(0);
 }
@@ -52,11 +52,11 @@ PetscErrorCode QPAddChild(QP qp, QPDuplicateOption opt, QP *newchild)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
   PetscValidPointer(newchild,2);
-  CHKERRQ(QPDuplicate(qp,opt,&child));
+  PetscCall(QPDuplicate(qp,opt,&child));
   qp->child = child;
   child->parent = qp;
   child->id = qp->id+1;
-  if (qp->changeListener) CHKERRQ((*qp->changeListener)(qp));
+  if (qp->changeListener) PetscCall((*qp->changeListener)(qp));
   if (newchild) *newchild = child;
   PetscFunctionReturn(0);
 }
@@ -70,8 +70,8 @@ PetscErrorCode QPRemoveChild(QP qp)
   if (!qp->child) PetscFunctionReturn(0);
   qp->child->parent = NULL;
   qp->child->postSolve = NULL;
-  CHKERRQ(QPDestroy(&qp->child));
-  if (qp->changeListener) CHKERRQ((*qp->changeListener)(qp));
+  PetscCall(QPDestroy(&qp->child));
+  if (qp->changeListener) PetscCall((*qp->changeListener)(qp));
   PetscFunctionReturn(0);
 }
 
@@ -100,10 +100,10 @@ PetscErrorCode QPCreate(MPI_Comm comm, QP *qp_new)
   PetscFunctionBegin;
   PetscValidPointer(qp_new,2);
   *qp_new = 0;
-  CHKERRQ(QPInitializePackage());
+  PetscCall(QPInitializePackage());
 
-  CHKERRQ(PetscHeaderCreate(qp,QP_CLASSID,"QP","Quadratic Programming Problem","QP",comm,QPDestroy,QPView));
-  CHKERRQ(PetscObjectChangeTypeName((PetscObject)qp,"QP"));
+  PetscCall(PetscHeaderCreate(qp,QP_CLASSID,"QP","Quadratic Programming Problem","QP",comm,QPDestroy,QPView));
+  PetscCall(PetscObjectChangeTypeName((PetscObject)qp,"QP"));
   qp->A            = NULL;
   qp->R            = NULL;
   qp->b            = NULL;
@@ -143,7 +143,7 @@ PetscErrorCode QPCreate(MPI_Comm comm, QP *qp_new)
   qp->transform_name[0] = 0;
 
   /* initialize preconditioner */
-  CHKERRQ(QPGetPC(qp,&qp->pc));
+  PetscCall(QPGetPC(qp,&qp->pc));
 
   *qp_new = qp;
   PetscFunctionReturn(0);
@@ -174,29 +174,29 @@ PetscErrorCode QPDuplicate(QP qp1,QPDuplicateOption opt,QP *qp2)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp1,QP_CLASSID,1);
   PetscValidPointer(qp2,2);
-  CHKERRQ(QPCreate(PetscObjectComm((PetscObject)qp1),&qp2_));
+  PetscCall(QPCreate(PetscObjectComm((PetscObject)qp1),&qp2_));
 
   if (opt==QP_DUPLICATE_DO_NOT_COPY) {
     *qp2 = qp2_;
     PetscFunctionReturn(0);
   }
 
-  CHKERRQ(QPSetQPC(qp2_,qp1->qpc));
-  CHKERRQ(QPSetEq(qp2_,qp1->BE,qp1->cE));
-  CHKERRQ(QPSetEqMultiplier(qp2_,qp1->lambda_E));
+  PetscCall(QPSetQPC(qp2_,qp1->qpc));
+  PetscCall(QPSetEq(qp2_,qp1->BE,qp1->cE));
+  PetscCall(QPSetEqMultiplier(qp2_,qp1->lambda_E));
   qp2_->BE_nest_count = qp1->BE_nest_count;
-  CHKERRQ(QPSetIneq(qp2_,qp1->BI,qp1->cI));
-  CHKERRQ(QPSetIneqMultiplier(qp2_,qp1->lambda_I));
-  CHKERRQ(QPSetInitialVector(qp2_,qp1->x));
-  CHKERRQ(QPSetOperator(qp2_,qp1->A));
-  CHKERRQ(QPSetOperatorNullSpace(qp2_,qp1->R));
-  if (qp1->pc) CHKERRQ(QPSetPC(qp2_,qp1->pc));
-  CHKERRQ(QPSetQPPF(qp2_,qp1->pf));
-  CHKERRQ(QPSetRhs(qp2_,qp1->b));
-  CHKERRQ(QPSetWorkVector(qp2_,qp1->xwork));
+  PetscCall(QPSetIneq(qp2_,qp1->BI,qp1->cI));
+  PetscCall(QPSetIneqMultiplier(qp2_,qp1->lambda_I));
+  PetscCall(QPSetInitialVector(qp2_,qp1->x));
+  PetscCall(QPSetOperator(qp2_,qp1->A));
+  PetscCall(QPSetOperatorNullSpace(qp2_,qp1->R));
+  if (qp1->pc) PetscCall(QPSetPC(qp2_,qp1->pc));
+  PetscCall(QPSetQPPF(qp2_,qp1->pf));
+  PetscCall(QPSetRhs(qp2_,qp1->b));
+  PetscCall(QPSetWorkVector(qp2_,qp1->xwork));
 
-  if (qp1->lambda)    CHKERRQ(PetscObjectReference((PetscObject)(qp2_->lambda = qp1->lambda)));
-  if (qp1->Bt_lambda) CHKERRQ(PetscObjectReference((PetscObject)(qp2_->Bt_lambda = qp1->Bt_lambda)));
+  if (qp1->lambda)    PetscCall(PetscObjectReference((PetscObject)(qp2_->lambda = qp1->lambda)));
+  if (qp1->Bt_lambda) PetscCall(PetscObjectReference((PetscObject)(qp2_->Bt_lambda = qp1->Bt_lambda)));
   *qp2 = qp2_;
   PetscFunctionReturn(0);
 }
@@ -212,20 +212,20 @@ PetscErrorCode QPCompareEqMultiplierWithLeastSquare(QP qp,PetscReal *norm)
   PetscFunctionBegin;
   if (!qp->BE) PetscFunctionReturn(0);
 
-  CHKERRQ(QPCompute_BEt_lambda(qp,&BEt_lambda));
+  PetscCall(QPCompute_BEt_lambda(qp,&BEt_lambda));
 
-  CHKERRQ(QPDuplicate(qp,QP_DUPLICATE_COPY_POINTERS,&qp2));
-  CHKERRQ(QPSetEqMultiplier(qp2,NULL));
-  CHKERRQ(QPComputeMissingEqMultiplier(qp2));
-  CHKERRQ(QPCompute_BEt_lambda(qp2,&BEt_lambda_LS));
+  PetscCall(QPDuplicate(qp,QP_DUPLICATE_COPY_POINTERS,&qp2));
+  PetscCall(QPSetEqMultiplier(qp2,NULL));
+  PetscCall(QPComputeMissingEqMultiplier(qp2));
+  PetscCall(QPCompute_BEt_lambda(qp2,&BEt_lambda_LS));
 
   /* compare lambda_E with least-square lambda_E */
-  CHKERRQ(VecAXPY(BEt_lambda_LS,-1.0,BEt_lambda));
-  CHKERRQ(VecNorm(BEt_lambda_LS,NORM_2,norm));
+  PetscCall(VecAXPY(BEt_lambda_LS,-1.0,BEt_lambda));
+  PetscCall(VecNorm(BEt_lambda_LS,NORM_2,norm));
 
-  CHKERRQ(VecDestroy(&BEt_lambda));
-  CHKERRQ(VecDestroy(&BEt_lambda_LS));
-  CHKERRQ(QPDestroy(&qp2));
+  PetscCall(VecDestroy(&BEt_lambda));
+  PetscCall(VecDestroy(&BEt_lambda_LS));
+  PetscCall(QPDestroy(&qp2));
   PetscFunctionReturn(0);
 }
 
@@ -255,120 +255,120 @@ PetscErrorCode QPViewKKT(QP qp,PetscViewer v)
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  CHKERRQ(PetscObjectGetComm((PetscObject)qp,&comm));
+  PetscCall(PetscObjectGetComm((PetscObject)qp,&comm));
   if (!v) v = PETSC_VIEWER_STDOUT_(comm);
   PetscValidHeaderSpecific(v,PETSC_VIEWER_CLASSID,2);
   PetscCheckSameComm(qp,1,v,2);
 
-  CHKERRQ(PetscObjectTypeCompare((PetscObject)v,PETSCVIEWERASCII,&flg));
+  PetscCall(PetscObjectTypeCompare((PetscObject)v,PETSCVIEWERASCII,&flg));
   if (!flg) SETERRQ(comm,PETSC_ERR_SUP,"Viewer type %s not supported for QP",((PetscObject)v)->type_name);
 
-  CHKERRQ(PetscOptionsGetBool(((PetscObject)qp)->options,NULL,"-qp_view_kkt_compare_lambda_E",&compare_lambda_E,NULL));
+  PetscCall(PetscOptionsGetBool(((PetscObject)qp)->options,NULL,"-qp_view_kkt_compare_lambda_E",&compare_lambda_E,NULL));
 
-  CHKERRQ(PetscObjectName((PetscObject)qp));
-  CHKERRQ(PetscObjectPrintClassNamePrefixType((PetscObject)qp,v));
-  CHKERRQ(PetscViewerASCIIPrintf(v, "  #%d in chain, derived by %s\n",qp->id,qp->transform_name));
+  PetscCall(PetscObjectName((PetscObject)qp));
+  PetscCall(PetscObjectPrintClassNamePrefixType((PetscObject)qp,v));
+  PetscCall(PetscViewerASCIIPrintf(v, "  #%d in chain, derived by %s\n",qp->id,qp->transform_name));
   if (!qp->solved) {
-    CHKERRQ(PetscViewerASCIIPrintf(v, "*** WARNING: QP is not solved. ***\n"));
+    PetscCall(PetscViewerASCIIPrintf(v, "*** WARNING: QP is not solved. ***\n"));
   }
 
-  CHKERRQ(QPGetOperator(qp, &A));
-  CHKERRQ(QPGetRhs(qp, &b));
-  CHKERRQ(QPGetEq(qp, &BE, &cE));
-  CHKERRQ(QPGetIneq(qp, &BI, &cI));
-  CHKERRQ(QPGetSolutionVector(qp, &x));
-  CHKERRQ(VecNorm(b,NORM_2,&normb));
+  PetscCall(QPGetOperator(qp, &A));
+  PetscCall(QPGetRhs(qp, &b));
+  PetscCall(QPGetEq(qp, &BE, &cE));
+  PetscCall(QPGetIneq(qp, &BI, &cI));
+  PetscCall(QPGetSolutionVector(qp, &x));
+  PetscCall(VecNorm(b,NORM_2,&normb));
 
   QPView_Vec(v,x,"x");
   QPView_Vec(v,b,"b");
   if (cE) QPView_Vec(v,cE,"cE");
-  if (BE && !cE) CHKERRQ(PetscViewerASCIIPrintf(v, "||cE|| = 0.00e-00    max(cE) = 0.00e-00 = cE(0)    min(cE) = 0.00e-00 = cE(0)\n"));
+  if (BE && !cE) PetscCall(PetscViewerASCIIPrintf(v, "||cE|| = 0.00e-00    max(cE) = 0.00e-00 = cE(0)    min(cE) = 0.00e-00 = cE(0)\n"));
   if (cI) QPView_Vec(v,cI,"cI");
-  if (BI && !cI) CHKERRQ(PetscViewerASCIIPrintf(v, "||cI|| = 0.00e-00    max(cI) = 0.00e-00 = cI(0)    min(cI) = 0.00e-00 = cI(0)\n"));
+  if (BI && !cI) PetscCall(PetscViewerASCIIPrintf(v, "||cI|| = 0.00e-00    max(cI) = 0.00e-00 = cI(0)    min(cI) = 0.00e-00 = cI(0)\n"));
   
-  CHKERRQ(VecDuplicate(b, &r));
-  CHKERRQ(QPComputeLagrangianGradient(qp,x,r,&kkt_name));
-  CHKERRQ(VecIsInvalidated(r,&notavail));
+  PetscCall(VecDuplicate(b, &r));
+  PetscCall(QPComputeLagrangianGradient(qp,x,r,&kkt_name));
+  PetscCall(VecIsInvalidated(r,&notavail));
 
   if (!notavail) {
     if (compare_lambda_E) {
-      CHKERRQ(QPCompareEqMultiplierWithLeastSquare(qp,&norm));
-      CHKERRQ(PetscViewerASCIIPrintf(v,"||BE'*lambda_E - BE'*lambda_E_LS|| = %.4e\n",norm));
+      PetscCall(QPCompareEqMultiplierWithLeastSquare(qp,&norm));
+      PetscCall(PetscViewerASCIIPrintf(v,"||BE'*lambda_E - BE'*lambda_E_LS|| = %.4e\n",norm));
     }
-    CHKERRQ(VecNorm(r, NORM_2, &norm));
-    CHKERRQ(PetscViewerASCIIPrintf(v,"r = ||%s|| = %.2e    rO/||b|| = %.2e\n",kkt_name,norm,norm/normb));
+    PetscCall(VecNorm(r, NORM_2, &norm));
+    PetscCall(PetscViewerASCIIPrintf(v,"r = ||%s|| = %.2e    rO/||b|| = %.2e\n",kkt_name,norm,norm/normb));
   } else {
-    CHKERRQ(PetscViewerASCIIPrintf(v,"r = ||%s|| not available\n",kkt_name));
+    PetscCall(PetscViewerASCIIPrintf(v,"r = ||%s|| not available\n",kkt_name));
   }
-  CHKERRQ(VecDestroy(&r));
-  CHKERRQ(PetscFree(kkt_name));
+  PetscCall(VecDestroy(&r));
+  PetscCall(PetscFree(kkt_name));
 
   if (BE) {
     if (BE->ops->mult) {
-      CHKERRQ(MatCreateVecs(BE, NULL, &r));
-      CHKERRQ(MatMult(BE, x, r));
-      if (cE) CHKERRQ(VecAXPY(r, -1.0, cE));
-      CHKERRQ(VecNorm(r, NORM_2, &norm));
+      PetscCall(MatCreateVecs(BE, NULL, &r));
+      PetscCall(MatMult(BE, x, r));
+      if (cE) PetscCall(VecAXPY(r, -1.0, cE));
+      PetscCall(VecNorm(r, NORM_2, &norm));
       if (cE) {
-        CHKERRQ(PetscViewerASCIIPrintf(v,"r = ||BE*x-cE||          = %.2e    r/||b|| = %.2e\n",norm,norm/normb));
+        PetscCall(PetscViewerASCIIPrintf(v,"r = ||BE*x-cE||          = %.2e    r/||b|| = %.2e\n",norm,norm/normb));
       } else {
-        CHKERRQ(PetscViewerASCIIPrintf(v,"r = ||BE*x||             = %.2e    r/||b|| = %.2e\n",norm,norm/normb));
+        PetscCall(PetscViewerASCIIPrintf(v,"r = ||BE*x||             = %.2e    r/||b|| = %.2e\n",norm,norm/normb));
       }
-      CHKERRQ(VecDestroy(&r));
+      PetscCall(VecDestroy(&r));
     } else {
       if (cE) {
-        CHKERRQ(PetscViewerASCIIPrintf(v,"r = ||BE*x-cE||         not available\n"));
+        PetscCall(PetscViewerASCIIPrintf(v,"r = ||BE*x-cE||         not available\n"));
       } else {
         Vec t = qp->xwork;
-        CHKERRQ(QPPFApplyGtG(qp->pf,x,t));                    /* BEtBEx = BE'*BE*x */
-        CHKERRQ(VecDot(x,t,&norm));                           /* norm = x'*BE'*BE*x */
+        PetscCall(QPPFApplyGtG(qp->pf,x,t));                    /* BEtBEx = BE'*BE*x */
+        PetscCall(VecDot(x,t,&norm));                           /* norm = x'*BE'*BE*x */
         norm = PetscSqrtReal(norm);
-        CHKERRQ(PetscViewerASCIIPrintf(v,"r = ||BE*x||             = %.2e    r/||b|| = %.2e\n",norm,norm/normb));
+        PetscCall(PetscViewerASCIIPrintf(v,"r = ||BE*x||             = %.2e    r/||b|| = %.2e\n",norm,norm/normb));
       }
     }
   }
 
   if (BI) {
-    CHKERRQ(VecDuplicate(qp->lambda_I,&r));
-    CHKERRQ(VecDuplicate(r,&o));
-    CHKERRQ(VecDuplicate(r,&t));
+    PetscCall(VecDuplicate(qp->lambda_I,&r));
+    PetscCall(VecDuplicate(r,&o));
+    PetscCall(VecDuplicate(r,&t));
 
-    CHKERRQ(VecSet(o,0.0));                                   /* o = zeros(size(r)) */
+    PetscCall(VecSet(o,0.0));                                   /* o = zeros(size(r)) */
 
     /* r = BI*x - cI */
-    CHKERRQ(MatMult(BI, x, r));                               /* r = BI*x         */
-    if (cI) CHKERRQ(VecAXPY(r, -1.0, cI));                    /* r = r - cI       */
+    PetscCall(MatMult(BI, x, r));                               /* r = BI*x         */
+    if (cI) PetscCall(VecAXPY(r, -1.0, cI));                    /* r = r - cI       */
 
     /* rI = norm(max(BI*x-cI,0)) */
-    CHKERRQ(VecPointwiseMax(t,r,o));                          /* t = max(r,o)     */
-    CHKERRQ(VecNorm(t,NORM_2,&norm));                         /* norm = norm(t)     */
+    PetscCall(VecPointwiseMax(t,r,o));                          /* t = max(r,o)     */
+    PetscCall(VecNorm(t,NORM_2,&norm));                         /* norm = norm(t)     */
     if (cI) {
-      CHKERRQ(PetscViewerASCIIPrintf(v,"r = ||max(BI*x-cI,0)||   = %.2e    r/||b|| = %.2e\n",norm,norm/normb));
+      PetscCall(PetscViewerASCIIPrintf(v,"r = ||max(BI*x-cI,0)||   = %.2e    r/||b|| = %.2e\n",norm,norm/normb));
     } else {
-      CHKERRQ(PetscViewerASCIIPrintf(v,"r = ||max(BI*x,0)||      = %.2e    r/||b|| = %.2e\n",norm,norm/normb));
+      PetscCall(PetscViewerASCIIPrintf(v,"r = ||max(BI*x,0)||      = %.2e    r/||b|| = %.2e\n",norm,norm/normb));
     }
 
     /* lambda >= o  =>  examine min(lambda,o) */
-    CHKERRQ(VecSet(o,0.0));                                   /* o = zeros(size(r)) */
-    CHKERRQ(VecPointwiseMin(t,qp->lambda_I,o));
-    CHKERRQ(VecNorm(t,NORM_2,&norm));                         /* norm = ||min(lambda,o)|| */
-    CHKERRQ(PetscViewerASCIIPrintf(v,"r = ||min(lambda_I,0)||  = %.2e    r/||b|| = %.2e\n",norm,norm/normb));
+    PetscCall(VecSet(o,0.0));                                   /* o = zeros(size(r)) */
+    PetscCall(VecPointwiseMin(t,qp->lambda_I,o));
+    PetscCall(VecNorm(t,NORM_2,&norm));                         /* norm = ||min(lambda,o)|| */
+    PetscCall(PetscViewerASCIIPrintf(v,"r = ||min(lambda_I,0)||  = %.2e    r/||b|| = %.2e\n",norm,norm/normb));
 
     /* lambda'*(BI*x-cI) = 0 */
-    CHKERRQ(VecDot(qp->lambda_I,r,&dot));
+    PetscCall(VecDot(qp->lambda_I,r,&dot));
     dot = PetscAbs(dot);
     if (cI) {
-      CHKERRQ(PetscViewerASCIIPrintf(v,"r = |lambda_I'*(BI*x-cI)|= %.2e    r/||b|| = %.2e\n",dot,dot/normb));
+      PetscCall(PetscViewerASCIIPrintf(v,"r = |lambda_I'*(BI*x-cI)|= %.2e    r/||b|| = %.2e\n",dot,dot/normb));
     } else {
-      CHKERRQ(PetscViewerASCIIPrintf(v,"r = |lambda_I'*(BI*x)|= %.2e       r/||b|| = %.2e\n",dot,dot/normb));
+      PetscCall(PetscViewerASCIIPrintf(v,"r = |lambda_I'*(BI*x)|= %.2e       r/||b|| = %.2e\n",dot,dot/normb));
     }
 
-    CHKERRQ(VecDestroy(&o));
-    CHKERRQ(VecDestroy(&r));
-    CHKERRQ(VecDestroy(&t));
+    PetscCall(VecDestroy(&o));
+    PetscCall(VecDestroy(&r));
+    PetscCall(VecDestroy(&t));
   }
 
-  if (qp->qpc) CHKERRQ(QPCViewKKT(qp->qpc,x,normb,v));
+  if (qp->qpc) PetscCall(QPCViewKKT(qp->qpc,x,normb,v));
   PetscFunctionReturn(0);
 }
 
@@ -398,48 +398,48 @@ PetscErrorCode QPView(QP qp,PetscViewer v)
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  CHKERRQ(PetscObjectGetComm((PetscObject)qp,&comm));
+  PetscCall(PetscObjectGetComm((PetscObject)qp,&comm));
   if (!v) v = PETSC_VIEWER_STDOUT_(comm);
   PetscValidHeaderSpecific(v,PETSC_VIEWER_CLASSID,2);
   PetscCheckSameComm(qp,1,v,2);
 
-  CHKERRQ(PetscObjectTypeCompare((PetscObject)v,PETSCVIEWERASCII,&iascii));
+  PetscCall(PetscObjectTypeCompare((PetscObject)v,PETSCVIEWERASCII,&iascii));
   if (!iascii) SETERRQ(comm,PETSC_ERR_SUP,"Viewer type %s not supported for QP",((PetscObject)v)->type_name);
-  CHKERRQ(PetscObjectName((PetscObject)qp));
-  CHKERRQ(PetscObjectPrintClassNamePrefixType((PetscObject)qp,v));
-  CHKERRQ(PetscViewerASCIIPrintf(v, "#%d in chain, derived by %s\n",qp->id,qp->transform_name));
+  PetscCall(PetscObjectName((PetscObject)qp));
+  PetscCall(PetscObjectPrintClassNamePrefixType((PetscObject)qp,v));
+  PetscCall(PetscViewerASCIIPrintf(v, "#%d in chain, derived by %s\n",qp->id,qp->transform_name));
 
-  CHKERRQ(QPGetOperator(qp, &A));
-  CHKERRQ(QPGetOperatorNullSpace(qp, &R));
-  CHKERRQ(QPGetRhs(qp, &b));
-  CHKERRQ(QPGetBox(qp, NULL, &lb, &ub));
-  CHKERRQ(QPGetEq(qp, &BE, &cE));
-  CHKERRQ(QPGetIneq(qp, &BI, &cI));
-  CHKERRQ(QPGetQPC(qp, &qpc));
-  CHKERRQ(QPChainFind(qp, (PetscErrorCode(*)(QP))QPTDualize, &childDual));
+  PetscCall(QPGetOperator(qp, &A));
+  PetscCall(QPGetOperatorNullSpace(qp, &R));
+  PetscCall(QPGetRhs(qp, &b));
+  PetscCall(QPGetBox(qp, NULL, &lb, &ub));
+  PetscCall(QPGetEq(qp, &BE, &cE));
+  PetscCall(QPGetIneq(qp, &BI, &cI));
+  PetscCall(QPGetQPC(qp, &qpc));
+  PetscCall(QPChainFind(qp, (PetscErrorCode(*)(QP))QPTDualize, &childDual));
 
-  CHKERRQ(PetscViewerASCIIPrintf(v,"  LOADED OBJECTS:\n"));
-  CHKERRQ(PetscViewerASCIIPrintf(v,"    %-32s %-16s %s\n", "what", "name", "present"));
-  CHKERRQ(QPView_PrintObjectLoaded(v, A,   "Hessian"));
-  CHKERRQ(QPView_PrintObjectLoaded(v, b,   "linear term (right-hand-side)"));
-  CHKERRQ(QPView_PrintObjectLoaded(v, R,   "R (kernel of K)"));
-  CHKERRQ(QPView_PrintObjectLoaded(v, lb,  "lower bounds"));
-  CHKERRQ(QPView_PrintObjectLoaded(v, ub,  "upper bounds"));
-  CHKERRQ(QPView_PrintObjectLoaded(v, BE,  "linear eq. constraint matrix"));
-  CHKERRQ(QPView_PrintObjectLoaded(v, cE,  "linear eq. constraint RHS"));
-  CHKERRQ(QPView_PrintObjectLoaded(v, BI,  "linear ineq. constraint"));
-  CHKERRQ(QPView_PrintObjectLoaded(v, cI,  "linear ineq. constraint RHS"));
-  CHKERRQ(QPView_PrintObjectLoaded(v, qpc, "QPC"));
+  PetscCall(PetscViewerASCIIPrintf(v,"  LOADED OBJECTS:\n"));
+  PetscCall(PetscViewerASCIIPrintf(v,"    %-32s %-16s %s\n", "what", "name", "present"));
+  PetscCall(QPView_PrintObjectLoaded(v, A,   "Hessian"));
+  PetscCall(QPView_PrintObjectLoaded(v, b,   "linear term (right-hand-side)"));
+  PetscCall(QPView_PrintObjectLoaded(v, R,   "R (kernel of K)"));
+  PetscCall(QPView_PrintObjectLoaded(v, lb,  "lower bounds"));
+  PetscCall(QPView_PrintObjectLoaded(v, ub,  "upper bounds"));
+  PetscCall(QPView_PrintObjectLoaded(v, BE,  "linear eq. constraint matrix"));
+  PetscCall(QPView_PrintObjectLoaded(v, cE,  "linear eq. constraint RHS"));
+  PetscCall(QPView_PrintObjectLoaded(v, BI,  "linear ineq. constraint"));
+  PetscCall(QPView_PrintObjectLoaded(v, cI,  "linear ineq. constraint RHS"));
+  PetscCall(QPView_PrintObjectLoaded(v, qpc, "QPC"));
 
-  if (A)   CHKERRQ(MatPrintInfo(A));
-  if (b)   CHKERRQ(VecPrintInfo(b));
-  if (R)   CHKERRQ(MatPrintInfo(R));
-  if (lb)  CHKERRQ(VecPrintInfo(lb));
-  if (ub)  CHKERRQ(VecPrintInfo(ub));
-  if (BE)  CHKERRQ(MatPrintInfo(BE));
-  if (cE)  CHKERRQ(VecPrintInfo(cE));
-  if (BI)  CHKERRQ(MatPrintInfo(BI));
-  if (cI)  CHKERRQ(VecPrintInfo(cI));
+  if (A)   PetscCall(MatPrintInfo(A));
+  if (b)   PetscCall(VecPrintInfo(b));
+  if (R)   PetscCall(MatPrintInfo(R));
+  if (lb)  PetscCall(VecPrintInfo(lb));
+  if (ub)  PetscCall(VecPrintInfo(ub));
+  if (BE)  PetscCall(MatPrintInfo(BE));
+  if (cE)  PetscCall(VecPrintInfo(cE));
+  if (BI)  PetscCall(MatPrintInfo(BI));
+  if (cI)  PetscCall(VecPrintInfo(cI));
   PetscFunctionReturn(0);
 }
 
@@ -461,30 +461,30 @@ PetscErrorCode QPView(QP qp,PetscViewer v)
 PetscErrorCode QPReset(QP qp)
 {
   PetscFunctionBegin;
-  CHKERRQ(QPDestroy( &qp->child));
+  PetscCall(QPDestroy( &qp->child));
 
-  CHKERRQ(MatDestroy(&qp->A));
-  CHKERRQ(MatDestroy(&qp->R));
-  CHKERRQ(MatDestroy(&qp->BE));
-  CHKERRQ(MatDestroy(&qp->BI));
-  CHKERRQ(MatDestroy(&qp->B));
+  PetscCall(MatDestroy(&qp->A));
+  PetscCall(MatDestroy(&qp->R));
+  PetscCall(MatDestroy(&qp->BE));
+  PetscCall(MatDestroy(&qp->BI));
+  PetscCall(MatDestroy(&qp->B));
 
-  CHKERRQ(VecDestroy(&qp->b));
-  CHKERRQ(VecDestroy(&qp->x));
-  CHKERRQ(VecDestroy(&qp->xwork));
-  CHKERRQ(VecDestroy(&qp->cE));
-  CHKERRQ(VecDestroy(&qp->lambda_E));
-  CHKERRQ(VecDestroy(&qp->Bt_lambda));
-  CHKERRQ(VecDestroy(&qp->cI));
-  CHKERRQ(VecDestroy(&qp->lambda_I));
-  CHKERRQ(VecDestroy(&qp->c));
-  CHKERRQ(VecDestroy(&qp->lambda));
+  PetscCall(VecDestroy(&qp->b));
+  PetscCall(VecDestroy(&qp->x));
+  PetscCall(VecDestroy(&qp->xwork));
+  PetscCall(VecDestroy(&qp->cE));
+  PetscCall(VecDestroy(&qp->lambda_E));
+  PetscCall(VecDestroy(&qp->Bt_lambda));
+  PetscCall(VecDestroy(&qp->cI));
+  PetscCall(VecDestroy(&qp->lambda_I));
+  PetscCall(VecDestroy(&qp->c));
+  PetscCall(VecDestroy(&qp->lambda));
   
-  CHKERRQ(PCDestroy( &qp->pc));
+  PetscCall(PCDestroy( &qp->pc));
 
-  CHKERRQ(QPCDestroy(&qp->qpc));
+  PetscCall(QPCDestroy(&qp->qpc));
   
-  CHKERRQ(QPPFDestroy(&qp->pf));
+  PetscCall(QPPFDestroy(&qp->pf));
   qp->setupcalled = PETSC_FALSE;
   qp->solved = PETSC_FALSE;
   PetscFunctionReturn(0);
@@ -504,103 +504,103 @@ PetscErrorCode QPSetUpInnerObjects(QP qp)
   FllopTracedFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
 
-  CHKERRQ(PetscObjectGetComm((PetscObject)qp,&comm));
+  PetscCall(PetscObjectGetComm((PetscObject)qp,&comm));
   if (!qp->A) SETERRQ(comm,PETSC_ERR_ORDER,"Hessian must be set before " __FUNCT__);
   if (!qp->b) SETERRQ(comm,PETSC_ERR_ORDER,"linear term must be set before " __FUNCT__);
 
   FllopTraceBegin;
-  CHKERRQ(PetscInfo(qp,"setup inner objects for QP #%d\n",qp->id));
+  PetscCall(PetscInfo(qp,"setup inner objects for QP #%d\n",qp->id));
 
-  if (!qp->pc) CHKERRQ(QPGetPC(qp,&qp->pc));
-  CHKERRQ(PCSetOperators(qp->pc,qp->A,qp->A));
+  if (!qp->pc) PetscCall(QPGetPC(qp,&qp->pc));
+  PetscCall(PCSetOperators(qp->pc,qp->A,qp->A));
 
-  CHKERRQ(QPInitializeInitialVector_Private(qp));
+  PetscCall(QPInitializeInitialVector_Private(qp));
 
-  if (!qp->xwork) CHKERRQ(VecDuplicate(qp->x,&qp->xwork));
+  if (!qp->xwork) PetscCall(VecDuplicate(qp->x,&qp->xwork));
 
   if (qp->BE && !qp->lambda_E) {
-    CHKERRQ(MatCreateVecs(qp->BE,NULL,&qp->lambda_E));
-    CHKERRQ(VecInvalidate(qp->lambda_E));
+    PetscCall(MatCreateVecs(qp->BE,NULL,&qp->lambda_E));
+    PetscCall(VecInvalidate(qp->lambda_E));
   }
   if (!qp->BE) {
-    CHKERRQ(VecDestroy(&qp->lambda_E));
+    PetscCall(VecDestroy(&qp->lambda_E));
   }
 
   if (qp->BI && !qp->lambda_I) {
-    CHKERRQ(MatCreateVecs(qp->BI,NULL,&qp->lambda_I));
-    CHKERRQ(VecInvalidate(qp->lambda_I));
+    PetscCall(MatCreateVecs(qp->BI,NULL,&qp->lambda_I));
+    PetscCall(VecInvalidate(qp->lambda_I));
   }
   if (!qp->BI) {
-    CHKERRQ(VecDestroy(&qp->lambda_I));
+    PetscCall(VecDestroy(&qp->lambda_I));
   }
 
   if ((qp->BE || qp->BI) && !qp->B)
   {
-  CHKERRQ(VecDestroy(&qp->c));
+  PetscCall(VecDestroy(&qp->c));
 
   if (qp->BE && !qp->BI) {
-    CHKERRQ(PetscObjectReference((PetscObject)(qp->B       = qp->BE)));
-    CHKERRQ(PetscObjectReference((PetscObject)(qp->lambda  = qp->lambda_E)));
-    CHKERRQ(PetscObjectReference((PetscObject)(qp->c       = qp->cE)));
+    PetscCall(PetscObjectReference((PetscObject)(qp->B       = qp->BE)));
+    PetscCall(PetscObjectReference((PetscObject)(qp->lambda  = qp->lambda_E)));
+    PetscCall(PetscObjectReference((PetscObject)(qp->c       = qp->cE)));
   } else if (!qp->BE && qp->BI) {
-    CHKERRQ(PetscObjectReference((PetscObject)(qp->B       = qp->BI)));
-    CHKERRQ(PetscObjectReference((PetscObject)(qp->lambda  = qp->lambda_I)));
-    CHKERRQ(PetscObjectReference((PetscObject)(qp->c       = qp->cI)));
+    PetscCall(PetscObjectReference((PetscObject)(qp->B       = qp->BI)));
+    PetscCall(PetscObjectReference((PetscObject)(qp->lambda  = qp->lambda_I)));
+    PetscCall(PetscObjectReference((PetscObject)(qp->c       = qp->cI)));
   } else {
-    CHKERRQ(PetscObjectReference((PetscObject)(Bs[0]       = qp->BE)));
-    CHKERRQ(PetscObjectReference((PetscObject)(lambdas[0]  = qp->lambda_E)));
+    PetscCall(PetscObjectReference((PetscObject)(Bs[0]       = qp->BE)));
+    PetscCall(PetscObjectReference((PetscObject)(lambdas[0]  = qp->lambda_E)));
     if (qp->cE) {
-      CHKERRQ(PetscObjectReference((PetscObject)(cs[0]     = qp->cE)));
+      PetscCall(PetscObjectReference((PetscObject)(cs[0]     = qp->cE)));
     } else {
-      CHKERRQ(MatCreateVecs(Bs[0],NULL,&cs[0]));
-      CHKERRQ(VecSet(cs[0],0.0));
+      PetscCall(MatCreateVecs(Bs[0],NULL,&cs[0]));
+      PetscCall(VecSet(cs[0],0.0));
     }
     
-    CHKERRQ(PetscObjectReference((PetscObject)(Bs[1]       = qp->BI)));
-    CHKERRQ(PetscObjectReference((PetscObject)(lambdas[1]  = qp->lambda_I)));
+    PetscCall(PetscObjectReference((PetscObject)(Bs[1]       = qp->BI)));
+    PetscCall(PetscObjectReference((PetscObject)(lambdas[1]  = qp->lambda_I)));
     if (qp->cI) {
-      CHKERRQ(PetscObjectReference((PetscObject)(cs[1]     = qp->cI)));
+      PetscCall(PetscObjectReference((PetscObject)(cs[1]     = qp->cI)));
     } else {
-      CHKERRQ(MatCreateVecs(Bs[1],NULL,&cs[1]));
-      CHKERRQ(VecSet(cs[1],0.0));
+      PetscCall(MatCreateVecs(Bs[1],NULL,&cs[1]));
+      PetscCall(VecSet(cs[1],0.0));
     }
     
-    CHKERRQ(MatCreateNestPermon(comm,2,NULL,1,NULL,Bs,&qp->B));
-    CHKERRQ(MatCreateVecs(qp->B,NULL,&qp->c));
-    CHKERRQ(PetscObjectSetName((PetscObject)qp->B,"B"));
-    CHKERRQ(PetscObjectSetName((PetscObject)qp->c,"c"));
+    PetscCall(MatCreateNestPermon(comm,2,NULL,1,NULL,Bs,&qp->B));
+    PetscCall(MatCreateVecs(qp->B,NULL,&qp->c));
+    PetscCall(PetscObjectSetName((PetscObject)qp->B,"B"));
+    PetscCall(PetscObjectSetName((PetscObject)qp->c,"c"));
     
     /* copy cE,cI to c */
-    CHKERRQ(MatNestGetISs(qp->B,rows,NULL));
+    PetscCall(MatNestGetISs(qp->B,rows,NULL));
     for (i=0; i<2; i++) {
-      CHKERRQ(VecGetSubVector(qp->c,rows[i],&c[i]));
-      CHKERRQ(VecCopy(cs[i],c[i]));
-      CHKERRQ(VecRestoreSubVector(qp->c,rows[i],&c[i]));
+      PetscCall(VecGetSubVector(qp->c,rows[i],&c[i]));
+      PetscCall(VecCopy(cs[i],c[i]));
+      PetscCall(VecRestoreSubVector(qp->c,rows[i],&c[i]));
     }
     
     for (i=0; i<2; i++) {
-      CHKERRQ(MatDestroy(&Bs[i]));
-      CHKERRQ(VecDestroy(&cs[i]));
-      CHKERRQ(VecDestroy(&lambdas[i]));
+      PetscCall(MatDestroy(&Bs[i]));
+      PetscCall(VecDestroy(&cs[i]));
+      PetscCall(VecDestroy(&lambdas[i]));
     }
   }
   }
 
   if (qp->B && !qp->lambda) {
-    CHKERRQ(MatCreateVecs(qp->B,NULL,&qp->lambda));
-    CHKERRQ(PetscObjectSetName((PetscObject)qp->lambda,"lambda"));
-    CHKERRQ(VecInvalidate(qp->lambda));
+    PetscCall(MatCreateVecs(qp->B,NULL,&qp->lambda));
+    PetscCall(PetscObjectSetName((PetscObject)qp->lambda,"lambda"));
+    PetscCall(VecInvalidate(qp->lambda));
   }
 
   if (qp->B && !qp->Bt_lambda) {
-    CHKERRQ(MatCreateVecs(qp->B,&qp->Bt_lambda,NULL));
-    CHKERRQ(PetscObjectSetName((PetscObject)qp->lambda,"Bt_lambda"));
-    CHKERRQ(VecInvalidate(qp->Bt_lambda));
+    PetscCall(MatCreateVecs(qp->B,&qp->Bt_lambda,NULL));
+    PetscCall(PetscObjectSetName((PetscObject)qp->lambda,"Bt_lambda"));
+    PetscCall(VecInvalidate(qp->Bt_lambda));
   }
 
   if (!qp->B) {
-    CHKERRQ(VecDestroy(&qp->lambda));
-    CHKERRQ(VecDestroy(&qp->Bt_lambda));
+    PetscCall(VecDestroy(&qp->lambda));
+    PetscCall(VecDestroy(&qp->Bt_lambda));
   }
   PetscFunctionReturnI(0);
 }
@@ -627,15 +627,15 @@ PetscErrorCode QPSetUp(QP qp)
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
   if (qp->setupcalled) PetscFunctionReturn(0);
 
-  CHKERRQ(PetscObjectGetComm((PetscObject)qp,&comm));
+  PetscCall(PetscObjectGetComm((PetscObject)qp,&comm));
   if (!qp->A) SETERRQ(comm,PETSC_ERR_ORDER,"Hessian must be set before " __FUNCT__);
   if (!qp->b) SETERRQ(comm,PETSC_ERR_ORDER,"linear term must be set before " __FUNCT__);
 
   FllopTraceBegin;
-  CHKERRQ(PetscInfo(qp,"setup QP #%d\n",qp->id));
-  CHKERRQ(QPSetUpInnerObjects(qp));
-  CHKERRQ(QPSetFromOptions_Private(qp));
-  CHKERRQ(PCSetUp(qp->pc));
+  PetscCall(PetscInfo(qp,"setup QP #%d\n",qp->id));
+  PetscCall(QPSetUpInnerObjects(qp));
+  PetscCall(QPSetFromOptions_Private(qp));
+  PetscCall(PCSetUp(qp->pc));
   qp->setupcalled = PETSC_TRUE;
   PetscFunctionReturnI(0);
 }
@@ -651,25 +651,25 @@ PetscErrorCode QPCompute_BEt_lambda(QP qp,Vec *BEt_lambda)
   if (!qp->BE) PetscFunctionReturn(0);
 
   if (!qp->BI) {
-    CHKERRQ(VecIsInvalidated(qp->Bt_lambda, &flg));
+    PetscCall(VecIsInvalidated(qp->Bt_lambda, &flg));
     if (!flg) {
-      CHKERRQ(VecDuplicate(qp->Bt_lambda, BEt_lambda));
-      CHKERRQ(VecCopy(qp->Bt_lambda, *BEt_lambda));                               /* BEt_lambda = Bt_lambda */
+      PetscCall(VecDuplicate(qp->Bt_lambda, BEt_lambda));
+      PetscCall(VecCopy(qp->Bt_lambda, *BEt_lambda));                               /* BEt_lambda = Bt_lambda */
       PetscFunctionReturn(0);
     }
 
-    CHKERRQ(VecIsInvalidated(qp->lambda,&flg));
+    PetscCall(VecIsInvalidated(qp->lambda,&flg));
     if (!flg && qp->B->ops->multtranspose) {
-      CHKERRQ(MatCreateVecs(qp->B, BEt_lambda, NULL));
-      CHKERRQ(MatMultTranspose(qp->B, qp->lambda, *BEt_lambda));                  /* BEt_lambda = B'*lambda */
+      PetscCall(MatCreateVecs(qp->B, BEt_lambda, NULL));
+      PetscCall(MatMultTranspose(qp->B, qp->lambda, *BEt_lambda));                  /* BEt_lambda = B'*lambda */
       PetscFunctionReturn(0);
     }
   }
 
-  CHKERRQ(VecIsInvalidated(qp->lambda_E,&flg));
+  PetscCall(VecIsInvalidated(qp->lambda_E,&flg));
   if (!flg || !qp->BE->ops->multtranspose) {
-    CHKERRQ(MatCreateVecs(qp->BE, BEt_lambda, NULL));
-    CHKERRQ(MatMultTranspose(qp->BE, qp->lambda_E, *BEt_lambda));                 /* Bt_lambda = BE'*lambda_E */
+    PetscCall(MatCreateVecs(qp->BE, BEt_lambda, NULL));
+    PetscCall(MatMultTranspose(qp->BE, qp->lambda_E, *BEt_lambda));                 /* Bt_lambda = BE'*lambda_E */
   }
   PetscFunctionReturn(0);
 }
@@ -684,14 +684,14 @@ PetscErrorCode QPComputeLagrangianGradient(QP qp, Vec x, Vec r, char *kkt_name_[
   char        kkt_name[256]="A*x - b";
 
   PetscFunctionBegin;
-  CHKERRQ(QPSetUp(qp));
-  CHKERRQ(QPGetOperator(qp, &A));
-  CHKERRQ(QPGetRhs(qp, &b));
-  CHKERRQ(QPGetEq(qp, &BE, &cE));
-  CHKERRQ(QPGetIneq(qp, &BI, &cI));
+  PetscCall(QPSetUp(qp));
+  PetscCall(QPGetOperator(qp, &A));
+  PetscCall(QPGetRhs(qp, &b));
+  PetscCall(QPGetEq(qp, &BE, &cE));
+  PetscCall(QPGetIneq(qp, &BI, &cI));
 
-  CHKERRQ(MatMult(A, x, r));
-  CHKERRQ(VecAXPY(r, -1.0, b));                                                   /* r = A*x - b */
+  PetscCall(MatMult(A, x, r));
+  PetscCall(VecAXPY(r, -1.0, b));                                                   /* r = A*x - b */
 
   /* TODO: replace with QPC function */
   {
@@ -700,63 +700,63 @@ PetscErrorCode QPComputeLagrangianGradient(QP qp, Vec x, Vec r, char *kkt_name_[
     IS  is;
     QPC qpc;
 
-    CHKERRQ(QPGetBox(qp,&is,&lb,&ub));
-    CHKERRQ(QPGetQPC(qp,&qpc));
-    if (qpc) CHKERRQ(QPCBoxGetMultipliers(qpc,&llb,&lub));
+    PetscCall(QPGetBox(qp,&is,&lb,&ub));
+    PetscCall(QPGetQPC(qp,&qpc));
+    if (qpc) PetscCall(QPCBoxGetMultipliers(qpc,&llb,&lub));
     if (lb) {
       if (is) {
-        CHKERRQ(VecISAXPY(r,is,-1.0,llb));
+        PetscCall(VecISAXPY(r,is,-1.0,llb));
       } else {
-        CHKERRQ(VecAXPY(r,-1.0,llb));
+        PetscCall(VecAXPY(r,-1.0,llb));
       }
     } if (ub) {
       if (is) {
-        CHKERRQ(VecISAXPY(r,is,1.0,lub));
+        PetscCall(VecISAXPY(r,is,1.0,lub));
       } else {
-        CHKERRQ(VecAXPY(r,1.0,lub));
+        PetscCall(VecAXPY(r,1.0,lub));
       }
     }
   }
 
-  CHKERRQ(VecDuplicate(r,&Bt_lambda));
+  PetscCall(VecDuplicate(r,&Bt_lambda));
   if (qp->B) {
-    CHKERRQ(VecIsInvalidated(qp->Bt_lambda,&flg));
+    PetscCall(VecIsInvalidated(qp->Bt_lambda,&flg));
     if (!flg) {
-      CHKERRQ(VecCopy(qp->Bt_lambda,Bt_lambda));                                  /* Bt_lambda = (B'*lambda) */
-      if (kkt_name_) CHKERRQ(PetscStrcat(kkt_name," + (B'*lambda)"));
+      PetscCall(VecCopy(qp->Bt_lambda,Bt_lambda));                                  /* Bt_lambda = (B'*lambda) */
+      if (kkt_name_) PetscCall(PetscStrcat(kkt_name," + (B'*lambda)"));
       goto endif;
     }
 
-    CHKERRQ(VecIsInvalidated(qp->lambda,&flg));
+    PetscCall(VecIsInvalidated(qp->lambda,&flg));
     if (!flg && qp->B->ops->multtranspose) {
-      CHKERRQ(MatMultTranspose(qp->B, qp->lambda, Bt_lambda));                    /* Bt_lambda = B'*lambda */
-      if (kkt_name_) CHKERRQ(PetscStrcat(kkt_name," + B'*lambda"));
+      PetscCall(MatMultTranspose(qp->B, qp->lambda, Bt_lambda));                    /* Bt_lambda = B'*lambda */
+      if (kkt_name_) PetscCall(PetscStrcat(kkt_name," + B'*lambda"));
       goto endif;
     }
 
     if (qp->BE) {
-      if (kkt_name_) CHKERRQ(PetscStrcat(kkt_name," + BE'*lambda_E"));
+      if (kkt_name_) PetscCall(PetscStrcat(kkt_name," + BE'*lambda_E"));
     }
     if (qp->BI) {
-      if (kkt_name_) CHKERRQ(PetscStrcat(kkt_name," + BI'*lambda_I"));
+      if (kkt_name_) PetscCall(PetscStrcat(kkt_name," + BI'*lambda_I"));
     }
 
     if (qp->BE) {
-      CHKERRQ(VecIsInvalidated(qp->lambda_E,&flg));
+      PetscCall(VecIsInvalidated(qp->lambda_E,&flg));
       if (flg || !qp->BE->ops->multtranspose) {
         avail = PETSC_FALSE;
         goto endif;
       }
-      CHKERRQ(MatMultTranspose(BE, qp->lambda_E, Bt_lambda));                     /* Bt_lambda = BE'*lambda_E */
+      PetscCall(MatMultTranspose(BE, qp->lambda_E, Bt_lambda));                     /* Bt_lambda = BE'*lambda_E */
     }
 
     if (qp->BI) {
-      CHKERRQ(VecIsInvalidated(qp->lambda_I,&flg));
+      PetscCall(VecIsInvalidated(qp->lambda_I,&flg));
       if (flg || !qp->BI->ops->multtransposeadd) {
         avail = PETSC_FALSE;
         goto endif;
       }
-      CHKERRQ(MatMultTransposeAdd(BI, qp->lambda_I, Bt_lambda, Bt_lambda));       /* Bt_lambda = Bt_lambda + BI'*lambda_I */
+      PetscCall(MatMultTransposeAdd(BI, qp->lambda_I, Bt_lambda, Bt_lambda));       /* Bt_lambda = Bt_lambda + BI'*lambda_I */
     }
   }
   endif:
@@ -764,19 +764,19 @@ PetscErrorCode QPComputeLagrangianGradient(QP qp, Vec x, Vec r, char *kkt_name_[
     Vec lb,ub;
 
     /* TODO: replace with QPC function */
-    CHKERRQ(QPGetBox(qp,NULL,&lb,&ub));
-    CHKERRQ(VecAXPY(r,1.0,Bt_lambda));                                            /* r = r + Bt_lambda */
+    PetscCall(QPGetBox(qp,NULL,&lb,&ub));
+    PetscCall(VecAXPY(r,1.0,Bt_lambda));                                            /* r = r + Bt_lambda */
     if (lb) {
-      if (kkt_name_) CHKERRQ(PetscStrcat(kkt_name," - lambda_lb"));
+      if (kkt_name_) PetscCall(PetscStrcat(kkt_name," - lambda_lb"));
     }
     if (ub) {
-      if (kkt_name_) CHKERRQ(PetscStrcat(kkt_name," + lambda_ub"));
+      if (kkt_name_) PetscCall(PetscStrcat(kkt_name," + lambda_ub"));
     }
   } else {
-    CHKERRQ(VecInvalidate(r));
+    PetscCall(VecInvalidate(r));
   }
-  if (kkt_name_) CHKERRQ(PetscStrallocpy(kkt_name,kkt_name_));
-  CHKERRQ(VecDestroy(&Bt_lambda));
+  if (kkt_name_) PetscCall(PetscStrallocpy(kkt_name,kkt_name_));
+  PetscCall(VecDestroy(&Bt_lambda));
   PetscFunctionReturn(0);
 }
 
@@ -791,43 +791,43 @@ PetscErrorCode QPComputeMissingEqMultiplier(QP qp)
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  CHKERRQ(QPSetUp(qp));
+  PetscCall(QPSetUp(qp));
 
   if (!qp->BE) PetscFunctionReturn(0);
-  CHKERRQ(VecIsInvalidated(qp->lambda_E,&flg));
+  PetscCall(VecIsInvalidated(qp->lambda_E,&flg));
   if (!flg) PetscFunctionReturn(0);
   if (qp->Bt_lambda) {
-    CHKERRQ(VecIsInvalidated(qp->Bt_lambda,&flg));
+    PetscCall(VecIsInvalidated(qp->Bt_lambda,&flg));
     if (!flg) PetscFunctionReturn(0);
   }
 
-  CHKERRQ(QPDuplicate(qp,QP_DUPLICATE_COPY_POINTERS,&qp_I));
-  CHKERRQ(QPSetEq(qp_I,NULL,NULL));
-  CHKERRQ(QPComputeLagrangianGradient(qp_I,qp->x,r,NULL));
-  CHKERRQ(QPDestroy(&qp_I));
+  PetscCall(QPDuplicate(qp,QP_DUPLICATE_COPY_POINTERS,&qp_I));
+  PetscCall(QPSetEq(qp_I,NULL,NULL));
+  PetscCall(QPComputeLagrangianGradient(qp_I,qp->x,r,NULL));
+  PetscCall(QPDestroy(&qp_I));
 
   //TODO Should we add qp->Bt_lambda_E ?
   if (qp->BE == qp->B) {
-    CHKERRQ(VecCopy(r,qp->Bt_lambda));
-    CHKERRQ(VecScale(qp->Bt_lambda,-1.0));
+    PetscCall(VecCopy(r,qp->Bt_lambda));
+    PetscCall(VecScale(qp->Bt_lambda,-1.0));
   } else {
-    CHKERRQ(QPPFApplyHalfQ(qp->pf,r,qp->lambda_E));
-    CHKERRQ(VecScale(qp->lambda_E,-1.0));                                               /* lambda_E_LS = -(BE*BE')\\BE*r */
+    PetscCall(QPPFApplyHalfQ(qp->pf,r,qp->lambda_E));
+    PetscCall(VecScale(qp->lambda_E,-1.0));                                               /* lambda_E_LS = -(BE*BE')\\BE*r */
   }
 
   if (FllopDebugEnabled) {
     PetscReal norm;
     if (qp->BE->ops->multtranspose) {
-      CHKERRQ(MatMultTransposeAdd(qp->BE,qp->lambda_E,r,r));
+      PetscCall(MatMultTransposeAdd(qp->BE,qp->lambda_E,r,r));
     } else {
-      CHKERRQ(VecAXPY(r,1.0,qp->Bt_lambda));
+      PetscCall(VecAXPY(r,1.0,qp->Bt_lambda));
     }
-    CHKERRQ(VecNorm(r,NORM_2,&norm));
-    CHKERRQ(FllopDebug1("||r||=%.2e\n",norm));
+    PetscCall(VecNorm(r,NORM_2,&norm));
+    PetscCall(FllopDebug1("||r||=%.2e\n",norm));
   }
 
-  CHKERRQ(PetscObjectGetName((PetscObject)qp,&name));
-  CHKERRQ(PetscInfo(qp,"missing eq. con. multiplier computed for QP Object %s (#%d in chain, derived by %s)\n",name,qp->id,qp->transform_name));
+  PetscCall(PetscObjectGetName((PetscObject)qp,&name));
+  PetscCall(PetscInfo(qp,"missing eq. con. multiplier computed for QP Object %s (#%d in chain, derived by %s)\n",name,qp->id,qp->transform_name));
   PetscFunctionReturn(0);
 }
 
@@ -845,17 +845,17 @@ PetscErrorCode QPComputeMissingBoxMultipliers(QP qp)
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  CHKERRQ(QPSetUp(qp));
+  PetscCall(QPSetUp(qp));
 
-  CHKERRQ(QPGetBox(qp,&is,&lb,&ub));
-  CHKERRQ(QPGetQPC(qp,&qpc));
-  if (qpc) CHKERRQ(QPCBoxGetMultipliers(qpc,&llb,&lub));
+  PetscCall(QPGetBox(qp,&is,&lb,&ub));
+  PetscCall(QPGetQPC(qp,&qpc));
+  if (qpc) PetscCall(QPCBoxGetMultipliers(qpc,&llb,&lub));
 
   if (lb) {
-    CHKERRQ(VecIsInvalidated(llb,&flg));
+    PetscCall(VecIsInvalidated(llb,&flg));
   }
   if (ub) {
-    CHKERRQ(VecIsInvalidated(lub,&flg2));
+    PetscCall(VecIsInvalidated(lub,&flg2));
   }
   if (!lb && !ub) PetscFunctionReturn(0);
   if (!flg && !flg2) PetscFunctionReturn(0);
@@ -863,39 +863,39 @@ PetscErrorCode QPComputeMissingBoxMultipliers(QP qp)
   /* currently cannot handle this situation, leave multipliers untouched */
   if (qp->BI) PetscFunctionReturn(0);
 
-  CHKERRQ(QPDuplicate(qp,QP_DUPLICATE_COPY_POINTERS,&qp_E));
-  CHKERRQ(QPCDestroy(&qp_E->qpc));
-  CHKERRQ(QPComputeLagrangianGradient(qp_E,qp->x,r,NULL));
-  CHKERRQ(QPDestroy(&qp_E));
+  PetscCall(QPDuplicate(qp,QP_DUPLICATE_COPY_POINTERS,&qp_E));
+  PetscCall(QPCDestroy(&qp_E->qpc));
+  PetscCall(QPComputeLagrangianGradient(qp_E,qp->x,r,NULL));
+  PetscCall(QPDestroy(&qp_E));
 
   if (lb) {
     if (is) {
-      CHKERRQ(VecISCopy(r,is,SCATTER_REVERSE,llb));
+      PetscCall(VecISCopy(r,is,SCATTER_REVERSE,llb));
     } else {
-      CHKERRQ(VecCopy(r,llb));
+      PetscCall(VecCopy(r,llb));
     }
   }
   if (ub) {
     if (is) {
-      CHKERRQ(VecISCopy(r,is,SCATTER_REVERSE,lub));
+      PetscCall(VecISCopy(r,is,SCATTER_REVERSE,lub));
     } else {
-      CHKERRQ(VecCopy(r,lub));
+      PetscCall(VecCopy(r,lub));
     }
-    CHKERRQ(VecScale(lub,-1.0));
+    PetscCall(VecScale(lub,-1.0));
   }
   if (lb && ub) {
     Vec lambdawork;
-    CHKERRQ(VecDuplicate(llb,&lambdawork));
-    CHKERRQ(VecZeroEntries(lambdawork));
-    CHKERRQ(VecPointwiseMax(llb,llb,lambdawork));
-    CHKERRQ(VecPointwiseMax(lub,lub,lambdawork));
-    CHKERRQ(VecDestroy(&lambdawork));
+    PetscCall(VecDuplicate(llb,&lambdawork));
+    PetscCall(VecZeroEntries(lambdawork));
+    PetscCall(VecPointwiseMax(llb,llb,lambdawork));
+    PetscCall(VecPointwiseMax(lub,lub,lambdawork));
+    PetscCall(VecDestroy(&lambdawork));
   }
 
   {
     const char *name_qp;
-    CHKERRQ(PetscObjectGetName((PetscObject)qp,&name_qp));
-    CHKERRQ(PetscInfo(qp,"missing lower bound con. multiplier computed for QP Object %s (#%d in chain, derived by %s)\n",name_qp,qp->id,qp->transform_name));
+    PetscCall(PetscObjectGetName((PetscObject)qp,&name_qp));
+    PetscCall(PetscInfo(qp,"missing lower bound con. multiplier computed for QP Object %s (#%d in chain, derived by %s)\n",name_qp,qp->id,qp->transform_name));
   }
   PetscFunctionReturn(0);
 }
@@ -928,9 +928,9 @@ PetscErrorCode QPComputeObjective(QP qp, Vec x, PetscReal *f)
   PetscValidHeaderSpecific(x,VEC_CLASSID,2);
   PetscValidRealPointer(f,3);
   if (!qp->setupcalled) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ORDER,"QPSetUp must be called first.");
-  CHKERRQ(MatMult(qp->A,x,qp->xwork));
-  CHKERRQ(VecAYPX(qp->xwork,-0.5,qp->b));
-  CHKERRQ(VecDot(x,qp->xwork,f));
+  PetscCall(MatMult(qp->A,x,qp->xwork));
+  PetscCall(VecAYPX(qp->xwork,-0.5,qp->b));
+  PetscCall(VecDot(x,qp->xwork,f));
   *f = -*f;
   PetscFunctionReturn(0);
 }
@@ -960,8 +960,8 @@ PetscErrorCode QPComputeObjectiveGradient(QP qp, Vec x, Vec g)
   PetscValidHeaderSpecific(x,VEC_CLASSID,2);
   PetscValidHeaderSpecific(g,VEC_CLASSID,3);
   if (!qp->setupcalled) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ORDER,"QPSetUp must be called first.");
-  CHKERRQ(MatMult(qp->A,x,g));
-  CHKERRQ(VecAXPY(g,-1.0,qp->b));
+  PetscCall(MatMult(qp->A,x,g));
+  PetscCall(VecAXPY(g,-1.0,qp->b));
   PetscFunctionReturn(0);
 }
 
@@ -996,8 +996,8 @@ PetscErrorCode QPComputeObjectiveFromGradient(QP qp, Vec x, Vec g, PetscReal *f)
   PetscValidHeaderSpecific(g,VEC_CLASSID,3);
   if (!qp->setupcalled) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ORDER,"QPSetUp must be called first.");
 
-  CHKERRQ(VecWAXPY(qp->xwork,-1.0,qp->b,g));
-  CHKERRQ(VecDot(x,qp->xwork,f));
+  PetscCall(VecWAXPY(qp->xwork,-1.0,qp->b,g));
+  PetscCall(VecDot(x,qp->xwork,f));
   *f /= 2.0;
   PetscFunctionReturn(0);
 }
@@ -1035,14 +1035,14 @@ PetscErrorCode QPComputeObjectiveAndGradient(QP qp, Vec x, Vec g, PetscReal *f)
   if (!qp->setupcalled) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ORDER,"QPSetUp must be called first.");
 
   if (!g) {
-    CHKERRQ(QPComputeObjective(qp,x,f));
+    PetscCall(QPComputeObjective(qp,x,f));
     PetscFunctionReturn(0);
   }
 
-  CHKERRQ(QPComputeObjectiveGradient(qp,x,g));
+  PetscCall(QPComputeObjectiveGradient(qp,x,g));
   if (!f) PetscFunctionReturn(0);
 
-  CHKERRQ(QPComputeObjectiveFromGradient(qp,x,g,f));
+  PetscCall(QPComputeObjectiveFromGradient(qp,x,g,f));
   PetscFunctionReturn(0);
 }
 
@@ -1069,10 +1069,10 @@ PetscErrorCode QPDestroy(QP *qp)
     *qp = 0;
     PetscFunctionReturn(0);
   }
-  if ((*qp)->postSolveCtxDestroy) CHKERRQ((*qp)->postSolveCtxDestroy((*qp)->postSolveCtx));
-  CHKERRQ(QPReset(*qp));
-  CHKERRQ(QPPFDestroy(&(*qp)->pf));
-  CHKERRQ(PetscHeaderDestroy(qp));
+  if ((*qp)->postSolveCtxDestroy) PetscCall((*qp)->postSolveCtxDestroy((*qp)->postSolveCtx));
+  PetscCall(QPReset(*qp));
+  PetscCall(QPPFDestroy(&(*qp)->pf));
+  PetscCall(PetscHeaderDestroy(qp));
   PetscFunctionReturn(0);
 }
 
@@ -1099,11 +1099,11 @@ PetscErrorCode QPSetOperator(QP qp, Mat A)
   PetscCheckSameComm(qp,1,A,2);
   if (A == qp->A) PetscFunctionReturn(0);
 
-  CHKERRQ(MatDestroy(&qp->A));
+  PetscCall(MatDestroy(&qp->A));
   qp->A = A;
-  CHKERRQ(PetscObjectReference((PetscObject)A));
+  PetscCall(PetscObjectReference((PetscObject)A));
 
-  if (qp->changeListener) CHKERRQ((*qp->changeListener)(qp));
+  if (qp->changeListener) PetscCall((*qp->changeListener)(qp));
   PetscFunctionReturn(0);
 }
 
@@ -1127,11 +1127,11 @@ PetscErrorCode QPSetPC(QP qp, PC pc)
   PetscValidHeaderSpecific(pc,PC_CLASSID,2);
   PetscCheckSameComm(qp,1,pc,2);
   if (pc == qp->pc) PetscFunctionReturn(0);
-  CHKERRQ(PCDestroy(&qp->pc));
+  PetscCall(PCDestroy(&qp->pc));
   qp->pc = pc;
-  CHKERRQ(PetscObjectReference((PetscObject)pc));
-  CHKERRQ(PetscLogObjectParent((PetscObject)qp,(PetscObject)qp->pc));
-  if (qp->changeListener) CHKERRQ((*qp->changeListener)(qp));
+  PetscCall(PetscObjectReference((PetscObject)pc));
+  PetscCall(PetscLogObjectParent((PetscObject)qp,(PetscObject)qp->pc));
+  if (qp->changeListener) PetscCall((*qp->changeListener)(qp));
   PetscFunctionReturn(0);
 }
 
@@ -1182,11 +1182,11 @@ PetscErrorCode QPGetPC(QP qp,PC *pc)
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
   PetscValidPointer(pc,2);
   if (!qp->pc) {
-    CHKERRQ(PCCreate(PetscObjectComm((PetscObject)qp),&qp->pc));
-    CHKERRQ(PetscObjectIncrementTabLevel((PetscObject)qp->pc,(PetscObject)qp,0));
-    CHKERRQ(PetscLogObjectParent((PetscObject)qp,(PetscObject)qp->pc));
-    CHKERRQ(PCSetType(qp->pc,PCNONE));
-    CHKERRQ(PCSetOperators(qp->pc,qp->A,qp->A));
+    PetscCall(PCCreate(PetscObjectComm((PetscObject)qp),&qp->pc));
+    PetscCall(PetscObjectIncrementTabLevel((PetscObject)qp->pc,(PetscObject)qp,0));
+    PetscCall(PetscLogObjectParent((PetscObject)qp,(PetscObject)qp->pc));
+    PetscCall(PCSetType(qp->pc,PCNONE));
+    PetscCall(PCSetOperators(qp->pc,qp->A,qp->A));
   }
   *pc = qp->pc;
   PetscFunctionReturn(0);
@@ -1215,13 +1215,13 @@ PetscErrorCode QPSetOperatorNullSpace(QP qp,Mat R)
   if (R == qp->R) PetscFunctionReturn(0);
   if (R) {
 #if defined(PETSC_USE_DEBUG)
-    CHKERRQ(MatCheckNullSpace(qp->A, R, PETSC_SMALL));
+    PetscCall(MatCheckNullSpace(qp->A, R, PETSC_SMALL));
 #endif
-    CHKERRQ(PetscObjectReference((PetscObject)R));
+    PetscCall(PetscObjectReference((PetscObject)R));
   }
-  CHKERRQ(MatDestroy(&qp->R));
+  PetscCall(MatDestroy(&qp->R));
   qp->R = R;
-  if (qp->changeListener) CHKERRQ((*qp->changeListener)(qp));
+  if (qp->changeListener) PetscCall((*qp->changeListener)(qp));
   PetscFunctionReturn(0);
 }
 
@@ -1274,18 +1274,18 @@ PetscErrorCode QPSetRhs(QP qp,Vec b)
   PetscCheckSameComm(qp,1,b,2);
   if (b == qp->b && qp->b_plus == PETSC_FALSE) PetscFunctionReturn(0);
 
-  CHKERRQ(VecDestroy(&qp->b));
+  PetscCall(VecDestroy(&qp->b));
   qp->b = b;
-  CHKERRQ(PetscObjectReference((PetscObject)b));
+  PetscCall(PetscObjectReference((PetscObject)b));
   qp->b_plus = PETSC_FALSE;
 
   if (FllopDebugEnabled) {
     PetscReal norm;
-    CHKERRQ(VecNorm(b,NORM_2,&norm));
-    CHKERRQ(FllopDebug1("||b|| = %0.2e\n", norm));
+    PetscCall(VecNorm(b,NORM_2,&norm));
+    PetscCall(FllopDebug1("||b|| = %0.2e\n", norm));
   }
 
-  if (qp->changeListener) CHKERRQ((*qp->changeListener)(qp));
+  if (qp->changeListener) PetscCall((*qp->changeListener)(qp));
   PetscFunctionReturn(0);
 }
 
@@ -1312,18 +1312,18 @@ PetscErrorCode QPSetRhsPlus(QP qp,Vec b)
   PetscCheckSameComm(qp,1,b,2);
   if (b == qp->b && qp->b_plus == PETSC_TRUE) PetscFunctionReturn(0);
   
-  CHKERRQ(VecDuplicate(b,&qp->b));
-  CHKERRQ(VecCopy(b,qp->b));
-  CHKERRQ(VecScale(qp->b,-1.0));
+  PetscCall(VecDuplicate(b,&qp->b));
+  PetscCall(VecCopy(b,qp->b));
+  PetscCall(VecScale(qp->b,-1.0));
   qp->b_plus = PETSC_TRUE;
   
   if (FllopDebugEnabled) {
     PetscReal norm;
-    CHKERRQ(VecNorm(b,NORM_2,&norm));
-    CHKERRQ(FllopDebug1("||b|| = %0.2e\n", norm));
+    PetscCall(VecNorm(b,NORM_2,&norm));
+    PetscCall(FllopDebug1("||b|| = %0.2e\n", norm));
   }
 
-  if (qp->changeListener) CHKERRQ((*qp->changeListener)(qp));
+  if (qp->changeListener) PetscCall((*qp->changeListener)(qp));
   PetscFunctionReturn(0);
 }
 
@@ -1383,10 +1383,10 @@ PetscErrorCode QPSetIneq(QP qp, Mat Bineq, Vec cineq)
   }
 
   if (Bineq != qp->BI) {
-    if (Bineq) CHKERRQ(PetscObjectReference((PetscObject)Bineq));
-    CHKERRQ(MatDestroy(&qp->BI));
-    CHKERRQ(MatDestroy(&qp->B));
-    CHKERRQ(QPSetIneqMultiplier(qp,NULL));
+    if (Bineq) PetscCall(PetscObjectReference((PetscObject)Bineq));
+    PetscCall(MatDestroy(&qp->BI));
+    PetscCall(MatDestroy(&qp->B));
+    PetscCall(QPSetIneqMultiplier(qp,NULL));
     qp->BI = Bineq;
     change = PETSC_TRUE;
   }
@@ -1394,35 +1394,35 @@ PetscErrorCode QPSetIneq(QP qp, Mat Bineq, Vec cineq)
   if (cineq) {
     if (!Bineq) {
       cineq = NULL;
-      CHKERRQ(PetscInfo(qp, "null inequality constraint matrix specified, the constraint RHS vector will be ignored\n"));
+      PetscCall(PetscInfo(qp, "null inequality constraint matrix specified, the constraint RHS vector will be ignored\n"));
     } else {
       PetscValidHeaderSpecific(cineq,VEC_CLASSID,3);
       PetscCheckSameComm(qp,1,cineq,3);
-      CHKERRQ(VecNorm(cineq,NORM_2,&norm));
-      CHKERRQ(FllopDebug1("||cineq|| = %0.2e\n", norm));
+      PetscCall(VecNorm(cineq,NORM_2,&norm));
+      PetscCall(FllopDebug1("||cineq|| = %0.2e\n", norm));
       if (norm < PETSC_MACHINE_EPSILON) {
-        CHKERRQ(PetscInfo(qp, "zero inequality constraint RHS vector detected\n"));
+        PetscCall(PetscInfo(qp, "zero inequality constraint RHS vector detected\n"));
         cineq = NULL;
       }
     }
   } else if (Bineq) {
-    CHKERRQ(PetscInfo(qp, "null inequality constraint RHS vector handled as zero vector\n"));
+    PetscCall(PetscInfo(qp, "null inequality constraint RHS vector handled as zero vector\n"));
   }
 
   if (cineq != qp->cI) {
-    if (cineq) CHKERRQ(PetscObjectReference((PetscObject)cineq));
-    CHKERRQ(VecDestroy(&qp->cI));
-    CHKERRQ(VecDestroy(&qp->c));
+    if (cineq) PetscCall(PetscObjectReference((PetscObject)cineq));
+    PetscCall(VecDestroy(&qp->cI));
+    PetscCall(VecDestroy(&qp->c));
     qp->cI = cineq;
     change = PETSC_TRUE;
   }
 
   if (!Bineq) {
-    CHKERRQ(VecDestroy(&qp->lambda_I));
+    PetscCall(VecDestroy(&qp->lambda_I));
   }
 
   if (change) {
-    if (qp->changeListener) CHKERRQ((*qp->changeListener)(qp));
+    if (qp->changeListener) PetscCall((*qp->changeListener)(qp));
   }
   PetscFunctionReturn(0);
 }
@@ -1491,13 +1491,13 @@ PetscErrorCode QPSetEq(QP qp, Mat Beq, Vec ceq)
 
   if (Beq != qp->BE) {
     if (Beq) {
-      CHKERRQ(QPGetQPPF(qp, &qp->pf));
-      CHKERRQ(QPPFSetG(qp->pf, Beq));
-      CHKERRQ(PetscObjectReference((PetscObject)Beq));
+      PetscCall(QPGetQPPF(qp, &qp->pf));
+      PetscCall(QPPFSetG(qp->pf, Beq));
+      PetscCall(PetscObjectReference((PetscObject)Beq));
     }
-    CHKERRQ(MatDestroy(&qp->BE));
-    CHKERRQ(MatDestroy(&qp->B));
-    CHKERRQ(QPSetEqMultiplier(qp,NULL));
+    PetscCall(MatDestroy(&qp->BE));
+    PetscCall(MatDestroy(&qp->B));
+    PetscCall(QPSetEqMultiplier(qp,NULL));
     qp->BE = Beq;
     qp->BE_nest_count = 0;
     change = PETSC_TRUE;
@@ -1506,35 +1506,35 @@ PetscErrorCode QPSetEq(QP qp, Mat Beq, Vec ceq)
   if (ceq) {
     if (!Beq) {
       ceq = NULL;
-      CHKERRQ(PetscInfo(qp, "null equality constraint matrix specified, the constraint RHS vector will be ignored\n"));
+      PetscCall(PetscInfo(qp, "null equality constraint matrix specified, the constraint RHS vector will be ignored\n"));
     } else {
       PetscValidHeaderSpecific(ceq,VEC_CLASSID,3);
       PetscCheckSameComm(qp,1,ceq,3);
-      CHKERRQ(VecNorm(ceq,NORM_2,&norm));
-      CHKERRQ(FllopDebug1("||ceq|| = %0.2e\n", norm));
+      PetscCall(VecNorm(ceq,NORM_2,&norm));
+      PetscCall(FllopDebug1("||ceq|| = %0.2e\n", norm));
       if (norm < PETSC_MACHINE_EPSILON) {
-        CHKERRQ(PetscInfo(qp, "zero equality constraint RHS vector detected\n"));
+        PetscCall(PetscInfo(qp, "zero equality constraint RHS vector detected\n"));
         ceq = NULL;
       }
     }
   } else if (Beq) {
-    CHKERRQ(PetscInfo(qp, "null equality constraint RHS vector handled as zero vector\n"));
+    PetscCall(PetscInfo(qp, "null equality constraint RHS vector handled as zero vector\n"));
   }
 
   if (ceq != qp->cE) {
-    if (ceq) CHKERRQ(PetscObjectReference((PetscObject)ceq));
-    CHKERRQ(VecDestroy(&qp->cE));
-    CHKERRQ(VecDestroy(&qp->c));
+    if (ceq) PetscCall(PetscObjectReference((PetscObject)ceq));
+    PetscCall(VecDestroy(&qp->cE));
+    PetscCall(VecDestroy(&qp->c));
     qp->cE = ceq;
     change = PETSC_TRUE;
   }
 
   if (!Beq) {
-    CHKERRQ(VecDestroy(&qp->lambda_E));
+    PetscCall(VecDestroy(&qp->lambda_E));
   }
 
   if (change) {
-    if (qp->changeListener) CHKERRQ((*qp->changeListener)(qp));
+    if (qp->changeListener) PetscCall((*qp->changeListener)(qp));
   }
   PetscFunctionReturn(0);
 }
@@ -1571,77 +1571,77 @@ PetscErrorCode QPAddEq(QP qp, Mat Beq, Vec ceq)
     Mat BE_orig=qp->BE;
     Vec cE_orig=qp->cE;
 
-    CHKERRQ(PetscObjectReference((PetscObject)BE_orig));
-    if (cE_orig) CHKERRQ(PetscObjectReference((PetscObject)cE_orig));
-    CHKERRQ(QPSetEq(qp,NULL,NULL));
-    CHKERRQ(QPAddEq(qp,BE_orig,cE_orig));
-    CHKERRQ(MatDestroy(&BE_orig));
-    CHKERRQ(VecDestroy(&cE_orig));
+    PetscCall(PetscObjectReference((PetscObject)BE_orig));
+    if (cE_orig) PetscCall(PetscObjectReference((PetscObject)cE_orig));
+    PetscCall(QPSetEq(qp,NULL,NULL));
+    PetscCall(QPAddEq(qp,BE_orig,cE_orig));
+    PetscCall(MatDestroy(&BE_orig));
+    PetscCall(VecDestroy(&cE_orig));
     PERMON_ASSERT(qp->BE_nest_count==1,"qp->BE_nest_count==1");
   }
   
   M = qp->BE_nest_count++;
 
-  CHKERRQ(PetscMalloc((M+1)*sizeof(Mat), &subBE));   //Mat subBE[M+1];
+  PetscCall(PetscMalloc((M+1)*sizeof(Mat), &subBE));   //Mat subBE[M+1];
   for (i = 0; i<M; i++) {
-    CHKERRQ(MatNestGetSubMat(qp->BE, i, 0, &subBE[i]));
-    CHKERRQ(PetscObjectReference((PetscObject) subBE[i]));
+    PetscCall(MatNestGetSubMat(qp->BE, i, 0, &subBE[i]));
+    PetscCall(PetscObjectReference((PetscObject) subBE[i]));
   }
   subBE[M] = Beq;
 
-  CHKERRQ(MatDestroy(&qp->BE));
-  CHKERRQ(MatCreateNestPermon(PetscObjectComm((PetscObject) qp), M+1, NULL, 1, NULL, subBE, &qp->BE));
-  CHKERRQ(PetscObjectSetName((PetscObject)qp->BE,"BE"));
+  PetscCall(MatDestroy(&qp->BE));
+  PetscCall(MatCreateNestPermon(PetscObjectComm((PetscObject) qp), M+1, NULL, 1, NULL, subBE, &qp->BE));
+  PetscCall(PetscObjectSetName((PetscObject)qp->BE,"BE"));
 
-  CHKERRQ(QPGetQPPF(qp, &qp->pf));
-  CHKERRQ(QPPFSetG(qp->pf, qp->BE));
+  PetscCall(QPGetQPPF(qp, &qp->pf));
+  PetscCall(QPPFSetG(qp->pf, qp->BE));
 
   if (ceq) {
     PetscValidHeaderSpecific(ceq, VEC_CLASSID, 3);
     PetscCheckSameComm(qp, 1, ceq, 3);
-    CHKERRQ(VecNorm(ceq, NORM_2, &norm));
-    CHKERRQ(FllopDebug1("||ceq|| = %0.2e\n", norm));
+    PetscCall(VecNorm(ceq, NORM_2, &norm));
+    PetscCall(FllopDebug1("||ceq|| = %0.2e\n", norm));
     if (norm < PETSC_MACHINE_EPSILON) {
-      CHKERRQ(PetscInfo(qp, "zero equality constraint RHS vector detected\n"));
+      PetscCall(PetscInfo(qp, "zero equality constraint RHS vector detected\n"));
       ceq = NULL;
     }
   } else {
-    CHKERRQ(PetscInfo(qp, "null equality constraint RHS vector handled as zero vector\n"));
+    PetscCall(PetscInfo(qp, "null equality constraint RHS vector handled as zero vector\n"));
   }
 
   if (ceq || qp->cE) {
     Vec *subCE;
-    CHKERRQ(PetscMalloc((M+1)*sizeof(Vec), &subCE));
+    PetscCall(PetscMalloc((M+1)*sizeof(Vec), &subCE));
     if (qp->cE) {
       for (i = 0; i<M; i++) {
-        CHKERRQ(VecNestGetSubVec(qp->cE, i, &subCE[i]));
-        CHKERRQ(PetscObjectReference((PetscObject) subCE[i]));
+        PetscCall(VecNestGetSubVec(qp->cE, i, &subCE[i]));
+        PetscCall(PetscObjectReference((PetscObject) subCE[i]));
       }
-      CHKERRQ(VecDestroy(&qp->cE));
+      PetscCall(VecDestroy(&qp->cE));
     } else {
       for (i = 0; i<M; i++) {
-        CHKERRQ(MatCreateVecs(subBE[i], NULL, &subCE[i]));
-        CHKERRQ(VecSet(subCE[i], 0.0));
+        PetscCall(MatCreateVecs(subBE[i], NULL, &subCE[i]));
+        PetscCall(VecSet(subCE[i], 0.0));
       }
     }
     if (!ceq) {
-      CHKERRQ(MatCreateVecs(Beq, NULL, &ceq));
-      CHKERRQ(VecSet(ceq, 0.0));
+      PetscCall(MatCreateVecs(Beq, NULL, &ceq));
+      PetscCall(VecSet(ceq, 0.0));
     }
     subCE[M] = ceq;
 
-    CHKERRQ(VecCreateNest(PetscObjectComm((PetscObject) qp), M+1, NULL, subCE, &qp->cE));
+    PetscCall(VecCreateNest(PetscObjectComm((PetscObject) qp), M+1, NULL, subCE, &qp->cE));
     for (i = 0; i<M; i++) {
-      CHKERRQ(VecDestroy( &subCE[i]));
+      PetscCall(VecDestroy( &subCE[i]));
     }
-    CHKERRQ(PetscFree(subCE));
+    PetscCall(PetscFree(subCE));
   }
 
   for (i = 0; i<M; i++) {
-    CHKERRQ(MatDestroy(   &subBE[i]));
+    PetscCall(MatDestroy(   &subBE[i]));
   }
-  CHKERRQ(PetscFree(subBE));
-  if (qp->changeListener) CHKERRQ((*qp->changeListener)(qp));
+  PetscCall(PetscFree(subBE));
+  if (qp->changeListener) PetscCall((*qp->changeListener)(qp));
 
   PetscFunctionReturn(0);
 }
@@ -1661,14 +1661,14 @@ PetscErrorCode QPGetEqMultiplicityScaling(QP qp, Vec *dE_new, Vec *dI_new)
   const PetscScalar *vals;
   
   PetscFunctionBeginI;
-  CHKERRQ(PetscObjectGetComm((PetscObject)qp,&comm));
+  PetscCall(PetscObjectGetComm((PetscObject)qp,&comm));
   //TODO we now assume fully redundant case
   if (!qp->BE_nest_count) {
     Bg = qp->BE;
   } else {
-    CHKERRQ(MatNestGetSubMat(qp->BE,0,0,&Bg));
+    PetscCall(MatNestGetSubMat(qp->BE,0,0,&Bg));
     if (qp->BE_nest_count >= 2) {
-      CHKERRQ(MatNestGetSubMat(qp->BE,1,0,&Bd));
+      PetscCall(MatNestGetSubMat(qp->BE,1,0,&Bd));
     }
   }
   Bc = qp->BI;
@@ -1676,153 +1676,153 @@ PetscErrorCode QPGetEqMultiplicityScaling(QP qp, Vec *dE_new, Vec *dI_new)
   
   if (!Bc) { scale_Bc = PETSC_FALSE; count_Bc = PETSC_FALSE; }
   if (!Bd) { scale_Bd = PETSC_FALSE; count_Bd = PETSC_FALSE; }
-  CHKERRQ(PetscOptionsGetBool(NULL,NULL,"-qp_E_scale_Bd",&scale_Bd,NULL));
-  CHKERRQ(PetscOptionsGetBool(NULL,NULL,"-qp_E_scale_Bc",&scale_Bc,NULL));
-  CHKERRQ(PetscOptionsGetBool(NULL,NULL,"-qp_E_count_Bd",&count_Bd,NULL));
-  CHKERRQ(PetscOptionsGetBool(NULL,NULL,"-qp_E_count_Bc",&count_Bc,NULL));
+  PetscCall(PetscOptionsGetBool(NULL,NULL,"-qp_E_scale_Bd",&scale_Bd,NULL));
+  PetscCall(PetscOptionsGetBool(NULL,NULL,"-qp_E_scale_Bc",&scale_Bc,NULL));
+  PetscCall(PetscOptionsGetBool(NULL,NULL,"-qp_E_count_Bd",&count_Bd,NULL));
+  PetscCall(PetscOptionsGetBool(NULL,NULL,"-qp_E_count_Bc",&count_Bc,NULL));
   //if (scale_Bc && !count_Bc) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_INCOMP,"-qp_E_scale_Bc implies -qp_E_count_Bc");
   //if (scale_Bd && !count_Bd) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_INCOMP,"-qp_E_scale_Bd implies -qp_E_count_Bd");
 
-  CHKERRQ(MatGetOwnershipRangeColumn(Bg,&ilo,&ihi));
+  PetscCall(MatGetOwnershipRangeColumn(Bg,&ilo,&ihi));
 
   {
-    CHKERRQ(MatCreateVecs(Bg,&dof_multiplicities,&edge_multiplicities_g));
-    CHKERRQ(VecSet(dof_multiplicities,   1.0));
+    PetscCall(MatCreateVecs(Bg,&dof_multiplicities,&edge_multiplicities_g));
+    PetscCall(VecSet(dof_multiplicities,   1.0));
   }
   if (scale_Bd) {
-    CHKERRQ(MatCreateVecs(Bd,NULL,&edge_multiplicities_d));
-    CHKERRQ(VecSet(edge_multiplicities_d,1.0));
+    PetscCall(MatCreateVecs(Bd,NULL,&edge_multiplicities_d));
+    PetscCall(VecSet(edge_multiplicities_d,1.0));
   }
   if (scale_Bc) {
-    CHKERRQ(MatCreateVecs(Bc,NULL,&edge_multiplicities_c));
-    CHKERRQ(VecSet(edge_multiplicities_c,1.0));
+    PetscCall(MatCreateVecs(Bc,NULL,&edge_multiplicities_c));
+    PetscCall(VecSet(edge_multiplicities_c,1.0));
   }
 
   {
-    CHKERRQ(MatIsImplicitTranspose(Bg,&flg));
+    PetscCall(MatIsImplicitTranspose(Bg,&flg));
     PERMON_ASSERT(flg,"Bg must be implicit transpose");
-    CHKERRQ(PermonMatTranspose(Bg,MAT_TRANSPOSE_EXPLICIT,&Bgt));
+    PetscCall(PermonMatTranspose(Bg,MAT_TRANSPOSE_EXPLICIT,&Bgt));
     for (i=ilo; i<ihi; i++) {
-      CHKERRQ(MatGetRow(Bgt,i,&ncols,&cols,&vals));
+      PetscCall(MatGetRow(Bgt,i,&ncols,&cols,&vals));
       k=0;
       for (j=0; j<ncols; j++) {
         if (vals[j]) k++;
       }
-      CHKERRQ(MatRestoreRow(Bgt,i,&ncols,&cols,&vals));
+      PetscCall(MatRestoreRow(Bgt,i,&ncols,&cols,&vals));
       if (k) {
         multiplicity = k+1;
-        CHKERRQ(VecSetValue(dof_multiplicities,i,multiplicity,INSERT_VALUES));
+        PetscCall(VecSetValue(dof_multiplicities,i,multiplicity,INSERT_VALUES));
       }
     }
   }
 
   if (count_Bd) {
-    CHKERRQ(MatIsImplicitTranspose(Bd,&flg));
+    PetscCall(MatIsImplicitTranspose(Bd,&flg));
     PERMON_ASSERT(flg,"Bd must be implicit transpose");
-    CHKERRQ(PermonMatTranspose(Bd,MAT_TRANSPOSE_EXPLICIT,&Bdt));
+    PetscCall(PermonMatTranspose(Bd,MAT_TRANSPOSE_EXPLICIT,&Bdt));
     for (i=ilo; i<ihi; i++) {
-      CHKERRQ(MatGetRow(Bdt,i,&ncols,&cols,&vals));
+      PetscCall(MatGetRow(Bdt,i,&ncols,&cols,&vals));
       k=0;
       for (j=0; j<ncols; j++) {
         if (vals[j]) k++;
         if (k>1) SETERRQ(comm,PETSC_ERR_PLIB,"more than one nonzero in Bd row %d",i);
       }
-      CHKERRQ(MatRestoreRow(Bdt,i,&ncols,&cols,&vals));
+      PetscCall(MatRestoreRow(Bdt,i,&ncols,&cols,&vals));
       if (k) {
-        CHKERRQ(VecGetValues(dof_multiplicities,1,&i,&multiplicity));
+        PetscCall(VecGetValues(dof_multiplicities,1,&i,&multiplicity));
         multiplicity++;
-        CHKERRQ(VecSetValue(dof_multiplicities,i,multiplicity,INSERT_VALUES));
+        PetscCall(VecSetValue(dof_multiplicities,i,multiplicity,INSERT_VALUES));
       }
     }
   }
 
   if (count_Bc) {
-    CHKERRQ(MatIsImplicitTranspose(Bc,&flg));
+    PetscCall(MatIsImplicitTranspose(Bc,&flg));
     PERMON_ASSERT(flg,"Bc must be implicit transpose");
-    CHKERRQ(PermonMatTranspose(Bc,MAT_TRANSPOSE_EXPLICIT,&Bct));
+    PetscCall(PermonMatTranspose(Bc,MAT_TRANSPOSE_EXPLICIT,&Bct));
     for (i=ilo; i<ihi; i++) {
-      CHKERRQ(MatGetRow(Bct,i,&ncols,&cols,&vals));
+      PetscCall(MatGetRow(Bct,i,&ncols,&cols,&vals));
       k=0;
       for (j=0; j<ncols; j++) {
         if (vals[j]) k++;
       }
-      CHKERRQ(MatRestoreRow(Bct,i,&ncols,&cols,&vals));
-      if (k>1) CHKERRQ(PetscPrintf(comm,"WARNING: more than one nonzero in Bc row %d\n",i));
+      PetscCall(MatRestoreRow(Bct,i,&ncols,&cols,&vals));
+      if (k>1) PetscCall(PetscPrintf(comm,"WARNING: more than one nonzero in Bc row %d\n",i));
       if (k) {
-        CHKERRQ(VecGetValues(dof_multiplicities,1,&i,&multiplicity));
+        PetscCall(VecGetValues(dof_multiplicities,1,&i,&multiplicity));
         multiplicity++;
-        CHKERRQ(VecSetValue(dof_multiplicities,i,multiplicity,INSERT_VALUES));
+        PetscCall(VecSetValue(dof_multiplicities,i,multiplicity,INSERT_VALUES));
       }
     }
   }
 
-  CHKERRQ(VecAssemblyBegin(dof_multiplicities));
-  CHKERRQ(VecAssemblyEnd(dof_multiplicities));
-  CHKERRQ(VecSqrtAbs(dof_multiplicities));
-  CHKERRQ(VecReciprocal(dof_multiplicities));
+  PetscCall(VecAssemblyBegin(dof_multiplicities));
+  PetscCall(VecAssemblyEnd(dof_multiplicities));
+  PetscCall(VecSqrtAbs(dof_multiplicities));
+  PetscCall(VecReciprocal(dof_multiplicities));
 
   {
     for (i=ilo; i<ihi; i++) {
-      CHKERRQ(MatGetRow(Bgt,i,&ncols,&cols,NULL));
+      PetscCall(MatGetRow(Bgt,i,&ncols,&cols,NULL));
       if (ncols) {
-        CHKERRQ(VecGetValues(dof_multiplicities,1,&i,&multiplicity));
+        PetscCall(VecGetValues(dof_multiplicities,1,&i,&multiplicity));
         for (j=0; j<ncols; j++) {
-          CHKERRQ(VecSetValue(edge_multiplicities_g,cols[j],multiplicity,INSERT_VALUES));
+          PetscCall(VecSetValue(edge_multiplicities_g,cols[j],multiplicity,INSERT_VALUES));
         }
       }
-      CHKERRQ(MatRestoreRow(Bgt,i,&ncols,&cols,NULL));
+      PetscCall(MatRestoreRow(Bgt,i,&ncols,&cols,NULL));
     }
-    CHKERRQ(VecAssemblyBegin(edge_multiplicities_g));
-    CHKERRQ(VecAssemblyEnd(  edge_multiplicities_g));
-    CHKERRQ(MatDestroy(&Bgt));
+    PetscCall(VecAssemblyBegin(edge_multiplicities_g));
+    PetscCall(VecAssemblyEnd(  edge_multiplicities_g));
+    PetscCall(MatDestroy(&Bgt));
   }
 
   if (scale_Bd) {
-    CHKERRQ(PermonMatTranspose(Bd,MAT_TRANSPOSE_EXPLICIT,&Bdt));
+    PetscCall(PermonMatTranspose(Bd,MAT_TRANSPOSE_EXPLICIT,&Bdt));
     for (i=ilo; i<ihi; i++) {
-      CHKERRQ(MatGetRow(Bdt,i,&ncols,&cols,NULL));
+      PetscCall(MatGetRow(Bdt,i,&ncols,&cols,NULL));
       if (ncols) {
-        CHKERRQ(VecGetValues(dof_multiplicities,1,&i,&multiplicity));
+        PetscCall(VecGetValues(dof_multiplicities,1,&i,&multiplicity));
         for (j=0; j<ncols; j++) {
-          CHKERRQ(VecSetValue(edge_multiplicities_d,cols[j],multiplicity,INSERT_VALUES));
+          PetscCall(VecSetValue(edge_multiplicities_d,cols[j],multiplicity,INSERT_VALUES));
         }
       }
-      CHKERRQ(MatRestoreRow(Bdt,i,&ncols,&cols,NULL));
+      PetscCall(MatRestoreRow(Bdt,i,&ncols,&cols,NULL));
     }
-    CHKERRQ(VecAssemblyBegin(edge_multiplicities_d));
-    CHKERRQ(VecAssemblyEnd(  edge_multiplicities_d));
-    CHKERRQ(MatDestroy(&Bdt));
+    PetscCall(VecAssemblyBegin(edge_multiplicities_d));
+    PetscCall(VecAssemblyEnd(  edge_multiplicities_d));
+    PetscCall(MatDestroy(&Bdt));
   }
 
   if (scale_Bc) {
-    CHKERRQ(PermonMatTranspose(Bc,MAT_TRANSPOSE_EXPLICIT,&Bct));
+    PetscCall(PermonMatTranspose(Bc,MAT_TRANSPOSE_EXPLICIT,&Bct));
     for (i=ilo; i<ihi; i++) {
-      CHKERRQ(MatGetRow(Bct,i,&ncols,&cols,NULL));
+      PetscCall(MatGetRow(Bct,i,&ncols,&cols,NULL));
       if (ncols) {
-        CHKERRQ(VecGetValues(dof_multiplicities,1,&i,&multiplicity));
+        PetscCall(VecGetValues(dof_multiplicities,1,&i,&multiplicity));
         for (j=0; j<ncols; j++) {
-          CHKERRQ(VecSetValue(edge_multiplicities_c,cols[j],multiplicity,INSERT_VALUES));
+          PetscCall(VecSetValue(edge_multiplicities_c,cols[j],multiplicity,INSERT_VALUES));
         }
       }
-      CHKERRQ(MatRestoreRow(Bct,i,&ncols,&cols,NULL));
+      PetscCall(MatRestoreRow(Bct,i,&ncols,&cols,NULL));
     }
-    CHKERRQ(VecAssemblyBegin(edge_multiplicities_c));
-    CHKERRQ(VecAssemblyEnd(  edge_multiplicities_c));
-    CHKERRQ(MatDestroy(&Bct));
+    PetscCall(VecAssemblyBegin(edge_multiplicities_c));
+    PetscCall(VecAssemblyEnd(  edge_multiplicities_c));
+    PetscCall(MatDestroy(&Bct));
   }
 
   if (edge_multiplicities_d) {
     Vec dE_vecs[2]={edge_multiplicities_g,edge_multiplicities_d};
-    CHKERRQ(VecCreateNest(PetscObjectComm((PetscObject)qp),2,NULL,dE_vecs,dE_new));
-    CHKERRQ(VecDestroy(&edge_multiplicities_d));
-    CHKERRQ(VecDestroy(&edge_multiplicities_g));
+    PetscCall(VecCreateNest(PetscObjectComm((PetscObject)qp),2,NULL,dE_vecs,dE_new));
+    PetscCall(VecDestroy(&edge_multiplicities_d));
+    PetscCall(VecDestroy(&edge_multiplicities_g));
   } else {
     *dE_new = edge_multiplicities_g;
   }
 
   *dI_new = edge_multiplicities_c;
 
-  CHKERRQ(VecDestroy(&dof_multiplicities));
+  PetscCall(VecDestroy(&dof_multiplicities));
   PetscFunctionReturnI(0);
 }
 
@@ -1892,12 +1892,12 @@ PetscErrorCode QPSetBox(QP qp, IS is, Vec lb, Vec ub)
   }
 
   if (lb || ub) {
-    CHKERRQ(QPCCreateBox(PetscObjectComm((PetscObject)qp),is,lb,ub,&qpc));
-    CHKERRQ(QPSetQPC(qp, qpc));
-    CHKERRQ(QPCDestroy(&qpc));
+    PetscCall(QPCCreateBox(PetscObjectComm((PetscObject)qp),is,lb,ub,&qpc));
+    PetscCall(QPSetQPC(qp, qpc));
+    PetscCall(QPCDestroy(&qpc));
   }
 
-  if (qp->changeListener) CHKERRQ((*qp->changeListener)(qp));
+  if (qp->changeListener) PetscCall((*qp->changeListener)(qp));
   PetscFunctionReturn(0);
 }
 
@@ -1927,12 +1927,12 @@ PetscErrorCode QPGetBox(QP qp, IS *is, Vec *lb, Vec *ub)
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  CHKERRQ(QPGetQPC(qp,&qpc));
+  PetscCall(QPGetQPC(qp,&qpc));
   if (qpc) {
-    CHKERRQ(PetscObjectTypeCompare((PetscObject)qpc,QPCBOX,&flg));
+    PetscCall(PetscObjectTypeCompare((PetscObject)qpc,QPCBOX,&flg));
     if (!flg) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qp->qpc)->type_name);
-    CHKERRQ(QPCBoxGet(qpc,lb,ub));
-    if (is) CHKERRQ(QPCGetIS(qpc,is));
+    PetscCall(QPCBoxGet(qpc,lb,ub));
+    if (is) PetscCall(QPCGetIS(qpc,is));
   } else {
     if (is) *is = NULL;
     if (lb) *lb = NULL;
@@ -1951,13 +1951,13 @@ PetscErrorCode QPSetEqMultiplier(QP qp, Vec lambda_E)
   if (lambda_E) {
     PetscValidHeaderSpecific(lambda_E,VEC_CLASSID,2);
     PetscCheckSameComm(qp,1,lambda_E,2);
-    CHKERRQ(PetscObjectReference((PetscObject)lambda_E));
+    PetscCall(PetscObjectReference((PetscObject)lambda_E));
   }
-  CHKERRQ(VecDestroy(&qp->lambda_E));
-  CHKERRQ(VecDestroy(&qp->lambda));
-  CHKERRQ(VecDestroy(&qp->Bt_lambda));
+  PetscCall(VecDestroy(&qp->lambda_E));
+  PetscCall(VecDestroy(&qp->lambda));
+  PetscCall(VecDestroy(&qp->Bt_lambda));
   qp->lambda_E = lambda_E;
-  if (qp->changeListener) CHKERRQ((*qp->changeListener)(qp));
+  if (qp->changeListener) PetscCall((*qp->changeListener)(qp));
   PetscFunctionReturn(0);
 }
 
@@ -1971,13 +1971,13 @@ PetscErrorCode QPSetIneqMultiplier(QP qp, Vec lambda_I)
   if (lambda_I) {
     PetscValidHeaderSpecific(lambda_I,VEC_CLASSID,2);
     PetscCheckSameComm(qp,1,lambda_I,2);
-    CHKERRQ(PetscObjectReference((PetscObject)lambda_I));
+    PetscCall(PetscObjectReference((PetscObject)lambda_I));
   }
-  CHKERRQ(VecDestroy(&qp->lambda_I));
-  CHKERRQ(VecDestroy(&qp->lambda));
-  CHKERRQ(VecDestroy(&qp->Bt_lambda));
+  PetscCall(VecDestroy(&qp->lambda_I));
+  PetscCall(VecDestroy(&qp->lambda));
+  PetscCall(VecDestroy(&qp->Bt_lambda));
   qp->lambda_I = lambda_I;
-  if (qp->changeListener) CHKERRQ((*qp->changeListener)(qp));
+  if (qp->changeListener) PetscCall((*qp->changeListener)(qp));
   PetscFunctionReturn(0);
 }
 
@@ -2005,15 +2005,15 @@ PetscErrorCode QPSetInitialVector(QP qp,Vec x)
     PetscCheckSameComm(qp,1,x,2);
   }
 
-  CHKERRQ(VecDestroy(&qp->x));
+  PetscCall(VecDestroy(&qp->x));
   qp->x = x;
 
   if (x) {
-    CHKERRQ(PetscObjectReference((PetscObject)x));
+    PetscCall(PetscObjectReference((PetscObject)x));
     if (FllopDebugEnabled) {
       PetscReal norm;
-      CHKERRQ(VecNorm(x,NORM_2,&norm));
-      CHKERRQ(FllopDebug1("||x|| = %0.2e\n", norm));
+      PetscCall(VecNorm(x,NORM_2,&norm));
+      PetscCall(FllopDebug1("||x|| = %0.2e\n", norm));
     }
   }
   PetscFunctionReturn(0);
@@ -2041,7 +2041,7 @@ PetscErrorCode QPGetSolutionVector(QP qp,Vec *x)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
   PetscValidPointer(x,2);
-  CHKERRQ(QPInitializeInitialVector_Private(qp));
+  PetscCall(QPInitializeInitialVector_Private(qp));
   *x = qp->x;
   PetscFunctionReturn(0);
 }
@@ -2067,9 +2067,9 @@ PetscErrorCode QPSetWorkVector(QP qp,Vec xwork)
   if (xwork) {
     PetscValidHeaderSpecific(xwork,VEC_CLASSID,2);
     PetscCheckSameComm(qp,1,xwork,2);
-    CHKERRQ(PetscObjectReference((PetscObject)xwork));
+    PetscCall(PetscObjectReference((PetscObject)xwork));
   }
-  CHKERRQ(VecDestroy(&qp->xwork));
+  PetscCall(VecDestroy(&qp->xwork));
   qp->xwork = xwork;
   PetscFunctionReturn(0);
 }
@@ -2101,7 +2101,7 @@ PetscErrorCode QPGetVecs(QP qp,Vec *right,Vec *left)
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
   PetscValidType(qp,1);
   if (qp->A) {
-    CHKERRQ(MatCreateVecs(qp->A,right,left));
+    PetscCall(MatCreateVecs(qp->A,right,left));
   } else {
     SETERRQ(((PetscObject)qp)->comm,PETSC_ERR_ORDER,"system operator not set yet");
   }
@@ -2266,12 +2266,12 @@ PetscErrorCode QPGetQPPF(QP qp, QPPF *pf)
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
   PetscValidPointer(pf,2);
   if (!qp->pf) {
-    CHKERRQ(QPPFCreate(PetscObjectComm((PetscObject)qp),&qp->pf));
-    CHKERRQ(PetscLogObjectParent((PetscObject)qp,(PetscObject)qp->pf));
-    CHKERRQ(PetscObjectIncrementTabLevel((PetscObject)qp->pf,(PetscObject)qp,1));
-    CHKERRQ(PetscObjectSetOptionsPrefix((PetscObject)qp->pf,((PetscObject)qp)->prefix));
+    PetscCall(QPPFCreate(PetscObjectComm((PetscObject)qp),&qp->pf));
+    PetscCall(PetscLogObjectParent((PetscObject)qp,(PetscObject)qp->pf));
+    PetscCall(PetscObjectIncrementTabLevel((PetscObject)qp->pf,(PetscObject)qp,1));
+    PetscCall(PetscObjectSetOptionsPrefix((PetscObject)qp->pf,((PetscObject)qp)->prefix));
     //TODO dirty that we call it unconditionally
-    CHKERRQ(QPPFSetFromOptions(qp->pf));
+    PetscCall(QPPFSetFromOptions(qp->pf));
   }
   *pf = qp->pf;
   PetscFunctionReturn(0);
@@ -2297,9 +2297,9 @@ PetscErrorCode QPSetQPPF(QP qp, QPPF pf)
   if (pf) {
     PetscValidHeaderSpecific(pf,QPPF_CLASSID,2);
     PetscCheckSameComm(qp,1,pf,2);
-    CHKERRQ(PetscObjectReference((PetscObject)pf));
+    PetscCall(PetscObjectReference((PetscObject)pf));
   }
-  CHKERRQ(QPPFDestroy(&qp->pf));
+  PetscCall(QPPFDestroy(&qp->pf));
   qp->pf = pf;
   PetscFunctionReturn(0);
 }
@@ -2347,9 +2347,9 @@ PetscErrorCode QPSetQPC(QP qp, QPC qpc)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
   if (qpc) PetscValidHeaderSpecific(qpc,QPC_CLASSID,2);
-  CHKERRQ(QPCDestroy(&qp->qpc));
+  PetscCall(QPCDestroy(&qp->qpc));
   qp->qpc = qpc;
-  CHKERRQ(PetscObjectReference((PetscObject)qpc));
+  PetscCall(PetscObjectReference((PetscObject)qpc));
   PetscFunctionReturn(0);
 }
 
@@ -2402,10 +2402,10 @@ PetscErrorCode QPSetOptionsPrefix(QP qp,const char prefix[])
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  CHKERRQ(PetscObjectSetOptionsPrefix((PetscObject)qp,prefix));
+  PetscCall(PetscObjectSetOptionsPrefix((PetscObject)qp,prefix));
   if (qp->pf) {
-    CHKERRQ(QPGetQPPF(qp, &qp->pf));
-    CHKERRQ(PetscObjectSetOptionsPrefix((PetscObject)qp->pf,prefix));
+    PetscCall(QPGetQPPF(qp, &qp->pf));
+    PetscCall(PetscObjectSetOptionsPrefix((PetscObject)qp->pf,prefix));
   }
   PetscFunctionReturn(0);
 }
@@ -2434,10 +2434,10 @@ PetscErrorCode QPAppendOptionsPrefix(QP qp,const char prefix[])
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  CHKERRQ(PetscObjectAppendOptionsPrefix((PetscObject)qp,prefix));
+  PetscCall(PetscObjectAppendOptionsPrefix((PetscObject)qp,prefix));
   if (qp->pf) {
-    CHKERRQ(QPGetQPPF(qp, &qp->pf));
-    CHKERRQ(PetscObjectAppendOptionsPrefix((PetscObject)qp->pf,prefix));
+    PetscCall(QPGetQPPF(qp, &qp->pf));
+    PetscCall(PetscObjectAppendOptionsPrefix((PetscObject)qp->pf,prefix));
   }
   PetscFunctionReturn(0);
 }
@@ -2464,7 +2464,7 @@ PetscErrorCode QPGetOptionsPrefix(QP qp,const char *prefix[])
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  CHKERRQ(PetscObjectGetOptionsPrefix((PetscObject)qp,prefix));
+  PetscCall(PetscObjectGetOptionsPrefix((PetscObject)qp,prefix));
   PetscFunctionReturn(0);
 }
 
@@ -2476,17 +2476,17 @@ static PetscErrorCode QPSetFromOptions_Private(QP qp)
   if (!qp->setfromoptionscalled) PetscFunctionReturn(0);
 
   PetscObjectOptionsBegin((PetscObject)qp);
-  if (!qp->pc) CHKERRQ(QPGetPC(qp,&qp->pc));
+  if (!qp->pc) PetscCall(QPGetPC(qp,&qp->pc));
 
   if (qp->pf) {
-    CHKERRQ(FllopPetscObjectInheritPrefixIfNotSet((PetscObject)qp->pf,(PetscObject)qp,NULL));
+    PetscCall(FllopPetscObjectInheritPrefixIfNotSet((PetscObject)qp->pf,(PetscObject)qp,NULL));
   }
-  CHKERRQ(FllopPetscObjectInheritPrefixIfNotSet((PetscObject)qp->pc,(PetscObject)qp,NULL));
+  PetscCall(FllopPetscObjectInheritPrefixIfNotSet((PetscObject)qp->pc,(PetscObject)qp,NULL));
 
   if (qp->pf) {
-    CHKERRQ(QPPFSetFromOptions(qp->pf));
+    PetscCall(QPPFSetFromOptions(qp->pf));
   }
-  CHKERRQ(PCSetFromOptions(qp->pc));
+  PetscCall(PCSetFromOptions(qp->pc));
 
   PetscOptionsEnd();
   PetscFunctionReturn(0);
@@ -2523,10 +2523,10 @@ PetscErrorCode QPSetFromOptions(QP qp)
   PetscObjectOptionsBegin((PetscObject)qp);
 
   /* options processed elsewhere */
-  CHKERRQ(PetscOptionsName("-qp_view","print the QP info at the end of a QPSSolve call","QPView",&flg));
+  PetscCall(PetscOptionsName("-qp_view","print the QP info at the end of a QPSSolve call","QPView",&flg));
 
   /* process any options handlers added with PetscObjectAddOptionsHandler() */
-  CHKERRQ(PetscObjectProcessOptionsHandlers(PetscOptionsObject,(PetscObject)qp));
+  PetscCall(PetscObjectProcessOptionsHandlers(PetscOptionsObject,(PetscObject)qp));
   PetscOptionsEnd();
   qp->setfromoptionscalled++;
   PetscFunctionReturn(0);

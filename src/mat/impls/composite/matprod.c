@@ -49,25 +49,25 @@ PetscErrorCode MatMult_Prod(Mat A,Vec x,Vec y)
   in = x;
   if (shell->right) {
     if (!shell->rightwork) {
-      CHKERRQ(VecDuplicate(shell->right,&shell->rightwork));
+      PetscCall(VecDuplicate(shell->right,&shell->rightwork));
     }
-    CHKERRQ(VecPointwiseMult(shell->rightwork,shell->right,in));
+    PetscCall(VecPointwiseMult(shell->rightwork,shell->right,in));
     in   = shell->rightwork;
   }
   while (next->next) {
     if (!next->work) { /* should reuse previous work if the same size */
-      CHKERRQ(MatCreateVecs(next->mat,NULL,&next->work));
+      PetscCall(MatCreateVecs(next->mat,NULL,&next->work));
     }
     out = next->work;
-    CHKERRQ(MatMult(next->mat,in,out));
+    PetscCall(MatMult(next->mat,in,out));
     in   = out;
     next = next->next;
   }
-  CHKERRQ(MatMult(next->mat,in,y));
+  PetscCall(MatMult(next->mat,in,y));
   if (shell->left) {
-    CHKERRQ(VecPointwiseMult(y,shell->left,y));
+    PetscCall(VecPointwiseMult(y,shell->left,y));
   }
-  CHKERRQ(VecScale(y,shell->scale));
+  PetscCall(VecScale(y,shell->scale));
   PetscFunctionReturn(0);
 }
 
@@ -84,25 +84,25 @@ PetscErrorCode MatMultTranspose_Prod(Mat A,Vec x,Vec y)
   in = x;
   if (shell->left) {
     if (!shell->leftwork) {
-      CHKERRQ(VecDuplicate(shell->left,&shell->leftwork));
+      PetscCall(VecDuplicate(shell->left,&shell->leftwork));
     }
-    CHKERRQ(VecPointwiseMult(shell->leftwork,shell->left,in));
+    PetscCall(VecPointwiseMult(shell->leftwork,shell->left,in));
     in   = shell->leftwork;
   }
   while (tail->prev) {
     if (!tail->prev->work) { /* should reuse previous work if the same size */
-      CHKERRQ(MatCreateVecs(tail->mat,&tail->prev->work,NULL));
+      PetscCall(MatCreateVecs(tail->mat,&tail->prev->work,NULL));
     }
     out = tail->prev->work;
-    CHKERRQ(MatMultTranspose(tail->mat,in,out));
+    PetscCall(MatMultTranspose(tail->mat,in,out));
     in   = out;
     tail = tail->prev;
   }
-  CHKERRQ(MatMultTranspose(tail->mat,in,y));
+  PetscCall(MatMultTranspose(tail->mat,in,y));
   if (shell->right) {
-    CHKERRQ(VecPointwiseMult(y,shell->right,y));
+    PetscCall(VecPointwiseMult(y,shell->right,y));
   }
-  CHKERRQ(VecScale(y,shell->scale));
+  PetscCall(VecScale(y,shell->scale));
   PetscFunctionReturn(0);
 }
 
@@ -114,13 +114,13 @@ PetscErrorCode MatMultAdd_Prod(Mat A,Vec x,Vec y,Vec z)
 
   PetscFunctionBegin;
   if (y == z) {
-    if (!shell->leftwork) { CHKERRQ(VecDuplicate(z,&shell->leftwork)); }
-    CHKERRQ(MatMult_Prod(A,x,shell->leftwork));
-    CHKERRQ(VecCopy(y,z));
-    CHKERRQ(VecAXPY(z,1.0,shell->leftwork));
+    if (!shell->leftwork) { PetscCall(VecDuplicate(z,&shell->leftwork)); }
+    PetscCall(MatMult_Prod(A,x,shell->leftwork));
+    PetscCall(VecCopy(y,z));
+    PetscCall(VecAXPY(z,1.0,shell->leftwork));
   } else {
-    CHKERRQ(MatMult_Prod(A,x,z));
-    CHKERRQ(VecAXPY(z,1.0,y));
+    PetscCall(MatMult_Prod(A,x,z));
+    PetscCall(VecAXPY(z,1.0,y));
   }
   PetscFunctionReturn(0);
 }
@@ -133,13 +133,13 @@ PetscErrorCode MatMultTransposeAdd_Prod(Mat A,Vec x,Vec y, Vec z)
 
   PetscFunctionBegin;
   if (y == z) {
-    if (!shell->rightwork) { CHKERRQ(VecDuplicate(z,&shell->rightwork)); }
-    CHKERRQ(MatMultTranspose_Prod(A,x,shell->rightwork));
-    CHKERRQ(VecCopy(y,z));
-    CHKERRQ(VecAXPY(z,1.0,shell->rightwork));
+    if (!shell->rightwork) { PetscCall(VecDuplicate(z,&shell->rightwork)); }
+    PetscCall(MatMultTranspose_Prod(A,x,shell->rightwork));
+    PetscCall(VecCopy(y,z));
+    PetscCall(VecAXPY(z,1.0,shell->rightwork));
   } else {
-    CHKERRQ(MatMultTranspose_Prod(A,x,z));
-    CHKERRQ(VecAXPY(z,1.0,y));
+    PetscCall(MatMultTranspose_Prod(A,x,z));
+    PetscCall(VecAXPY(z,1.0,y));
   }
   PetscFunctionReturn(0);
 }
@@ -152,8 +152,8 @@ FLLOP_EXTERN PetscErrorCode  MatCreate_Prod(Mat A)
   Mat_Composite  *composite;
 
   PetscFunctionBegin;
-  CHKERRQ(PetscFunctionListFind(MatList,MATCOMPOSITE,(void(**)(void))&createComposite));
-  CHKERRQ(createComposite(A));
+  PetscCall(PetscFunctionListFind(MatList,MATCOMPOSITE,(void(**)(void))&createComposite));
+  PetscCall(createComposite(A));
   composite = (Mat_Composite*)A->data;
 
   A->ops->mult               = MatMult_Prod;
@@ -163,13 +163,13 @@ FLLOP_EXTERN PetscErrorCode  MatCreate_Prod(Mat A)
   A->ops->getdiagonal        = NULL;
   composite->type            = MAT_COMPOSITE_MULTIPLICATIVE;
 
-  CHKERRQ(PetscObjectComposeFunction((PetscObject)A,"MatProdGetMat_Prod_C",MatProdGetMat_Prod));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A,"MatProdGetMat_Prod_C",MatProdGetMat_Prod));
 
   composite->type           = MAT_COMPOSITE_MULTIPLICATIVE;
   composite->head           = NULL;
   composite->tail           = NULL;
 
-  CHKERRQ(PetscObjectChangeTypeName((PetscObject)A,MATPROD));
+  PetscCall(PetscObjectChangeTypeName((PetscObject)A,MATPROD));
   PetscFunctionReturn(0);
 }
 
@@ -214,17 +214,17 @@ PetscErrorCode  MatCreateProd(MPI_Comm comm,PetscInt nmat,const Mat *mats,Mat *m
   if (nmat < 1) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_OUTOFRANGE,"Must pass in at least one matrix");
   PetscValidPointer(mat,3);
 
-  CHKERRQ(MatGetLocalSize(mats[0],PETSC_IGNORE,&n));
-  CHKERRQ(MatGetLocalSize(mats[nmat-1],&m,PETSC_IGNORE));
-  CHKERRQ(MatGetSize(mats[0],PETSC_IGNORE,&N));
-  CHKERRQ(MatGetSize(mats[nmat-1],&M,PETSC_IGNORE));
-  CHKERRQ(MatCreate(comm,mat));
-  CHKERRQ(MatSetSizes(*mat,m,n,M,N));
-  CHKERRQ(MatSetType(*mat,MATPROD));
+  PetscCall(MatGetLocalSize(mats[0],PETSC_IGNORE,&n));
+  PetscCall(MatGetLocalSize(mats[nmat-1],&m,PETSC_IGNORE));
+  PetscCall(MatGetSize(mats[0],PETSC_IGNORE,&N));
+  PetscCall(MatGetSize(mats[nmat-1],&M,PETSC_IGNORE));
+  PetscCall(MatCreate(comm,mat));
+  PetscCall(MatSetSizes(*mat,m,n,M,N));
+  PetscCall(MatSetType(*mat,MATPROD));
   for (i=0; i<nmat; i++) {
-    CHKERRQ(MatCompositeAddMat(*mat,mats[i]));
+    PetscCall(MatCompositeAddMat(*mat,mats[i]));
   }
-  CHKERRQ(MatAssemblyBegin(*mat,MAT_FINAL_ASSEMBLY));
-  CHKERRQ(MatAssemblyEnd(*mat,MAT_FINAL_ASSEMBLY));
+  PetscCall(MatAssemblyBegin(*mat,MAT_FINAL_ASSEMBLY));
+  PetscCall(MatAssemblyEnd(*mat,MAT_FINAL_ASSEMBLY));
   PetscFunctionReturn(0);
 }

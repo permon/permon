@@ -8,25 +8,25 @@ int main(int argc,char **args)
   PetscInt       n = 4;
   PetscBool      flg;
 
-  CHKERRQ(PermonInitialize(&argc,&args,(char *)0,(char *)0));
+  PetscCall(PermonInitialize(&argc,&args,(char *)0,(char *)0));
 
-  CHKERRQ(VecCreate(PETSC_COMM_WORLD,&v));
-  CHKERRQ(VecSetSizes(v,PETSC_DECIDE,n));
-  CHKERRQ(VecSetFromOptions(v));
-  CHKERRQ(VecSet(v,1.));
+  PetscCall(VecCreate(PETSC_COMM_WORLD,&v));
+  PetscCall(VecSetSizes(v,PETSC_DECIDE,n));
+  PetscCall(VecSetFromOptions(v));
+  PetscCall(VecSet(v,1.));
 
-  CHKERRQ(VecIsInvalidated(v,&flg));
+  PetscCall(VecIsInvalidated(v,&flg));
   if (flg) SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_PLIB,"Vec is invalid");
-  CHKERRQ(VecInvalidate(v));
-  CHKERRQ(VecIsInvalidated(v,&flg));
+  PetscCall(VecInvalidate(v));
+  PetscCall(VecIsInvalidated(v,&flg));
   if (!flg) SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_PLIB,"Vec is valid");
-  CHKERRQ(VecView(v,NULL));
-  CHKERRQ(VecSet(v,1.));
-  CHKERRQ(VecIsInvalidated(v,&flg));
+  PetscCall(VecView(v,NULL));
+  PetscCall(VecSet(v,1.));
+  PetscCall(VecIsInvalidated(v,&flg));
   if (flg) SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_PLIB,"Vec is invalid");
 
-  CHKERRQ(VecDestroy(&v));
-  CHKERRQ(PermonFinalize());
+  PetscCall(VecDestroy(&v));
+  PetscCall(PermonFinalize());
   return 0;
 }
 

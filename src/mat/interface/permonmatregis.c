@@ -15,14 +15,14 @@ FLLOP_EXTERN PetscErrorCode MatCreate_Gluing(Mat);
 PetscErrorCode  PermonMatRegisterAll()
 {
   PetscFunctionBegin;
-  CHKERRQ(MatRegister(MATINV,           MatCreate_Inv));
-  CHKERRQ(MatRegister(MATBLOCKDIAG,     MatCreate_BlockDiag));
-  CHKERRQ(MatRegister(MATSUM,           MatCreate_Sum));
-  CHKERRQ(MatRegister(MATPROD,          MatCreate_Prod));
-  CHKERRQ(MatRegister(MATSEQDENSEPERMON,MatCreate_SeqDensePermon));
-  CHKERRQ(MatRegister(MATMPIDENSEPERMON,MatCreate_MPIDensePermon));
-  CHKERRQ(MatRegister(MATEXTENSION,     MatCreate_Extension));
-  CHKERRQ(MatRegister(MATGLUING,        MatCreate_Gluing));
-  CHKERRQ(MatRegisterRootName(MATDENSEPERMON,MATSEQDENSEPERMON,MATMPIDENSEPERMON));
+  PetscCall(MatRegister(MATINV,           MatCreate_Inv));
+  PetscCall(MatRegister(MATBLOCKDIAG,     MatCreate_BlockDiag));
+  PetscCall(MatRegister(MATSUM,           MatCreate_Sum));
+  PetscCall(MatRegister(MATPROD,          MatCreate_Prod));
+  PetscCall(MatRegister(MATSEQDENSEPERMON,MatCreate_SeqDensePermon));
+  PetscCall(MatRegister(MATMPIDENSEPERMON,MatCreate_MPIDensePermon));
+  PetscCall(MatRegister(MATEXTENSION,     MatCreate_Extension));
+  PetscCall(MatRegister(MATGLUING,        MatCreate_Gluing));
+  PetscCall(MatRegisterRootName(MATDENSEPERMON,MATSEQDENSEPERMON,MATMPIDENSEPERMON));
   PetscFunctionReturn(0);
 }

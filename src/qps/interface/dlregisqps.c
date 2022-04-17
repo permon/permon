@@ -12,15 +12,15 @@ PetscErrorCode QPSInitializePackage(void)
   if (QPSPackageInitialized) PetscFunctionReturn(0);
   QPSPackageInitialized = PETSC_TRUE;
   /* Register Classes */
-  CHKERRQ(PetscClassIdRegister("QP Solver",&QPS_CLASSID));
+  PetscCall(PetscClassIdRegister("QP Solver",&QPS_CLASSID));
   /* Register Constructors */
-  CHKERRQ(QPSRegisterAll());
+  PetscCall(QPSRegisterAll());
   /* Register Events */
-  CHKERRQ(PetscLogEventRegister("QPSSolve",QPS_CLASSID,&QPS_Solve));
-  CHKERRQ(PetscLogEventRegister("QPSPostSolve",QPS_CLASSID,&QPS_PostSolve));
+  PetscCall(PetscLogEventRegister("QPSSolve",QPS_CLASSID,&QPS_Solve));
+  PetscCall(PetscLogEventRegister("QPSPostSolve",QPS_CLASSID,&QPS_PostSolve));
   /* Process info & summary exclusions */
-  CHKERRQ(FllopProcessInfoExclusions(QPS_CLASSID, QPS_CLASS_NAME));
-  CHKERRQ(PetscRegisterFinalize(QPSFinalizePackage));
+  PetscCall(FllopProcessInfoExclusions(QPS_CLASSID, QPS_CLASS_NAME));
+  PetscCall(PetscRegisterFinalize(QPSFinalizePackage));
   PetscFunctionReturn(0);
 }
 
@@ -29,7 +29,7 @@ PetscErrorCode QPSInitializePackage(void)
 PetscErrorCode QPSFinalizePackage(void)
 {
   PetscFunctionBegin;
-  CHKERRQ(PetscFunctionListDestroy(&QPSList));
+  PetscCall(PetscFunctionListDestroy(&QPSList));
   QPSPackageInitialized = PETSC_FALSE;
   QPSRegisterAllCalled  = PETSC_FALSE;
   PetscFunctionReturn(0);
