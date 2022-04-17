@@ -49,7 +49,7 @@ int main(int argc,char **args)
   }
   ierr = ISLocalToGlobalMappingCreate(PETSC_COMM_WORLD,1,ndofs_l,global_indices,PETSC_OWN_POINTER,&l2g);
   /* Create MATIS object needed by KSPFETI */
-  ierr = MatCreateIS(PETSC_COMM_WORLD,1,PETSC_DECIDE,PETSC_DECIDE,ndofs,ndofs,l2g,NULL,&A);CHKERRQ(ierr);
+  ierr = MatCreateIS(PETSC_COMM_WORLD,1,PETSC_DECIDE,PETSC_DECIDE,ndofs,ndofs,l2g,l2g,&A);CHKERRQ(ierr);
   ierr = MatISSetPreallocation(A,3,NULL,3,NULL);CHKERRQ(ierr);
   ierr = MatCreateVecs(A,&solution,&rhs);CHKERRQ(ierr);
 

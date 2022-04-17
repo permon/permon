@@ -2005,7 +2005,7 @@ PetscErrorCode QPTMatISToBlockDiag(QP qp)
   *  create interface mappings
   *  adapted from PCISSetUp */
   /* get info on mapping */
-  mapping = qp->A->rmap->mapping;
+  mapping = matis->rmapping;
   TRY( ISLocalToGlobalMappingGetSize(mapping,&n) );
   TRY( ISLocalToGlobalMappingGetInfo(mapping,&n_neigh,&neigh,&n_shared,&shared) );
 
