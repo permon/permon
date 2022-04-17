@@ -288,7 +288,7 @@ static PetscErrorCode MatOrthColumns_GS_Lingen(MPI_Comm comm, PetscInt N, Vec q[
 static PetscErrorCode MatOrthColumns_GS(Mat A, MatOrthType type, MatOrthForm form, Mat *Q_new, Mat *S_new)
 {
   MPI_Comm       comm;
-  Mat            Q=NULL, S=NULL;
+  Mat            Q=NULL, S=NULL,Q1;
   PetscInt       M, N, m, n, i, Alo, Ahi, Slo, Shi;
   Vec            *q=NULL, *s=NULL;
   PetscScalar    *dots;
@@ -313,7 +313,10 @@ static PetscErrorCode MatOrthColumns_GS(Mat A, MatOrthType type, MatOrthForm for
   }
 
   TRY( MatGetOwnershipRange(A, &Alo, &Ahi) );
-  TRY( PermonMatConvertBlocks(A, MATDENSEPERMON, MAT_INITIAL_MATRIX, &Q) );
+  /*TODO: fix this workaround for prealloc check in MatDenseGetLDA */
+  TRY( PermonMatConvertBlocks(A, MATDENSE, MAT_INITIAL_MATRIX, &Q1) );
+  TRY( PermonMatConvertBlocks(Q1, MATDENSEPERMON, MAT_INITIAL_MATRIX, &Q) );
+  TRY( MatDestroy(&Q1) );
 
   if (computeS) {
     TRY( MatCreateDensePermon(comm, n, n, N, N, NULL, &S) );
