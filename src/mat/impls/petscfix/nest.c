@@ -279,15 +279,15 @@ static PetscErrorCode MatNestPermonGetVecs_NestPermon(Mat A,Vec *right,Vec *left
   PetscErrorCode ierr;
 
   PetscFunctionBegin;
-  ierr = PetscObjectGetComm((PetscObject)A,&comm);CHKERRQ(ierr);
+  CHKERRQ(PetscObjectGetComm((PetscObject)A,&comm));
   if (right) {
     /* allocate R */
-    ierr = PetscMalloc(sizeof(Vec) * bA->nc, &R);CHKERRQ(ierr);
+    CHKERRQ(PetscMalloc(sizeof(Vec) * bA->nc, &R));
     /* Create the right vectors */
     for (j=0; j<bA->nc; j++) {
       for (i=0; i<bA->nr; i++) {
         if (bA->m[i][j]) {
-          ierr = MatNestPermonGetVecs(bA->m[i][j],&R[j],NULL);CHKERRQ(ierr);
+          CHKERRQ(MatNestPermonGetVecs(bA->m[i][j],&R[j],NULL));
           break;
         }
       }
@@ -296,22 +296,22 @@ static PetscErrorCode MatNestPermonGetVecs_NestPermon(Mat A,Vec *right,Vec *left
         SETERRQ(PetscObjectComm((PetscObject)A), PETSC_ERR_ARG_WRONG, "Mat(Nest) contains a null column.");
       }
     }
-    ierr = VecCreateNest(comm,bA->nc,bA->isglobal.col,R,right);CHKERRQ(ierr);
+    CHKERRQ(VecCreateNest(comm,bA->nc,bA->isglobal.col,R,right));
     /* hand back control to the nest vector */
     for (j=0; j<bA->nc; j++) {
-      ierr = VecDestroy(&R[j]);CHKERRQ(ierr);
+      CHKERRQ(VecDestroy(&R[j]));
     }
-    ierr = PetscFree(R);CHKERRQ(ierr);
+    CHKERRQ(PetscFree(R));
   }
 
   if (left) {
     /* allocate L */
-    ierr = PetscMalloc(sizeof(Vec) * bA->nr, &L);CHKERRQ(ierr);
+    CHKERRQ(PetscMalloc(sizeof(Vec) * bA->nr, &L));
     /* Create the left vectors */
     for (i=0; i<bA->nr; i++) {
       for (j=0; j<bA->nc; j++) {
         if (bA->m[i][j]) {
-          ierr = MatCreateVecs(bA->m[i][j],NULL,&L[i]);CHKERRQ(ierr);
+          CHKERRQ(MatCreateVecs(bA->m[i][j],NULL,&L[i]));
           break;
         }
       }
@@ -321,12 +321,12 @@ static PetscErrorCode MatNestPermonGetVecs_NestPermon(Mat A,Vec *right,Vec *left
       }
     }
 
-    ierr = VecCreateNest(comm,bA->nr,bA->isglobal.row,L,left);CHKERRQ(ierr);
+    CHKERRQ(VecCreateNest(comm,bA->nr,bA->isglobal.row,L,left));
     for (i=0; i<bA->nr; i++) {
-      ierr = VecDestroy(&L[i]);CHKERRQ(ierr);
+      CHKERRQ(VecDestroy(&L[i]));
     }
 
-    ierr = PetscFree(L);CHKERRQ(ierr);
+    CHKERRQ(PetscFree(L));
   }
   PetscFunctionReturn(0);
 }
@@ -339,7 +339,7 @@ static PetscErrorCode  MatNestSetVecType_NestPermon(Mat A,VecType vtype)
   PetscBool      flg;
 
   PetscFunctionBegin;
-  ierr = PetscStrcmp(vtype,VECNEST,&flg);CHKERRQ(ierr);
+  CHKERRQ(PetscStrcmp(vtype,VECNEST,&flg));
   /* In reality, this only distinguishes VECNEST and "other" */
   if (flg) A->ops->getvecs = MatNestPermonGetVecs_NestPermon;
   else A->ops->getvecs = (PetscErrorCode (*)(Mat,Vec*,Vec*)) 0;
@@ -514,26 +514,26 @@ static PetscErrorCode MatDuplicate_NestPermon(Mat A,MatDuplicateOption op,Mat *B
   PetscErrorCode ierr;
 
   PetscFunctionBegin;
-  ierr = PetscMalloc1(nr*nc,&b);CHKERRQ(ierr);
+  CHKERRQ(PetscMalloc1(nr*nc,&b));
   for (i=0; i<nr; i++) {
     for (j=0; j<nc; j++) {
       if (bA->m[i][j]) {
-        ierr = MatDuplicate(bA->m[i][j],op,&b[i*nc+j]);CHKERRQ(ierr);
-        ierr = FllopPetscObjectInheritName((PetscObject)b[i*nc+j],(PetscObject)bA->m[i][j],NULL);CHKERRQ(ierr);
+        CHKERRQ(MatDuplicate(bA->m[i][j],op,&b[i*nc+j]));
+        CHKERRQ(FllopPetscObjectInheritName((PetscObject)b[i*nc+j],(PetscObject)bA->m[i][j],NULL));
       } else {
         b[i*nc+j] = NULL;
       }
     }
   }
-  ierr = MatCreateNestPermon(PetscObjectComm((PetscObject)A),nr,bA->isglobal.row,nc,bA->isglobal.col,b,B);CHKERRQ(ierr);
+  CHKERRQ(MatCreateNestPermon(PetscObjectComm((PetscObject)A),nr,bA->isglobal.row,nc,bA->isglobal.col,b,B));
   /* Give the new MatNest exclusive ownership */
   for (i=0; i<nr*nc; i++) {
-    ierr = MatDestroy(&b[i]);CHKERRQ(ierr);
+    CHKERRQ(MatDestroy(&b[i]));
   }
-  ierr = PetscFree(b);CHKERRQ(ierr);
+  CHKERRQ(PetscFree(b));
 
-  ierr = MatAssemblyBegin(*B,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  ierr = MatAssemblyEnd(*B,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+  CHKERRQ(MatAssemblyBegin(*B,MAT_FINAL_ASSEMBLY));
+  CHKERRQ(MatAssemblyEnd(*B,MAT_FINAL_ASSEMBLY));
   PetscFunctionReturn(0);
 }
 

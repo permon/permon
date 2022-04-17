@@ -21,11 +21,11 @@ PetscErrorCode  QPSRegisterAll(void)
 
   PetscFunctionBegin;
   QPSRegisterAllCalled = PETSC_TRUE;
-  ierr = QPSRegister(QPSKSP,      QPSCreate_KSP);CHKERRQ(ierr);
-  ierr = QPSRegister(QPSMPGP,     QPSCreate_MPGP);CHKERRQ(ierr);
-  ierr = QPSRegister(QPSSMALXE,   QPSCreate_SMALXE);CHKERRQ(ierr);
-  ierr = QPSRegister(QPSTAO,      QPSCreate_Tao);CHKERRQ(ierr);
-  ierr = QPSRegister(QPSPCPG,     QPSCreate_PCPG);CHKERRQ(ierr);
+  CHKERRQ(QPSRegister(QPSKSP,      QPSCreate_KSP));
+  CHKERRQ(QPSRegister(QPSMPGP,     QPSCreate_MPGP));
+  CHKERRQ(QPSRegister(QPSSMALXE,   QPSCreate_SMALXE));
+  CHKERRQ(QPSRegister(QPSTAO,      QPSCreate_Tao));
+  CHKERRQ(QPSRegister(QPSPCPG,     QPSCreate_PCPG));
   PetscFunctionReturn(0);
 }
 
@@ -36,6 +36,6 @@ PetscErrorCode QPSRegister(const char sname[],PetscErrorCode (*function)(QPS))
   PetscErrorCode ierr;
 
   PetscFunctionBegin;
-  ierr = PetscFunctionListAdd(&QPSList,sname,function);CHKERRQ(ierr);
+  CHKERRQ(PetscFunctionListAdd(&QPSList,sname,function));
   PetscFunctionReturn(0);
 }

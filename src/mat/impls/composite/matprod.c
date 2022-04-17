@@ -50,25 +50,25 @@ PetscErrorCode MatMult_Prod(Mat A,Vec x,Vec y)
   in = x;
   if (shell->right) {
     if (!shell->rightwork) {
-      ierr = VecDuplicate(shell->right,&shell->rightwork);CHKERRQ(ierr);
+      CHKERRQ(VecDuplicate(shell->right,&shell->rightwork));
     }
-    ierr = VecPointwiseMult(shell->rightwork,shell->right,in);CHKERRQ(ierr);
+    CHKERRQ(VecPointwiseMult(shell->rightwork,shell->right,in));
     in   = shell->rightwork;
   }
   while (next->next) {
     if (!next->work) { /* should reuse previous work if the same size */
-      ierr = MatCreateVecs(next->mat,NULL,&next->work);CHKERRQ(ierr);
+      CHKERRQ(MatCreateVecs(next->mat,NULL,&next->work));
     }
     out = next->work;
-    ierr = MatMult(next->mat,in,out);CHKERRQ(ierr);
+    CHKERRQ(MatMult(next->mat,in,out));
     in   = out;
     next = next->next;
   }
-  ierr = MatMult(next->mat,in,y);CHKERRQ(ierr);
+  CHKERRQ(MatMult(next->mat,in,y));
   if (shell->left) {
-    ierr = VecPointwiseMult(y,shell->left,y);CHKERRQ(ierr);
+    CHKERRQ(VecPointwiseMult(y,shell->left,y));
   }
-  ierr = VecScale(y,shell->scale);CHKERRQ(ierr);
+  CHKERRQ(VecScale(y,shell->scale));
   PetscFunctionReturn(0);
 }
 
@@ -86,25 +86,25 @@ PetscErrorCode MatMultTranspose_Prod(Mat A,Vec x,Vec y)
   in = x;
   if (shell->left) {
     if (!shell->leftwork) {
-      ierr = VecDuplicate(shell->left,&shell->leftwork);CHKERRQ(ierr);
+      CHKERRQ(VecDuplicate(shell->left,&shell->leftwork));
     }
-    ierr = VecPointwiseMult(shell->leftwork,shell->left,in);CHKERRQ(ierr);
+    CHKERRQ(VecPointwiseMult(shell->leftwork,shell->left,in));
     in   = shell->leftwork;
   }
   while (tail->prev) {
     if (!tail->prev->work) { /* should reuse previous work if the same size */
-      ierr = MatCreateVecs(tail->mat,&tail->prev->work,NULL);CHKERRQ(ierr);
+      CHKERRQ(MatCreateVecs(tail->mat,&tail->prev->work,NULL));
     }
     out = tail->prev->work;
-    ierr = MatMultTranspose(tail->mat,in,out);CHKERRQ(ierr);
+    CHKERRQ(MatMultTranspose(tail->mat,in,out));
     in   = out;
     tail = tail->prev;
   }
-  ierr = MatMultTranspose(tail->mat,in,y);CHKERRQ(ierr);
+  CHKERRQ(MatMultTranspose(tail->mat,in,y));
   if (shell->right) {
-    ierr = VecPointwiseMult(y,shell->right,y);CHKERRQ(ierr);
+    CHKERRQ(VecPointwiseMult(y,shell->right,y));
   }
-  ierr = VecScale(y,shell->scale);CHKERRQ(ierr);
+  CHKERRQ(VecScale(y,shell->scale));
   PetscFunctionReturn(0);
 }
 
@@ -155,8 +155,8 @@ FLLOP_EXTERN PetscErrorCode  MatCreate_Prod(Mat A)
   Mat_Composite  *composite;
 
   PetscFunctionBegin;
-  ierr = PetscFunctionListFind(MatList,MATCOMPOSITE,(void(**)(void))&createComposite);CHKERRQ(ierr);
-  ierr = createComposite(A);CHKERRQ(ierr);
+  CHKERRQ(PetscFunctionListFind(MatList,MATCOMPOSITE,(void(**)(void))&createComposite));
+  CHKERRQ(createComposite(A));
   composite = (Mat_Composite*)A->data;
 
   A->ops->mult               = MatMult_Prod;
@@ -172,7 +172,7 @@ FLLOP_EXTERN PetscErrorCode  MatCreate_Prod(Mat A)
   composite->head           = NULL;
   composite->tail           = NULL;
 
-  ierr = PetscObjectChangeTypeName((PetscObject)A,MATPROD);CHKERRQ(ierr);
+  CHKERRQ(PetscObjectChangeTypeName((PetscObject)A,MATPROD));
   PetscFunctionReturn(0);
 }
 
@@ -218,17 +218,17 @@ PetscErrorCode  MatCreateProd(MPI_Comm comm,PetscInt nmat,const Mat *mats,Mat *m
   if (nmat < 1) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_OUTOFRANGE,"Must pass in at least one matrix");
   PetscValidPointer(mat,3);
 
-  ierr = MatGetLocalSize(mats[0],PETSC_IGNORE,&n);CHKERRQ(ierr);
-  ierr = MatGetLocalSize(mats[nmat-1],&m,PETSC_IGNORE);CHKERRQ(ierr);
-  ierr = MatGetSize(mats[0],PETSC_IGNORE,&N);CHKERRQ(ierr);
-  ierr = MatGetSize(mats[nmat-1],&M,PETSC_IGNORE);CHKERRQ(ierr);
-  ierr = MatCreate(comm,mat);CHKERRQ(ierr);
-  ierr = MatSetSizes(*mat,m,n,M,N);CHKERRQ(ierr);
-  ierr = MatSetType(*mat,MATPROD);CHKERRQ(ierr);
+  CHKERRQ(MatGetLocalSize(mats[0],PETSC_IGNORE,&n));
+  CHKERRQ(MatGetLocalSize(mats[nmat-1],&m,PETSC_IGNORE));
+  CHKERRQ(MatGetSize(mats[0],PETSC_IGNORE,&N));
+  CHKERRQ(MatGetSize(mats[nmat-1],&M,PETSC_IGNORE));
+  CHKERRQ(MatCreate(comm,mat));
+  CHKERRQ(MatSetSizes(*mat,m,n,M,N));
+  CHKERRQ(MatSetType(*mat,MATPROD));
   for (i=0; i<nmat; i++) {
-    ierr = MatCompositeAddMat(*mat,mats[i]);CHKERRQ(ierr);
+    CHKERRQ(MatCompositeAddMat(*mat,mats[i]));
   }
-  ierr = MatAssemblyBegin(*mat,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  ierr = MatAssemblyEnd(*mat,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+  CHKERRQ(MatAssemblyBegin(*mat,MAT_FINAL_ASSEMBLY));
+  CHKERRQ(MatAssemblyEnd(*mat,MAT_FINAL_ASSEMBLY));
   PetscFunctionReturn(0);
 }

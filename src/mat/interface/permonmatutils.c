@@ -337,8 +337,8 @@ static PetscErrorCode MatMultEqualTol_Private(Mat A,PetscBool transpose,Mat B,Pe
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
   PetscValidHeaderSpecific(B,MAT_CLASSID,2);
   f = transpose ? MatMultTranspose : MatMult;
-  ierr = MatGetLocalSize(A,&am,&an);CHKERRQ(ierr);
-  ierr = MatGetLocalSize(B,&bm,&bn);CHKERRQ(ierr);
+  CHKERRQ(MatGetLocalSize(A,&am,&an));
+  CHKERRQ(MatGetLocalSize(B,&bm,&bn));
   if (am != bm || an != bn) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_SIZ,"Mat A,Mat B: local dim %D %D %D %D",am,bm,an,bn);
   PetscCheckSameComm(A,1,B,2);
 
@@ -353,40 +353,40 @@ static PetscErrorCode MatMultEqualTol_Private(Mat A,PetscBool transpose,Mat B,Pe
     PetscValidLogicalCollectiveReal(A,tol,5);
   }
 
-  ierr = PetscRandomCreate(((PetscObject)A)->comm,&rctx);CHKERRQ(ierr);
-  ierr = PetscRandomSetFromOptions(rctx);CHKERRQ(ierr);
+  CHKERRQ(PetscRandomCreate(((PetscObject)A)->comm,&rctx));
+  CHKERRQ(PetscRandomSetFromOptions(rctx));
   if (transpose) {
-    ierr = MatCreateVecs(B,&s1,&x);CHKERRQ(ierr);
+    CHKERRQ(MatCreateVecs(B,&s1,&x));
   } else {
-    ierr = MatCreateVecs(B,&x,&s1);CHKERRQ(ierr);
+    CHKERRQ(MatCreateVecs(B,&x,&s1));
   }
-  ierr = VecSetFromOptions(x);CHKERRQ(ierr);
-  ierr = VecSetFromOptions(s1);CHKERRQ(ierr);
-  ierr = VecDuplicate(s1,&s2);CHKERRQ(ierr);
+  CHKERRQ(VecSetFromOptions(x));
+  CHKERRQ(VecSetFromOptions(s1));
+  CHKERRQ(VecDuplicate(s1,&s2));
 
   *flg = PETSC_TRUE;
   for (k=0; k<n; k++) {
-    ierr = VecSetRandom(x,rctx);CHKERRQ(ierr);
-    ierr = (*f)(A,x,s1);CHKERRQ(ierr);
-    ierr = (*f)(B,x,s2);CHKERRQ(ierr);
-    ierr = VecNorm(s2,NORM_INFINITY,&r2);CHKERRQ(ierr);
+    CHKERRQ(VecSetRandom(x,rctx));
+    CHKERRQ((*f)(A,x,s1));
+    CHKERRQ((*f)(B,x,s2));
+    CHKERRQ(VecNorm(s2,NORM_INFINITY,&r2));
     if (r2 < tol){
-      ierr = VecNorm(s1,NORM_INFINITY,&r1);CHKERRQ(ierr);
+      CHKERRQ(VecNorm(s1,NORM_INFINITY,&r1));
     } else {
-      ierr = VecAXPY(s2,none,s1);CHKERRQ(ierr);
-      ierr = VecNorm(s2,NORM_INFINITY,&r1);CHKERRQ(ierr);
+      CHKERRQ(VecAXPY(s2,none,s1));
+      CHKERRQ(VecNorm(s2,NORM_INFINITY,&r1));
       r1 /= r2;
     }
-    ierr = PetscInfo(fllop,"relative error of %D-th MatMult() %g\n",k,r1);CHKERRQ(ierr);
+    CHKERRQ(PetscInfo(fllop,"relative error of %D-th MatMult() %g\n",k,r1));
     if (r1 > tol) {
       *flg = PETSC_FALSE;
       break;
     }
   }
-  ierr = PetscRandomDestroy(&rctx);CHKERRQ(ierr);
-  ierr = VecDestroy(&x);CHKERRQ(ierr);
-  ierr = VecDestroy(&s1);CHKERRQ(ierr);
-  ierr = VecDestroy(&s2);CHKERRQ(ierr);
+  CHKERRQ(PetscRandomDestroy(&rctx));
+  CHKERRQ(VecDestroy(&x));
+  CHKERRQ(VecDestroy(&s1));
+  CHKERRQ(VecDestroy(&s2));
   PetscFunctionReturn(0);
 }
 
@@ -1022,12 +1022,12 @@ PetscErrorCode  MatTransposeMatMultWorks(Mat A,Mat B,PetscBool *flg)
   } else {
     /* dispatch based on the type of A and B from their PetscObject's PetscFunctionLists. */
     char multname[256];
-    ierr = PetscStrcpy(multname,"MatTransposeMatMult_");CHKERRQ(ierr);
-    ierr = PetscStrcat(multname,((PetscObject)A)->type_name);CHKERRQ(ierr);
-    ierr = PetscStrcat(multname,"_");CHKERRQ(ierr);
-    ierr = PetscStrcat(multname,((PetscObject)B)->type_name);CHKERRQ(ierr);
-    ierr = PetscStrcat(multname,"_C");CHKERRQ(ierr); /* e.g., multname = "MatMatMult_seqdense_seqaij_C" */
-    ierr = PetscObjectQueryFunction((PetscObject)B,multname,&transposematmult);CHKERRQ(ierr);
+    CHKERRQ(PetscStrcpy(multname,"MatTransposeMatMult_"));
+    CHKERRQ(PetscStrcat(multname,((PetscObject)A)->type_name));
+    CHKERRQ(PetscStrcat(multname,"_"));
+    CHKERRQ(PetscStrcat(multname,((PetscObject)B)->type_name));
+    CHKERRQ(PetscStrcat(multname,"_C")); /* e.g., multname = "MatMatMult_seqdense_seqaij_C" */
+    CHKERRQ(PetscObjectQueryFunction((PetscObject)B,multname,&transposematmult));
     if (!transposematmult) *flg = PETSC_FALSE;
   }
   PetscFunctionReturn(0);
@@ -1080,41 +1080,41 @@ PetscErrorCode  PermonMatSetFromOptions(Mat B)
 
   if (B->rmap->bs < 0) {
     PetscInt newbs = -1;
-    ierr = PetscOptionsInt("-mat_block_size","Set the blocksize used to store the matrix","MatSetBlockSize",newbs,&newbs,&flg);CHKERRQ(ierr);
+    CHKERRQ(PetscOptionsInt("-mat_block_size","Set the blocksize used to store the matrix","MatSetBlockSize",newbs,&newbs,&flg));
     if (flg) {
-      ierr = PetscLayoutSetBlockSize(B->rmap,newbs);CHKERRQ(ierr);
-      ierr = PetscLayoutSetBlockSize(B->cmap,newbs);CHKERRQ(ierr);
+      CHKERRQ(PetscLayoutSetBlockSize(B->rmap,newbs));
+      CHKERRQ(PetscLayoutSetBlockSize(B->cmap,newbs));
     }
   }
 
-  ierr = PetscOptionsFList("-mat_type","Matrix type","MatSetType",MatList,deft,type,256,&flg);CHKERRQ(ierr);
+  CHKERRQ(PetscOptionsFList("-mat_type","Matrix type","MatSetType",MatList,deft,type,256,&flg));
   if (!((PetscObject)B)->type_name) {
     if (flg) {
-      ierr = MatSetType(B,type);CHKERRQ(ierr);
+      CHKERRQ(MatSetType(B,type));
     } else if (!((PetscObject)B)->type_name) {
-      ierr = MatSetType(B,deft);CHKERRQ(ierr);
+      CHKERRQ(MatSetType(B,deft));
     }
   } else if (flg) {
-    ierr = PermonMatConvertInplace(B,type);CHKERRQ(ierr);
+    CHKERRQ(PermonMatConvertInplace(B,type));
   }
 
-  ierr = PetscOptionsName("-mat_is_symmetric","Checks if mat is symmetric on MatAssemblyEnd()","MatIsSymmetric",&B->checksymmetryonassembly);CHKERRQ(ierr);
-  ierr = PetscOptionsReal("-mat_is_symmetric","Checks if mat is symmetric on MatAssemblyEnd()","MatIsSymmetric",B->checksymmetrytol,&B->checksymmetrytol,NULL);CHKERRQ(ierr);
-  ierr = PetscOptionsBool("-mat_null_space_test","Checks if provided null space is correct in MatAssemblyEnd()","MatSetNullSpaceTest",B->checknullspaceonassembly,&B->checknullspaceonassembly,NULL);CHKERRQ(ierr);
+  CHKERRQ(PetscOptionsName("-mat_is_symmetric","Checks if mat is symmetric on MatAssemblyEnd()","MatIsSymmetric",&B->checksymmetryonassembly));
+  CHKERRQ(PetscOptionsReal("-mat_is_symmetric","Checks if mat is symmetric on MatAssemblyEnd()","MatIsSymmetric",B->checksymmetrytol,&B->checksymmetrytol,NULL));
+  CHKERRQ(PetscOptionsBool("-mat_null_space_test","Checks if provided null space is correct in MatAssemblyEnd()","MatSetNullSpaceTest",B->checknullspaceonassembly,&B->checknullspaceonassembly,NULL));
 
   if (B->ops->setfromoptions) {
-    ierr = (*B->ops->setfromoptions)(PetscOptionsObject,B);CHKERRQ(ierr);
+    CHKERRQ((*B->ops->setfromoptions)(PetscOptionsObject,B));
   }
 
   flg  = PETSC_FALSE;
-  ierr = PetscOptionsBool("-mat_new_nonzero_location_err","Generate an error if new nonzeros are created in the matrix structure (useful to test preallocation)","MatSetOption",flg,&flg,&set);CHKERRQ(ierr);
-  if (set) {ierr = MatSetOption(B,MAT_NEW_NONZERO_LOCATION_ERR,flg);CHKERRQ(ierr);}
+  CHKERRQ(PetscOptionsBool("-mat_new_nonzero_location_err","Generate an error if new nonzeros are created in the matrix structure (useful to test preallocation)","MatSetOption",flg,&flg,&set));
+  if (set) CHKERRQ(MatSetOption(B,MAT_NEW_NONZERO_LOCATION_ERR,flg));
   flg  = PETSC_FALSE;
-  ierr = PetscOptionsBool("-mat_new_nonzero_allocation_err","Generate an error if new nonzeros are allocated in the matrix structure (useful to test preallocation)","MatSetOption",flg,&flg,&set);CHKERRQ(ierr);
-  if (set) {ierr = MatSetOption(B,MAT_NEW_NONZERO_ALLOCATION_ERR,flg);CHKERRQ(ierr);}
+  CHKERRQ(PetscOptionsBool("-mat_new_nonzero_allocation_err","Generate an error if new nonzeros are allocated in the matrix structure (useful to test preallocation)","MatSetOption",flg,&flg,&set));
+  if (set) CHKERRQ(MatSetOption(B,MAT_NEW_NONZERO_ALLOCATION_ERR,flg));
 
   /* process any options handlers added with PetscObjectAddOptionsHandler() */
-  ierr = PetscObjectProcessOptionsHandlers(PetscOptionsObject,(PetscObject)B);CHKERRQ(ierr);
+  CHKERRQ(PetscObjectProcessOptionsHandlers(PetscOptionsObject,(PetscObject)B));
   PetscOptionsEnd();
   PetscFunctionReturnI(0);
 }
@@ -1151,8 +1151,8 @@ PetscErrorCode PermonMatConvertInplace(Mat A, MatType type)
   Mat              tmp;
 
   PetscFunctionBeginI;
-  ierr = PetscObjectTypeCompare((PetscObject)A,type,&sametype);CHKERRQ(ierr);
-  ierr = PetscStrcmp(type,MATSAME,&issame);CHKERRQ(ierr);
+  CHKERRQ(PetscObjectTypeCompare((PetscObject)A,type,&sametype));
+  CHKERRQ(PetscStrcmp(type,MATSAME,&issame));
   if (issame || sametype) PetscFunctionReturn(0);
 
   refct = ((PetscObject)A)->refct;
@@ -1163,23 +1163,23 @@ PetscErrorCode PermonMatConvertInplace(Mat A, MatType type)
   ((PetscObject)A)->name = 0;
   ((PetscObject)A)->prefix = 0;
 
-  ierr = MatCreate(PetscObjectComm((PetscObject)A),&tmp);CHKERRQ(ierr);
-  ierr = PermonMatCopyProperties(A,tmp);CHKERRQ(ierr);
+  CHKERRQ(MatCreate(PetscObjectComm((PetscObject)A),&tmp));
+  CHKERRQ(PermonMatCopyProperties(A,tmp));
 
-  ierr = PetscPushErrorHandler(PetscReturnErrorHandler,NULL);CHKERRQ(ierr);
+  CHKERRQ(PetscPushErrorHandler(PetscReturnErrorHandler,NULL));
   ierr1 = MatConvert(A,type,MAT_INPLACE_MATRIX,&A);
-  ierr = PetscPopErrorHandler();CHKERRQ(ierr);
+  CHKERRQ(PetscPopErrorHandler());
   if (ierr1 == PETSC_ERR_SUP) {
-    ierr = PetscInfo(fllop,"matrix type not supported, trying to convert to MATAIJ first\n");CHKERRQ(ierr);
-    ierr = MatConvert(A,MATAIJ,MAT_INPLACE_MATRIX,&A);CHKERRQ(ierr);
-    ierr = MatConvert(A,type,MAT_INPLACE_MATRIX,&A);CHKERRQ(ierr);
+    CHKERRQ(PetscInfo(fllop,"matrix type not supported, trying to convert to MATAIJ first\n"));
+    CHKERRQ(MatConvert(A,MATAIJ,MAT_INPLACE_MATRIX,&A));
+    CHKERRQ(MatConvert(A,type,MAT_INPLACE_MATRIX,&A));
   } else if (ierr1) {
     /* re-throw error in other error cases */
-    ierr = MatConvert(A,type,MAT_INPLACE_MATRIX,&A);CHKERRQ(ierr);
+    CHKERRQ(MatConvert(A,type,MAT_INPLACE_MATRIX,&A));
   }
 
-  ierr = PermonMatCopyProperties(tmp,A);CHKERRQ(ierr);
-  ierr = MatDestroy(&tmp);CHKERRQ(ierr);
+  CHKERRQ(PermonMatCopyProperties(tmp,A));
+  CHKERRQ(MatDestroy(&tmp));
 
   ((PetscObject)A)->refct = refct;
   ((PetscObject)A)->state = state + 1;
@@ -1239,16 +1239,16 @@ PetscErrorCode MatRedistributeRows(Mat mat_from,IS rowperm,PetscInt base,Mat mat
   m_to = mat_to->rmap->n;
   M_to = mat_to->rmap->N;
   N = mat_to->cmap->N;
-  ierr = MatGetOwnershipRanges(mat_to,&rstart);CHKERRQ(ierr);
-  ierr = MPI_Comm_size(PetscObjectComm((PetscObject)mat_to),&commsize);CHKERRQ(ierr);
-  ierr = ISGetIndices(rowperm,&indices);CHKERRQ(ierr);
+  CHKERRQ(MatGetOwnershipRanges(mat_to,&rstart));
+  CHKERRQ(MPI_Comm_size(PetscObjectComm((PetscObject)mat_to),&commsize));
+  CHKERRQ(ISGetIndices(rowperm,&indices));
 
-  ierr = MatDenseGetArray(mat_from,&arr_from);CHKERRQ(ierr);
-  ierr = VecCreateSeqWithArray(PETSC_COMM_SELF,1,m_from*N,arr_from,&v_from);CHKERRQ(ierr);
-  ierr = MatDenseGetArray(mat_to,&arr_to);CHKERRQ(ierr);
-  ierr = VecCreateMPIWithArray(PetscObjectComm((PetscObject)mat_to),1,m_to*N,M_to*N,arr_to,&v_to);CHKERRQ(ierr);
+  CHKERRQ(MatDenseGetArray(mat_from,&arr_from));
+  CHKERRQ(VecCreateSeqWithArray(PETSC_COMM_SELF,1,m_from*N,arr_from,&v_from));
+  CHKERRQ(MatDenseGetArray(mat_to,&arr_to));
+  CHKERRQ(VecCreateMPIWithArray(PetscObjectComm((PetscObject)mat_to),1,m_to*N,M_to*N,arr_to,&v_to));
 
-  ierr = PetscMalloc1(m_from*N,&idxx);CHKERRQ(ierr);
+  CHKERRQ(PetscMalloc1(m_from*N,&idxx));
   for (i=0; i<m_from; i++) {
     PetscInt proc,idx,iidx,j,m;
 
@@ -1263,21 +1263,21 @@ PetscErrorCode MatRedistributeRows(Mat mat_from,IS rowperm,PetscInt base,Mat mat
 
     for (j=0; j<N; j++) idxx[i+j*m_from] = iidx + j*m;
   }
-  ierr = ISCreateGeneral(PETSC_COMM_SELF,m_from*N,idxx,PETSC_COPY_VALUES,&is_to);CHKERRQ(ierr);
-  ierr = VecScatterCreate(v_from,NULL,v_to,is_to,&sc);CHKERRQ(ierr);
-  ierr = VecScatterBegin(sc,v_from,v_to,INSERT_VALUES,SCATTER_FORWARD);CHKERRQ(ierr);
-  ierr = VecScatterEnd(sc,v_from,v_to,INSERT_VALUES,SCATTER_FORWARD);CHKERRQ(ierr);
-  ierr = ISDestroy(&is_to);CHKERRQ(ierr);
-  ierr = VecScatterDestroy(&sc);CHKERRQ(ierr);
+  CHKERRQ(ISCreateGeneral(PETSC_COMM_SELF,m_from*N,idxx,PETSC_COPY_VALUES,&is_to));
+  CHKERRQ(VecScatterCreate(v_from,NULL,v_to,is_to,&sc));
+  CHKERRQ(VecScatterBegin(sc,v_from,v_to,INSERT_VALUES,SCATTER_FORWARD));
+  CHKERRQ(VecScatterEnd(sc,v_from,v_to,INSERT_VALUES,SCATTER_FORWARD));
+  CHKERRQ(ISDestroy(&is_to));
+  CHKERRQ(VecScatterDestroy(&sc));
 
   TRY( MatAssemblyBegin(mat_to,MAT_FINAL_ASSEMBLY) );
   TRY( MatAssemblyEnd(mat_to,MAT_FINAL_ASSEMBLY) );
 
-  ierr = ISRestoreIndices(rowperm,&indices);CHKERRQ(ierr);
-  ierr = MatDenseRestoreArray(mat_to,&arr_to);CHKERRQ(ierr);
-  ierr = VecDestroy(&v_to);CHKERRQ(ierr);
-  ierr = PetscFree(idxx);CHKERRQ(ierr);
-  ierr = VecDestroy(&v_from);CHKERRQ(ierr);
-  ierr = MatDenseRestoreArray(mat_from,&arr_from);CHKERRQ(ierr);
+  CHKERRQ(ISRestoreIndices(rowperm,&indices));
+  CHKERRQ(MatDenseRestoreArray(mat_to,&arr_to));
+  CHKERRQ(VecDestroy(&v_to));
+  CHKERRQ(PetscFree(idxx));
+  CHKERRQ(VecDestroy(&v_from));
+  CHKERRQ(MatDenseRestoreArray(mat_from,&arr_from));
   PetscFunctionReturn(0);
 }

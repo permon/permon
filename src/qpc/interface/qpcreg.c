@@ -17,7 +17,7 @@ PetscErrorCode  QPCRegisterAll(void)
 
   PetscFunctionBegin;
   QPCRegisterAllCalled = PETSC_TRUE;
-  ierr = QPCRegister(QPCBOX,      QPCCreate_Box);CHKERRQ(ierr);
+  CHKERRQ(QPCRegister(QPCBOX,      QPCCreate_Box));
   PetscFunctionReturn(0);
 }
 
@@ -28,6 +28,6 @@ PetscErrorCode QPCRegister(const char sname[],PetscErrorCode (*function)(QPC))
   PetscErrorCode ierr;
 
   PetscFunctionBegin;
-  ierr = PetscFunctionListAdd(&QPCList,sname,function);CHKERRQ(ierr);
+  CHKERRQ(PetscFunctionListAdd(&QPCList,sname,function));
   PetscFunctionReturn(0);
 }

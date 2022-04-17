@@ -177,17 +177,17 @@ PetscErrorCode FllopSetFromOptions()
   PetscOptionsBegin(PETSC_COMM_WORLD, NULL, "FLLOP options", NULL);
   {
     flg = PETSC_FALSE;
-    ierr = PetscOptionsBool("-fllop_object_info", "print one-line info messages about matrices and vectors", NULL, PETSC_FALSE, &flg, NULL);CHKERRQ(ierr);
-    ierr = FllopSetObjectInfo(flg);CHKERRQ(ierr);
+    CHKERRQ(PetscOptionsBool("-fllop_object_info", "print one-line info messages about matrices and vectors", NULL, PETSC_FALSE, &flg, NULL));
+    CHKERRQ(FllopSetObjectInfo(flg));
     flg = PETSC_FALSE;
-    ierr = PetscOptionsBool("-fllop_trace",       "trace crucial FLLOP functions",                           NULL, PETSC_FALSE, &flg, NULL);CHKERRQ(ierr);
-    ierr = FllopSetTrace(flg);CHKERRQ(ierr);
+    CHKERRQ(PetscOptionsBool("-fllop_trace",       "trace crucial FLLOP functions",                           NULL, PETSC_FALSE, &flg, NULL));
+    CHKERRQ(FllopSetTrace(flg));
     flg = PETSC_FALSE;
-    ierr = PetscOptionsBool("-fllop_debug",       "enable FLLOP debug messages",                             NULL, PETSC_FALSE, &flg, NULL);CHKERRQ(ierr);
-    ierr = FllopSetDebug(flg);CHKERRQ(ierr);    
+    CHKERRQ(PetscOptionsBool("-fllop_debug",       "enable FLLOP debug messages",                             NULL, PETSC_FALSE, &flg, NULL));
+    CHKERRQ(FllopSetDebug(flg));    
     flg = PETSC_FALSE;
 #if defined (PETSC_USE_INFO)
-    ierr = PetscOptionsString("-fllop_info",      "enable info messages only from FLLOP",                    NULL, NULL, logname, 256, &fllop_info);CHKERRQ(ierr);
+    CHKERRQ(PetscOptionsString("-fllop_info",      "enable info messages only from FLLOP",                    NULL, NULL, logname, 256, &fllop_info));
 #endif     
   }
   PetscOptionsEnd();
@@ -195,14 +195,14 @@ PetscErrorCode FllopSetFromOptions()
 #if defined (PETSC_USE_INFO)
   {
     info = PETSC_FALSE;
-    ierr = PetscOptionsGetString(NULL,NULL, "-info", logname, 256, &info);CHKERRQ(ierr);
-    ierr = PetscOptionsGetString(NULL,NULL, "-info_exclude", logList, 256, &excl);CHKERRQ(ierr);
+    CHKERRQ(PetscOptionsGetString(NULL,NULL, "-info", logname, 256, &info));
+    CHKERRQ(PetscOptionsGetString(NULL,NULL, "-info_exclude", logList, 256, &excl));
     
     if (fllop_info || info) {
       FllopInfoEnabled = PETSC_TRUE;
-      ierr = PetscInfoAllow(PETSC_TRUE);CHKERRQ(ierr);
+      CHKERRQ(PetscInfoAllow(PETSC_TRUE));
       if (logname[0]) {
-        ierr = PetscInfoSetFile(logname,"w");CHKERRQ(ierr);
+        CHKERRQ(PetscInfoSetFile(logname,"w"));
       }
     }
     
@@ -211,19 +211,19 @@ PetscErrorCode FllopSetFromOptions()
     }    
 
     if (excl) {
-      ierr = PetscStrstr(logList, "petsc", &className);CHKERRQ(ierr);
+      CHKERRQ(PetscStrstr(logList, "petsc", &className));
       if (className) {
         TRY( FllopPetscInfoDeactivateAll() );
       }
 
-      ierr = PetscStrstr(logList, "fllop", &className);CHKERRQ(ierr);
+      CHKERRQ(PetscStrstr(logList, "fllop", &className));
       if (className) FllopInfoEnabled = PETSC_FALSE;
     }
 
     if (FllopInfoEnabled) {
-      ierr = PetscInfoActivateClass(FLLOP_CLASSID);CHKERRQ(ierr);
+      CHKERRQ(PetscInfoActivateClass(FLLOP_CLASSID));
     } else {
-      ierr = PetscInfoDeactivateClass(FLLOP_CLASSID);CHKERRQ(ierr);
+      CHKERRQ(PetscInfoDeactivateClass(FLLOP_CLASSID));
     }
   }
 #endif
@@ -245,7 +245,7 @@ PetscErrorCode FllopEventRegLogGetEvent(PetscEventRegLog eventLog, const char na
   *event = -1;
   *exists = PETSC_FALSE;
   for (e = 0; e < eventLog->numEvents; e++) {
-    ierr = PetscStrcasecmp(eventLog->eventInfo[e].name, name, &match);CHKERRQ(ierr);
+    CHKERRQ(PetscStrcasecmp(eventLog->eventInfo[e].name, name, &match));
     if (match) {
       *event = e;
       *exists = PETSC_TRUE;
@@ -264,8 +264,8 @@ PetscErrorCode  FllopPetscLogEventGetId(const char name[], PetscLogEvent *event,
   PetscErrorCode ierr;
 
   PetscFunctionBegin;
-  ierr = PetscLogGetStageLog(&stageLog);CHKERRQ(ierr);
-  ierr = FllopEventRegLogGetEvent(stageLog->eventLog, name, event, exists);CHKERRQ(ierr);
+  CHKERRQ(PetscLogGetStageLog(&stageLog));
+  CHKERRQ(FllopEventRegLogGetEvent(stageLog->eventLog, name, event, exists));
   PetscFunctionReturn(0);
 }
 

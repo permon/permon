@@ -144,15 +144,15 @@ PetscErrorCode MatCreateDensePermon(MPI_Comm comm,PetscInt m,PetscInt n,PetscInt
   PetscMPIInt    size;
 
   PetscFunctionBegin;
-  ierr = MatCreate(comm,A);CHKERRQ(ierr);
-  ierr = MatSetSizes(*A,m,n,M,N);CHKERRQ(ierr);
-  ierr = MPI_Comm_size(comm,&size);CHKERRQ(ierr);
+  CHKERRQ(MatCreate(comm,A));
+  CHKERRQ(MatSetSizes(*A,m,n,M,N));
+  CHKERRQ(MPI_Comm_size(comm,&size));
   if (size > 1) {
-    ierr = MatSetType(*A,MATMPIDENSEPERMON);CHKERRQ(ierr);
-    ierr = MatMPIDenseSetPreallocation(*A,data);CHKERRQ(ierr);
+    CHKERRQ(MatSetType(*A,MATMPIDENSEPERMON));
+    CHKERRQ(MatMPIDenseSetPreallocation(*A,data));
   } else {
-    ierr = MatSetType(*A,MATSEQDENSEPERMON);CHKERRQ(ierr);
-    ierr = MatSeqDenseSetPreallocation(*A,data);CHKERRQ(ierr);
+    CHKERRQ(MatSetType(*A,MATSEQDENSEPERMON));
+    CHKERRQ(MatSeqDenseSetPreallocation(*A,data));
   }
   PetscFunctionReturn(0);
 }

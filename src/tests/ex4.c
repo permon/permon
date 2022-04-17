@@ -11,22 +11,22 @@ int main(int argc,char **args)
 
   ierr = PermonInitialize(&argc,&args,(char *)0,(char *)0);if (ierr) return ierr;
 
-  ierr = VecCreate(PETSC_COMM_WORLD,&v);CHKERRQ(ierr);
-  ierr = VecSetSizes(v,PETSC_DECIDE,n);CHKERRQ(ierr);
-  ierr = VecSetFromOptions(v);CHKERRQ(ierr);
-  ierr = VecSet(v,1.);CHKERRQ(ierr);
+  CHKERRQ(VecCreate(PETSC_COMM_WORLD,&v));
+  CHKERRQ(VecSetSizes(v,PETSC_DECIDE,n));
+  CHKERRQ(VecSetFromOptions(v));
+  CHKERRQ(VecSet(v,1.));
 
-  ierr = VecIsInvalidated(v,&flg);CHKERRQ(ierr);
+  CHKERRQ(VecIsInvalidated(v,&flg));
   if (flg) SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_PLIB,"Vec is invalid");
-  ierr = VecInvalidate(v);CHKERRQ(ierr);
-  ierr = VecIsInvalidated(v,&flg);CHKERRQ(ierr);
+  CHKERRQ(VecInvalidate(v));
+  CHKERRQ(VecIsInvalidated(v,&flg));
   if (!flg) SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_PLIB,"Vec is valid");
-  ierr = VecView(v,NULL);CHKERRQ(ierr);
-  ierr = VecSet(v,1.);CHKERRQ(ierr);
-  ierr = VecIsInvalidated(v,&flg);CHKERRQ(ierr);
+  CHKERRQ(VecView(v,NULL));
+  CHKERRQ(VecSet(v,1.));
+  CHKERRQ(VecIsInvalidated(v,&flg));
   if (flg) SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_PLIB,"Vec is invalid");
 
-  ierr = VecDestroy(&v);CHKERRQ(ierr);
+  CHKERRQ(VecDestroy(&v));
   ierr = PermonFinalize();
   return ierr;
 }
@@ -35,4 +35,3 @@ int main(int argc,char **args)
 /*TEST
   test:
 TEST*/
-

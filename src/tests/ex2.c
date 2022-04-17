@@ -17,26 +17,26 @@ int main(int argc,char **args)
 
   ierr = PermonInitialize(&argc,&args,(char *)0,(char *)0);if (ierr) return ierr;
   comm = PETSC_COMM_WORLD;
-  ierr = MPI_Comm_rank(comm,&rank);CHKERRQ(ierr);
-  ierr = MPI_Comm_size(comm,&size);CHKERRQ(ierr);
-  ierr = PetscOptionsGetInt(NULL,NULL,"-nloc",&n,NULL);CHKERRQ(ierr);
-  ierr = PetscOptionsGetViewer(comm,NULL,NULL,"-view",&viewer,&format,NULL);CHKERRQ(ierr);
+  CHKERRQ(MPI_Comm_rank(comm,&rank));
+  CHKERRQ(MPI_Comm_size(comm,&size));
+  CHKERRQ(PetscOptionsGetInt(NULL,NULL,"-nloc",&n,NULL));
+  CHKERRQ(PetscOptionsGetViewer(comm,NULL,NULL,"-view",&viewer,&format,NULL));
 
-  ierr = PetscRandomCreate(comm,&rand);CHKERRQ(ierr);
-  ierr = PetscRandomSetInterval(rand,0.0,10.0);CHKERRQ(ierr);
+  CHKERRQ(PetscRandomCreate(comm,&rand));
+  CHKERRQ(PetscRandomSetInterval(rand,0.0,10.0));
 
-  ierr = MatCreateDense(comm,n,n,PETSC_DECIDE,PETSC_DECIDE,NULL,&A);CHKERRQ(ierr);
-  ierr = MatGetSize(A,&N,NULL);CHKERRQ(ierr);
-  ierr = MatSetRandom(A,rand);CHKERRQ(ierr);
+  CHKERRQ(MatCreateDense(comm,n,n,PETSC_DECIDE,PETSC_DECIDE,NULL,&A));
+  CHKERRQ(MatGetSize(A,&N,NULL));
+  CHKERRQ(MatSetRandom(A,rand));
 
-  ierr = MatGetOwnershipRange(A,&rstart,NULL);CHKERRQ(ierr);
-  ierr = ISCreateStride(comm,n,N-rstart,-1,&rperm);CHKERRQ(ierr);
+  CHKERRQ(MatGetOwnershipRange(A,&rstart,NULL));
+  CHKERRQ(ISCreateStride(comm,n,N-rstart,-1,&rperm));
 
   if (viewer) {
-    ierr = PetscViewerPushFormat(viewer,format);CHKERRQ(ierr);
-    ierr = MatView(A,viewer);CHKERRQ(ierr);
-    ierr = ISView(rperm,viewer);CHKERRQ(ierr);
-    ierr = PetscViewerPopFormat(viewer);CHKERRQ(ierr);
+    CHKERRQ(PetscViewerPushFormat(viewer,format));
+    CHKERRQ(MatView(A,viewer));
+    CHKERRQ(ISView(rperm,viewer));
+    CHKERRQ(PetscViewerPopFormat(viewer));
   }
 
   if (!rank) {
@@ -44,45 +44,45 @@ int main(int argc,char **args)
   } else {
     nB = n - 1;
   }
-  ierr = MatCreateDense(comm,nB,nB,N,N,NULL,&B);CHKERRQ(ierr);
-  ierr = MatRedistributeRows(A,rperm,1,B);CHKERRQ(ierr);
+  CHKERRQ(MatCreateDense(comm,nB,nB,N,N,NULL,&B));
+  CHKERRQ(MatRedistributeRows(A,rperm,1,B));
 
   if (viewer) {
     IS isr,isrg;
 
-    ierr = PetscViewerPushFormat(viewer,format);CHKERRQ(ierr);
-    ierr = MatView(B,viewer);CHKERRQ(ierr);
-    ierr = MatGetOwnershipIS(B,&isr,NULL);CHKERRQ(ierr);
-    ierr = ISOnComm(isr,comm,PETSC_USE_POINTER,&isrg);CHKERRQ(ierr);
-    ierr = ISView(isrg,viewer);CHKERRQ(ierr);
-    ierr = ISDestroy(&isr);CHKERRQ(ierr);
-    ierr = ISDestroy(&isrg);CHKERRQ(ierr);
-    ierr = PetscViewerPopFormat(viewer);CHKERRQ(ierr);
+    CHKERRQ(PetscViewerPushFormat(viewer,format));
+    CHKERRQ(MatView(B,viewer));
+    CHKERRQ(MatGetOwnershipIS(B,&isr,NULL));
+    CHKERRQ(ISOnComm(isr,comm,PETSC_USE_POINTER,&isrg));
+    CHKERRQ(ISView(isrg,viewer));
+    CHKERRQ(ISDestroy(&isr));
+    CHKERRQ(ISDestroy(&isrg));
+    CHKERRQ(PetscViewerPopFormat(viewer));
   }
 
-  ierr = ISDestroy(&rperm);CHKERRQ(ierr);
+  CHKERRQ(ISDestroy(&rperm));
 
-  ierr = MatGetOwnershipRange(B,&rstart,NULL);CHKERRQ(ierr);
-  ierr = ISCreateStride(comm,nB,N-rstart,-1,&rperm);CHKERRQ(ierr);
+  CHKERRQ(MatGetOwnershipRange(B,&rstart,NULL));
+  CHKERRQ(ISCreateStride(comm,nB,N-rstart,-1,&rperm));
 
-  ierr = MatCreateDense(comm,n,n,N,N,NULL,&C);CHKERRQ(ierr);
-  ierr = MatRedistributeRows(B,rperm,1,C);CHKERRQ(ierr);
+  CHKERRQ(MatCreateDense(comm,n,n,N,N,NULL,&C));
+  CHKERRQ(MatRedistributeRows(B,rperm,1,C));
 
   if (viewer) {
-    ierr = PetscViewerPushFormat(viewer,format);CHKERRQ(ierr);
-    ierr = ISView(rperm,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-    ierr = MatView(C,viewer);CHKERRQ(ierr);
-    ierr = PetscViewerPopFormat(viewer);CHKERRQ(ierr);
+    CHKERRQ(PetscViewerPushFormat(viewer,format));
+    CHKERRQ(ISView(rperm,PETSC_VIEWER_STDOUT_WORLD));
+    CHKERRQ(MatView(C,viewer));
+    CHKERRQ(PetscViewerPopFormat(viewer));
   }
 
-  ierr = MatEqual(A,C,&flg);CHKERRQ(ierr);
+  CHKERRQ(MatEqual(A,C,&flg));
   if (!flg) SETERRQ(comm, PETSC_ERR_PLIB, "C != A");
 
-  ierr = PetscRandomDestroy(&rand);CHKERRQ(ierr);
-  ierr = ISDestroy(&rperm);CHKERRQ(ierr);
-  ierr = MatDestroy(&A);CHKERRQ(ierr);
-  ierr = MatDestroy(&B);CHKERRQ(ierr);
-  ierr = MatDestroy(&C);CHKERRQ(ierr);
+  CHKERRQ(PetscRandomDestroy(&rand));
+  CHKERRQ(ISDestroy(&rperm));
+  CHKERRQ(MatDestroy(&A));
+  CHKERRQ(MatDestroy(&B));
+  CHKERRQ(MatDestroy(&C));
   ierr = PermonFinalize();
   return ierr;
 }
@@ -95,4 +95,3 @@ int main(int argc,char **args)
     nsize: {{1 2 4}}
     args: -nloc {{1 5 19}}
 TEST*/
-

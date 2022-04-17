@@ -13,7 +13,7 @@ PetscErrorCode  MatCreateSeqSBAIJWithArrays_permonfix(MPI_Comm comm,PetscInt bs,
   Mat_SeqSBAIJ   *sbaij;
 
   PetscFunctionBegin;
-  ierr = MatCreateSeqSBAIJWithArrays(comm,bs,m,n,i,j,a,mat);CHKERRQ(ierr);
+  CHKERRQ(MatCreateSeqSBAIJWithArrays(comm,bs,m,n,i,j,a,mat));
   sbaij = (Mat_SeqSBAIJ*)(*mat)->data;
   sbaij->free_imax_ilen = PETSC_TRUE;
   PetscFunctionReturn(0);

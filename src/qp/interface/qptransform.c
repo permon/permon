@@ -2197,4 +2197,3 @@ PetscErrorCode QPTFromOptions(QP qp)
   PetscFunctionReturn(0);
 }
 #undef QPTransformBegin
-

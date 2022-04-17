@@ -10,6 +10,6 @@ PetscErrorCode PermonKSPRegisterAll()
   PetscErrorCode ierr;
   
   PetscFunctionBegin;
-  ierr = KSPRegister(KSPFETI, KSPCreate_FETI);CHKERRQ(ierr);
+  CHKERRQ(KSPRegister(KSPFETI, KSPCreate_FETI));
   PetscFunctionReturn(0);
 }

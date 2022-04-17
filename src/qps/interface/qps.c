@@ -1068,14 +1068,14 @@ PetscErrorCode QPSSetWorkVecs(QPS qps,PetscInt nw)
   PetscErrorCode ierr;
 
   PetscFunctionBegin;
-  ierr       = VecDestroyVecs(qps->nwork,&qps->work);CHKERRQ(ierr);
-  ierr       = PetscFree(qps->work_state);CHKERRQ(ierr);
+  CHKERRQ(VecDestroyVecs(qps->nwork,&qps->work));
+  CHKERRQ(PetscFree(qps->work_state));
 
   qps->nwork = nw;
-  ierr       = QPSGetVecs(qps,nw,&qps->work,0,NULL);CHKERRQ(ierr);
-  ierr       = PetscMalloc1(nw,&qps->work_state);CHKERRQ(ierr);
-  ierr       = PetscMemzero(qps->work_state,nw*sizeof(PetscObjectState));CHKERRQ(ierr);
-  ierr       = PetscLogObjectParents(qps,nw,qps->work);CHKERRQ(ierr);
+  CHKERRQ(QPSGetVecs(qps,nw,&qps->work,0,NULL));
+  CHKERRQ(PetscMalloc1(nw,&qps->work_state));
+  CHKERRQ(PetscMemzero(qps->work_state,nw*sizeof(PetscObjectState)));
+  CHKERRQ(PetscLogObjectParents(qps,nw,qps->work));
   PetscFunctionReturn(0);
 }
 
@@ -1457,4 +1457,3 @@ PetscErrorCode QPSMonitorCostFunction(QPS qps,PetscInt n,PetscReal rnorm,void *d
    TRY( PetscViewerASCIISubtractTab(viewer,((PetscObject)qps)->tablevel) );
    PetscFunctionReturn(0);
 }
-
