@@ -9,7 +9,7 @@ int main(int argc,char **args)
   PetscBool      flg;
   PetscErrorCode ierr;
 
-  ierr = PermonInitialize(&argc,&args,(char *)0,(char *)0);if (ierr) return ierr;
+  CHKERRQ(PermonInitialize(&argc,&args,(char *)0,(char *)0));
 
   CHKERRQ(VecCreate(PETSC_COMM_WORLD,&v));
   CHKERRQ(VecSetSizes(v,PETSC_DECIDE,n));
@@ -27,8 +27,8 @@ int main(int argc,char **args)
   if (flg) SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_PLIB,"Vec is invalid");
 
   CHKERRQ(VecDestroy(&v));
-  ierr = PermonFinalize();
-  return ierr;
+  CHKERRQ(PermonFinalize());
+  return 0;
 }
 
 

@@ -31,7 +31,7 @@ int main(int argc,char **args)
   PetscErrorCode ierr;
 
   /* Init PERMON */
-  ierr = PermonInitialize(&argc,&args,(char*)0,help);if (ierr) return ierr;
+  CHKERRQ(PermonInitialize(&argc,&args,(char*)0,help));
 
   /* Get number of elems per subdomain and number of subdomains */
   CHKERRQ(PetscOptionsGetInt(NULL,NULL,"-ne",&ne_l,NULL)); /* number of local elements */
@@ -47,7 +47,7 @@ int main(int argc,char **args)
   for (i=0; i<ndofs_l; i++) {
     global_indices[i]=rank*ne_l +i;
   }
-  ierr = ISLocalToGlobalMappingCreate(PETSC_COMM_WORLD,1,ndofs_l,global_indices,PETSC_OWN_POINTER,&l2g);
+  CHKERRQ(ISLocalToGlobalMappingCreate(PETSC_COMM_WORLD,1,ndofs_l,global_indices,PETSC_OWN_POINTER,&l2g));
   /* Create MATIS object needed by KSPFETI */
   CHKERRQ(MatCreateIS(PETSC_COMM_WORLD,1,PETSC_DECIDE,PETSC_DECIDE,ndofs,ndofs,l2g,l2g,&A));
   CHKERRQ(MatISSetPreallocation(A,3,NULL,3,NULL));
@@ -109,8 +109,8 @@ int main(int argc,char **args)
   CHKERRQ(MatDestroy(&A));
   CHKERRQ(KSPDestroy(&ksp));
   /* Quit PERMON */
-  ierr = PermonFinalize();
-  return ierr;
+  CHKERRQ(PermonFinalize());
+  return 0;
 }
 
 /*TEST

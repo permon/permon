@@ -40,7 +40,7 @@ int main(int argc,char **args)
   PetscBool      converged,spd=PETSC_FALSE,empty_nullsp=PETSC_FALSE;
   PetscErrorCode ierr;
 
-  ierr = PermonInitialize(&argc,&args,(char *)0,help);if (ierr) return ierr;
+  CHKERRQ(PermonInitialize(&argc,&args,(char *)0,help));
   CHKERRQ(PetscOptionsGetInt(NULL,NULL,"-n",&n,NULL));
   CHKERRQ(PetscOptionsGetBool(NULL,NULL,"-empty_nullsp",&empty_nullsp,NULL));
   CHKERRQ(PetscOptionsGetBool(NULL,NULL,"-spd",&spd,NULL));
@@ -156,8 +156,8 @@ int main(int argc,char **args)
   CHKERRQ(MatDestroy(&R));
   CHKERRQ(MatDestroy(&B));
   CHKERRQ(MatDestroy(&A));
-  ierr = PermonFinalize();
-  return ierr;
+  CHKERRQ(PermonFinalize());
+  return 0;
 }
 
 

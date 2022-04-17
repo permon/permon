@@ -15,7 +15,7 @@ int main(int argc,char **args)
   MPI_Comm          comm;
   PetscErrorCode    ierr;
 
-  ierr = PermonInitialize(&argc,&args,(char *)0,(char *)0);if (ierr) return ierr;
+  CHKERRQ(PermonInitialize(&argc,&args,(char *)0,(char *)0));
   comm = PETSC_COMM_WORLD;
   CHKERRQ(MPI_Comm_rank(comm,&rank));
   CHKERRQ(MPI_Comm_size(comm,&size));
@@ -83,8 +83,8 @@ int main(int argc,char **args)
   CHKERRQ(MatDestroy(&A));
   CHKERRQ(MatDestroy(&B));
   CHKERRQ(MatDestroy(&C));
-  ierr = PermonFinalize();
-  return ierr;
+  CHKERRQ(PermonFinalize());
+  return 0;
 }
 
 

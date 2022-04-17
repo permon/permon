@@ -56,7 +56,7 @@ int main(int argc,char **args)
   PetscBool      converged,viewSol=PETSC_FALSE;
   PetscErrorCode ierr;
 
-  ierr = PermonInitialize(&argc,&args,(char *)0,help);if (ierr) return ierr;
+  CHKERRQ(PermonInitialize(&argc,&args,(char *)0,help));
   CHKERRQ(PetscOptionsGetInt(NULL,NULL,"-n",&n,NULL));
   CHKERRQ(PetscOptionsGetBool(NULL,NULL,"-sol",&viewSol,NULL));
 
@@ -149,8 +149,8 @@ int main(int argc,char **args)
   CHKERRQ(VecDestroy(&c));
   CHKERRQ(VecDestroy(&b));
   CHKERRQ(MatDestroy(&A));
-  ierr = PermonFinalize();
-  return ierr;
+  CHKERRQ(PermonFinalize());
+  return 0;
 }
 
 

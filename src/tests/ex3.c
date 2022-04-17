@@ -10,7 +10,7 @@ int main(int argc,char **args)
 
   PetscErrorCode ierr;
 
-  ierr = PermonInitialize(&argc,&args,(char *)0,(char *)0);if (ierr) return ierr;
+  CHKERRQ(PermonInitialize(&argc,&args,(char *)0,(char *)0));
   CHKERRQ(PetscOptionsGetInt(NULL,NULL,"-n",&n,NULL));
 
   CHKERRQ(MatCreate(PETSC_COMM_WORLD,&A));
@@ -40,8 +40,8 @@ int main(int argc,char **args)
 
   CHKERRQ(MatDestroy(&A));
   CHKERRQ(MatDestroy(&Ainv));
-  ierr = PermonFinalize();
-  return ierr;
+  CHKERRQ(PermonFinalize());
+  return 0;
 }
 
 

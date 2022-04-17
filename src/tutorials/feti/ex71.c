@@ -176,27 +176,27 @@ int main(int argc,char **args)
   PetscBool              ismatis;
   PetscErrorCode         ierr;
 
-  ierr = PermonInitialize(&argc,&args,(char*)0,help);if (ierr) return ierr;
+  CHKERRQ(PermonInitialize(&argc,&args,(char*)0,help));
   CHKERRQ(ProcessOptions(PETSC_COMM_WORLD,&user));
   switch (user.dim) {
   case 3:
-    ierr = DMDACreate3d(PETSC_COMM_WORLD,user.per[0] ? DM_BOUNDARY_PERIODIC : DM_BOUNDARY_NONE,
+    CHKERRQ(DMDACreate3d(PETSC_COMM_WORLD,user.per[0] ? DM_BOUNDARY_PERIODIC : DM_BOUNDARY_NONE,
                                          user.per[1] ? DM_BOUNDARY_PERIODIC : DM_BOUNDARY_NONE,
                                          user.per[2] ? DM_BOUNDARY_PERIODIC : DM_BOUNDARY_NONE,
                                          DMDA_STENCIL_BOX,user.cells[0]+1,user.cells[1]+1,user.cells[2]+1,
                                          PETSC_DECIDE,PETSC_DECIDE,PETSC_DECIDE,user.dof,
-                                         1,PETSC_NULL,PETSC_NULL,PETSC_NULL,&da);CHKERRQ(ierr);
+                                         1,PETSC_NULL,PETSC_NULL,PETSC_NULL,&da));
     break;
   case 2:
-    ierr = DMDACreate2d(PETSC_COMM_WORLD,user.per[0] ? DM_BOUNDARY_PERIODIC : DM_BOUNDARY_NONE,
+    CHKERRQ(DMDACreate2d(PETSC_COMM_WORLD,user.per[0] ? DM_BOUNDARY_PERIODIC : DM_BOUNDARY_NONE,
                                          user.per[1] ? DM_BOUNDARY_PERIODIC : DM_BOUNDARY_NONE,
                                          DMDA_STENCIL_BOX,user.cells[0]+1,user.cells[1]+1,
                                          PETSC_DECIDE,PETSC_DECIDE,user.dof,
-                                         1,PETSC_NULL,PETSC_NULL,&da);CHKERRQ(ierr);
+                                         1,PETSC_NULL,PETSC_NULL,&da));
     break;
   case 1:
-    ierr = DMDACreate1d(PETSC_COMM_WORLD,user.per[0] ? DM_BOUNDARY_PERIODIC : DM_BOUNDARY_NONE,
-                                         user.cells[0]+1,user.dof,1,PETSC_NULL,&da);CHKERRQ(ierr);
+    CHKERRQ(DMDACreate1d(PETSC_COMM_WORLD,user.per[0] ? DM_BOUNDARY_PERIODIC : DM_BOUNDARY_NONE,
+                                         user.cells[0]+1,user.dof,1,PETSC_NULL,&da);
     break;
   default: SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Unsupported dimension %D",user.dim);
   }
@@ -397,8 +397,8 @@ int main(int argc,char **args)
   CHKERRQ(KSPDestroy(&ksp));
   CHKERRQ(MatDestroy(&A));
   CHKERRQ(DMDestroy(&da));
-  ierr = PermonFinalize();
-  return ierr;
+  CHKERRQ(PermonFinalize());
+  return 0;
 }
 
 /*TEST
