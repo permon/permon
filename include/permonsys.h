@@ -10,12 +10,6 @@
 #endif
 
 //TODO remove all these FLLOP_* macros
-#define FLLOP_SETERRQ( comm,n,s) SETERRQ(comm,n,s)
-#define FLLOP_SETERRQ1(comm,n,s,a1) SETERRQ1(comm,n,s,a1)
-#define FLLOP_SETERRQ2(comm,n,s,a1,a2) SETERRQ2(comm,n,s,a1,a2)
-#define FLLOP_SETERRQ3(comm,n,s,a1,a2,a3) SETERRQ3(comm,n,s,a1,a2,a3)
-#define FLLOP_SETERRQ4(comm,n,s,a1,a2,a3,a4) SETERRQ4(comm,n,s,a1,a2,a3,a4)
-#define FLLOP_SETERRQ5(comm,n,s,a1,a2,a3,a4,a5) SETERRQ5(comm,n,s,a1,a2,a3,a4,a5)
 #define FLLOP_EXTERN PETSC_EXTERN
 #define FLLOP_INTERN PETSC_INTERN
 
@@ -41,12 +35,6 @@ FLLOP_EXTERN char FLLOP_ObjNameBuffer_Global[FLLOP_MAX_NAME_LEN];
 
 /* BEGIN Function-like Macros */
 FLLOP_EXTERN PetscErrorCode _fllop_ierr;
-#define FLLOP_SETERRQ_WORLD( n,s)                 FLLOP_SETERRQ(PETSC_COMM_WORLD,n,s)
-#define FLLOP_SETERRQ_WORLD1(n,s,a1)              FLLOP_SETERRQ1(PETSC_COMM_WORLD,n,s,a1)
-#define FLLOP_SETERRQ_WORLD2(n,s,a1,a2)           FLLOP_SETERRQ2(PETSC_COMM_WORLD,n,s,a1,a2)
-#define FLLOP_SETERRQ_WORLD3(n,s,a1,a2,a3)        FLLOP_SETERRQ3(PETSC_COMM_WORLD,n,s,a1,a2,a3)
-#define FLLOP_SETERRQ_WORLD4(n,s,a1,a2,a3,a4)     FLLOP_SETERRQ4(PETSC_COMM_WORLD,n,s,a1,a2,a3,a4)
-#define FLLOP_SETERRQ_WORLD5(n,s,a1,a2,a3,a4,a5)  FLLOP_SETERRQ5(PETSC_COMM_WORLD,n,s,a1,a2,a3,a4,a5)
 #define PERMON_ASSERT(c,...)                 if (PetscUnlikely(!(c))) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_PLIB,__VA_ARGS__);
 
 #define FllopDebug(msg)                       0; do { if (FllopDebugEnabled) PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg); } while(0)
