@@ -37,7 +37,7 @@ int main(int argc,char **args)
   QPS            qps;
   PetscInt       i,n = 10,col[3],rstart,rend;
   PetscReal      h,value[3];
-  PetscBool      converged,spd,empty_nullsp;
+  PetscBool      converged,spd=PETSC_FALSE,empty_nullsp=PETSC_FALSE;
   PetscErrorCode ierr;
 
   ierr = PermonInitialize(&argc,&args,(char *)0,help);if (ierr) return ierr;
