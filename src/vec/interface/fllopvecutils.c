@@ -95,8 +95,8 @@ PetscErrorCode VecPrintInfo(Vec vec)
   PetscCall(VecGetType(vec, &type));
   PetscCall(PetscObjectGetName((PetscObject) vec, &name));
   PetscCall(PetscPrintf(comm,
-      "Vec %8x %-16s %-10s size(m,  M  )=[%6d %10d]\n",
-          vec,name, type,                m,  M));
+      "Vec %p %-16s %-10s size(m,  M  )=[%6d %10d]\n",
+          (void*)vec,name, type,                m,  M));
   PetscFunctionReturn(0);
 }
 

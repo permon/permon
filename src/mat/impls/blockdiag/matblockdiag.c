@@ -545,7 +545,7 @@ PetscErrorCode MatView_BlockDiag(Mat mat,PetscViewer viewer)
   PetscFunctionBegin;
   PetscCall(PetscObjectGetComm((PetscObject)mat,&comm));
   PetscCall(PetscObjectTypeCompare((PetscObject)viewer,PETSCVIEWERASCII,&iascii));
-  if (!iascii) SETERRQ(comm,PETSC_ERR_SUP,"Viewer type %s not supported for matrix type %s",((PetscObject)viewer)->type,((PetscObject)mat)->type_name);
+  if (!iascii) SETERRQ(comm,PETSC_ERR_SUP,"Viewer type %s not supported for matrix type %s",((PetscObject)viewer)->type_name,((PetscObject)mat)->type_name);
   PetscCall(PetscViewerGetFormat(viewer,&format));
 
   if (format == PETSC_VIEWER_DEFAULT) {

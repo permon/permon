@@ -399,7 +399,7 @@ PetscErrorCode QPPFSetUp(QPPF cp)
   PetscCallMPI(MPI_Comm_rank(comm, &rank));
   PetscCallMPI(MPI_Comm_size(comm, &size));
   PetscCall(PetscObjectGetName((PetscObject)cp->G,&name));
-  PetscCall(PetscInfo(cp, "cp: %x  Mat %s: %x  change flags: %d %d %d %d\n",  cp, name, cp->G, cp->dataChange,  cp->variantChange,  cp->explicitInvChange,  cp->GChange));
+  PetscCall(PetscInfo(cp, "cp: %p  Mat %s: %p  change flags: %d %d %d %d\n",  (void*)cp, name, (void*)cp->G, cp->dataChange,  cp->variantChange,  cp->explicitInvChange,  cp->GChange));
 
   /* detect orthonormal rows quickly */
   if (!cp->G_has_orthonormal_rows_implicitly) {

@@ -16,7 +16,7 @@ static PetscErrorCode QPSetFromOptions_Private(QP qp);
   PetscCall(VecNorm(x,NORM_2,&norm));\
   PetscCall(VecMax(x,&imax,&max));\
   PetscCall(VecMin(x,&imin,&min));\
-  PetscCall(PetscViewerASCIIPrintf(v, "||%2s|| = %.8e    max(%2s) = %.2e = %2s(%d)    min(%2s) = %.2e = %2s(%d)    %x\n",name,norm,name,max,name,imax,name,min,name,imin,x));\
+  PetscCall(PetscViewerASCIIPrintf(v, "||%2s|| = %.8e    max(%2s) = %.2e = %2s(%d)    min(%2s) = %.2e = %2s(%d)    %p\n",name,norm,name,max,name,imax,name,min,name,imin,(void*)x));\
 }
 
 #undef __FUNCT__

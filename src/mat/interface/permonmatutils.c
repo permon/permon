@@ -45,8 +45,8 @@ PetscErrorCode MatPrintInfo(Mat mat)
   PetscCall(PetscObjectGetOptionsPrefix((PetscObject) mat, &prefix));
 
   PetscCall(PetscPrintf(comm,
-      "Mat %8x %-16s %-10s %-10s sizes %d %d %d %d",
-          mat, name, prefix, type,                m, n, M, N));
+      "Mat %p %-16s %-10s %-10s sizes %d %d %d %d",
+          (void*)mat, name, prefix, type,                m, n, M, N));
 
   if (mat->ops->getinfo) {
     MatInfo info;
