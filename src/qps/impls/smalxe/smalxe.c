@@ -643,7 +643,7 @@ PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,KSPConvergedReason *reaso
     *reason = KSP_DIVERGED_ITS;
     qps_outer->reason = KSP_DIVERGED_BREAKDOWN;
     PetscCall(PetscInfo(qps_inner,"Inner QP solver is diverging (iteration count reached the maximum).\n"));
-    PetscCall(PetscInfo(qps_inner,"Current residual norm %14.12e at inner iteration %D\n",(double)gnorm,i));
+    PetscCall(PetscInfo(qps_inner,"Current residual norm %14.12e at inner iteration %" PetscInt_FMT "\n",(double)gnorm,i));
     PetscFunctionReturn(0);
   }
 
@@ -669,7 +669,7 @@ PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,KSPConvergedReason *reaso
   }
 
   if (gnorm < qps_inner->atol) {
-    PetscCall(PetscInfo(qps_inner,"Inner QP solver has converged. Residual norm gnorm=%.8e is less than atol = min(M1*||Bu||),eta) = %s = %.8e at iteration %D.\n",gnorm,(cctx->MNormBu<smalxe->eta)?"M1||Bu||":"eta",qps_inner->atol,i));
+    PetscCall(PetscInfo(qps_inner,"Inner QP solver has converged. Residual norm gnorm=%.8e is less than atol = min(M1*||Bu||),eta) = %s = %.8e at iteration %" PetscInt_FMT ".\n",gnorm,(cctx->MNormBu<smalxe->eta)?"M1||Bu||":"eta",qps_inner->atol,i));
     *reason = KSP_CONVERGED_ATOL;
     if (cctx->MNormBu < smalxe->eta) {
       smalxe->M1_hits++;
@@ -688,10 +688,10 @@ PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,KSPConvergedReason *reaso
       PetscCall(PetscInfo(qps_inner,"skipping gtol criterion because G = %.8e > %.8e = E\n",smalxe->inner->rnorm,smalxe->enorm));
     } else {
       if (smalxe->inner_no_gtol_stop < 2) {
-        PetscCall(PetscInfo(qps_inner,"Inner QP solver has converged. Residual norm gnorm=%.8e is less than gtol = %.8e at iteration %D\n",gnorm,cctx->gtol,i));
+        PetscCall(PetscInfo(qps_inner,"Inner QP solver has converged. Residual norm gnorm=%.8e is less than gtol = %.8e at iteration %" PetscInt_FMT "\n",gnorm,cctx->gtol,i));
         *reason = KSP_CONVERGED_RTOL;
       } else {
-        PetscCall(PetscInfo(qps_inner,"Gradient tolerance has been reached. Residual norm gnorm=%.8e is less than gtol = %.8e at iteration %D\n",gnorm,cctx->gtol,i));
+        PetscCall(PetscInfo(qps_inner,"Gradient tolerance has been reached. Residual norm gnorm=%.8e is less than gtol = %.8e at iteration %" PetscInt_FMT "\n",gnorm,cctx->gtol,i));
       }
       if (smalxe->state != 3) {
         PetscCall(PetscInfo( qps_inner,"changing rho_update_type to 3\n"));
@@ -1009,7 +1009,7 @@ PetscErrorCode QPSSolve_SMALXE(QPS qps)
     smalxe->normBu_old = smalxe->normBu;
   }
   if (i == maxits) {
-    PetscCall(PetscInfo(qps,"Maximum number of iterations has been reached: %D\n",maxits));
+    PetscCall(PetscInfo(qps,"Maximum number of iterations has been reached: %" PetscInt_FMT "\n",maxits));
     if (!qps->reason) qps->reason = KSP_DIVERGED_ITS;
   }
 

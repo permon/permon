@@ -28,7 +28,7 @@ PetscErrorCode QPSMonitorDefault_MPGP(QPS qps,PetscInt n,PetscViewer viewer)
      PetscCall(PetscViewerASCIIPrintf(viewer,"  Projected gradient norms for %s solve.\n",((PetscObject)qps)->prefix));
    }
 
-   PetscCall(PetscViewerASCIIPrintf(viewer,"%3D MPGP [%c] ||gp||=%.10e",n,mpgp->currentStepType,(double)qps->rnorm));
+   PetscCall(PetscViewerASCIIPrintf(viewer,"%3" PetscInt_FMT " MPGP [%c] ||gp||=%.10e",n,mpgp->currentStepType,(double)qps->rnorm));
    PetscCall(PetscViewerASCIIPrintf(viewer,",\t||gf||=%.10e",(double)mpgp->gfnorm));
    PetscCall(PetscViewerASCIIPrintf(viewer,",\t||gc||=%.10e",(double)mpgp->gcnorm));
    PetscCall(PetscViewerASCIIPrintf(viewer,",\talpha=%.10e",(double)mpgp->alpha));

@@ -698,7 +698,7 @@ PetscErrorCode QPSConvergedDefault(QPS qps,KSPConvergedReason *reason)
 
   if (i > qps->max_it) {
     *reason = KSP_DIVERGED_ITS;
-    PetscCall(PetscInfo(qps,"QP solver is diverging (iteration count reached the maximum). Initial right hand size norm %14.12e, current residual norm %14.12e at iteration %D\n",(double)cctx->norm_rhs,(double)rnorm,i));
+    PetscCall(PetscInfo(qps,"QP solver is diverging (iteration count reached the maximum). Initial right hand size norm %14.12e, current residual norm %14.12e at iteration %" PetscInt_FMT "\n",(double)cctx->norm_rhs,(double)rnorm,i));
     PetscFunctionReturn(0);
   }
   
@@ -709,14 +709,14 @@ PetscErrorCode QPSConvergedDefault(QPS qps,KSPConvergedReason *reason)
     *reason = KSP_DIVERGED_NANORINF;
   } else if (rnorm <= cctx->ttol) {
     if (rnorm < qps->atol) {
-      PetscCall(PetscInfo(qps,"QP solver has converged. Residual norm %14.12e is less than absolute tolerance %14.12e at iteration %D\n",(double)rnorm,(double)qps->atol,i));
+      PetscCall(PetscInfo(qps,"QP solver has converged. Residual norm %14.12e is less than absolute tolerance %14.12e at iteration %" PetscInt_FMT "\n",(double)rnorm,(double)qps->atol,i));
       *reason = KSP_CONVERGED_ATOL;
     } else {
-      PetscCall(PetscInfo(qps,"QP solver has converged. Residual norm %14.12e is less than rtol*||b|| =  %14.12e * %14.12e = %14.12e at iteration %D\n",(double)rnorm,(double)qps->rtol,(double)cctx->norm_rhs,(double)qps->rtol*cctx->norm_rhs,i));
+      PetscCall(PetscInfo(qps,"QP solver has converged. Residual norm %14.12e is less than rtol*||b|| =  %14.12e * %14.12e = %14.12e at iteration %" PetscInt_FMT "\n",(double)rnorm,(double)qps->rtol,(double)cctx->norm_rhs,(double)qps->rtol*cctx->norm_rhs,i));
       *reason = KSP_CONVERGED_RTOL;
     }
   } else if (rnorm >= qps->divtol*cctx->norm_rhs_div) {
-    PetscCall(PetscInfo(qps,"QP solver is diverging. Residual norm %14.12e exceeded the divergence tolerance divtol * ||b|| = %14.12e * %14.12e = %14.12e at iteration %D\n",(double)rnorm,(double)qps->divtol,(double)cctx->norm_rhs,(double)qps->divtol*cctx->norm_rhs_div,i));
+    PetscCall(PetscInfo(qps,"QP solver is diverging. Residual norm %14.12e exceeded the divergence tolerance divtol * ||b|| = %14.12e * %14.12e = %14.12e at iteration %" PetscInt_FMT "\n",(double)rnorm,(double)qps->divtol,(double)cctx->norm_rhs,(double)qps->divtol*cctx->norm_rhs_div,i));
     *reason = KSP_DIVERGED_DTOL;
   }
   PetscFunctionReturn(0);
@@ -932,7 +932,7 @@ PetscErrorCode QPSSetTolerances(QPS qps,PetscReal rtol,PetscReal atol,PetscReal 
     qps->divtol = divtol;
   }
   if (max_it != PETSC_DEFAULT) {
-    if (max_it < 0) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Maximum number of iterations %D must be non-negative",max_it);
+    if (max_it < 0) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Maximum number of iterations %" PetscInt_FMT " must be non-negative",max_it);
     qps->max_it = max_it;
   }
   PetscFunctionReturn(0);
@@ -1396,7 +1396,7 @@ PetscErrorCode QPSMonitorDefault(QPS qps,PetscInt n,PetscReal rnorm,void *ctx)
     if (n == 0 && ((PetscObject)qps)->prefix) {
       PetscCall(PetscViewerASCIIPrintf(viewer,"  Projected gradient norms for %s solve.\n",((PetscObject)qps)->prefix));
     }
-    PetscCall(PetscViewerASCIIPrintf(viewer,"%3D QPS Projected gradient norm %14.12e \n",n,(double)rnorm));
+    PetscCall(PetscViewerASCIIPrintf(viewer,"%3" PetscInt_FMT " QPS Projected gradient norm %14.12e \n",n,(double)rnorm));
     PetscCall(PetscViewerASCIISubtractTab(viewer,((PetscObject)qps)->tablevel));
   }
 
@@ -1448,7 +1448,7 @@ PetscErrorCode QPSMonitorCostFunction(QPS qps,PetscInt n,PetscReal rnorm,void *d
        PetscCall(QPSGetSolvedQP(qps,&qp));
        PetscCall(QPGetSolutionVector(qp, &x));
        PetscCall(QPComputeObjective(qp,x,&f));
-       PetscCall(PetscViewerASCIIPrintf(viewer,"%3D QPS Cost function value %14.12e \n",n,(double)f));
+       PetscCall(PetscViewerASCIIPrintf(viewer,"%3" PetscInt_FMT " QPS Cost function value %14.12e \n",n,(double)f));
        PetscCall(PetscViewerASCIISubtractTab(viewer,((PetscObject)qps)->tablevel));
    }
 

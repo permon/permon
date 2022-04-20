@@ -93,7 +93,7 @@ int main( int argc, char **argv )
   PetscCall(PetscOptionsGetBool(NULL,NULL,"-test_getdiagonal",&testgetdiag,NULL));
 
   PetscCall(PetscPrintf(PETSC_COMM_WORLD,"\n---- Journal Bearing Problem SHB-----\n"));
-  PetscCall(PetscPrintf(PETSC_COMM_WORLD,"mx: %D,  my: %D,  ecc: %g \n\n",user.nx,user.ny,(double)user.ecc));
+  PetscCall(PetscPrintf(PETSC_COMM_WORLD,"mx: %" PetscInt_FMT ",  my: %" PetscInt_FMT ",  ecc: %g \n\n",user.nx,user.ny,(double)user.ecc));
 
   /* Let Petsc determine the grid division */
   Nx = PETSC_DECIDE; Ny = PETSC_DECIDE;
@@ -176,7 +176,7 @@ int main( int argc, char **argv )
   /* Solve the bound constrained problem */
   PetscCall(TaoSolve(tao));
   PetscCall(TaoGetConvergedReason(tao, &reason));
-  if (reason < 0) SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_NOT_CONVERGED, "TAO diverged, reason %D (%s)", reason, TaoConvergedReasons[reason]);
+  if (reason < 0) SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_NOT_CONVERGED, "TAO diverged, reason %" PetscInt_FMT " (%s)", reason, TaoConvergedReasons[reason]);
   
   /* Call PERMON solver and compare results */
   PetscCall(CallPermonAndCompareResults(tao, &user));
@@ -455,7 +455,7 @@ PetscErrorCode Monitor(Tao tao, void *ctx)
   PetscFunctionBegin;
   PetscCall(TaoGetSolutionStatus(tao, &its, &f, &gnorm, &cnorm, &xdiff, &reason));
   if (!(its%5)) {
-    PetscCall(PetscPrintf(PETSC_COMM_WORLD,"iteration=%D\tf=%g\n",its,(double)f));
+    PetscCall(PetscPrintf(PETSC_COMM_WORLD,"iteration=%" PetscInt_FMT "\tf=%g\n",its,(double)f));
   }
   PetscFunctionReturn(0);
 }
@@ -537,7 +537,7 @@ PetscErrorCode CallPermonAndCompareResults(Tao tao, void *ctx)
   /* Solve the QP */
   PetscCall(QPSSolve(qps));  
   PetscCall(QPSGetConvergedReason(qps, &reason));
-  if (reason < 0) SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_NOT_CONVERGED, "QPS diverged, reason %D (%s)", reason, KSPConvergedReasons[reason]);
+  if (reason < 0) SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_NOT_CONVERGED, "QPS diverged, reason %" PetscInt_FMT " (%s)", reason, KSPConvergedReasons[reason]);
 
   /* Get the solution vector */
   PetscCall(QPGetSolutionVector(qp, &x_qp));

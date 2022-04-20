@@ -864,10 +864,10 @@ PetscErrorCode MatView_Inv(Mat imat, PetscViewer viewer)
         //
         PetscCall(KSPGetPC(inv->ksp, &pc));
         red = (PC_Redundant*)pc->data;
-        PetscCall(PetscViewerASCIIPrintf(viewer,"Redundant preconditioner: First (color=0) of %D nested KSPs follows\n",red->nsubcomm));
+        PetscCall(PetscViewerASCIIPrintf(viewer,"Redundant preconditioner: First (color=0) of %" PetscInt_FMT " nested KSPs follows\n",red->nsubcomm));
         show = PetscNot(red->psubcomm->color);
       } else {                /* inv->ksp is PCBJACOBI */
-        PetscCall(PetscViewerASCIIPrintf(viewer,"Block Jacobi preconditioner: First (rank=0) of %D nested diagonal block KSPs follows\n",size));
+        PetscCall(PetscViewerASCIIPrintf(viewer,"Block Jacobi preconditioner: First (rank=0) of %" PetscInt_FMT " nested diagonal block KSPs follows\n",size));
         show = PetscNot(rank);
       }
       PetscCall(PetscViewerASCIIPushTab(viewer));
