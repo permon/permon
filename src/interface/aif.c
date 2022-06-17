@@ -32,11 +32,11 @@ static PetscErrorCode FllopAIFMatCompleteFromUpperTriangular(Mat A, AIFMatSymmet
 {
   PetscFunctionBegin;
   if (flg==AIF_MAT_SYM_SYMMETRIC) {
-    TRY( MatSetOption(A, MAT_SYMMETRIC, PETSC_TRUE) );
-    TRY( MatSetOption(A, MAT_SYMMETRY_ETERNAL, PETSC_TRUE) );
+    PetscCall(MatSetOption(A, MAT_SYMMETRIC, PETSC_TRUE));
+    PetscCall(MatSetOption(A, MAT_SYMMETRY_ETERNAL, PETSC_TRUE));
   }
   if (flg==AIF_MAT_SYM_UPPER_TRIANGULAR) {
-    TRY( MatCompleteFromUpperTriangular(A) );
+    PetscCall(MatCompleteFromUpperTriangular(A));
   }
   PetscFunctionReturn(0);
 }
@@ -46,8 +46,8 @@ static PetscErrorCode FllopAIFMatCompleteFromUpperTriangular(Mat A, AIFMatSymmet
 PetscErrorCode FllopAIFInitialize(int *argc, char ***args, const char rcfile[])
 {
   PetscFunctionBegin;
-  TRY( PermonInitialize(argc,args,rcfile,(char*)0) );
-  TRY( FllopAIFInitializeInComm(PETSC_COMM_WORLD,argc,args,rcfile) );
+  PetscCall(PermonInitialize(argc,args,rcfile,(char*)0));
+  PetscCall(FllopAIFInitializeInComm(PETSC_COMM_WORLD,argc,args,rcfile));
   PetscFunctionReturn(0);
 }
 
@@ -58,12 +58,12 @@ PetscErrorCode FllopAIFInitializeInComm(MPI_Comm comm, int *argc, char ***args, 
   PetscFunctionBegin;
   if (FllopAIFInitializeCalled) { PetscFunctionReturn(0); }
   aif_comm = comm;
-  TRY( PermonInitialize(argc,args,rcfile,(char*)0) );
-  TRY( FllopAIFReset() );
-  TRY( PetscLogStageRegister("FllopAIF  Main", &aif_stage) );
-  TRY( PetscLogStageRegister("FllopAIF Setup", &aif_setup_stage) );
-  TRY( PetscLogStageRegister("FllopAIF Solve", &aif_solve_stage) );
-  TRY( PetscLogStagePush(aif_stage) );
+  PetscCall(PermonInitialize(argc,args,rcfile,(char*)0));
+  PetscCall(FllopAIFReset());
+  PetscCall(PetscLogStageRegister("FllopAIF  Main", &aif_stage));
+  PetscCall(PetscLogStageRegister("FllopAIF Setup", &aif_setup_stage));
+  PetscCall(PetscLogStageRegister("FllopAIF Solve", &aif_solve_stage));
+  PetscCall(PetscLogStagePush(aif_stage));
   FllopAIFInitializeCalled = PETSC_TRUE;
   PetscFunctionReturn(0);
 }
@@ -73,11 +73,11 @@ PetscErrorCode FllopAIFInitializeInComm(MPI_Comm comm, int *argc, char ***args, 
 PetscErrorCode FllopAIFReset()
 {
   PetscFunctionBegin;
-  TRY( QPDestroy(&aif_qp) );
-  TRY( QPSDestroy(&aif_qps) );
-  TRY( QPCreate(aif_comm,&aif_qp) );
-  TRY( QPSCreate(aif_comm,&aif_qps) );
-  TRY( QPSSetQP(aif_qps,aif_qp) );
+  PetscCall(QPDestroy(&aif_qp));
+  PetscCall(QPSDestroy(&aif_qps));
+  PetscCall(QPCreate(aif_comm,&aif_qp));
+  PetscCall(QPSCreate(aif_comm,&aif_qps));
+  PetscCall(QPSSetQP(aif_qps,aif_qp));
   aif_setup_called = PETSC_FALSE;
   PetscFunctionReturn(0);
 }
@@ -88,10 +88,10 @@ PetscErrorCode FllopAIFFinalize()
 {
   PetscFunctionBegin;
   if (!FllopAIFInitializeCalled) PetscFunctionReturn(0);
-  TRY( QPDestroy(&aif_qp) );
-  TRY( QPSDestroy(&aif_qps) );
-  TRY( PetscLogStagePop() );
-  TRY( PermonFinalize() );
+  PetscCall(QPDestroy(&aif_qp));
+  PetscCall(QPSDestroy(&aif_qps));
+  PetscCall(PetscLogStagePop());
+  PetscCall(PermonFinalize());
   aif_comm=0; aif_base=0; aif_feti=0; aif_stage=0; aif_setup_stage=0; aif_solve_stage=0; 
   FllopAIFInitializeCalled = PETSC_FALSE;
   aif_setup_called = PETSC_FALSE;
@@ -123,10 +123,10 @@ PetscErrorCode FllopAIFSetSolutionVector(PetscInt n,PetscReal *x,const char *nam
   Vec x_g;
   
   PetscFunctionBegin;
-  TRY( VecCreateMPIWithArray(aif_comm,1,n,PETSC_DECIDE,x,&x_g) );
-  TRY( PetscObjectSetName((PetscObject)x_g,name) );
-  TRY( QPSetInitialVector(aif_qp,x_g) );
-  TRY( VecDestroy(&x_g) );
+  PetscCall(VecCreateMPIWithArray(aif_comm,1,n,PETSC_DECIDE,x,&x_g));
+  PetscCall(PetscObjectSetName((PetscObject)x_g,name));
+  PetscCall(QPSetInitialVector(aif_qp,x_g));
+  PetscCall(VecDestroy(&x_g));
   aif_setup_called = PETSC_FALSE;
   PetscFunctionReturn(0);
 }
@@ -140,21 +140,21 @@ PetscErrorCode FllopAIFSetFETIOperator(PetscInt n,PetscInt *i,PetscInt *j,PetscS
   
   PetscFunctionBegin;
   aif_feti=PETSC_TRUE;
-  TRY( FllopAIFApplyBase_Private(PETSC_FALSE,ni,i,nj,j) );
+  PetscCall(FllopAIFApplyBase_Private(PETSC_FALSE,ni,i,nj,j));
   
   if (symflg == AIF_MAT_SYM_UPPER_TRIANGULAR) {
-    TRY( MatCreateSeqSBAIJWithArrays(PETSC_COMM_SELF,1,n,n,i,j,A,&A_l) );
+    PetscCall(MatCreateSeqSBAIJWithArrays(PETSC_COMM_SELF,1,n,n,i,j,A,&A_l));
   } else {
-    TRY( MatCreateSeqAIJWithArrays(PETSC_COMM_SELF,n,n,i,j,A,&A_l) );
+    PetscCall(MatCreateSeqAIJWithArrays(PETSC_COMM_SELF,n,n,i,j,A,&A_l));
   }
-  TRY( FllopAIFMatCompleteFromUpperTriangular(A_l,symflg) );
-  TRY( MatCreateBlockDiag(aif_comm,A_l,&A_g) );
-  TRY( PetscObjectSetName((PetscObject)A_g,name) );
-  TRY( FllopPetscObjectInheritName((PetscObject)A_l,(PetscObject)A_g,"_loc") );
-  TRY( MatDestroy(&A_l) );
+  PetscCall(FllopAIFMatCompleteFromUpperTriangular(A_l,symflg));
+  PetscCall(MatCreateBlockDiag(aif_comm,A_l,&A_g));
+  PetscCall(PetscObjectSetName((PetscObject)A_g,name));
+  PetscCall(FllopPetscObjectInheritName((PetscObject)A_l,(PetscObject)A_g,"_loc"));
+  PetscCall(MatDestroy(&A_l));
   
-  TRY( QPSetOperator(aif_qp,A_g) );
-  TRY( MatDestroy(&A_g) );
+  PetscCall(QPSetOperator(aif_qp,A_g));
+  PetscCall(MatDestroy(&A_g));
   aif_setup_called = PETSC_FALSE;
   PetscFunctionReturn(0);
 }
@@ -170,53 +170,53 @@ PetscErrorCode FllopAIFSetFETIOperatorMATIS(PetscInt n,PetscInt N,PetscInt *i,Pe
   ISLocalToGlobalMapping l2gmap;
   
   PetscFunctionBegin;
-  TRY( QPGetRhs(aif_qp,&b) );
-  TRY( QPGetSolutionVector(aif_qp,&x) );
-  if (!x || !b) FLLOP_SETERRQ(aif_comm,PETSC_ERR_SUP,"x and b has to be set before operator");
+  PetscCall(QPGetRhs(aif_qp,&b));
+  PetscCall(QPGetSolutionVector(aif_qp,&x));
+  if (!x || !b) SETERRQ(aif_comm,PETSC_ERR_SUP,"x and b has to be set before operator");
 
   aif_feti=PETSC_TRUE;
-  TRY( FllopAIFApplyBase_Private(PETSC_FALSE,ni,i,nj,j) );
+  PetscCall(FllopAIFApplyBase_Private(PETSC_FALSE,ni,i,nj,j));
   
   if (symflg == AIF_MAT_SYM_UPPER_TRIANGULAR) {
-    TRY( MatCreateSeqSBAIJWithArrays(PETSC_COMM_SELF,1,n,n,i,j,A,&A_l) );
+    PetscCall(MatCreateSeqSBAIJWithArrays(PETSC_COMM_SELF,1,n,n,i,j,A,&A_l));
   } else {
-    TRY( MatCreateSeqAIJWithArrays(PETSC_COMM_SELF,n,n,i,j,A,&A_l) );
+    PetscCall(MatCreateSeqAIJWithArrays(PETSC_COMM_SELF,n,n,i,j,A,&A_l));
   }
-  TRY( FllopAIFMatCompleteFromUpperTriangular(A_l,symflg) );
-  TRY( ISLocalToGlobalMappingCreateIS(l2g,&l2gmap) );
-  TRY( MatCreateIS(aif_comm,1,PETSC_DECIDE,PETSC_DECIDE,N,N,l2gmap,l2gmap,&A_g) );
-  TRY( ISLocalToGlobalMappingDestroy(&l2gmap) );
-  TRY( MatISSetLocalMat(A_g,A_l) );
-  TRY( MatAssemblyBegin(A_g,MAT_FINAL_ASSEMBLY) );
-  TRY( MatAssemblyEnd(A_g,MAT_FINAL_ASSEMBLY) );
-  TRY( PetscObjectSetName((PetscObject)A_g,name) );
-  TRY( FllopPetscObjectInheritName((PetscObject)A_l,(PetscObject)A_g,"_loc") );
-  TRY( MatDestroy(&A_l) );
+  PetscCall(FllopAIFMatCompleteFromUpperTriangular(A_l,symflg));
+  PetscCall(ISLocalToGlobalMappingCreateIS(l2g,&l2gmap));
+  PetscCall(MatCreateIS(aif_comm,1,PETSC_DECIDE,PETSC_DECIDE,N,N,l2gmap,l2gmap,&A_g));
+  PetscCall(ISLocalToGlobalMappingDestroy(&l2gmap));
+  PetscCall(MatISSetLocalMat(A_g,A_l));
+  PetscCall(MatAssemblyBegin(A_g,MAT_FINAL_ASSEMBLY));
+  PetscCall(MatAssemblyEnd(A_g,MAT_FINAL_ASSEMBLY));
+  PetscCall(PetscObjectSetName((PetscObject)A_g,name));
+  PetscCall(FllopPetscObjectInheritName((PetscObject)A_l,(PetscObject)A_g,"_loc"));
+  PetscCall(MatDestroy(&A_l));
 
   Mat_IS *matis  = (Mat_IS*)A_g->data;
-  TRY( MatCreateVecs(A_g,&x_new,&b_new) );
-  TRY( VecGetLocalVector(x,matis->x) );
-  //TRY( VecSet(x_new,zero) );
-  TRY( VecScatterBegin(matis->rctx,matis->x,x_new,INSERT_VALUES,SCATTER_REVERSE) );
-  TRY( VecScatterEnd(matis->rctx,matis->x,x_new,INSERT_VALUES,SCATTER_REVERSE) );
-  TRY( VecRestoreLocalVector(x,matis->x) );
-  TRY( VecGetLocalVector(b,matis->y) );
-  TRY( VecSet(b_new,zero) );
-  TRY( VecScatterBegin(matis->rctx,matis->y,b_new,ADD_VALUES,SCATTER_REVERSE) );
-  TRY( VecScatterEnd(matis->rctx,matis->y,b_new,ADD_VALUES,SCATTER_REVERSE) );
-  TRY( VecRestoreLocalVector(b,matis->y) );
+  PetscCall(MatCreateVecs(A_g,&x_new,&b_new));
+  PetscCall(VecGetLocalVector(x,matis->x));
+  //PetscCall(VecSet(x_new,zero));
+  PetscCall(VecScatterBegin(matis->rctx,matis->x,x_new,INSERT_VALUES,SCATTER_REVERSE));
+  PetscCall(VecScatterEnd(matis->rctx,matis->x,x_new,INSERT_VALUES,SCATTER_REVERSE));
+  PetscCall(VecRestoreLocalVector(x,matis->x));
+  PetscCall(VecGetLocalVector(b,matis->y));
+  PetscCall(VecSet(b_new,zero));
+  PetscCall(VecScatterBegin(matis->rctx,matis->y,b_new,ADD_VALUES,SCATTER_REVERSE));
+  PetscCall(VecScatterEnd(matis->rctx,matis->y,b_new,ADD_VALUES,SCATTER_REVERSE));
+  PetscCall(VecRestoreLocalVector(b,matis->y));
 
-  TRY( PetscObjectCompose((PetscObject)b_new,"b_decomp",(PetscObject)b) );
-  TRY( PetscObjectCompose((PetscObject)x_new,"x_decomp",(PetscObject)x) );
-  TRY( QPSetInitialVector(aif_qp,x_new) );
-  TRY( QPSetRhs(aif_qp,b_new) );
-  TRY( QPSetOperator(aif_qp,A_g) );
-  TRY( QPTMatISToBlockDiag(aif_qp) );
-  TRY( QPGetChild(aif_qp,&aif_qp) );
+  PetscCall(PetscObjectCompose((PetscObject)b_new,"b_decomp",(PetscObject)b));
+  PetscCall(PetscObjectCompose((PetscObject)x_new,"x_decomp",(PetscObject)x));
+  PetscCall(QPSetInitialVector(aif_qp,x_new));
+  PetscCall(QPSetRhs(aif_qp,b_new));
+  PetscCall(QPSetOperator(aif_qp,A_g));
+  PetscCall(QPTMatISToBlockDiag(aif_qp));
+  PetscCall(QPGetChild(aif_qp,&aif_qp));
 
-  TRY( VecDestroy(&x_new) );
-  TRY( VecDestroy(&b_new) );
-  TRY( MatDestroy(&A_g) );
+  PetscCall(VecDestroy(&x_new));
+  PetscCall(VecDestroy(&b_new));
+  PetscCall(MatDestroy(&A_g));
   aif_setup_called = PETSC_FALSE;
   PetscFunctionReturn(0);
 }
@@ -229,15 +229,15 @@ PetscErrorCode FllopAIFSetFETIOperatorNullspace(PetscInt n,PetscInt d,PetscScala
   
   PetscFunctionBegin;
   aif_feti=PETSC_TRUE;
-  TRY( MatCreateSeqDense(PETSC_COMM_SELF,n,d,R,&R_l) );
+  PetscCall(MatCreateSeqDense(PETSC_COMM_SELF,n,d,R,&R_l));
     
-  TRY( MatCreateBlockDiag(aif_comm,R_l,&R_g) );
-  TRY( PetscObjectSetName((PetscObject)R_g,name) );
-  TRY( FllopPetscObjectInheritName((PetscObject)R_l,(PetscObject)R_g,"_loc") );
-  TRY( MatDestroy(&R_l) );
+  PetscCall(MatCreateBlockDiag(aif_comm,R_l,&R_g));
+  PetscCall(PetscObjectSetName((PetscObject)R_g,name));
+  PetscCall(FllopPetscObjectInheritName((PetscObject)R_l,(PetscObject)R_g,"_loc"));
+  PetscCall(MatDestroy(&R_l));
   
-  TRY( QPSetOperatorNullSpace(aif_qp,R_g) );
-  TRY( MatDestroy(&R_g) );
+  PetscCall(QPSetOperatorNullSpace(aif_qp,R_g));
+  PetscCall(MatDestroy(&R_g));
   aif_setup_called = PETSC_FALSE;
   PetscFunctionReturn(0);
 }
@@ -250,16 +250,16 @@ PetscErrorCode FllopAIFSetOperatorByStripes(PetscInt m,PetscInt n,PetscInt N,Pet
   PetscInt ni=n+1, nj=i[n];
   
   PetscFunctionBegin;
-  TRY( FllopAIFApplyBase_Private(PETSC_FALSE, ni,i, nj, j) );
+  PetscCall(FllopAIFApplyBase_Private(PETSC_FALSE, ni,i, nj, j));
   if (symflg == AIF_MAT_SYM_UPPER_TRIANGULAR) {
-    TRY( MatCreateMPISBAIJWithArrays(aif_comm,1,m,n,PETSC_DECIDE,N,i,j,A,&A_g) );
+    PetscCall(MatCreateMPISBAIJWithArrays(aif_comm,1,m,n,PETSC_DECIDE,N,i,j,A,&A_g));
   } else {
-    TRY( MatCreateMPIAIJWithArrays(aif_comm,m,n,PETSC_DECIDE,N,i,j,A,&A_g) );
+    PetscCall(MatCreateMPIAIJWithArrays(aif_comm,m,n,PETSC_DECIDE,N,i,j,A,&A_g));
   }
-  TRY( FllopAIFMatCompleteFromUpperTriangular(A_g,symflg) );
-  TRY( PetscObjectSetName((PetscObject)A_g,name) );
-  TRY( QPSetOperator(aif_qp,A_g) );
-  TRY( MatDestroy(&A_g) );
+  PetscCall(FllopAIFMatCompleteFromUpperTriangular(A_g,symflg));
+  PetscCall(PetscObjectSetName((PetscObject)A_g,name));
+  PetscCall(QPSetOperator(aif_qp,A_g));
+  PetscCall(MatDestroy(&A_g));
   aif_setup_called = PETSC_FALSE;
   PetscFunctionReturn(0);
 }
@@ -271,10 +271,10 @@ PetscErrorCode FllopAIFSetRhs(PetscInt n,PetscScalar *b,const char *name)
   Vec b_g;
   
   PetscFunctionBegin;
-  TRY( VecCreateMPIWithArray(aif_comm,1,n,PETSC_DECIDE,b,&b_g) );
-  TRY( PetscObjectSetName((PetscObject)b_g,name) );
-  TRY( QPSetRhs(aif_qp,b_g) );
-  TRY( VecDestroy(&b_g) );
+  PetscCall(VecCreateMPIWithArray(aif_comm,1,n,PETSC_DECIDE,b,&b_g));
+  PetscCall(PetscObjectSetName((PetscObject)b_g,name));
+  PetscCall(QPSetRhs(aif_qp,b_g));
+  PetscCall(VecDestroy(&b_g));
   aif_setup_called = PETSC_FALSE;
   PetscFunctionReturn(0);
 }
@@ -298,12 +298,12 @@ static PetscErrorCode FllopAIFCreateLinearConstraints_Private(PetscBool coo,Pets
     ni=m+1;
     nj=Bi[m];
   }
-  TRY( FllopAIFApplyBase_Private(coo, ni,Bi,nj,Bj) );
+  PetscCall(FllopAIFApplyBase_Private(coo, ni,Bi,nj,Bj));
   
   if (cv) {
     PetscValidPointer(cv,8);
-    TRY( VecCreateMPIWithArray(aif_comm,1,m,PETSC_DECIDE,cv,&c_g) );
-    TRY( PetscObjectSetName((PetscObject)c_g,cname) );
+    PetscCall(VecCreateMPIWithArray(aif_comm,1,m,PETSC_DECIDE,cv,&c_g));
+    PetscCall(PetscObjectSetName((PetscObject)c_g,cname));
   }
   
   if (coo && B_dist_horizontal) {
@@ -314,34 +314,34 @@ static PetscErrorCode FllopAIFCreateLinearConstraints_Private(PetscBool coo,Pets
   }
 
   if (coo) {
-    TRY( MatCreateSeqAIJFromTriple(PETSC_COMM_SELF,m,n,Bi,Bj,Bv,&B_l,Bnnz,0) );
+    PetscCall(MatCreateSeqAIJFromTriple(PETSC_COMM_SELF,m,n,Bi,Bj,Bv,&B_l,Bnnz,0));
   } else {
-    TRY( MatCreateSeqAIJWithArrays(PETSC_COMM_SELF,m,n,Bi,Bj,Bv,&B_l) );
+    PetscCall(MatCreateSeqAIJWithArrays(PETSC_COMM_SELF,m,n,Bi,Bj,Bv,&B_l));
   }
 
   if (!coo && B_dist_horizontal) {
     tmat = B_l;
-    TRY( PermonMatTranspose(tmat, MAT_TRANSPOSE_EXPLICIT, &B_l) );
-    TRY( MatDestroy(&tmat) );
+    PetscCall(PermonMatTranspose(tmat, MAT_TRANSPOSE_EXPLICIT, &B_l));
+    PetscCall(MatDestroy(&tmat));
   }
 
   if (B_dist_horizontal != B_trans) { /* this means B is stored in transposed form, distributed across longer side */
     column_layout = NULL;
   } else {
-    TRY( QPGetRhs(aif_qp, &column_layout) );
-    FLLOP_ASSERT(column_layout,"RHS specified");
+    PetscCall(QPGetRhs(aif_qp, &column_layout));
+    PERMON_ASSERT(column_layout,"RHS specified");
   }
   
-  TRY( MatMergeAndDestroy(aif_comm,&B_l,column_layout,&B_g) );
+  PetscCall(MatMergeAndDestroy(aif_comm,&B_l,column_layout,&B_g));
   
   if (B_dist_horizontal != B_trans) {
     tmat = B_g;
-    TRY( PermonMatTranspose(tmat, MAT_TRANSPOSE_CHEAPEST, &B_g) );
-    TRY( PetscObjectSetName((PetscObject)B_g, Bname) );
-    TRY( FllopPetscObjectInheritName((PetscObject)tmat,(PetscObject)B_g,"_T") );
-    TRY( MatDestroy(&tmat) );
+    PetscCall(PermonMatTranspose(tmat, MAT_TRANSPOSE_CHEAPEST, &B_g));
+    PetscCall(PetscObjectSetName((PetscObject)B_g, Bname));
+    PetscCall(FllopPetscObjectInheritName((PetscObject)tmat,(PetscObject)B_g,"_T"));
+    PetscCall(MatDestroy(&tmat));
   } else {
-    TRY( PetscObjectSetName((PetscObject)B_g,Bname) );
+    PetscCall(PetscObjectSetName((PetscObject)B_g,Bname));
   } 
   
   *B_new = B_g;
@@ -364,10 +364,10 @@ PetscErrorCode FllopAIFSetIneq(PetscInt m,PetscInt N,PetscBool B_trans,PetscBool
   PetscValidIntPointer(Bj,6);
   PetscValidIntPointer(Bv,7);
 
-  TRY( FllopAIFCreateLinearConstraints_Private(PETSC_FALSE,m,N,B_trans,B_dist_horizontal,Bi,Bj,Bv,-1,Bname,cv,cname,&B,&c) );
-  TRY( QPSetIneq(aif_qp,B,c) );
-  TRY( VecDestroy(&c) );
-  TRY( MatDestroy(&B) );
+  PetscCall(FllopAIFCreateLinearConstraints_Private(PETSC_FALSE,m,N,B_trans,B_dist_horizontal,Bi,Bj,Bv,-1,Bname,cv,cname,&B,&c));
+  PetscCall(QPSetIneq(aif_qp,B,c));
+  PetscCall(VecDestroy(&c));
+  PetscCall(MatDestroy(&B));
   aif_setup_called = PETSC_FALSE;
   PetscFunctionReturn(0);
 }
@@ -387,10 +387,10 @@ PetscErrorCode FllopAIFSetEq(PetscInt m,PetscInt N,PetscBool B_trans,PetscBool B
   PetscValidIntPointer(Bj,6);
   PetscValidIntPointer(Bv,7);
 
-  TRY( FllopAIFCreateLinearConstraints_Private(PETSC_FALSE,m,N,B_trans,B_dist_horizontal,Bi,Bj,Bv,-1,Bname,cv,cname,&B,&c) );
-  TRY( QPSetEq(aif_qp,B,c) );
-  TRY( VecDestroy(&c) );
-  TRY( MatDestroy(&B) );
+  PetscCall(FllopAIFCreateLinearConstraints_Private(PETSC_FALSE,m,N,B_trans,B_dist_horizontal,Bi,Bj,Bv,-1,Bname,cv,cname,&B,&c));
+  PetscCall(QPSetEq(aif_qp,B,c));
+  PetscCall(VecDestroy(&c));
+  PetscCall(MatDestroy(&B));
   aif_setup_called = PETSC_FALSE;
   PetscFunctionReturn(0);
 }
@@ -410,10 +410,10 @@ PetscErrorCode FllopAIFAddEq(PetscInt m,PetscInt N,PetscBool B_trans,PetscBool B
   PetscValidIntPointer(Bj,6);
   PetscValidIntPointer(Bv,7);
 
-  TRY( FllopAIFCreateLinearConstraints_Private(PETSC_FALSE,m,N,B_trans,B_dist_horizontal,Bi,Bj,Bv,-1,Bname,cv,cname,&B,&c) );
-  TRY( QPAddEq(aif_qp,B,c) );
-  TRY( VecDestroy(&c) );
-  TRY( MatDestroy(&B) );
+  PetscCall(FllopAIFCreateLinearConstraints_Private(PETSC_FALSE,m,N,B_trans,B_dist_horizontal,Bi,Bj,Bv,-1,Bname,cv,cname,&B,&c));
+  PetscCall(QPAddEq(aif_qp,B,c));
+  PetscCall(VecDestroy(&c));
+  PetscCall(MatDestroy(&B));
   aif_setup_called = PETSC_FALSE;
   PetscFunctionReturn(0);
 }
@@ -433,10 +433,10 @@ PetscErrorCode FllopAIFSetIneqCOO(PetscInt m,PetscInt N,PetscBool B_trans,PetscB
   PetscValidIntPointer(Bj,6);
   PetscValidIntPointer(Bv,7);
 
-  TRY( FllopAIFCreateLinearConstraints_Private(PETSC_TRUE,m,N,B_trans,B_dist_horizontal,Bi,Bj,Bv,Bnnz,Bname,cv,cname,&B,&c) );
-  TRY( QPSetIneq(aif_qp,B,c) );
-  TRY( VecDestroy(&c) );
-  TRY( MatDestroy(&B) );
+  PetscCall(FllopAIFCreateLinearConstraints_Private(PETSC_TRUE,m,N,B_trans,B_dist_horizontal,Bi,Bj,Bv,Bnnz,Bname,cv,cname,&B,&c));
+  PetscCall(QPSetIneq(aif_qp,B,c));
+  PetscCall(VecDestroy(&c));
+  PetscCall(MatDestroy(&B));
   aif_setup_called = PETSC_FALSE;
   PetscFunctionReturn(0);
 }
@@ -456,10 +456,10 @@ PetscErrorCode FllopAIFSetEqCOO(PetscInt m,PetscInt N,PetscBool B_trans,PetscBoo
   PetscValidIntPointer(Bj,6);
   PetscValidIntPointer(Bv,7);
 
-  TRY( FllopAIFCreateLinearConstraints_Private(PETSC_TRUE,m,N,B_trans,B_dist_horizontal,Bi,Bj,Bv,Bnnz,Bname,cv,cname,&B,&c) );
-  TRY( QPSetEq(aif_qp,B,c) );
-  TRY( VecDestroy(&c) );
-  TRY( MatDestroy(&B) );
+  PetscCall(FllopAIFCreateLinearConstraints_Private(PETSC_TRUE,m,N,B_trans,B_dist_horizontal,Bi,Bj,Bv,Bnnz,Bname,cv,cname,&B,&c));
+  PetscCall(QPSetEq(aif_qp,B,c));
+  PetscCall(VecDestroy(&c));
+  PetscCall(MatDestroy(&B));
   aif_setup_called = PETSC_FALSE;
   PetscFunctionReturn(0);
 }
@@ -479,10 +479,10 @@ PetscErrorCode FllopAIFAddEqCOO(PetscInt m,PetscInt N,PetscBool B_trans,PetscBoo
   PetscValidIntPointer(Bj,6);
   PetscValidIntPointer(Bv,7);
 
-  TRY( FllopAIFCreateLinearConstraints_Private(PETSC_TRUE,m,N,B_trans,B_dist_horizontal,Bi,Bj,Bv,Bnnz,Bname,cv,cname,&B,&c) );
-  TRY( QPAddEq(aif_qp,B,c) );
-  TRY( VecDestroy(&c) );
-  TRY( MatDestroy(&B) );
+  PetscCall(FllopAIFCreateLinearConstraints_Private(PETSC_TRUE,m,N,B_trans,B_dist_horizontal,Bi,Bj,Bv,Bnnz,Bname,cv,cname,&B,&c));
+  PetscCall(QPAddEq(aif_qp,B,c));
+  PetscCall(VecDestroy(&c));
+  PetscCall(MatDestroy(&B));
   aif_setup_called = PETSC_FALSE;
   PetscFunctionReturn(0);
 }
@@ -492,7 +492,7 @@ PetscErrorCode FllopAIFAddEqCOO(PetscInt m,PetscInt N,PetscBool B_trans,PetscBoo
 PetscErrorCode FllopAIFSetType(const char type[])
 {
   PetscFunctionBegin;  
-  TRY( QPSSetType(aif_qps,type) );
+  PetscCall(QPSSetType(aif_qps,type));
   aif_setup_called = PETSC_FALSE;
   PetscFunctionReturn(0);
 }
@@ -502,7 +502,7 @@ PetscErrorCode FllopAIFSetType(const char type[])
 PetscErrorCode FllopAIFSetDefaultType()
 {
   PetscFunctionBegin;
-  TRY( QPSSetDefaultType(aif_qps) );
+  PetscCall(QPSSetDefaultType(aif_qps));
   aif_setup_called = PETSC_FALSE;
   PetscFunctionReturn(0);   
 }
@@ -518,18 +518,18 @@ PetscErrorCode FllopAIFSetBox(PetscInt n,PetscScalar *lb,const char *lbname,Pets
   lb_g=NULL; ub_g=NULL;
   
   if (lb) {
-    TRY( VecCreateMPIWithArray(aif_comm,1,n,PETSC_DECIDE,lb,&lb_g) );
-    TRY( PetscObjectSetName((PetscObject)lb_g,lbname) );
+    PetscCall(VecCreateMPIWithArray(aif_comm,1,n,PETSC_DECIDE,lb,&lb_g));
+    PetscCall(PetscObjectSetName((PetscObject)lb_g,lbname));
   }
   
   if (ub) {
-    TRY( VecCreateMPIWithArray(aif_comm,1,n,PETSC_DECIDE,ub,&ub_g) );
-    TRY( PetscObjectSetName((PetscObject)ub_g,ubname) );
+    PetscCall(VecCreateMPIWithArray(aif_comm,1,n,PETSC_DECIDE,ub,&ub_g));
+    PetscCall(PetscObjectSetName((PetscObject)ub_g,ubname));
   }
   
-  TRY( QPSetBox(aif_qp,NULL,lb_g,ub_g) );
-  TRY( VecDestroy(&lb_g) );
-  TRY( VecDestroy(&ub_g) );
+  PetscCall(QPSetBox(aif_qp,NULL,lb_g,ub_g));
+  PetscCall(VecDestroy(&lb_g));
+  PetscCall(VecDestroy(&ub_g));
   aif_setup_called = PETSC_FALSE;
   PetscFunctionReturn(0);
 }
@@ -548,9 +548,9 @@ PetscErrorCode FllopAIFSetArrayBase(PetscInt base)
 PetscErrorCode FllopAIFEnforceEqByProjector()
 {
   PetscFunctionBegin;
-  TRY( PetscLogStagePush(aif_setup_stage) );
-  TRY( QPTEnforceEqByProjector(aif_qp) );
-  TRY( PetscLogStagePop() );
+  PetscCall(PetscLogStagePush(aif_setup_stage));
+  PetscCall(QPTEnforceEqByProjector(aif_qp));
+  PetscCall(PetscLogStagePop());
   aif_setup_called = PETSC_FALSE;
   PetscFunctionReturn(0);
 }
@@ -560,9 +560,9 @@ PetscErrorCode FllopAIFEnforceEqByProjector()
 PetscErrorCode FllopAIFEnforceEqByPenalty(PetscReal rho)
 {
   PetscFunctionBegin;
-  TRY( PetscLogStagePush(aif_setup_stage) );
-  TRY( QPTEnforceEqByPenalty(aif_qp,rho,PETSC_FALSE) );
-  TRY( PetscLogStagePop() );
+  PetscCall(PetscLogStagePush(aif_setup_stage));
+  PetscCall(QPTEnforceEqByPenalty(aif_qp,rho,PETSC_FALSE));
+  PetscCall(PetscLogStagePop());
   aif_setup_called = PETSC_FALSE;
   PetscFunctionReturn(0);
 }
@@ -572,9 +572,9 @@ PetscErrorCode FllopAIFEnforceEqByPenalty(PetscReal rho)
 PetscErrorCode FllopAIFHomogenizeEq()
 {
   PetscFunctionBegin;
-  TRY( PetscLogStagePush(aif_setup_stage) );
-  TRY( QPTHomogenizeEq(aif_qp) );
-  TRY( PetscLogStagePop() );
+  PetscCall(PetscLogStagePush(aif_setup_stage));
+  PetscCall(QPTHomogenizeEq(aif_qp));
+  PetscCall(PetscLogStagePop());
   aif_setup_called = PETSC_FALSE;
   PetscFunctionReturn(0);
 }
@@ -584,9 +584,9 @@ PetscErrorCode FllopAIFHomogenizeEq()
 PetscErrorCode FllopAIFDualize(MatRegularizationType regtype)
 {
   PetscFunctionBegin;
-  TRY( PetscLogStagePush(aif_setup_stage) );
-  TRY( QPTDualize(aif_qp,(MatInvType) aif_feti,regtype) );
-  TRY( PetscLogStagePop() );
+  PetscCall(PetscLogStagePush(aif_setup_stage));
+  PetscCall(QPTDualize(aif_qp,(MatInvType) aif_feti,regtype));
+  PetscCall(PetscLogStagePop());
   aif_setup_called = PETSC_FALSE;
   PetscFunctionReturn(0);
 }
@@ -596,9 +596,9 @@ PetscErrorCode FllopAIFDualize(MatRegularizationType regtype)
 PetscErrorCode FllopAIFFromOptions()
 {
   PetscFunctionBegin;
-  TRY( PetscLogStagePush(aif_setup_stage) );
-  TRY( QPTFromOptions(aif_qp) );
-  TRY( PetscLogStagePop() );
+  PetscCall(PetscLogStagePush(aif_setup_stage));
+  PetscCall(QPTFromOptions(aif_qp));
+  PetscCall(PetscLogStagePop());
   aif_setup_called = PETSC_FALSE;
   PetscFunctionReturn(0);
 }
@@ -609,11 +609,11 @@ PetscErrorCode FllopAIFOperatorShift(PetscScalar a)
 {
   Mat A,Aloc;
   PetscFunctionBegin;
-  TRY( PetscLogStagePush(aif_setup_stage) );
-  TRY( QPGetOperator(aif_qp,&A) );
-  TRY( MatGetDiagonalBlock(A,&Aloc) );
-  TRY( MatShift(Aloc,a) );
-  TRY( PetscLogStagePop() );
+  PetscCall(PetscLogStagePush(aif_setup_stage));
+  PetscCall(QPGetOperator(aif_qp,&A));
+  PetscCall(MatGetDiagonalBlock(A,&Aloc));
+  PetscCall(MatShift(Aloc,a));
+  PetscCall(PetscLogStagePop());
   PetscFunctionReturn(0);
 }
 
@@ -623,11 +623,11 @@ PetscErrorCode FllopAIFSetUp()
 {
   PetscFunctionBegin;
   if (aif_setup_called) PetscFunctionReturn(0);
-  TRY( PetscLogStagePush(aif_setup_stage) );
-  TRY( QPSSetFromOptions(aif_qps) );
-  TRY( QPSSetUp(aif_qps) );
+  PetscCall(PetscLogStagePush(aif_setup_stage));
+  PetscCall(QPSSetFromOptions(aif_qps));
+  PetscCall(QPSSetUp(aif_qps));
   aif_setup_called = PETSC_TRUE;
-  TRY( PetscLogStagePop() );
+  PetscCall(PetscLogStagePop());
   PetscFunctionReturn(0);
 }
 
@@ -642,55 +642,55 @@ PetscErrorCode FllopAIFKSPSolveMATIS(IS isDir,PetscInt n,PetscInt N,PetscInt *i,
   ISLocalToGlobalMapping l2gmap;
   
   PetscFunctionBegin;
-  TRY( QPGetRhs(aif_qp,&b) );
-  TRY( QPGetSolutionVector(aif_qp,&x) );
-  if (!x || !b) FLLOP_SETERRQ(aif_comm,PETSC_ERR_SUP,"x and b has to be set before operator");
+  PetscCall(QPGetRhs(aif_qp,&b));
+  PetscCall(QPGetSolutionVector(aif_qp,&x));
+  if (!x || !b) SETERRQ(aif_comm,PETSC_ERR_SUP,"x and b has to be set before operator");
 
   aif_feti=PETSC_TRUE;
-  TRY( FllopAIFApplyBase_Private(PETSC_FALSE,ni,i,nj,j) );
+  PetscCall(FllopAIFApplyBase_Private(PETSC_FALSE,ni,i,nj,j));
   
   if (symflg == AIF_MAT_SYM_UPPER_TRIANGULAR) {
-    TRY( MatCreateSeqSBAIJWithArrays(PETSC_COMM_SELF,1,n,n,i,j,A,&A_l) );
+    PetscCall(MatCreateSeqSBAIJWithArrays(PETSC_COMM_SELF,1,n,n,i,j,A,&A_l));
   } else {
-    TRY( MatCreateSeqAIJWithArrays(PETSC_COMM_SELF,n,n,i,j,A,&A_l) );
+    PetscCall(MatCreateSeqAIJWithArrays(PETSC_COMM_SELF,n,n,i,j,A,&A_l));
   }
-  TRY( FllopAIFMatCompleteFromUpperTriangular(A_l,symflg) );
-  TRY( ISLocalToGlobalMappingCreateIS(l2g,&l2gmap) );
-  TRY( MatCreateIS(aif_comm,1,PETSC_DECIDE,PETSC_DECIDE,N,N,l2gmap,l2gmap,&A_g) );
-  TRY( ISLocalToGlobalMappingDestroy(&l2gmap) );
-  TRY( MatISSetLocalMat(A_g,A_l) );
-  TRY( MatAssemblyBegin(A_g,MAT_FINAL_ASSEMBLY) );
-  TRY( MatAssemblyEnd(A_g,MAT_FINAL_ASSEMBLY) );
-  TRY( PetscObjectSetName((PetscObject)A_g,name) );
-  TRY( FllopPetscObjectInheritName((PetscObject)A_l,(PetscObject)A_g,"_loc") );
-  TRY( MatDestroy(&A_l) );
+  PetscCall(FllopAIFMatCompleteFromUpperTriangular(A_l,symflg));
+  PetscCall(ISLocalToGlobalMappingCreateIS(l2g,&l2gmap));
+  PetscCall(MatCreateIS(aif_comm,1,PETSC_DECIDE,PETSC_DECIDE,N,N,l2gmap,l2gmap,&A_g));
+  PetscCall(ISLocalToGlobalMappingDestroy(&l2gmap));
+  PetscCall(MatISSetLocalMat(A_g,A_l));
+  PetscCall(MatAssemblyBegin(A_g,MAT_FINAL_ASSEMBLY));
+  PetscCall(MatAssemblyEnd(A_g,MAT_FINAL_ASSEMBLY));
+  PetscCall(PetscObjectSetName((PetscObject)A_g,name));
+  PetscCall(FllopPetscObjectInheritName((PetscObject)A_l,(PetscObject)A_g,"_loc"));
+  PetscCall(MatDestroy(&A_l));
 
   Mat_IS *matis  = (Mat_IS*)A_g->data;
-  TRY( MatCreateVecs(A_g,&x_new,&b_new) );
-  TRY( VecGetLocalVector(x,matis->x) );
-  //TRY( VecSet(x_new,zero) );
-  TRY( VecScatterBegin(matis->rctx,matis->x,x_new,INSERT_VALUES,SCATTER_REVERSE) );
-  TRY( VecScatterEnd(matis->rctx,matis->x,x_new,INSERT_VALUES,SCATTER_REVERSE) );
-  TRY( VecRestoreLocalVector(x,matis->x) );
-  TRY( VecGetLocalVector(b,matis->y) );
-  TRY( VecSet(b_new,zero) );
-  TRY( VecScatterBegin(matis->rctx,matis->y,b_new,ADD_VALUES,SCATTER_REVERSE) );
-  TRY( VecScatterEnd(matis->rctx,matis->y,b_new,ADD_VALUES,SCATTER_REVERSE) );
-  TRY( VecRestoreLocalVector(b,matis->y) );
+  PetscCall(MatCreateVecs(A_g,&x_new,&b_new));
+  PetscCall(VecGetLocalVector(x,matis->x));
+  //PetscCall(VecSet(x_new,zero));
+  PetscCall(VecScatterBegin(matis->rctx,matis->x,x_new,INSERT_VALUES,SCATTER_REVERSE));
+  PetscCall(VecScatterEnd(matis->rctx,matis->x,x_new,INSERT_VALUES,SCATTER_REVERSE));
+  PetscCall(VecRestoreLocalVector(x,matis->x));
+  PetscCall(VecGetLocalVector(b,matis->y));
+  PetscCall(VecSet(b_new,zero));
+  PetscCall(VecScatterBegin(matis->rctx,matis->y,b_new,ADD_VALUES,SCATTER_REVERSE));
+  PetscCall(VecScatterEnd(matis->rctx,matis->y,b_new,ADD_VALUES,SCATTER_REVERSE));
+  PetscCall(VecRestoreLocalVector(b,matis->y));
 
-  TRY( PetscObjectCompose((PetscObject)b_new,"b_decomp",(PetscObject)b) );
-  TRY( PetscObjectCompose((PetscObject)x_new,"x_decomp",(PetscObject)x) );
+  PetscCall(PetscObjectCompose((PetscObject)b_new,"b_decomp",(PetscObject)b));
+  PetscCall(PetscObjectCompose((PetscObject)x_new,"x_decomp",(PetscObject)x));
   
   KSP ksp;
-  TRY( KSPCreate(aif_comm,&ksp) );
-  TRY( KSPSetOperators(ksp,A_g,A_g) );
-  TRY( KSPSetFromOptions(ksp) );
-  TRY( KSPFETISetDirichlet(ksp,isDir,FETI_LOCAL,PETSC_TRUE) );
-  TRY( KSPSolve(ksp,b_new,x_new) );
+  PetscCall(KSPCreate(aif_comm,&ksp));
+  PetscCall(KSPSetOperators(ksp,A_g,A_g));
+  PetscCall(KSPSetFromOptions(ksp));
+  PetscCall(KSPFETISetDirichlet(ksp,isDir,FETI_LOCAL,PETSC_TRUE));
+  PetscCall(KSPSolve(ksp,b_new,x_new));
 
-  TRY( VecDestroy(&x_new) );
-  TRY( VecDestroy(&b_new) );
-  TRY( MatDestroy(&A_g) );
+  PetscCall(VecDestroy(&x_new));
+  PetscCall(VecDestroy(&b_new));
+  PetscCall(MatDestroy(&A_g));
   aif_setup_called = PETSC_FALSE;
   PetscFunctionReturn(0);
 }
@@ -702,18 +702,18 @@ PetscErrorCode FllopAIFSolve()
   PetscInt test=0;
 
   PetscFunctionBegin;
-  TRY( PetscOptionsGetInt(NULL,NULL,"-aif_test",&test,NULL) );
-  TRY( PetscLogStagePush(aif_solve_stage) );
+  PetscCall(PetscOptionsGetInt(NULL,NULL,"-aif_test",&test,NULL));
+  PetscCall(PetscLogStagePush(aif_solve_stage));
   switch (test) {
     case 1: {
-      TRY( PetscPrintf(PETSC_COMM_WORLD, "Hello world!\n") );
+      PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Hello world!\n"));
       break;
     }
     case 0:
     default:
-      TRY( FllopAIFSetUp() );
-      TRY( QPSSolve(aif_qps) );
+      PetscCall(FllopAIFSetUp());
+      PetscCall(QPSSolve(aif_qps));
   }
-  TRY( PetscLogStagePop() );
+  PetscCall(PetscLogStagePop());
   PetscFunctionReturn(0);
 }
