@@ -93,6 +93,7 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
     mm = m;
   } else {
     /* MUMPS matrix type (sym) is set to 2 automatically (see MatGetFactor_aij_mumps). */
+    PetscCall(PCSetFromOptions(pc));
     PetscCall(PCFactorGetMatSolverType(pc,&type));
     PetscCall(PetscStrcmp(type,MATSOLVERMUMPS,&flg)); 
     if (flg) PetscCall(PetscObjectTypeCompare((PetscObject)pc,PCCHOLESKY,&flg));
@@ -568,11 +569,12 @@ static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
       inv->innerksp = *kspp;
     } else {
       char stri[1024];
+      PetscCall(PetscSNPrintf(stri, sizeof(stri), "-%smat_inv_redundant_pc_type none",prefix));
       PetscCall(PetscSNPrintf(stri, sizeof(stri), "-%smat_inv_psubcomm_type %s",prefix,PetscSubcommTypes[inv->psubcommType]));
       PetscCall(PetscOptionsInsertString(NULL,stri));
       PetscCall(PCSetType(pc, PCREDUNDANT));
       PetscCall(PCRedundantSetNumber(pc, inv->redundancy));
-      PetscCall(PCSetFromOptions(pc));
+      PetscCall(PCSetUp(pc));
       PetscCall(PCRedundantGetKSP(pc, &inv->innerksp));
     }
   } else {

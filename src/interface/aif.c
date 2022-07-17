@@ -147,7 +147,8 @@ PetscErrorCode FllopAIFSetFETIOperator(PetscInt n,PetscInt *i,PetscInt *j,PetscS
   } else {
     PetscCall(MatCreateSeqAIJWithArrays(PETSC_COMM_SELF,n,n,i,j,A,&A_l));
   }
-  PetscCall(FllopAIFMatCompleteFromUpperTriangular(A_l,symflg));
+  //PetscCall(FllopAIFMatCompleteFromUpperTriangular(A_l,symflg));
+  PetscCall(MatConvert(A_l,MATSEQAIJ,MAT_INPLACE_MATRIX,&A_l));
   PetscCall(MatCreateBlockDiag(aif_comm,A_l,&A_g));
   PetscCall(PetscObjectSetName((PetscObject)A_g,name));
   PetscCall(FllopPetscObjectInheritName((PetscObject)A_l,(PetscObject)A_g,"_loc"));
