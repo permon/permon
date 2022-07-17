@@ -63,6 +63,8 @@ typedef struct {
   PetscReal lower, upper;
 
   PetscBool knoll;
+
+  PetscErrorCode (*computeInnerTol)(QPS qps,Vec u,PetscReal *tol);
   PetscErrorCode (*updateNormBu)(QPS qps,Vec u,PetscReal *normBu,PetscReal *enorm);
 } QPS_SMALXE;
 
@@ -75,5 +77,8 @@ FLLOP_INTERN PetscErrorCode QPSConvergedCreate_Inner_SMALXE(QPS qps_outer, void 
 FLLOP_INTERN PetscErrorCode QPSConvergedDestroy_Inner_SMALXE(void *ctx);
 FLLOP_INTERN PetscErrorCode QPSSMALXEUpdate_SMALXE(QPS qps, PetscReal Lag_old, PetscReal Lag, PetscReal rho);
 FLLOP_INTERN PetscErrorCode QPSSMALXEUpdateNormBu_SMALXE(QPS qps,Vec u,PetscReal *normBu,PetscReal *enorm);
+FLLOP_INTERN PetscErrorCode QPSSMALXEInnerTolStd_SMALXE(QPS qps,Vec u,PetscReal *tol);
+FLLOP_INTERN PetscErrorCode QPSSMALXEInnerTolALAPC_SMALXE(QPS qps,Vec u,PetscReal *tol);
+FLLOP_INTERN PetscErrorCode QPSSMALXEInnerTolLag_SMALXE(QPS qps,Vec u,PetscReal *tol);
 
 #endif

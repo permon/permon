@@ -3,6 +3,8 @@
 
 FLLOP_EXTERN PetscErrorCode QPSReset_SMALXE(QPS qps);
 
+const char *const QPSSMALXECriterionTypes[] = {"std","alapc","lag","QPSSMALXECriterionType","QPS_SMALXE_CRITERION_",0};
+
 #undef __FUNCT__
 #define __FUNCT__ "QPSSMALXEGetOperatorMaxEigenvalue_SMALXE"
 static PetscErrorCode QPSSMALXEGetOperatorMaxEigenvalue_SMALXE(QPS qps,PetscReal *maxeig)
@@ -248,6 +250,40 @@ static PetscErrorCode QPSSMALXESetMonitor_SMALXE(QPS qps,PetscBool flg)
   
   PetscFunctionBegin;
   smalxe->monitor = flg;
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "QPSSMALXESetCriterion_SMALXE"
+static PetscErrorCode QPSSMALXESetCriterion_SMALXE(QPS qps,QPSSMALXECriterionType type)
+{
+  QPS_SMALXE *smalxe = (QPS_SMALXE*)qps->data;
+  
+  PetscFunctionBegin;
+  switch (type) {
+    case QPS_SMALXE_CRITERION_STD:
+      smalxe->computeInnerTol = QPSSMALXEInnerTolStd_SMALXE;
+      break;
+    //case QPS_SMALXE_CRITERION_ALAPC:
+    //  smalxe->computeInnerTol = QPSSMALXEInnerTolALAPC_SMALXE;
+    //  break;
+    //case QPS_SMALXE_CRITERION_LAG:
+    //  smalxe->computeInnerTol = QPSSMALXEInnerTolLag_SMALXE;
+    //  break;
+    default: SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_PLIB,"Unknown SMALXE inner stopping criterion type");            
+    }
+    
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "QPSSMALXEInnerTolStd_SMALXE"
+PetscErrorCode QPSSMALXEInnerTolStd_SMALXE(QPS qps,Vec u,PetscReal *tol)
+{
+  QPS_SMALXE *smalxe = (QPS_SMALXE*)qps->data;
+
+  PetscFunctionBegin;
+  *tol = PetscMin(smalxe->M1*smalxe->normBu,smalxe->eta);
   PetscFunctionReturn(0);
 }
 
@@ -634,7 +670,8 @@ PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,KSPConvergedReason *reaso
   PetscCall(smalxe->updateNormBu(qps_outer,u,&smalxe->normBu,&smalxe->enorm));
   qps_outer->rnorm = PetscMax(smalxe->enorm,gnorm);
   cctx->MNormBu = smalxe->M1 * smalxe->normBu;
-  qps_inner->atol = PetscMin(cctx->MNormBu, smalxe->eta);
+  //qps_inner->atol = PetscMin(cctx->MNormBu, smalxe->eta);
+  PetscCall(smalxe->computeInnerTol(qps_outer,u,&qps_inner->atol));
   
   PetscCall(QPSConverged_Inner_SMALXE_Monitor_Outer(qps_inner,qp_inner,i,gnorm,cctx,PETSC_TRUE));
   PetscCall(QPSConverged_Inner_SMALXE_Monitor_Inner(qps_inner,qp_inner,i,gnorm,cctx));
@@ -712,6 +749,7 @@ PetscErrorCode QPSSetFromOptions_SMALXE(PetscOptionItems *PetscOptionsObject,QPS
   PetscBool flg1,flg2,eta_direct,rho_direct,M1_direct;
   PetscReal maxeig,maxeig_tol,eta,rho,M1,M1_update,rho_update,rho_update_late;
   PetscInt maxeig_iter;
+  QPSSMALXECriterionType criterion;
 
   PetscFunctionBegin;
   PetscOptionsHead(PetscOptionsObject,"QPSSMALXE options");
@@ -753,6 +791,11 @@ PetscErrorCode QPSSetFromOptions_SMALXE(PetscOptionItems *PetscOptionsObject,QPS
 
   PetscCall(PetscOptionsBool("-qps_smalxe_get_lambda","","",smalxe->get_lambda,&smalxe->get_lambda,NULL));
   PetscCall(PetscOptionsBool("-qps_smalxe_get_Bt_lambda","","",smalxe->get_Bt_lambda,&smalxe->get_Bt_lambda,NULL));
+
+  /* stopping crit */
+  criterion = QPS_SMALXE_CRITERION_STD;
+  PetscCall(PetscOptionsEnum("-qps_smalxe_criterion","Set inner stopping criterion","",QPSSMALXECriterionTypes,(PetscEnum)criterion,(PetscEnum*)&criterion,&flg1));
+  if (flg1) PetscCall(QPSSMALXESetCriterion(qps,criterion));
 
   //TODO temporary
   PetscCall(PetscOptionsBoolGroupBegin("-qps_smalxe_monitor","","QPSSMALXESetMonitor",&smalxe->monitor));
@@ -1098,6 +1141,7 @@ PetscErrorCode QPSDestroy_SMALXE(QPS qps)
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSSMALXESetOperatorMaxEigenvalueTolerance_SMALXE_C",NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSSMALXEGetOperatorMaxEigenvalueTolerance_SMALXE_C",NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSSMALXESetMonitor_SMALXE_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSSMALXESetCriterion_SMALXE_C",NULL));
   PetscCall(QPSDestroyDefault(qps));
   PetscFunctionReturn(0);
 }
@@ -1144,6 +1188,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_SMALXE(QPS qps)
   qps->ops->viewconvergence  = QPSViewConvergence_SMALXE;
 
   smalxe->updateNormBu       = QPSSMALXEUpdateNormBu_SMALXE;
+  smalxe->computeInnerTol    = QPSSMALXEInnerTolStd_SMALXE;
 
   /* set type-specific functions */
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSSMALXEGetInnerQPS_SMALXE_C",QPSSMALXEGetInnerQPS_SMALXE));
@@ -1168,6 +1213,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_SMALXE(QPS qps)
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSSMALXESetOperatorMaxEigenvalueTolerance_SMALXE_C",QPSSMALXESetOperatorMaxEigenvalueTolerance_SMALXE));
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSSMALXEGetOperatorMaxEigenvalueTolerance_SMALXE_C",QPSSMALXEGetOperatorMaxEigenvalueTolerance_SMALXE));
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSSMALXESetMonitor_SMALXE_C",QPSSMALXESetMonitor_SMALXE));
+  PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSSMALXESetCriterion_SMALXE_C",QPSSMALXESetCriterion_SMALXE));
 
   /* initialize inner data */
   smalxe->inner = NULL;
@@ -1492,5 +1538,16 @@ PetscErrorCode QPSSMALXESetMonitor(QPS qps,PetscBool flg)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidLogicalCollectiveBool(qps,flg,2);
   PetscTryMethod(qps,"QPSSMALXESetMonitor_SMALXE_C",(QPS,PetscBool),(qps,flg));
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "QPSSMALXESetCriterion"
+PetscErrorCode QPSSMALXESetCriterion(QPS qps,QPSSMALXECriterionType type)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
+  PetscValidLogicalCollectiveEnum(qps,type,2);
+  PetscTryMethod(qps,"QPSSMALXESetCriterion_SMALXE_C",(QPS,QPSSMALXECriterionType),(qps,type));
   PetscFunctionReturn(0);
 }

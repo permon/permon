@@ -125,6 +125,8 @@ FLLOP_EXTERN PetscErrorCode QPSMPGPQPCGetOperatorMaxEigenvalueIterations(QPS qps
 FLLOP_EXTERN PetscErrorCode QPSMPGPQPCSetOperatorMaxEigenvalueIterations(QPS qps,PetscInt numit);
 
 /* SMALXE */
+typedef enum {QPS_SMALXE_CRITERION_STD,QPS_SMALXE_CRITERION_ALAPC,QPS_SMALXE_CRITERION_LAG} QPSSMALXECriterionType;
+FLLOP_EXTERN const char *const QPSSMALXECriterionTypes[];
 FLLOP_EXTERN PetscErrorCode QPSSMALXEGetInnerQPS(QPS qps,QPS *inner);
 FLLOP_EXTERN PetscErrorCode QPSSMALXESetOperatorMaxEigenvalue(QPS qps,PetscReal maxeig);
 FLLOP_EXTERN PetscErrorCode QPSSMALXEGetOperatorMaxEigenvalue(QPS qps,PetscReal *maxeig);
@@ -148,6 +150,7 @@ FLLOP_EXTERN PetscErrorCode QPSSMALXESetRhoUpdateLate(QPS qps,PetscReal rho_upda
 FLLOP_EXTERN PetscErrorCode QPSSMALXEGetRhoUpdateLate(QPS qps,PetscReal *rho_update_late);
 //TODO temporary solution, monitors should be implemented more generally
 FLLOP_EXTERN PetscErrorCode QPSSMALXESetMonitor(QPS qps,PetscBool flg);
+FLLOP_EXTERN PetscErrorCode QPSSMALXESetCriterion(QPS qps,QPSSMALXECriterionType type);
 
 #endif
 
