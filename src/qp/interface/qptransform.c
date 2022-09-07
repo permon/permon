@@ -1998,7 +1998,7 @@ PetscErrorCode QPTMatISToBlockDiag(QP qp)
   PetscCall(MatCreateBlockDiag(comm,matis->A,&A));
   PetscCall(QPSetOperator(child,A));
   PetscCall(QPSetEq(child,qp->BE,NULL));
-  PetscCall(QPSetOperatorNullSpace(child,qp->R));
+  PetscCall(QPSetOperatorNullSpace(child,qp->R)); /* assumes the nullspace is for the decomposed system */
   PetscCall(MatDestroy(&qp->BE));
 
   /* get mappings for RHS decomposition
@@ -2068,24 +2068,77 @@ PetscErrorCode QPTMatISToBlockDiag(QP qp)
   PetscCall(VecScatterEnd(global_to_B,vec1_B,b,INSERT_VALUES,SCATTER_REVERSE));
   PetscCall(VecScatterBegin(matis->cctx,b,matis->y,INSERT_VALUES,SCATTER_FORWARD)); /* set local vec */
   PetscCall(VecScatterEnd(matis->cctx,b,matis->y,INSERT_VALUES,SCATTER_FORWARD));
+  PetscCall(VecRestoreLocalVector(child->b,matis->y));
   /* assemble x */
   PetscCall(VecGetLocalVector(child->x,matis->x));
   PetscCall(VecScatterBegin(matis->cctx,qp->x,matis->x,INSERT_VALUES,SCATTER_FORWARD)); /* set local vec */
   PetscCall(VecScatterEnd(matis->cctx,qp->x,matis->x,INSERT_VALUES,SCATTER_FORWARD));
+  PetscCall(VecRestoreLocalVector(child->x,matis->x));
 
   /* inherit l2g and i2g */
   PetscCall(ISLocalToGlobalMappingGetIndices(mapping,&idx_l2g));
   PetscCall(ISCreateGeneral(PetscObjectComm((PetscObject)qp),n,idx_l2g,PETSC_COPY_VALUES,&l2g));
+  //ISView(l2g,NULL);
   PetscCall(ISLocalToGlobalMappingRestoreIndices(mapping,&idx_l2g));
   PetscCall(QPFetiSetLocalToGlobalMapping(child,l2g));
   PetscCall(ISOnComm(is_B_global,PETSC_COMM_WORLD,PETSC_COPY_VALUES,&i2g));
   PetscCall(ISSort(i2g));
   PetscCall(QPFetiSetInterfaceToGlobalMapping(child,i2g));
 
+  if (qp->BI) {
+    Mat BI,BIt,BIt_u;
+    Vec D_u,D_d;
+    //Vec x,y;
+    //PetscInt i,n;
+
+    //PetscCall(VecDuplicate(child->x,&x));
+    //PetscCall(VecDuplicate(child->x,&y));
+    //PetscCall(VecGetLocalVector(x,matis->x));
+    PetscCall(MatTranspose(qp->BI,MAT_INITIAL_MATRIX,&BIt_u));
+    //PetscCall(MatGetSize(BIt,NULL,&n));
+    ////for (i=0; i<n; i++) {
+    //PetscCall(VecSet(matis->x,0.));
+    //PetscCall(MatGetColumnVector(BIt,y,i));
+    //PetscCall(VecScatterBegin(matis->cctx,y,matis->x,INSERT_VALUES,SCATTER_FORWARD)); /* set local vec */
+    //PetscCall(VecScatterEnd(matis->cctx,y,matis->x,INSERT_VALUES,SCATTER_FORWARD));
+    //PetscCall(MatCreateScatter(comm,matis->cctx,&));
+    PetscCall(MatCreateSubMatrix(BIt_u,l2g,NULL,MAT_INITIAL_MATRIX,&BIt));
+    PetscCall(VecDuplicate(qp->x,&D_u));
+    PetscCall(VecDuplicate(child->x,&D_d));
+    PetscCall(VecSet(D_u,1.));
+    PetscCall(VecSet(D_d,1.));
+    PetscCall(VecScatterBegin(global_to_B,D,D_u,INSERT_VALUES,SCATTER_REVERSE)); /* create decomposed interface scaling */
+    PetscCall(VecScatterEnd(global_to_B,D,D_u,INSERT_VALUES,SCATTER_REVERSE));
+    PetscCall(VecGetLocalVector(D_d,matis->y));
+    PetscCall(VecScatterBegin(matis->cctx,D_u,matis->y,INSERT_VALUES,SCATTER_FORWARD)); /* set local vec */
+    PetscCall(VecScatterEnd(matis->cctx,D_u,matis->y,INSERT_VALUES,SCATTER_FORWARD));
+    PetscCall(VecRestoreLocalVector(D_d,matis->y));
+    //VecView(D_d,NULL);
+    PetscCall(MatDiagonalScale(BIt,D_d,NULL));
+    PetscCall(PermonMatTranspose(BIt,MAT_TRANSPOSE_CHEAPEST,&BI));
+    PetscCall(QPSetIneq(child,BI,qp->cI));
+
+    //PetscCall(VecSet(D_u,1.));
+    //PetscCall(VecSet(D_d,1.));
+
+    //Vec vec,vec1;
+    //PetscReal nrm;
+    //MatCreateVecs(BI,NULL,&vec);
+    //VecDuplicate(vec,&vec1);
+    //MatMult(BI,D_d,vec);
+    //MatMult(qp->BI,D_u,vec1);
+    //VecAXPY(vec,-1.,vec1);
+    //VecNorm(vec,NORM_2,&nrm);
+    //PetscPrintf(comm,"nrm %e\n",nrm);
+    //Mat L;
+    //MatISGetLocalMat(qp->A,&L);
+    //PetscMPIInt rank;
+    //MPI_Comm_rank(comm,&rank);
+    //if (!rank) MatView(L,NULL);
+  }
+
   PetscCall(ISDestroy(&i2g));
   PetscCall(ISDestroy(&l2g));
-  PetscCall(VecRestoreLocalVector(child->x,matis->x));
-  PetscCall(VecRestoreLocalVector(child->b,matis->y));
   PetscCall(ISLocalToGlobalMappingRestoreInfo(mapping,&n_neigh,&neigh,&n_shared,&shared));
   PetscCall(ISDestroy(&is_B_local));
   PetscCall(ISDestroy(&is_B_global));
