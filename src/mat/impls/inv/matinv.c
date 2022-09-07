@@ -63,7 +63,7 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
   PetscBool flg,blockdiag = PETSC_FALSE;
   MatSolverType type;
   Mat_MUMPS *mumps = NULL;
-  PetscReal null_pivot_threshold = -1e-8;
+  //PetscReal null_pivot_threshold = 1e-8;
   MPI_Comm blockComm;
 
   PetscFunctionBeginI;
@@ -102,9 +102,11 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
       /* If MUMPS Cholesky is used, avoid doubled factorization. */
       char opts[128];
       if (inv->type == MAT_INV_BLOCKDIAG) {
-        PetscCall(PetscSNPrintf(opts,sizeof(opts),"-%ssub_mat_mumps_icntl_24 1 -%ssub_mat_mumps_cntl_3 %e",((PetscObject)pc)->prefix,((PetscObject)pc)->prefix,null_pivot_threshold));
+        //PetscCall(PetscSNPrintf(opts,sizeof(opts),"-%ssub_mat_mumps_icntl_24 1 -%ssub_mat_mumps_cntl_3 %e",((PetscObject)pc)->prefix,((PetscObject)pc)->prefix,null_pivot_threshold));
+        PetscCall(PetscSNPrintf(opts,sizeof(opts),"-%ssub_mat_mumps_icntl_24 1",((PetscObject)pc)->prefix,((PetscObject)pc)->prefix));
       } else {
-        PetscCall(PetscSNPrintf(opts,sizeof(opts),"-%smat_mumps_icntl_24 1 -%smat_mumps_cntl_3 %e",((PetscObject)pc)->prefix,((PetscObject)pc)->prefix,null_pivot_threshold));
+        //PetscCall(PetscSNPrintf(opts,sizeof(opts),"-%smat_mumps_icntl_24 1 -%smat_mumps_cntl_3 %e",((PetscObject)pc)->prefix,((PetscObject)pc)->prefix,null_pivot_threshold));
+        PetscCall(PetscSNPrintf(opts,sizeof(opts),"-%smat_mumps_icntl_24 1",((PetscObject)pc)->prefix,((PetscObject)pc)->prefix));
       }
       PetscCall(PetscOptionsInsertString(NULL,opts));
       PetscCall(PCSetFromOptions(pc));
@@ -115,7 +117,7 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
       PetscCall(PetscPrintf(PetscObjectComm((PetscObject)imat), "WARNING: Performing extra factorization with MUMPS Cholesky just for nullspace detection. Avoid this by setting MUMPS Cholesky as MATINV solver.\n"));
       PetscCall(MatGetFactor(Kl,MATSOLVERMUMPS,MAT_FACTOR_CHOLESKY,&F));
       PetscCall(MatMumpsSetIcntl(F,24,1)); /* null pivot detection */
-      PetscCall(MatMumpsSetCntl(F,3,null_pivot_threshold)); /* null pivot threshold */
+      //PetscCall(MatMumpsSetCntl(F,3,null_pivot_threshold)); /* null pivot threshold */
       mumps =(Mat_MUMPS*)F->data;
       PetscCall(MatCholeskyFactorSymbolic(F,Kl,NULL,NULL));
       PetscCall(MatCholeskyFactorNumeric(F,Kl,NULL));
@@ -127,6 +129,7 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
 
   PetscCall(MatCreateDensePermon(blockComm,mm,PETSC_DECIDE,M,defect,NULL,&Rl));
 
+  printf("defect %d\n", defect);
   if (defect) {
     /* stash sol_loc allocated in MatFactorNumeric_MUMPS() */
     MumpsScalar *sol_loc_orig = mumps->id.sol_loc;
