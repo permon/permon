@@ -225,7 +225,7 @@ PetscErrorCode QPSSolve_Tao(QPS qps)
 
 #undef __FUNCT__  
 #define __FUNCT__ "QPSSetFromOptions_Tao"
-PetscErrorCode QPSSetFromOptions_Tao(PetscOptionItems *PetscOptionsObject,QPS qps)
+PetscErrorCode QPSSetFromOptions_Tao(QPS qps,PetscOptionItems *PetscOptionsObject)
 {
   QPS_Tao          *qpstao = (QPS_Tao*)qps->data;
   

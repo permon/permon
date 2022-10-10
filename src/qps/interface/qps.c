@@ -901,7 +901,7 @@ PetscErrorCode QPSSetFromOptions(QPS qps)
   PetscCall(PetscOptionsName("-qps_view","print the QPS parameters at the end of a QPSSolve call","QPSView",&flg));
   PetscCall(PetscOptionsName("-qps_view_convergence","print the QPS convergence info at the end of a QPSSolve call","QPSViewConvergence",&flg));
   if (qps->ops->setfromoptions) {
-    PetscCall((*qps->ops->setfromoptions)(PetscOptionsObject,qps));
+    PetscCall((*qps->ops->setfromoptions)(qps,PetscOptionsObject));
   }
   if (qps->topQP) PetscCall(QPChainSetFromOptions(qps->topQP));
   PetscOptionsEnd();

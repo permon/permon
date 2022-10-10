@@ -2523,7 +2523,7 @@ PetscErrorCode QPSetFromOptions(QP qp)
   PetscCall(PetscOptionsName("-qp_view","print the QP info at the end of a QPSSolve call","QPView",&flg));
 
   /* process any options handlers added with PetscObjectAddOptionsHandler() */
-  PetscCall(PetscObjectProcessOptionsHandlers(PetscOptionsObject,(PetscObject)qp));
+  PetscCall(PetscObjectProcessOptionsHandlers((PetscObject)qp,PetscOptionsObject));
   PetscOptionsEnd();
   qp->setfromoptionscalled++;
   PetscFunctionReturn(0);

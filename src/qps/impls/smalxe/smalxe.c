@@ -706,7 +706,7 @@ PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,KSPConvergedReason *reaso
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSSetFromOptions_SMALXE"
-PetscErrorCode QPSSetFromOptions_SMALXE(PetscOptionItems *PetscOptionsObject,QPS qps)
+PetscErrorCode QPSSetFromOptions_SMALXE(QPS qps,PetscOptionItems *PetscOptionsObject)
 {
   QPS_SMALXE    *smalxe = (QPS_SMALXE*)qps->data;
   PetscBool flg1,flg2,eta_direct,rho_direct,M1_direct;

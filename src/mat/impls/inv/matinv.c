@@ -802,7 +802,7 @@ PetscErrorCode MatDestroy_Inv(Mat imat)
 
 #undef __FUNCT__  
 #define __FUNCT__ "MatSetFromOptions_Inv"
-PetscErrorCode MatSetFromOptions_Inv(PetscOptionItems *PetscOptionsObject,Mat imat)
+PetscErrorCode MatSetFromOptions_Inv(Mat imat,PetscOptionItems *PetscOptionsObject)
 {
   PetscBool set;
   PetscSubcommType psubcommType;

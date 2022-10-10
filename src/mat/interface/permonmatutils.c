@@ -1100,7 +1100,7 @@ PetscErrorCode  PermonMatSetFromOptions(Mat B)
   PetscCall(PetscOptionsBool("-mat_null_space_test","Checks if provided null space is correct in MatAssemblyEnd()","MatSetNullSpaceTest",B->checknullspaceonassembly,&B->checknullspaceonassembly,NULL));
 
   if (B->ops->setfromoptions) {
-    PetscCall((*B->ops->setfromoptions)(PetscOptionsObject,B));
+    PetscCall((*B->ops->setfromoptions)(B,PetscOptionsObject));
   }
 
   flg  = PETSC_FALSE;
@@ -1111,7 +1111,7 @@ PetscErrorCode  PermonMatSetFromOptions(Mat B)
   if (set) PetscCall(MatSetOption(B,MAT_NEW_NONZERO_ALLOCATION_ERR,flg));
 
   /* process any options handlers added with PetscObjectAddOptionsHandler() */
-  PetscCall(PetscObjectProcessOptionsHandlers(PetscOptionsObject,(PetscObject)B));
+  PetscCall(PetscObjectProcessOptionsHandlers((PetscObject)B,PetscOptionsObject));
   PetscOptionsEnd();
   PetscFunctionReturnI(0);
 }

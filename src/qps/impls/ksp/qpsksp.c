@@ -150,7 +150,7 @@ PetscErrorCode QPSSolve_KSP(QPS qps)
 
 #undef __FUNCT__  
 #define __FUNCT__ "QPSSetFromOptions_KSP"
-PetscErrorCode QPSSetFromOptions_KSP(PetscOptionItems *PetscOptionsObject,QPS qps)
+PetscErrorCode QPSSetFromOptions_KSP(QPS qps,PetscOptionItems *PetscOptionsObject)
 {
   QPS_KSP          *qpsksp = (QPS_KSP*)qps->data;
   
