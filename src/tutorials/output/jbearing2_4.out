@@ -28,7 +28,7 @@ Setting PERMON rtol = gttol, atol = gatol
  21 MPGP [c] ||gp||=3.3212967541e-06,	||gf||=3.3212967541e-06,	||gc||=0.0000000000e+00,	alpha=2.0061100039e-01
  22 MPGP [c] ||gp||=1.3208278169e-06,	||gf||=1.3208278169e-06,	||gc||=0.0000000000e+00,	alpha=2.0061100039e-01
  23 MPGP [c] ||gp||=4.1716887962e-07,	||gf||=4.1716887962e-07,	||gc||=0.0000000000e+00,	alpha=2.0061100039e-01
-QPS Object: 1 MPI processes
+QPS Object: 1 MPI process
   type: mpgp
   last QPSSolve CONVERGED due to CONVERGED_RTOL, KSPReason=2, required 23 iterations
   all 1 QPSSolves from last QPSReset/QPSResetStatistics have required 23 iterations

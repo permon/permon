@@ -4,7 +4,7 @@ mx: 8,  my: 12,  ecc: 0.1
 
 TAO tolerances are gatol = 1.000000e-08, grtol =  1.000000e-50, gttol = 1.000000e-06
 Setting PERMON rtol = gttol, atol = gatol
-QPS Object: 1 MPI processes
+QPS Object: 1 MPI process
   type: tao
   last QPSSolve CONVERGED due to CONVERGED_RTOL, KSPReason=2, required 40 iterations
   all 1 QPSSolves from last QPSReset/QPSResetStatistics have required 40 iterations
@@ -14,10 +14,10 @@ QPS Object: 1 MPI processes
     Number of KSP iterations in last iteration: 0
     Total number of KSP iterations: 0
     Information about last TAOSolve:
-      Tao Object: (qps_) 1 MPI processes
+      Tao Object: (qps_) 1 MPI process
         type: blmvm
         Gradient steps: 0
-        Mat Object: (qps_tao_blmvm_) 1 MPI processes
+        Mat Object: (qps_tao_blmvm_) 1 MPI process
           type: lmvmbfgs
           rows=96, cols=96
             Scale type: DIAGONAL
@@ -29,7 +29,7 @@ QPS Object: 1 MPI processes
             Number of updates: 39
             Number of rejects: 0
             Number of resets: 1
-            Mat Object: (J0_) 1 MPI processes
+            Mat Object: (J0_) 1 MPI process
               type: lmvmdiagbroyden
               rows=96, cols=96
                 Scale history: 1
@@ -40,7 +40,7 @@ QPS Object: 1 MPI processes
                 Number of updates: 39
                 Number of rejects: 0
                 Number of resets: 1
-        TaoLineSearch Object: 1 MPI processes
+        TaoLineSearch Object: 1 MPI process
           type: more-thuente
           maximum function evaluations=30
           tolerances: ftol=0.0001, rtol=1e-10, gtol=0.9
