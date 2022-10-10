@@ -64,7 +64,7 @@ PetscErrorCode MatPrintInfo(Mat mat)
   PetscCall(PetscPrintf(comm, "\n"));
 
   //TODO implement as type-specific methods
-  PetscCall(PetscObjectTypeCompare((PetscObject)mat, MATTRANSPOSEMAT, &flg));
+  PetscCall(PetscObjectTypeCompare((PetscObject)mat, MATTRANSPOSEVIRTUAL, &flg));
   if (flg) {
     PetscCall(MatTransposeGetMat(mat,&inmat));
     PetscCall(PetscObjectGetTabLevel((PetscObject)inmat,&tablevel));
@@ -953,7 +953,7 @@ PetscErrorCode PermonMatMatMult(Mat A,Mat B,MatReuse scall,PetscReal fill,Mat *C
 
   PetscCall(MatIsImplicitTranspose(A, &flg_A));
   PetscCall(MatIsImplicitTranspose(B, &flg_B));
-  if (flg_A && flg_B) SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_INCOMP,"both matrices #1,#2 cannot be implicit transposes (MATTRANSPOSEMAT)");
+  if (flg_A && flg_B) SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_INCOMP,"both matrices #1,#2 cannot be implicit transposes (MATTRANSPOSEVIRTUAL)");
   if (flg_A) {
     PetscCall(MatTransposeGetMat(A,&T));
     PetscCall(MatTransposeMatMult(T,B,scall,fill,C));
