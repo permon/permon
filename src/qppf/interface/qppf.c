@@ -207,7 +207,6 @@ static PetscErrorCode QPPFSetUpGt_Private(QPPF cp, Mat *newGt)
     ttype = MAT_TRANSPOSE_CHEAPEST;
   }
   PetscCall(PermonMatTranspose(cp->G,ttype,&Gt));
-  PetscCall(PetscLogObjectParent((PetscObject)cp,(PetscObject)Gt));
   PetscCall(PetscObjectSetName((PetscObject)Gt,"Gt"));
   PetscCall(PetscObjectIncrementTabLevel((PetscObject) Gt,(PetscObject) cp, 1));
   *newGt = Gt;
@@ -267,7 +266,6 @@ static PetscErrorCode QPPFSetUpGGt_Private(QPPF cp, Mat *newGGt)
 
   {
     PetscCall(PetscObjectSetName((PetscObject)GGt,"GGt"));
-    PetscCall(PetscLogObjectParent((PetscObject)cp,(PetscObject)GGt));
     PetscCall(PetscObjectIncrementTabLevel((PetscObject)GGt,(PetscObject)cp,1));
 
     PetscCall(MatSetOption(GGt, MAT_SYMMETRIC, PETSC_TRUE));
@@ -305,7 +303,6 @@ static PetscErrorCode QPPFSetUpGGtinv_Private(QPPF cp, Mat *GGtinv_new)
 
   PetscCall(PetscLogEventBegin(QPPF_SetUp_GGtinv,cp,0,0,0));
   PetscCall(MatCreateInv(GGt, MAT_INV_MONOLITHIC, &GGtinv));
-  PetscCall(PetscLogObjectParent((PetscObject)cp,(PetscObject)GGtinv));
   PetscCall(PetscObjectIncrementTabLevel((PetscObject) GGtinv, (PetscObject) cp, 1));
   PetscCall(PetscObjectSetName((PetscObject) GGtinv, "GGtinv"));
   PetscCall(MatSetOptionsPrefix(GGtinv, ((PetscObject)cp)->prefix));
@@ -411,7 +408,6 @@ PetscErrorCode QPPFSetUp(QPPF cp)
   if (!cp->GGtinv) {
     PetscCall(MatDestroy(&cp->GGtinv));
     PetscCall(QPPFSetUpGGtinv_Private(cp, &cp->GGtinv));
-    PetscCall(PetscLogObjectParent((PetscObject)cp,(PetscObject)cp->GGtinv));
   } else {
     //PERMON_ASSERT(((Mat_Inv*)cp->GGtinv->data)->ksp->pc->setupcalled,"setupcalled");
     if (!cp->Gt) {
@@ -423,8 +419,6 @@ PetscErrorCode QPPFSetUp(QPPF cp)
   PetscCall(VecDuplicate(cp->G_left, &(cp->Gt_right)));
   PetscCall(VecDuplicate(cp->G_left, &(cp->alpha_tilde)));
   PetscCall(VecZeroEntries(cp->alpha_tilde));
-  PetscCall(PetscLogObjectParent((PetscObject)cp,(PetscObject)cp->G_left));
-  PetscCall(PetscLogObjectParent((PetscObject)cp,(PetscObject)cp->Gt_right));
 
   if (cp->GGtinv && !cp->explicitInv) PetscCall(MatInvSetUp(cp->GGtinv));
 
@@ -674,7 +668,6 @@ PetscErrorCode QPPFCreateQ(QPPF cp, Mat *newQ)
   PetscValidPointer(newQ,2);
   PetscCall(MatCreateShellPermon(((PetscObject) cp)->comm, cp->Gn, cp->Gn, cp->GN, cp->GN, cp, &Q));
   PetscCall(MatShellSetOperation(Q, MATOP_MULT, (void(*)()) QPPFMatMult_Q));
-  PetscCall(PetscLogObjectParent((PetscObject)cp,(PetscObject)Q));
   PetscCall(PetscObjectCompose((PetscObject)Q,"qppf",(PetscObject)cp));
   PetscCall(PetscObjectSetName((PetscObject)Q, "Q"));
   *newQ = Q;
@@ -694,7 +687,6 @@ PetscErrorCode QPPFCreateHalfQ(QPPF cp, Mat *newHalfQ)
   PetscCall(MatCreateShellPermon(((PetscObject) cp)->comm, cp->Gm, cp->Gn, cp->GM, cp->GN, cp, &HalfQ));
   PetscCall(MatShellSetOperation(HalfQ, MATOP_MULT, (void(*)()) QPPFMatMult_HalfQ));
   PetscCall(MatShellSetOperation(HalfQ, MATOP_MULT_TRANSPOSE, (void(*)()) QPPFMatMultTranspose_HalfQ));
-  PetscCall(PetscLogObjectParent((PetscObject)cp,(PetscObject)HalfQ));
   PetscCall(PetscObjectCompose((PetscObject)HalfQ,"qppf",(PetscObject)cp));
   PetscCall(PetscObjectSetName((PetscObject)HalfQ, "HalfQ"));
   *newHalfQ = HalfQ;
@@ -713,7 +705,6 @@ PetscErrorCode QPPFCreateP(QPPF cp, Mat *newP)
   PetscValidPointer(newP,2);
   PetscCall(MatCreateShellPermon(((PetscObject) cp)->comm, cp->Gn, cp->Gn, cp->GN, cp->GN, cp, &P));
   PetscCall(MatShellSetOperation(P, MATOP_MULT, (void(*)()) QPPFMatMult_P));
-  PetscCall(PetscLogObjectParent((PetscObject)cp,(PetscObject)P));
   PetscCall(PetscObjectCompose((PetscObject)P,"qppf",(PetscObject)cp));
   PetscCall(PetscObjectSetName((PetscObject)P, "P"));
   *newP = P;
@@ -732,7 +723,6 @@ PetscErrorCode QPPFCreateGtG(QPPF cp, Mat *newGtG)
   PetscValidPointer(newGtG,2);
   PetscCall(MatCreateShellPermon(((PetscObject) cp)->comm, cp->Gn, cp->Gn, cp->GN, cp->GN, cp, &GtG));
   PetscCall(MatShellSetOperation(GtG, MATOP_MULT, (void(*)()) QPPFMatMult_GtG));
-  PetscCall(PetscLogObjectParent((PetscObject)cp,(PetscObject)GtG));
   PetscCall(PetscObjectCompose((PetscObject)GtG,"qppf",(PetscObject)cp));
   PetscCall(PetscObjectSetName((PetscObject)GtG, "GtG"));
   *newGtG = GtG;

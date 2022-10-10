@@ -456,7 +456,7 @@ FLLOP_EXTERN PetscErrorCode QPCCreate_Box(QPC qpc)
   QPC_Box      *ctx;
 
   PetscFunctionBegin;
-  PetscCall(PetscNewLog(qpc,&ctx));
+  PetscCall(PetscNew(&ctx));
   qpc->data = (void*)ctx;
 
   /* set general QPC functions already implemented for this QPC type */

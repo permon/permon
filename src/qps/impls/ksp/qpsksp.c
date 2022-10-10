@@ -229,7 +229,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_KSP(QPS qps)
   
   PetscFunctionBegin;
   PetscCall(PetscObjectGetComm((PetscObject)qps,&comm));
-  PetscCall(PetscNewLog(qps,&qpsksp));
+  PetscCall(PetscNew(&qpsksp));
   qps->data                  = (void*)qpsksp;
   qpsksp->setfromoptionscalled = PETSC_FALSE;
   
@@ -247,7 +247,6 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_KSP(QPS qps)
   
   PetscCall(KSPCreate(comm,&qpsksp->ksp));
   PetscCall(KSPSetOptionsPrefix(qpsksp->ksp,"qps_"));
-  PetscCall(PetscLogObjectParent((PetscObject)qps,(PetscObject)qpsksp->ksp));
   PetscCall(PetscObjectIncrementTabLevel((PetscObject)qpsksp->ksp,(PetscObject)qps,1));
   PetscCall(KSPSetType(qpsksp->ksp,KSPCG));
   PetscCall(KSPSetNormType(qpsksp->ksp,KSP_NORM_UNPRECONDITIONED));

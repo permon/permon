@@ -1073,7 +1073,6 @@ PetscErrorCode QPSSetWorkVecs(QPS qps,PetscInt nw)
   PetscCall(QPSGetVecs(qps,nw,&qps->work,0,NULL));
   PetscCall(PetscMalloc1(nw,&qps->work_state));
   PetscCall(PetscMemzero(qps->work_state,nw*sizeof(PetscObjectState)));
-  PetscCall(PetscLogObjectParents(qps,nw,qps->work));
   PetscFunctionReturn(0);
 }
 

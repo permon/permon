@@ -457,7 +457,6 @@ static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
   if (!inv->ksp) {
     PetscCall(KSPCreate(PetscObjectComm((PetscObject)imat),&inv->ksp));
     PetscCall(PetscObjectIncrementTabLevel((PetscObject)inv->ksp,(PetscObject)imat,1));
-    PetscCall(PetscLogObjectParent((PetscObject)imat,(PetscObject)inv->ksp));
   }
 
   own = ((PetscObject)inv->A)->refct == 1 ? PETSC_TRUE : PETSC_FALSE;

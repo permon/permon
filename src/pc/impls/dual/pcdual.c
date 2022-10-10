@@ -182,7 +182,7 @@ FLLOP_EXTERN PetscErrorCode PCCreate_Dual(PC pc)
   PetscFunctionBegin;
   /* Create the private data structure for this preconditioner and
      attach it to the PC object.  */
-  PetscCall(PetscNewLog(pc,&ctx));
+  PetscCall(PetscNew(&ctx));
   pc->data = (void*)ctx;
   
   ctx->setfromoptionscalled = PETSC_FALSE;

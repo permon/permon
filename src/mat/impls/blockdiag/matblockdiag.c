@@ -705,7 +705,7 @@ FLLOP_EXTERN PetscErrorCode MatCreate_BlockDiag(Mat B) {
   PetscFunctionBegin;
   PetscCall(PetscObjectChangeTypeName((PetscObject)B,MATBLOCKDIAG));
 
-  PetscCall(PetscNewLog(B,&data));
+  PetscCall(PetscNew(&data));
   B->data                    = (void*) data;
   B->assembled               = PETSC_TRUE;
   B->preallocated            = PETSC_TRUE;

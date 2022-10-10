@@ -834,7 +834,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
   QPS_MPGP         *mpgp;
 
   PetscFunctionBegin;
-  PetscCall(PetscNewLog(qps,&mpgp));
+  PetscCall(PetscNew(&mpgp));
   qps->data                  = (void*)mpgp;
 
   mpgp->alpha_user           = PETSC_DECIDE;

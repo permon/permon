@@ -1130,7 +1130,6 @@ PetscErrorCode QPSetPC(QP qp, PC pc)
   PetscCall(PCDestroy(&qp->pc));
   qp->pc = pc;
   PetscCall(PetscObjectReference((PetscObject)pc));
-  PetscCall(PetscLogObjectParent((PetscObject)qp,(PetscObject)qp->pc));
   if (qp->changeListener) PetscCall((*qp->changeListener)(qp));
   PetscFunctionReturn(0);
 }
@@ -1184,7 +1183,6 @@ PetscErrorCode QPGetPC(QP qp,PC *pc)
   if (!qp->pc) {
     PetscCall(PCCreate(PetscObjectComm((PetscObject)qp),&qp->pc));
     PetscCall(PetscObjectIncrementTabLevel((PetscObject)qp->pc,(PetscObject)qp,0));
-    PetscCall(PetscLogObjectParent((PetscObject)qp,(PetscObject)qp->pc));
     PetscCall(PCSetType(qp->pc,PCNONE));
     PetscCall(PCSetOperators(qp->pc,qp->A,qp->A));
   }
@@ -2267,7 +2265,6 @@ PetscErrorCode QPGetQPPF(QP qp, QPPF *pf)
   PetscValidPointer(pf,2);
   if (!qp->pf) {
     PetscCall(QPPFCreate(PetscObjectComm((PetscObject)qp),&qp->pf));
-    PetscCall(PetscLogObjectParent((PetscObject)qp,(PetscObject)qp->pf));
     PetscCall(PetscObjectIncrementTabLevel((PetscObject)qp->pf,(PetscObject)qp,1));
     PetscCall(PetscObjectSetOptionsPrefix((PetscObject)qp->pf,((PetscObject)qp)->prefix));
     //TODO dirty that we call it unconditionally

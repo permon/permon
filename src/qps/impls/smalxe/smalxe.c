@@ -1128,7 +1128,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_SMALXE(QPS qps)
   
   PetscFunctionBegin;
   PetscCall(PetscObjectGetComm((PetscObject)qps,&comm));
-  PetscCall(PetscNewLog(qps,&smalxe));
+  PetscCall(PetscNew(&smalxe));
   qps->data                  = (void*)smalxe;
   
   /*

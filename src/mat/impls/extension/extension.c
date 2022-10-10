@@ -1117,7 +1117,7 @@ FLLOP_EXTERN PetscErrorCode MatCreate_Extension(Mat TA)
   PetscFunctionBegin;
   PetscCall(PetscObjectChangeTypeName((PetscObject)TA,MATEXTENSION));
 
-  PetscCall(PetscNewLog(TA,&data));
+  PetscCall(PetscNew(&data));
 
   /* initialize general inner data */
   TA->data                    = (void*) data;
