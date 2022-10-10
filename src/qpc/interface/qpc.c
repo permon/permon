@@ -45,12 +45,9 @@ PetscErrorCode QPCSetUp(QPC qpc)
 
   FllopTraceBegin;
 
-  /* it is necessary to set up lambdawork vectors based on given constraint data */
-  if (!qpc->ops->setup) SETERRQ(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
-
   /* prepare lambdawork vector based on the layout of given constraint data */
   /* this method is independent on layout of IS (so it is the same for IS=null) */
-  PetscCall((*qpc->ops->setup)(qpc));
+  PetscUseTypeMethod(qpc,setup);
 
   if (qpc->is) {
     /* IS is given */
@@ -73,7 +70,7 @@ PetscErrorCode QPCReset(QPC qpc)
   PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
   PetscCall(VecDestroy(&qpc->lambdawork));
   PetscCall(ISDestroy(&qpc->is));
-  if (qpc->ops->reset) PetscCall((*qpc->ops->reset)(qpc));
+  PetscTryTypeMethod(qpc,reset);
   qpc->setupcalled = PETSC_FALSE;
   PetscFunctionReturn(0);
 }
@@ -132,7 +129,7 @@ PetscErrorCode QPCView(QPC qpc,PetscViewer v)
   PetscViewerASCIIPopTab(v);
 
   if (*qpc->ops->view) {
-    PetscCall((*qpc->ops->view)(qpc,v));
+    PetscUseTypeMethod(qpc,view,v);
   } else {
     const QPCType type;
     PetscCall(QPCGetType(qpc, &type));
@@ -154,10 +151,9 @@ PetscErrorCode QPCViewKKT(QPC qpc, Vec x, PetscReal normb, PetscViewer v)
   PetscValidLogicalCollectiveReal(qpc,normb,3);
   PetscValidHeaderSpecific(v,PETSC_VIEWER_CLASSID,4);
 
-  PetscCall(QPCGetSubvector( qpc, x, &x_sub));
-  if (!qpc->ops->viewkkt) SETERRQ(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
-  PetscCall((*qpc->ops->viewkkt)(qpc, x_sub, normb, v));
-  PetscCall(QPCRestoreSubvector( qpc, x, &x_sub));
+  PetscCall(QPCGetSubvector(qpc,x,&x_sub));
+  PetscUseTypeMethod(qpc,viewkkt,x_sub,normb,v);
+  PetscCall(QPCRestoreSubvector(qpc,x,&x_sub));
   PetscFunctionReturn(0);
 }
 
@@ -181,9 +177,7 @@ PetscErrorCode QPCDestroy(QPC *qpc)
 
   PetscCall(QPCReset(*qpc));
 
-  if ((*qpc)->ops->destroy) {
-    PetscCall((*(*qpc)->ops->destroy)(*qpc));
-  }
+  PetscTryTypeMethod((*qpc),destroy);
 
   PetscCall(PetscFree((*qpc)->data));
   PetscCall(PetscHeaderDestroy(qpc));
@@ -215,7 +209,7 @@ PetscErrorCode QPCSetType(QPC qpc, const QPCType type)
     if (!create) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_UNKNOWN_TYPE,"Unable to find requested QPC type %s",type);
 
     /* Destroy the pre-existing private QPC context */
-    if (qpc->ops->destroy) PetscCall((*qpc->ops->destroy)(qpc));
+    PetscTryTypeMethod(qpc,destroy);
 
     /* Reinitialize function pointers in QPCOps structure */
     PetscCall(PetscMemzero(qpc->ops,sizeof(struct _QPCOps)));
@@ -286,8 +280,7 @@ PetscErrorCode QPCGetBlockSize(QPC qpc,PetscInt *bs)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
   PetscValidIntPointer(bs,2);
-  if (!qpc->ops->getblocksize) SETERRQ(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
-  PetscCall((*qpc->ops->getblocksize)(qpc,bs));
+  PetscUseTypeMethod(qpc,getblocksize,bs);
   PetscFunctionReturn(0);
 }
 
@@ -309,7 +302,7 @@ PetscErrorCode QPCIsLinear(QPC qpc,PetscBool *linear)
       /* default value */
       *linear = PETSC_FALSE;
   } else {
-      PetscCall((*qpc->ops->islinear)(qpc,linear));
+      PetscUseTypeMethod(qpc,islinear,linear);
   }
   PetscFunctionReturn(0);
 }
@@ -332,7 +325,7 @@ PetscErrorCode QPCIsSubsymmetric(QPC qpc,PetscBool *subsym)
       /* default value */
       *subsym = PETSC_FALSE;
   } else {
-      PetscCall((*qpc->ops->issubsymmetric)(qpc,subsym));
+      PetscUseTypeMethod(qpc,issubsymmetric,subsym);
   }
   PetscFunctionReturn(0);
 }
@@ -352,11 +345,7 @@ PetscErrorCode QPCGetNumberOfConstraints(QPC qpc,PetscInt *num)
   PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
   PetscValidIntPointer(num,2);
 
-  /* verify if there is a corresponding function of QPC type */
-  if (!qpc->ops->getnumberofconstraints) SETERRQ(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
-
-  /* QPC of this type has own implementation of getnumberofconstraints*/
-  PetscCall((*qpc->ops->getnumberofconstraints)(qpc,num));
+  PetscUseTypeMethod(qpc,getnumberofconstraints,num);
   PetscFunctionReturn(0);
 }
 
@@ -389,7 +378,7 @@ PetscErrorCode QPCGetConstraintFunction(QPC qpc, Vec x, Vec *hx)
   PetscCall(QPCGetSubvector(qpc,x,&x_sub));
 
   /* call corresponding function of QPC type */
-  PetscCall((*qpc->ops->getconstraintfunction)(qpc,x_sub,&hx_type));
+  PetscUseTypeMethod(qpc,getconstraintfunction,x_sub,&hx_type);
 
   /* hx has the same layout as lambda, in lambdawork I have computed constraint function values */
   PetscCall(QPCRestoreSubvector(qpc,x,&x_sub));
@@ -419,9 +408,7 @@ PetscErrorCode QPCRestoreConstraintFunction(QPC qpc,Vec x, Vec *hx)
   /* get block size */
   PetscCall(QPCGetBlockSize(qpc,&bs));
 
-  if (qpc->ops->restoreconstraintfunction) {
-    PetscCall((*qpc->ops->restoreconstraintfunction)(qpc,x,hx));
-  }
+  PetscTryTypeMethod(qpc,restoreconstraintfunction,x,hx);
   PetscFunctionReturn(0);
 }
 
@@ -497,7 +484,7 @@ PetscErrorCode QPCProject(QPC qpc,Vec x, Vec Px)
   PetscCall(QPCGetSubvector(qpc,x,&x_sub));
 
   /* make projection */
-  PetscCall((*qpc->ops->project)(qpc,x_sub,Px_sub));
+  PetscUseTypeMethod(qpc,project,x_sub,Px_sub);
 
   /* restore subvectors */
   PetscCall(QPCRestoreSubvector(qpc,Px,&Px_sub));
@@ -533,7 +520,7 @@ PetscErrorCode QPCFeas(QPC qpc, Vec x, Vec d, PetscScalar *alpha)
   PetscCall(QPCGetSubvector( qpc, d, &d_sub));
 
   /* compute largest step-size for the given QPC type */
-  PetscCall((*qpc->ops->feas)(qpc, x_sub, d_sub, &alpha_temp));
+  PetscUseTypeMethod(qpc, feas, x_sub, d_sub, &alpha_temp);
   PetscCallMPI(MPI_Allreduce(&alpha_temp, alpha, 1, MPIU_SCALAR, MPIU_MIN, PetscObjectComm((PetscObject)qpc)));
 
   /* restore the gradients */
@@ -574,8 +561,7 @@ PetscErrorCode QPCGrads(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
   PetscCall(QPCGetSubvector( qpc, gf, &gf_sub));
   PetscCall(QPCGetSubvector( qpc, gc, &gc_sub));
 
-  if (!qpc->ops->grads) SETERRQ(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
-  PetscCall((*qpc->ops->grads)(qpc, x_sub, g_sub, gf_sub, gc_sub));
+  PetscUseTypeMethod(qpc,grads, x_sub, g_sub, gf_sub, gc_sub);
 
   /* restore the gradients */
   PetscCall(QPCRestoreSubvector( qpc, x, &x_sub));
@@ -622,8 +608,7 @@ PetscErrorCode QPCGradReduced(QPC qpc, Vec x, Vec gf, PetscReal alpha, Vec gr)
   PetscCall(QPCGetSubvector( qpc, gf, &gf_sub));
   PetscCall(QPCGetSubvector( qpc, gr, &gr_sub));
 
-  if (!qpc->ops->gradreduced) SETERRQ(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
-  PetscCall((*qpc->ops->gradreduced)(qpc, x_sub, gf_sub, alpha, gr_sub));
+  PetscUseTypeMethod(qpc, gradreduced, x_sub, gf_sub, alpha, gr_sub);
 
   /* restore the gradients */
   PetscCall(QPCRestoreSubvector( qpc, x, &x_sub));

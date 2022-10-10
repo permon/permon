@@ -1099,9 +1099,7 @@ PetscErrorCode  PermonMatSetFromOptions(Mat B)
   PetscCall(PetscOptionsReal("-mat_is_symmetric","Checks if mat is symmetric on MatAssemblyEnd()","MatIsSymmetric",B->checksymmetrytol,&B->checksymmetrytol,NULL));
   PetscCall(PetscOptionsBool("-mat_null_space_test","Checks if provided null space is correct in MatAssemblyEnd()","MatSetNullSpaceTest",B->checknullspaceonassembly,&B->checknullspaceonassembly,NULL));
 
-  if (B->ops->setfromoptions) {
-    PetscCall((*B->ops->setfromoptions)(B,PetscOptionsObject));
-  }
+  PetscTryTypeMethod(B,setfromoptions,PetscOptionsObject);
 
   flg  = PETSC_FALSE;
   PetscCall(PetscOptionsBool("-mat_new_nonzero_location_err","Generate an error if new nonzeros are created in the matrix structure (useful to test preallocation)","MatSetOption",flg,&flg,&set));
