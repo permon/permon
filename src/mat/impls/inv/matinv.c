@@ -64,6 +64,7 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
   MatSolverType type;
   Mat_MUMPS *mumps = NULL;
   PetscReal null_pivot_threshold = -1e-8;
+  PetscBool isset,isspd;
   MPI_Comm blockComm;
 
   PetscFunctionBeginI;
@@ -88,7 +89,8 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
     }
   }
   
-  if (Kl->spd_set && Kl->spd) {
+  PetscCall(MatIsSPDKnown(Kl,&isset,&isspd));
+  if (isset && isspd) {
     defect = 0;
     mm = m;
   } else {

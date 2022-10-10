@@ -1122,15 +1122,11 @@ PetscErrorCode PermonMatCopyProperties(Mat A,Mat B)
   B->nooffprocentries            = A->nooffprocentries;
   B->assembly_subset             = A->assembly_subset;
   B->nooffproczerorows           = A->nooffproczerorows;
-  B->spd_set                     = A->spd_set;
   B->spd                         = A->spd;
   B->symmetric                   = A->symmetric;
-  B->symmetric_set               = A->symmetric_set;
-  B->symmetric_eternal           = A->symmetric_eternal;
+  B->symmetry_eternal           = A->symmetry_eternal;
   B->structurally_symmetric      = A->structurally_symmetric;
-  B->structurally_symmetric_set  = A->structurally_symmetric_set;
   B->hermitian                   = A->hermitian;
-  B->hermitian_set               = A->hermitian_set;
   PetscFunctionReturn(0);
 }
 
