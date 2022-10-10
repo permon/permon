@@ -1,5 +1,5 @@
 
-#if !defined(__TRANSM_H)
+#ifndef __TRANSM_H
 #define	__TRANSM_H
 
 typedef struct {

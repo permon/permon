@@ -1,8 +1,8 @@
 /*
     Provides an interface to the MUMPS sparse solver
 */
-#if !defined(__MUMPSIMPL_H)                                                     
-#define __MUMPSIMPL_H    
+#ifndef __MUMPSIMPL_H
+#define __MUMPSIMPL_H
 
 EXTERN_C_BEGIN
 #if defined(PETSC_USE_COMPLEX)
@@ -19,11 +19,12 @@ EXTERN_C_BEGIN
 #endif
 #endif
 EXTERN_C_END
-#define JOB_INIT -1
+#define JOB_INIT         -1
+#define JOB_NULL         0
 #define JOB_FACTSYMBOLIC 1
-#define JOB_FACTNUMERIC 2
-#define JOB_SOLVE 3
-#define JOB_END -2
+#define JOB_FACTNUMERIC  2
+#define JOB_SOLVE        3
+#define JOB_END          -2
 
 /* calls to MUMPS */
 #if defined(PETSC_USE_COMPLEX)
@@ -58,12 +59,12 @@ typedef MUMPS_INT PetscMUMPSInt;
 #endif
 
 /* macros s.t. indices match MUMPS documentation */
-#define ICNTL(I) icntl[(I)-1]
-#define CNTL(I) cntl[(I)-1]
-#define INFOG(I) infog[(I)-1]
-#define INFO(I) info[(I)-1]
+#define ICNTL(I)  icntl[(I)-1]
+#define CNTL(I)   cntl[(I)-1]
+#define INFOG(I)  infog[(I)-1]
+#define INFO(I)   info[(I)-1]
 #define RINFOG(I) rinfog[(I)-1]
-#define RINFO(I) rinfo[(I)-1]
+#define RINFO(I)  rinfo[(I)-1]
 
 typedef struct Mat_MUMPS Mat_MUMPS;
 struct Mat_MUMPS {
@@ -82,31 +83,40 @@ struct Mat_MUMPS {
 #endif
 
   MatStructure   matstruc;
-  PetscMPIInt    myid,petsc_size;
-  PetscMUMPSInt  *irn,*jcn;             /* the (i,j,v) triplets passed to mumps. */
-  PetscScalar    *val,*val_alloc;       /* For some matrices, we can directly access their data array without a buffer. For others, we need a buffer. So comes val_alloc. */
-  PetscInt64     nnz;                   /* number of nonzeros. The type is called selective 64-bit in mumps */
+  PetscMPIInt    myid, petsc_size;
+  PetscMUMPSInt *irn, *jcn;       /* the (i,j,v) triplets passed to mumps. */
+  PetscScalar   *val, *val_alloc; /* For some matrices, we can directly access their data array without a buffer. For others, we need a buffer. So comes val_alloc. */
+  PetscInt64     nnz;             /* number of nonzeros. The type is called selective 64-bit in mumps */
   PetscMUMPSInt  sym;
   MPI_Comm       mumps_comm;
-  PetscMUMPSInt  ICNTL9_pre;            /* check if ICNTL(9) is changed from previous MatSolve */
-  VecScatter     scat_rhs, scat_sol;    /* used by MatSolve() */
-  Vec            b_seq,x_seq;
-  PetscInt       ninfo,*info;           /* which INFO to display */
+  PetscMUMPSInt *ICNTL_pre;
+  PetscReal     *CNTL_pre;
+  PetscMUMPSInt  ICNTL9_pre;         /* check if ICNTL(9) is changed from previous MatSolve */
+  VecScatter     scat_rhs, scat_sol; /* used by MatSolve() */
+  PetscMUMPSInt  ICNTL20;            /* use centralized (0) or distributed (10) dense RHS */
+  PetscMUMPSInt  lrhs_loc, nloc_rhs, *irhs_loc;
+#if defined(PETSC_HAVE_OPENMP_SUPPORT)
+  PetscInt    *rhs_nrow, max_nrhs;
+  PetscMPIInt *rhs_recvcounts, *rhs_disps;
+  PetscScalar *rhs_loc, *rhs_recvbuf;
+#endif
+  Vec            b_seq, x_seq;
+  PetscInt       ninfo, *info; /* which INFO to display */
   PetscInt       sizeredrhs;
-  PetscScalar    *schur_sol;
+  PetscScalar   *schur_sol;
   PetscInt       schur_sizesol;
-  PetscMUMPSInt  *ia_alloc,*ja_alloc;   /* work arrays used for the CSR struct for sparse rhs */
-  PetscInt64     cur_ilen,cur_jlen;     /* current len of ia_alloc[], ja_alloc[] */
-  PetscErrorCode (*ConvertToTriples)(Mat,PetscInt,MatReuse,Mat_MUMPS*);
+  PetscMUMPSInt *ia_alloc, *ja_alloc; /* work arrays used for the CSR struct for sparse rhs */
+  PetscInt64     cur_ilen, cur_jlen;  /* current len of ia_alloc[], ja_alloc[] */
+  PetscErrorCode (*ConvertToTriples)(Mat, PetscInt, MatReuse, Mat_MUMPS *);
 
   /* stuff used by petsc/mumps OpenMP support*/
-  PetscBool      use_petsc_omp_support;
-  PetscOmpCtrl   omp_ctrl;              /* an OpenMP controler that blocked processes will release their CPU (MPI_Barrier does not have this guarantee) */
-  MPI_Comm       petsc_comm,omp_comm;   /* petsc_comm is petsc matrix's comm */
-  PetscInt64     *recvcount;            /* a collection of nnz on omp_master */
-  PetscMPIInt    tag,omp_comm_size;
-  PetscBool      is_omp_master;         /* is this rank the master of omp_comm */
-  MPI_Request    *reqs;
+  PetscBool    use_petsc_omp_support;
+  PetscOmpCtrl omp_ctrl;             /* an OpenMP controler that blocked processes will release their CPU (MPI_Barrier does not have this guarantee) */
+  MPI_Comm     petsc_comm, omp_comm; /* petsc_comm is petsc matrix's comm */
+  PetscInt64  *recvcount;            /* a collection of nnz on omp_master */
+  PetscMPIInt  tag, omp_comm_size;
+  PetscBool    is_omp_master; /* is this rank the master of omp_comm */
+  MPI_Request *reqs;
 };
 
 #endif
