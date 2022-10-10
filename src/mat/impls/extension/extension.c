@@ -994,7 +994,7 @@ PetscErrorCode MatMatTransposeMult_Extension_Extension_same(Mat A, Mat B, MatReu
     }
     PetscCall(PetscBLASIntCast(M_loc,&bm));
     PetscCall(PetscBLASIntCast(nElem[j],&bk));
-    PetscStackCallBLAS("BLASgemm",BLASgemm_("N","T",&bm,&bm,&bk,&_DOne,dataLoc[j],&bm,dataElem,&bm,&_DZero,arr,&bm));
+    PetscCallBLAS("BLASgemm",BLASgemm_("N","T",&bm,&bm,&bk,&_DOne,dataLoc[j],&bm,dataElem,&bm,&_DZero,arr,&bm));
     dataElem += nElem[j]*M_loc;
     if (!isSym){
       PetscCall(MatSetValues(C_out,M_loc,iCol,M_loc,iRow,arr,INSERT_VALUES));
