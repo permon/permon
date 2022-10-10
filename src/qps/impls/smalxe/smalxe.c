@@ -714,7 +714,7 @@ PetscErrorCode QPSSetFromOptions_SMALXE(QPS qps,PetscOptionItems *PetscOptionsOb
   PetscInt maxeig_iter;
 
   PetscFunctionBegin;
-  PetscOptionsHead(PetscOptionsObject,"QPSSMALXE options");
+  PetscOptionsHeadBegin(PetscOptionsObject,"QPSSMALXE options");
   PetscCall(PetscOptionsReal("-qps_smalxe_maxeig","Approximate maximum eigenvalue of the Hessian, PETSC_DECIDE means this is automatically computed.","QPSSMALXESetOperatorMaxEigenValue",smalxe->maxeig,&maxeig,&flg1));
   if (flg1) PetscCall(QPSSMALXESetOperatorMaxEigenvalue(qps,maxeig));
   PetscCall(PetscOptionsReal("-qps_smalxe_maxeig_tol","Relative tolerance to find approximate maximum eigenvalue of the Hessian, PETSC_DECIDE means QPS rtol*100","QPSSMALXESetOperatorMaxEigenvalueTolerance",smalxe->maxeig_tol,&maxeig_tol,&flg1));
@@ -776,7 +776,7 @@ PetscErrorCode QPSSetFromOptions_SMALXE(QPS qps,PetscOptionItems *PetscOptionsOb
 
   PetscCall(PetscOptionsBool("-qps_smalxe_knoll","","",smalxe->knoll,&smalxe->knoll,NULL));
   smalxe->setfromoptionscalled = PETSC_TRUE;
-  PetscOptionsTail();
+  PetscOptionsHeadEnd();
   PetscFunctionReturn(0);
 }
 

@@ -810,14 +810,14 @@ PetscErrorCode MatSetFromOptions_Inv(Mat imat,PetscOptionItems *PetscOptionsObje
   
   PetscFunctionBegin;
   inv = (Mat_Inv*) imat->data;
-  PetscOptionsHead(PetscOptionsObject,"Mat Inv options");
+  PetscOptionsHeadBegin(PetscOptionsObject,"Mat Inv options");
   
   PetscCall(PetscOptionsEnum("-mat_inv_psubcomm_type", "subcommunicator type", "", PetscSubcommTypes, (PetscEnum) inv->psubcommType, (PetscEnum*)&psubcommType, &set));
   if (set) MatInvSetPsubcommType(imat, psubcommType);
 
   inv->setfromoptionscalled = PETSC_TRUE;
 
-  PetscOptionsTail();
+  PetscOptionsHeadEnd();
   PetscFunctionReturn(0);
 }
 
