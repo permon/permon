@@ -689,6 +689,7 @@ static PetscErrorCode MatProductNumeric_BlockDiag_Extension(Mat C)
   Mat            newmat;
   PetscBool      flg = PETSC_FALSE;
 
+  PetscFunctionBegin;
   switch (product->type) {
   case MATPRODUCT_AtB:
     PetscObjectOptionsBegin((PetscObject)C);
@@ -994,7 +995,7 @@ PetscErrorCode MatMatTransposeMult_Extension_Extension_same(Mat A, Mat B, MatReu
     }
     PetscCall(PetscBLASIntCast(M_loc,&bm));
     PetscCall(PetscBLASIntCast(nElem[j],&bk));
-    PetscStackCallBLAS("BLASgemm",BLASgemm_("N","T",&bm,&bm,&bk,&_DOne,dataLoc[j],&bm,dataElem,&bm,&_DZero,arr,&bm));
+    PetscCallBLAS("BLASgemm",BLASgemm_("N","T",&bm,&bm,&bk,&_DOne,dataLoc[j],&bm,dataElem,&bm,&_DZero,arr,&bm));
     dataElem += nElem[j]*M_loc;
     if (!isSym){
       PetscCall(MatSetValues(C_out,M_loc,iCol,M_loc,iRow,arr,INSERT_VALUES));
@@ -1053,6 +1054,7 @@ static PetscErrorCode MatProductNumeric_Extension(Mat C)
   PetscInt    mattype = 0; /* make aij default type */
   const char  *allowedMats[3] = {"aij","baij","sbaij"};
 
+  PetscFunctionBegin;
   /* TODO add general mult, resulting mat MPIAIJ || extension */
   switch (product->type) {
   case MATPRODUCT_ABt:
@@ -1117,7 +1119,7 @@ FLLOP_EXTERN PetscErrorCode MatCreate_Extension(Mat TA)
   PetscFunctionBegin;
   PetscCall(PetscObjectChangeTypeName((PetscObject)TA,MATEXTENSION));
 
-  PetscCall(PetscNewLog(TA,&data));
+  PetscCall(PetscNew(&data));
 
   /* initialize general inner data */
   TA->data                    = (void*) data;

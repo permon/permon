@@ -64,7 +64,7 @@ PetscErrorCode MatPrintInfo(Mat mat)
   PetscCall(PetscPrintf(comm, "\n"));
 
   //TODO implement as type-specific methods
-  PetscCall(PetscObjectTypeCompare((PetscObject)mat, MATTRANSPOSEMAT, &flg));
+  PetscCall(PetscObjectTypeCompare((PetscObject)mat, MATTRANSPOSEVIRTUAL, &flg));
   if (flg) {
     PetscCall(MatTransposeGetMat(mat,&inmat));
     PetscCall(PetscObjectGetTabLevel((PetscObject)inmat,&tablevel));
@@ -953,7 +953,7 @@ PetscErrorCode PermonMatMatMult(Mat A,Mat B,MatReuse scall,PetscReal fill,Mat *C
 
   PetscCall(MatIsImplicitTranspose(A, &flg_A));
   PetscCall(MatIsImplicitTranspose(B, &flg_B));
-  if (flg_A && flg_B) SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_INCOMP,"both matrices #1,#2 cannot be implicit transposes (MATTRANSPOSEMAT)");
+  if (flg_A && flg_B) SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_INCOMP,"both matrices #1,#2 cannot be implicit transposes (MATTRANSPOSEVIRTUAL)");
   if (flg_A) {
     PetscCall(MatTransposeGetMat(A,&T));
     PetscCall(MatTransposeMatMult(T,B,scall,fill,C));
@@ -1099,9 +1099,7 @@ PetscErrorCode  PermonMatSetFromOptions(Mat B)
   PetscCall(PetscOptionsReal("-mat_is_symmetric","Checks if mat is symmetric on MatAssemblyEnd()","MatIsSymmetric",B->checksymmetrytol,&B->checksymmetrytol,NULL));
   PetscCall(PetscOptionsBool("-mat_null_space_test","Checks if provided null space is correct in MatAssemblyEnd()","MatSetNullSpaceTest",B->checknullspaceonassembly,&B->checknullspaceonassembly,NULL));
 
-  if (B->ops->setfromoptions) {
-    PetscCall((*B->ops->setfromoptions)(PetscOptionsObject,B));
-  }
+  PetscTryTypeMethod(B,setfromoptions,PetscOptionsObject);
 
   flg  = PETSC_FALSE;
   PetscCall(PetscOptionsBool("-mat_new_nonzero_location_err","Generate an error if new nonzeros are created in the matrix structure (useful to test preallocation)","MatSetOption",flg,&flg,&set));
@@ -1111,7 +1109,7 @@ PetscErrorCode  PermonMatSetFromOptions(Mat B)
   if (set) PetscCall(MatSetOption(B,MAT_NEW_NONZERO_ALLOCATION_ERR,flg));
 
   /* process any options handlers added with PetscObjectAddOptionsHandler() */
-  PetscCall(PetscObjectProcessOptionsHandlers(PetscOptionsObject,(PetscObject)B));
+  PetscCall(PetscObjectProcessOptionsHandlers((PetscObject)B,PetscOptionsObject));
   PetscOptionsEnd();
   PetscFunctionReturnI(0);
 }
@@ -1124,15 +1122,11 @@ PetscErrorCode PermonMatCopyProperties(Mat A,Mat B)
   B->nooffprocentries            = A->nooffprocentries;
   B->assembly_subset             = A->assembly_subset;
   B->nooffproczerorows           = A->nooffproczerorows;
-  B->spd_set                     = A->spd_set;
   B->spd                         = A->spd;
   B->symmetric                   = A->symmetric;
-  B->symmetric_set               = A->symmetric_set;
-  B->symmetric_eternal           = A->symmetric_eternal;
+  B->symmetry_eternal           = A->symmetry_eternal;
   B->structurally_symmetric      = A->structurally_symmetric;
-  B->structurally_symmetric_set  = A->structurally_symmetric_set;
   B->hermitian                   = A->hermitian;
-  B->hermitian_set               = A->hermitian_set;
   PetscFunctionReturn(0);
 }
 

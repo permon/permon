@@ -12,7 +12,7 @@
 #include "permon/private/petsc/mat/sbaij.h"
 #include "permon/private/petsc/mat/shell.h"
 #include "permon/private/petsc/mat/transm.h"
-#include "permon/private/petsc/mat/matis.h"
+#include "permon/private/petsc/mat/matisimpl.h"
 #include "permon/private/petsc/pc/redundant.h"
 #else
 #error "unsupported PETSc version"

@@ -160,14 +160,14 @@ static PetscErrorCode PCDestroy_Dual(PC pc)
 
 #undef __FUNCT__
 #define __FUNCT__ "PCSetFromOptions_Dual"
-PetscErrorCode PCSetFromOptions_Dual(PetscOptionItems *PetscOptionsObject,PC pc)
+PetscErrorCode PCSetFromOptions_Dual(PC pc,PetscOptionItems *PetscOptionsObject)
 {
   PC_Dual         *ctx = (PC_Dual*)pc->data;
 
   PetscFunctionBegin;
-  PetscOptionsHead(PetscOptionsObject,"PCDUAL options");
+  PetscOptionsHeadBegin(PetscOptionsObject,"PCDUAL options");
   PetscCall(PetscOptionsEnum("-pc_dual_type", "PCDUAL type", "PCDualSetType", PCDualTypes, (PetscEnum)ctx->pcdualtype, (PetscEnum*)&ctx->pcdualtype, NULL));
-  PetscOptionsTail();
+  PetscOptionsHeadEnd();
   ctx->setfromoptionscalled = PETSC_TRUE;
   PetscFunctionReturn(0);
 }
@@ -182,7 +182,7 @@ FLLOP_EXTERN PetscErrorCode PCCreate_Dual(PC pc)
   PetscFunctionBegin;
   /* Create the private data structure for this preconditioner and
      attach it to the PC object.  */
-  PetscCall(PetscNewLog(pc,&ctx));
+  PetscCall(PetscNew(&ctx));
   pc->data = (void*)ctx;
   
   ctx->setfromoptionscalled = PETSC_FALSE;

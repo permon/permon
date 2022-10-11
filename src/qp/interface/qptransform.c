@@ -918,7 +918,7 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
   PetscBool        B_nest_extension = PETSC_FALSE;
   PetscBool        mp = PETSC_FALSE;
   PetscBool        true_mp = PETSC_FALSE;
-  PetscBool        spd;
+  PetscBool        spdset,spd;
 
   PetscFunctionBeginI;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
@@ -989,11 +989,11 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
   /* get or compute stiffness matrix kernel (R) */
   R = NULL;
   PetscCall(QPGetOperatorNullSpace(qp,&R));
-  PetscCall(MatGetOption(qp->A,MAT_SPD,&spd));
+  PetscCall(MatIsSPDKnown(qp->A,&spdset,&spd));
   if (R) {
     PetscCall(MatInvSetNullSpace(Kplus,R));
     //TODO consider not inheriting R with 0 cols
-  } else if (spd) {
+  } else if (spdset && spd) {
     PetscCall(PetscInfo(qp,"Hessian flagged SPD => not computing null space\n"));
   } else {
     PetscInt Ncols;

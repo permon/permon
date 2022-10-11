@@ -9,7 +9,7 @@ PetscErrorCode MatIsImplicitTranspose(Mat A,PetscBool *flg)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
   PetscValidPointer(flg,2);
-  PetscCall(PetscObjectTypeCompare((PetscObject)A,MATTRANSPOSEMAT,flg));
+  PetscCall(PetscObjectTypeCompare((PetscObject)A,MATTRANSPOSEVIRTUAL,flg));
   PetscFunctionReturn(0);
 }
 
@@ -109,7 +109,7 @@ PetscErrorCode PermonMatTranspose(Mat A,MatTransposeType type,Mat *At_out)
 
   /* work-around for MATTRANSPOSE to avoid need of a new constructor */
   if (!f) {
-    PetscCall(PetscObjectTypeCompare((PetscObject)A,MATTRANSPOSEMAT,&flg));
+    PetscCall(PetscObjectTypeCompare((PetscObject)A,MATTRANSPOSEVIRTUAL,&flg));
     if (flg) f = PermonMatTranspose_Transpose;
   }
   

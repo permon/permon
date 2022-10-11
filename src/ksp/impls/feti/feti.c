@@ -172,7 +172,7 @@ FLLOP_EXTERN PetscErrorCode KSPCreate_FETI(KSP ksp)
   KSP_FETI *feti;
 
   PetscFunctionBegin;
-  PetscCall(PetscNewLog(ksp,&feti));
+  PetscCall(PetscNew(&feti));
   ksp->data = (void*)feti;
 
   //TODO norms

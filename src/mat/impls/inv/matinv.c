@@ -55,7 +55,6 @@ static PetscErrorCode MatInvGetRegularizationType_Inv(Mat imat,MatRegularization
 #if defined(PETSC_HAVE_MUMPS)
 static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
 {
-  Mat_Inv *inv = (Mat_Inv*)imat->data;
   Mat Kl=NULL,R=NULL,Rl=NULL,F=NULL;
   KSP ksp;
   PC pc;
@@ -64,6 +63,7 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
   MatSolverType type;
   Mat_MUMPS *mumps = NULL;
   PetscReal null_pivot_threshold = -1e-8;
+  PetscBool isset,isspd;
   MPI_Comm blockComm;
 
   PetscFunctionBeginI;
@@ -88,7 +88,8 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
     }
   }
   
-  if (Kl->spd_set && Kl->spd) {
+  PetscCall(MatIsSPDKnown(Kl,&isset,&isspd));
+  if (isset && isspd) {
     defect = 0;
     mm = m;
   } else {
@@ -101,11 +102,7 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
     if (flg) {
       /* If MUMPS Cholesky is used, avoid doubled factorization. */
       char opts[128];
-      if (inv->type == MAT_INV_BLOCKDIAG) {
-        PetscCall(PetscSNPrintf(opts,sizeof(opts),"-%ssub_mat_mumps_icntl_24 1 -%ssub_mat_mumps_cntl_3 %e",((PetscObject)pc)->prefix,((PetscObject)pc)->prefix,null_pivot_threshold));
-      } else {
-        PetscCall(PetscSNPrintf(opts,sizeof(opts),"-%smat_mumps_icntl_24 1 -%smat_mumps_cntl_3 %e",((PetscObject)pc)->prefix,((PetscObject)pc)->prefix,null_pivot_threshold));
-      }
+      PetscCall(PetscSNPrintf(opts,sizeof(opts),"-%smat_mumps_icntl_24 1 -%smat_mumps_cntl_3 %e",((PetscObject)pc)->prefix,((PetscObject)pc)->prefix,null_pivot_threshold));
       PetscCall(PetscOptionsInsertString(NULL,opts));
       PetscCall(PCSetFromOptions(pc));
       PetscCall(PCSetUp(pc));
@@ -457,7 +454,6 @@ static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
   if (!inv->ksp) {
     PetscCall(KSPCreate(PetscObjectComm((PetscObject)imat),&inv->ksp));
     PetscCall(PetscObjectIncrementTabLevel((PetscObject)inv->ksp,(PetscObject)imat,1));
-    PetscCall(PetscLogObjectParent((PetscObject)imat,(PetscObject)inv->ksp));
   }
 
   own = ((PetscObject)inv->A)->refct == 1 ? PETSC_TRUE : PETSC_FALSE;
@@ -803,7 +799,7 @@ PetscErrorCode MatDestroy_Inv(Mat imat)
 
 #undef __FUNCT__  
 #define __FUNCT__ "MatSetFromOptions_Inv"
-PetscErrorCode MatSetFromOptions_Inv(PetscOptionItems *PetscOptionsObject,Mat imat)
+PetscErrorCode MatSetFromOptions_Inv(Mat imat,PetscOptionItems *PetscOptionsObject)
 {
   PetscBool set;
   PetscSubcommType psubcommType;
@@ -811,14 +807,14 @@ PetscErrorCode MatSetFromOptions_Inv(PetscOptionItems *PetscOptionsObject,Mat im
   
   PetscFunctionBegin;
   inv = (Mat_Inv*) imat->data;
-  PetscOptionsHead(PetscOptionsObject,"Mat Inv options");
+  PetscOptionsHeadBegin(PetscOptionsObject,"Mat Inv options");
   
   PetscCall(PetscOptionsEnum("-mat_inv_psubcomm_type", "subcommunicator type", "", PetscSubcommTypes, (PetscEnum) inv->psubcommType, (PetscEnum*)&psubcommType, &set));
   if (set) MatInvSetPsubcommType(imat, psubcommType);
 
   inv->setfromoptionscalled = PETSC_TRUE;
 
-  PetscOptionsTail();
+  PetscOptionsHeadEnd();
   PetscFunctionReturn(0);
 }
 

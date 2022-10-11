@@ -90,7 +90,6 @@ PetscErrorCode QPSTaoGetTao(QPS qps,Tao *tao)
     PetscCall(TaoCreate(PetscObjectComm((PetscObject)qps),&qpstao->tao));
     PetscCall(TaoSetOptionsPrefix(qpstao->tao,prefix));
     PetscCall(TaoAppendOptionsPrefix(qpstao->tao,"qps_"));
-    PetscCall(PetscLogObjectParent((PetscObject)qps,(PetscObject)qpstao->tao));
     PetscCall(PetscObjectIncrementTabLevel((PetscObject)qpstao->tao,(PetscObject)qps,1));
     PetscCall(TaoSetType(qpstao->tao,TAOGPCG));
   }
@@ -226,7 +225,7 @@ PetscErrorCode QPSSolve_Tao(QPS qps)
 
 #undef __FUNCT__  
 #define __FUNCT__ "QPSSetFromOptions_Tao"
-PetscErrorCode QPSSetFromOptions_Tao(PetscOptionItems *PetscOptionsObject,QPS qps)
+PetscErrorCode QPSSetFromOptions_Tao(QPS qps,PetscOptionItems *PetscOptionsObject)
 {
   QPS_Tao          *qpstao = (QPS_Tao*)qps->data;
   
@@ -288,6 +287,7 @@ PetscErrorCode QPSReset_Tao(QPS qps)
 PetscErrorCode QPSDestroy_Tao(QPS qps)
 {
   PetscFunctionBegin;
+  PetscCall(QPSReset_Tao(qps));
   PetscCall(QPSDestroyDefault(qps));
   PetscFunctionReturn(0);  
 }
@@ -321,7 +321,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_Tao(QPS qps)
   
   PetscFunctionBegin;
   PetscCall(PetscObjectGetComm((PetscObject)qps,&comm));
-  PetscCall(PetscNewLog(qps,&qpstao));
+  PetscCall(PetscNew(&qpstao));
   qps->data                  = (void*)qpstao;
   qpstao->setfromoptionscalled = PETSC_FALSE;
   qpstao->ksp_its            = 0;
