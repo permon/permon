@@ -471,6 +471,7 @@ static PetscErrorCode MatProductNumeric_NestPermon(Mat C)
   Mat            A=product->A,B=product->B;
   Mat            newmat;
 
+  PetscFunctionBegin;
   switch (product->type) {
   case MATPRODUCT_AB:
     PetscCall(MatMatMult_NestPermon_NestPermon(A,B,product->fill,&newmat));

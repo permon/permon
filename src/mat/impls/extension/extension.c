@@ -689,6 +689,7 @@ static PetscErrorCode MatProductNumeric_BlockDiag_Extension(Mat C)
   Mat            newmat;
   PetscBool      flg = PETSC_FALSE;
 
+  PetscFunctionBegin;
   switch (product->type) {
   case MATPRODUCT_AtB:
     PetscObjectOptionsBegin((PetscObject)C);
@@ -1053,6 +1054,7 @@ static PetscErrorCode MatProductNumeric_Extension(Mat C)
   PetscInt    mattype = 0; /* make aij default type */
   const char  *allowedMats[3] = {"aij","baij","sbaij"};
 
+  PetscFunctionBegin;
   /* TODO add general mult, resulting mat MPIAIJ || extension */
   switch (product->type) {
   case MATPRODUCT_ABt:

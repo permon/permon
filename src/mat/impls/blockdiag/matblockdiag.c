@@ -341,6 +341,7 @@ static PetscErrorCode MatProductNumeric_BlockDiag_AIJ(Mat C)
   Mat            A=product->A,B=product->B;
   Mat            newmat;
 
+  PetscFunctionBegin;
   switch (product->type) {
   case MATPRODUCT_AB:
     PetscCall(MatMatMult_BlockDiag_AIJ(A,B,product->fill,&newmat));
@@ -383,6 +384,7 @@ static PetscErrorCode MatProductNumeric_BlockDiag(Mat C)
   Mat            A=product->A,B=product->B;
   Mat            newmat;
 
+  PetscFunctionBegin;
   switch (product->type) {
   case MATPRODUCT_AB:
     PetscCall(MatMatMult_BlockDiag_BlockDiag(A,B,product->fill,&newmat));
