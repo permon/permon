@@ -287,6 +287,7 @@ PetscErrorCode QPSReset_Tao(QPS qps)
 PetscErrorCode QPSDestroy_Tao(QPS qps)
 {
   PetscFunctionBegin;
+  PetscCall(QPSReset_Tao(qps));
   PetscCall(QPSDestroyDefault(qps));
   PetscFunctionReturn(0);  
 }
