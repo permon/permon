@@ -29,7 +29,7 @@ QPS Object: 2 MPI processes
             Number of updates: 70
             Number of rejects: 0
             Number of resets: 1
-            Mat Object: (J0_) 2 MPI processes
+            Mat Object: (qps_tao_blmvm_J0_) 2 MPI processes
               type: lmvmdiagbroyden
               rows=160, cols=160
                 Scale history: 1
