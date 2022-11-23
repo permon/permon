@@ -6,8 +6,6 @@
 
 static PetscErrorCode MatGetDiagonalBlock_BlockDiag(Mat,Mat*);
 
-#undef __FUNCT__
-#define __FUNCT__ "MatZeroRowsColumns_BlockDiag"
 PetscErrorCode MatZeroRowsColumns_BlockDiag(Mat A,PetscInt n,const PetscInt rows[],PetscScalar diag,Vec x,Vec b)
 {
   Mat_BlockDiag *data = (Mat_BlockDiag*) A->data;
@@ -37,8 +35,6 @@ PetscErrorCode MatZeroRowsColumns_BlockDiag(Mat A,PetscInt n,const PetscInt rows
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatZeroRows_BlockDiag"
 PetscErrorCode MatZeroRows_BlockDiag(Mat A,PetscInt n,const PetscInt rows[],PetscScalar diag,Vec x,Vec b)
 {
   Mat_BlockDiag *data = (Mat_BlockDiag*) A->data;
@@ -68,8 +64,6 @@ PetscErrorCode MatZeroRows_BlockDiag(Mat A,PetscInt n,const PetscInt rows[],Pets
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatZeroEntries_BlockDiag"
 PetscErrorCode MatZeroEntries_BlockDiag(Mat A)
 {
   Mat_BlockDiag *data = (Mat_BlockDiag*) A->data;
@@ -79,8 +73,6 @@ PetscErrorCode MatZeroEntries_BlockDiag(Mat A)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatConvert_BlockDiag_SeqAIJ"
 static PetscErrorCode MatConvert_BlockDiag_SeqAIJ(Mat A, MatType newtype, MatReuse reuse, Mat *newB)
 {
   MPI_Comm comm;
@@ -106,8 +98,6 @@ static PetscErrorCode MatConvert_BlockDiag_SeqAIJ(Mat A, MatType newtype, MatReu
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatConvert_BlockDiag_MPIAIJ"
 static PetscErrorCode MatConvert_BlockDiag_MPIAIJ(Mat A, MatType newtype, MatReuse reuse, Mat *newB)
 {
   PetscMPIInt size;
@@ -145,8 +135,6 @@ static PetscErrorCode MatConvert_BlockDiag_MPIAIJ(Mat A, MatType newtype, MatReu
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatConvert_BlockDiag_AIJ"
 static PetscErrorCode MatConvert_BlockDiag_AIJ(Mat A, MatType newtype, MatReuse reuse, Mat *newB)
 {
   PetscMPIInt size;
@@ -161,8 +149,6 @@ static PetscErrorCode MatConvert_BlockDiag_AIJ(Mat A, MatType newtype, MatReuse 
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonMatConvertBlocks_BlockDiag"
 static PetscErrorCode PermonMatConvertBlocks_BlockDiag(Mat A, MatType newtype, MatReuse reuse, Mat* B)
 {
   Mat_BlockDiag *data = (Mat_BlockDiag*) A->data;
@@ -186,8 +172,6 @@ static PetscErrorCode PermonMatConvertBlocks_BlockDiag(Mat A, MatType newtype, M
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "MatMult_BlockDiag"
 PetscErrorCode MatMult_BlockDiag(Mat mat, Vec right, Vec left) {
   Mat_BlockDiag *data = (Mat_BlockDiag*) mat->data;
 
@@ -200,8 +184,6 @@ PetscErrorCode MatMult_BlockDiag(Mat mat, Vec right, Vec left) {
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "MatMultTranspose_BlockDiag"
 PetscErrorCode MatMultTranspose_BlockDiag(Mat mat, Vec right, Vec left) {
   Mat_BlockDiag *data = (Mat_BlockDiag*) mat->data;
 
@@ -214,8 +196,6 @@ PetscErrorCode MatMultTranspose_BlockDiag(Mat mat, Vec right, Vec left) {
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMultAdd_BlockDiag"
 PetscErrorCode MatMultAdd_BlockDiag(Mat mat,Vec v1,Vec v2,Vec v3)
 {
   Mat_BlockDiag *data = (Mat_BlockDiag*) mat->data;
@@ -231,8 +211,6 @@ PetscErrorCode MatMultAdd_BlockDiag(Mat mat,Vec v1,Vec v2,Vec v3)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMultTransposeAdd_BlockDiag"
 PetscErrorCode MatMultTransposeAdd_BlockDiag(Mat mat,Vec v1,Vec v2,Vec v3)
 {
   Mat_BlockDiag *data = (Mat_BlockDiag*) mat->data;
@@ -247,8 +225,6 @@ PetscErrorCode MatMultTransposeAdd_BlockDiag(Mat mat,Vec v1,Vec v2,Vec v3)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMatMult_BlockDiag_BlockDiag"
 PetscErrorCode MatMatMult_BlockDiag_BlockDiag(Mat A, Mat B, PetscReal fill, Mat *C) {
   MPI_Comm comm;
   Mat A_loc, B_loc, C_loc;
@@ -263,8 +239,6 @@ PetscErrorCode MatMatMult_BlockDiag_BlockDiag(Mat A, Mat B, PetscReal fill, Mat 
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMatMult_BlockDiag_AIJ"
 static PetscErrorCode MatMatMult_BlockDiag_AIJ(Mat A, Mat B, PetscReal fill, Mat *C) {
   MPI_Comm comm;
   Mat A_loc, B_loc, C_loc;
@@ -290,8 +264,6 @@ static PetscErrorCode MatMatMult_BlockDiag_AIJ(Mat A, Mat B, PetscReal fill, Mat
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatTransposeMatMult_BlockDiag_BlockDiag"
 PetscErrorCode MatTransposeMatMult_BlockDiag_BlockDiag(Mat A, Mat B, PetscReal fill, Mat *C) {
   MPI_Comm comm;
   Mat A_loc, B_loc, C_loc;
@@ -306,8 +278,6 @@ PetscErrorCode MatTransposeMatMult_BlockDiag_BlockDiag(Mat A, Mat B, PetscReal f
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatTransposeMatMult_BlockDiag_AIJ"
 static PetscErrorCode MatTransposeMatMult_BlockDiag_AIJ(Mat A, Mat B, PetscReal fill, Mat *C) {
   MPI_Comm comm;
   Mat A_loc, B_loc, C_loc;
@@ -333,8 +303,6 @@ static PetscErrorCode MatTransposeMatMult_BlockDiag_AIJ(Mat A, Mat B, PetscReal 
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatProductNumeric_BlockDiag_AIJ"
 static PetscErrorCode MatProductNumeric_BlockDiag_AIJ(Mat C)
 {
   Mat_Product    *product = C->product;
@@ -358,8 +326,6 @@ static PetscErrorCode MatProductNumeric_BlockDiag_AIJ(Mat C)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatProductSymbolic_BlockDiag_AIJ"
 static PetscErrorCode MatProductSymbolic_BlockDiag_AIJ(Mat C)
 {
   PetscFunctionBegin;
@@ -367,8 +333,6 @@ static PetscErrorCode MatProductSymbolic_BlockDiag_AIJ(Mat C)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatProductSetFromOptions_BlockDiag_AIJ"
 static PetscErrorCode MatProductSetFromOptions_BlockDiag_AIJ(Mat C)
 {
   PetscFunctionBegin;
@@ -376,8 +340,6 @@ static PetscErrorCode MatProductSetFromOptions_BlockDiag_AIJ(Mat C)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatProductNumeric_BlockDiag"
 static PetscErrorCode MatProductNumeric_BlockDiag(Mat C)
 {
   Mat_Product    *product = C->product;
@@ -401,8 +363,6 @@ static PetscErrorCode MatProductNumeric_BlockDiag(Mat C)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatProductSymbolic_BlockDiag"
 static PetscErrorCode MatProductSymbolic_BlockDiag(Mat C)
 {
   PetscFunctionBegin;
@@ -410,8 +370,6 @@ static PetscErrorCode MatProductSymbolic_BlockDiag(Mat C)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatProductSetFromOptions_BlockDiag"
 static PetscErrorCode MatProductSetFromOptions_BlockDiag(Mat C)
 {
   PetscFunctionBegin;
@@ -419,8 +377,6 @@ static PetscErrorCode MatProductSetFromOptions_BlockDiag(Mat C)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "MatDestroy_BlockDiag"
 PetscErrorCode MatDestroy_BlockDiag(Mat mat) {
   Mat_BlockDiag *data;
 
@@ -435,8 +391,6 @@ PetscErrorCode MatDestroy_BlockDiag(Mat mat) {
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "MatDuplicate_BlockDiag"
 PetscErrorCode MatDuplicate_BlockDiag(Mat matin,MatDuplicateOption cpvalues,Mat *newmat)
 {
   Mat matout;
@@ -459,8 +413,6 @@ PetscErrorCode MatDuplicate_BlockDiag(Mat matin,MatDuplicateOption cpvalues,Mat 
   PetscFunctionReturn(0);  
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "MatGetDiagonalBlock_BlockDiag"
 static PetscErrorCode MatGetDiagonalBlock_BlockDiag(Mat A, Mat *A_loc) {
   Mat_BlockDiag *data = (Mat_BlockDiag*) A->data;
 
@@ -469,8 +421,6 @@ static PetscErrorCode MatGetDiagonalBlock_BlockDiag(Mat A, Mat *A_loc) {
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "MatGetInfo_BlockDiag"
 PetscErrorCode MatGetInfo_BlockDiag(Mat matin,MatInfoType flag,MatInfo *info)
 {
   Mat_BlockDiag  *mat = (Mat_BlockDiag*) matin->data;
@@ -511,8 +461,6 @@ PetscErrorCode MatGetInfo_BlockDiag(Mat matin,MatInfoType flag,MatInfo *info)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatSetOption_BlockDiag"
 PetscErrorCode MatSetOption_BlockDiag(Mat mat, MatOption op, PetscBool flg)
 {
   Mat_BlockDiag  *bd = (Mat_BlockDiag*) mat->data;
@@ -522,8 +470,6 @@ PetscErrorCode MatSetOption_BlockDiag(Mat mat, MatOption op, PetscBool flg)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatGetDiagonal_BlockDiag"
 PetscErrorCode MatGetDiagonal_BlockDiag(Mat mat,Vec d)
 {
   Mat_BlockDiag  *bd = (Mat_BlockDiag*) mat->data;
@@ -534,8 +480,6 @@ PetscErrorCode MatGetDiagonal_BlockDiag(Mat mat,Vec d)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatView_BlockDiag"
 PetscErrorCode MatView_BlockDiag(Mat mat,PetscViewer viewer)
 {
   Mat_BlockDiag  *bd = (Mat_BlockDiag*) mat->data;
@@ -575,8 +519,6 @@ PetscErrorCode MatView_BlockDiag(Mat mat,PetscViewer viewer)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatAssemblyBegin_BlockDiag"
 PetscErrorCode MatAssemblyBegin_BlockDiag(Mat mat, MatAssemblyType type)
 {
   Mat_BlockDiag  *bd = (Mat_BlockDiag*) mat->data;
@@ -586,8 +528,6 @@ PetscErrorCode MatAssemblyBegin_BlockDiag(Mat mat, MatAssemblyType type)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatAssemblyEnd_BlockDiag"
 PetscErrorCode MatAssemblyEnd_BlockDiag(Mat mat, MatAssemblyType type)
 {
   Mat_BlockDiag  *bd = (Mat_BlockDiag*) mat->data;
@@ -597,8 +537,6 @@ PetscErrorCode MatAssemblyEnd_BlockDiag(Mat mat, MatAssemblyType type)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatSetLocalToGlobalMapping_BlockDiag"
 PetscErrorCode MatSetLocalToGlobalMapping_BlockDiag(Mat x,ISLocalToGlobalMapping rmapping,ISLocalToGlobalMapping cmapping)
 {
   PetscFunctionBegin;
@@ -606,8 +544,6 @@ PetscErrorCode MatSetLocalToGlobalMapping_BlockDiag(Mat x,ISLocalToGlobalMapping
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatSetValuesLocal_BlockDiag"
 PetscErrorCode MatSetValuesLocal_BlockDiag(Mat mat,PetscInt nrow,const PetscInt irow[],PetscInt ncol,const PetscInt icol[],const PetscScalar y[],InsertMode addv)
 {
   Mat_BlockDiag *data = (Mat_BlockDiag*) mat->data;
@@ -617,8 +553,6 @@ PetscErrorCode MatSetValuesLocal_BlockDiag(Mat mat,PetscInt nrow,const PetscInt 
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatScale_BlockDiag"
 PetscErrorCode MatScale_BlockDiag(Mat mat,PetscScalar a)
 {
   Mat_BlockDiag *data = (Mat_BlockDiag*) mat->data;
@@ -628,8 +562,6 @@ PetscErrorCode MatScale_BlockDiag(Mat mat,PetscScalar a)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatGetColumnVectors_BlockDiag"
 static PetscErrorCode MatGetColumnVectors_BlockDiag(Mat mat, Vec *cols_new[])
 {
   Mat_BlockDiag *data = (Mat_BlockDiag*) mat->data;
@@ -661,8 +593,6 @@ static PetscErrorCode MatGetColumnVectors_BlockDiag(Mat mat, Vec *cols_new[])
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatRestoreColumnVectors_BlockDiag"
 static PetscErrorCode MatRestoreColumnVectors_BlockDiag(Mat mat, Vec *cols[])
 {
   Mat_BlockDiag *data = (Mat_BlockDiag*) mat->data;
@@ -683,8 +613,6 @@ static PetscErrorCode MatRestoreColumnVectors_BlockDiag(Mat mat, Vec *cols[])
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatOrthColumns_BlockDiag"
 static PetscErrorCode MatOrthColumns_BlockDiag(Mat A, MatOrthType type, MatOrthForm form, Mat *Q_new, Mat *S_new)
 {
   Mat_BlockDiag  *bd = (Mat_BlockDiag*) A->data;
@@ -699,8 +627,6 @@ static PetscErrorCode MatOrthColumns_BlockDiag(Mat A, MatOrthType type, MatOrthF
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatCreate_BlockDiag"
 FLLOP_EXTERN PetscErrorCode MatCreate_BlockDiag(Mat B) {
   Mat_BlockDiag *data;
 
@@ -753,8 +679,6 @@ FLLOP_EXTERN PetscErrorCode MatCreate_BlockDiag(Mat B) {
 
 //TODO comment, collective
 //TODO MatBlockDiagSetDiagonalBlock
-#undef __FUNCT__  
-#define __FUNCT__ "MatCreateBlockDiag"
 PetscErrorCode MatCreateBlockDiag(MPI_Comm comm, Mat block, Mat *B_new) {
   Mat_BlockDiag *data;
   PetscInt rlo,rhi,clo,chi;

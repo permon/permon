@@ -1,7 +1,5 @@
 #include <../src/qps/impls/pcpg/pcpgimpl.h>
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSIsQPCompatible_PCPG"
 /*
 QPSIsQPCompatible_PCPG - verify if the algorithm is able to solve given QP problem
 
@@ -23,8 +21,6 @@ PetscErrorCode QPSIsQPCompatible_PCPG(QPS qps,QP qp,PetscBool *flg){
 
 
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSSetup_PCPG"
 /*
  * QPSSetup_PCPG - the setup function of PCPG algorithm
  *
@@ -41,8 +37,6 @@ PetscErrorCode QPSSetup_PCPG(QPS qps){
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSSolve_PCPG"
 /*
  * QPSSolve_PCPG - the solver; solve the problem using PCPG algorithm 
  *
@@ -133,8 +127,6 @@ PetscErrorCode QPSSolve_PCPG(QPS qps){
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSCreate_PCPG"
 FLLOP_EXTERN PetscErrorCode QPSCreate_PCPG(QPS qps)
 { 
   PetscFunctionBegin;  

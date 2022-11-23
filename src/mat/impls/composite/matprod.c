@@ -1,8 +1,6 @@
 #include <permonmat.h>
 #include <../src/mat/impls/composite/permoncompositeimpl.h>
 
-#undef __FUNCT__
-#define __FUNCT__ "MatProdGetMat_Prod"
 static PetscErrorCode MatProdGetMat_Prod(Mat A,PetscInt index,Mat *Ai)
 {
   Mat_Composite     *shell = (Mat_Composite*)A->data;
@@ -24,8 +22,6 @@ static PetscErrorCode MatProdGetMat_Prod(Mat A,PetscInt index,Mat *Ai)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatProdGetMat"
 PetscErrorCode MatProdGetMat(Mat A,PetscInt i,Mat *Ai)
 {
   PetscFunctionBegin;
@@ -36,8 +32,6 @@ PetscErrorCode MatProdGetMat(Mat A,PetscInt i,Mat *Ai)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "MatMult_Prod"
 PetscErrorCode MatMult_Prod(Mat A,Vec x,Vec y)
 {
   Mat_Composite     *shell = (Mat_Composite*)A->data;  
@@ -71,8 +65,6 @@ PetscErrorCode MatMult_Prod(Mat A,Vec x,Vec y)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "MatMultTranspose_Prod"
 PetscErrorCode MatMultTranspose_Prod(Mat A,Vec x,Vec y)
 {
   Mat_Composite     *shell = (Mat_Composite*)A->data;  
@@ -106,8 +98,6 @@ PetscErrorCode MatMultTranspose_Prod(Mat A,Vec x,Vec y)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "MatMultAdd_Prod"
 PetscErrorCode MatMultAdd_Prod(Mat A,Vec x,Vec y,Vec z)
 {
   Mat_Composite     *shell = (Mat_Composite*)A->data;  
@@ -125,8 +115,6 @@ PetscErrorCode MatMultAdd_Prod(Mat A,Vec x,Vec y,Vec z)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "MatMultTransposeAdd_Prod"
 PetscErrorCode MatMultTransposeAdd_Prod(Mat A,Vec x,Vec y, Vec z)
 {
   Mat_Composite     *shell = (Mat_Composite*)A->data;  
@@ -144,8 +132,6 @@ PetscErrorCode MatMultTransposeAdd_Prod(Mat A,Vec x,Vec y, Vec z)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "MatCreate_Prod"
 FLLOP_EXTERN PetscErrorCode  MatCreate_Prod(Mat A)
 {
   PetscErrorCode (*createComposite)(Mat);
@@ -173,8 +159,6 @@ FLLOP_EXTERN PetscErrorCode  MatCreate_Prod(Mat A)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "MatCreateProd"
 /*@C
    MatCreateProd - Creates a matrix as the implicit product of zero or more matrices.
    This class is an adoption of MATCOMPOSITE type in PETSc.

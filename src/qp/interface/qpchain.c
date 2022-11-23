@@ -1,8 +1,6 @@
 
 #include <permon/private/qpimpl.h>
 
-#undef __FUNCT__
-#define __FUNCT__ "QPChainAdd"
 /*@
    QPChainAdd - Append QP into the QP chain.
 
@@ -27,8 +25,6 @@ PetscErrorCode QPChainAdd(QP qp, QPDuplicateOption opt, QP *newchild)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPChainPop"
 /*@
    QPChainPop - Delete the last QP of the chain.
 
@@ -48,8 +44,6 @@ PetscErrorCode QPChainPop(QP qp)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPChainFind"
 /*@
    QPChainFind - Find QP in the chain.
 
@@ -88,8 +82,6 @@ PetscErrorCode QPChainFind(QP qp,PetscErrorCode(*transform)(QP),QP *child)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPChainGetLast"
 /*@
    QPChainGetLast - Get last QP in the chain.
 
@@ -121,8 +113,6 @@ PetscErrorCode QPChainGetLast(QP qp,QP *last)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPChainSetUp"
 /*@
    QPChainSetUp - Calls QPSetUP() on QP and its descendants in the chain.
 
@@ -144,8 +134,6 @@ PetscErrorCode QPChainSetUp(QP qp)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPChainSetFromOptions"
 /*@
    QPChainSetFromOptions - Calls QPSetFromOptions() on QP and its descendants in the chain.
 
@@ -175,8 +163,6 @@ PetscErrorCode QPChainSetFromOptions(QP qp)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPChainPostSolve"
 /*@
    QPChainPostSolve - Apply post solve functions and optionally view. 
 
@@ -277,8 +263,6 @@ PetscErrorCode QPChainPostSolve(QP qp)
   PetscFunctionReturnI(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPChainViewKKT"
 /*@
    QPChainViewKKT - Calls QPViewKKT() on each QP in the chain.
 
@@ -322,8 +306,6 @@ PetscErrorCode QPChainViewKKT(QP qp, PetscViewer v)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPChainView"
 /*@
    QPChainView - Calls QPView() on each QP in the chain.
 
@@ -363,8 +345,6 @@ PetscErrorCode QPChainView(QP qp, PetscViewer v)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPChainViewQPPF"
 /*@
    QPChainViewQPPF - Calls QPViewQPPF() on each QP in the chain.
 

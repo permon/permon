@@ -1,7 +1,5 @@
 #include <../src/qpc/impls/box/qpcboximpl.h>
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCSetUp_Box"
 PetscErrorCode QPCSetUp_Box(QPC qpc)
 {
   QPC_Box         *ctx = (QPC_Box*)qpc->data;
@@ -18,8 +16,6 @@ PetscErrorCode QPCSetUp_Box(QPC qpc)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCGrads_Box"
 static PetscErrorCode QPCGrads_Box(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
 {
   Vec                   lb,ub;
@@ -65,8 +61,6 @@ static PetscErrorCode QPCGrads_Box(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCGradReduced_Box"
 static PetscErrorCode QPCGradReduced_Box(QPC qpc, Vec x, Vec gf, PetscReal alpha, Vec gr)
 {
   Vec                   lb,ub;
@@ -101,8 +95,6 @@ static PetscErrorCode QPCGradReduced_Box(QPC qpc, Vec x, Vec gf, PetscReal alpha
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCFeas_Box"
 static PetscErrorCode QPCFeas_Box(QPC qpc,Vec x, Vec d, PetscScalar *alpha)
 {
   Vec                   lb,ub;
@@ -151,8 +143,6 @@ static PetscErrorCode QPCFeas_Box(QPC qpc,Vec x, Vec d, PetscScalar *alpha)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCBoxSet_Box"
 static PetscErrorCode QPCBoxSet_Box(QPC qpc,Vec lb, Vec ub)
 {
   QPC_Box         *ctx = (QPC_Box*)qpc->data;
@@ -177,8 +167,6 @@ static PetscErrorCode QPCBoxSet_Box(QPC qpc,Vec lb, Vec ub)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCBoxGet_Box"
 static PetscErrorCode QPCBoxGet_Box(QPC qpc,Vec *lb,Vec *ub)
 {
   QPC_Box         *ctx = (QPC_Box*)qpc->data;
@@ -189,8 +177,6 @@ static PetscErrorCode QPCBoxGet_Box(QPC qpc,Vec *lb,Vec *ub)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCBoxGetMultipliers_Box"
 static PetscErrorCode QPCBoxGetMultipliers_Box(QPC qpc,Vec *llb,Vec *lub)
 {
   QPC_Box         *ctx = (QPC_Box*)qpc->data;
@@ -201,8 +187,6 @@ static PetscErrorCode QPCBoxGetMultipliers_Box(QPC qpc,Vec *llb,Vec *lub)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCIsLinear_Box"
 PetscErrorCode QPCIsLinear_Box(QPC qpc,PetscBool *linear)
 {
   PetscFunctionBegin;
@@ -210,8 +194,6 @@ PetscErrorCode QPCIsLinear_Box(QPC qpc,PetscBool *linear)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCIsSubsymmetric_Box"
 PetscErrorCode QPCIsSubsymmetric_Box(QPC qpc,PetscBool *subsymmetric)
 {
   PetscFunctionBegin;
@@ -219,8 +201,6 @@ PetscErrorCode QPCIsSubsymmetric_Box(QPC qpc,PetscBool *subsymmetric)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCGetBlockSize_Box"
 PetscErrorCode QPCGetBlockSize_Box(QPC qpc,PetscInt *bs)
 {
   PetscFunctionBegin;
@@ -228,8 +208,6 @@ PetscErrorCode QPCGetBlockSize_Box(QPC qpc,PetscInt *bs)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCGetNumberOfConstraints_Box"
 PetscErrorCode QPCGetNumberOfConstraints_Box(QPC qpc, PetscInt *num)
 {
   QPC_Box         *ctx = (QPC_Box*)qpc->data;
@@ -251,8 +229,6 @@ PetscErrorCode QPCGetNumberOfConstraints_Box(QPC qpc, PetscInt *num)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCGetConstraintFunction_Box"
 PetscErrorCode QPCGetConstraintFunction_Box(QPC qpc, Vec x_sub, Vec *hx_out)
 {
   QPC_Box               *ctx = (QPC_Box*)qpc->data;
@@ -293,8 +269,6 @@ PetscErrorCode QPCGetConstraintFunction_Box(QPC qpc, Vec x_sub, Vec *hx_out)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCProject_Box"
 PetscErrorCode QPCProject_Box(QPC qpc, Vec x, Vec Px)
 {
   QPC_Box         *ctx = (QPC_Box*)qpc->data;
@@ -312,8 +286,6 @@ PetscErrorCode QPCProject_Box(QPC qpc, Vec x, Vec Px)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCView_Box"
 PetscErrorCode QPCView_Box(QPC qpc, PetscViewer viewer)
 {
   QPC_Box         *ctx = (QPC_Box*)qpc->data;
@@ -336,8 +308,6 @@ PetscErrorCode QPCView_Box(QPC qpc, PetscViewer viewer)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCViewKKT_Box"
 PetscErrorCode QPCViewKKT_Box(QPC qpc, Vec x, PetscReal normb, PetscViewer v)
 {
   QPC_Box         *ctx = (QPC_Box*)qpc->data;
@@ -431,8 +401,6 @@ PetscErrorCode QPCViewKKT_Box(QPC qpc, Vec x, PetscReal normb, PetscViewer v)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCDestroy_Box"
 PetscErrorCode QPCDestroy_Box(QPC qpc)
 {
   QPC_Box      *ctx = (QPC_Box*)qpc->data;
@@ -449,8 +417,6 @@ PetscErrorCode QPCDestroy_Box(QPC qpc)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCCreate_Box"
 FLLOP_EXTERN PetscErrorCode QPCCreate_Box(QPC qpc)
 {
   QPC_Box      *ctx;
@@ -488,8 +454,6 @@ FLLOP_EXTERN PetscErrorCode QPCCreate_Box(QPC qpc)
 }
 
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCBoxSet"
 PetscErrorCode QPCBoxSet(QPC qpc,Vec lb, Vec ub)
 {
   PetscFunctionBegin;
@@ -515,8 +479,6 @@ PetscErrorCode QPCBoxSet(QPC qpc,Vec lb, Vec ub)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCBoxGet"
 PetscErrorCode QPCBoxGet(QPC qpc,Vec *lb, Vec *ub)
 {
   PetscFunctionBegin;
@@ -528,8 +490,6 @@ PetscErrorCode QPCBoxGet(QPC qpc,Vec *lb, Vec *ub)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCBoxGetMultipliers"
 PetscErrorCode QPCBoxGetMultipliers(QPC qpc,Vec *llb,Vec *lub)
 {
   PetscFunctionBegin;
@@ -541,8 +501,6 @@ PetscErrorCode QPCBoxGetMultipliers(QPC qpc,Vec *llb,Vec *lub)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCCreateBox"
 /*@
 QPCCreateBox - create QPC Box instance; set the type of QPC to Box, set vector of variables, set index set of constrained components, set the value of lower and upper bounds
 

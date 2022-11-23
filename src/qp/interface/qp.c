@@ -19,8 +19,6 @@ static PetscErrorCode QPSetFromOptions_Private(QP qp);
   PetscCall(PetscViewerASCIIPrintf(v, "||%2s|| = %.8e    max(%2s) = %.2e = %2s(%d)    min(%2s) = %.2e = %2s(%d)    %p\n",name,norm,name,max,name,imax,name,min,name,imin,(void*)x));\
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPInitializeInitialVector_Private"
 static PetscErrorCode QPInitializeInitialVector_Private(QP qp)
 {
   Vec xp, xc;
@@ -43,8 +41,6 @@ static PetscErrorCode QPInitializeInitialVector_Private(QP qp)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPAddChild"
 PetscErrorCode QPAddChild(QP qp, QPDuplicateOption opt, QP *newchild)
 {
   QP child;
@@ -61,8 +57,6 @@ PetscErrorCode QPAddChild(QP qp, QPDuplicateOption opt, QP *newchild)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPRemoveChild"
 PetscErrorCode QPRemoveChild(QP qp)
 {
   PetscFunctionBegin;
@@ -76,8 +70,6 @@ PetscErrorCode QPRemoveChild(QP qp)
 }
 
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCreate"
 /*@
    QPCreate - Creates a quadratic programming problem (QP) object.
    
@@ -149,8 +141,6 @@ PetscErrorCode QPCreate(MPI_Comm comm, QP *qp_new)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPDuplicate"
 /*@
    QPDuplicate - Duplicate QP object.
 
@@ -201,8 +191,6 @@ PetscErrorCode QPDuplicate(QP qp1,QPDuplicateOption opt,QP *qp2)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCompareEqMultiplierWithLeastSquare"
 PetscErrorCode QPCompareEqMultiplierWithLeastSquare(QP qp,PetscReal *norm)
 {
   Vec BEt_lambda = NULL;
@@ -229,8 +217,6 @@ PetscErrorCode QPCompareEqMultiplierWithLeastSquare(QP qp,PetscReal *norm)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPViewKKT"
 /*@
    QPViewKKT - Print how well are KKT conditions satisfied with the computed minimizer and Lagrange multipliers.
 
@@ -372,8 +358,6 @@ PetscErrorCode QPViewKKT(QP qp,PetscViewer v)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPView"
 /*@
    QPView - Print information about the QP.
 
@@ -443,8 +427,6 @@ PetscErrorCode QPView(QP qp,PetscViewer v)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPReset"
 /*@
    QPReset - Resets a QP context to the setupcalled = 0 and solved = 0 state,
      and destroys the Vecs and Mats describing the data as well as PC and child QP.
@@ -490,8 +472,6 @@ PetscErrorCode QPReset(QP qp)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSetUpInnerObjects"
 PetscErrorCode QPSetUpInnerObjects(QP qp)
 {
   MPI_Comm comm;
@@ -605,8 +585,6 @@ PetscErrorCode QPSetUpInnerObjects(QP qp)
   PetscFunctionReturnI(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSetUp"
 /*@
    QPSetUp - Sets up the internal data structures for the QP.
 
@@ -640,8 +618,6 @@ PetscErrorCode QPSetUp(QP qp)
   PetscFunctionReturnI(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCompute_BEt_lambda"
 PetscErrorCode QPCompute_BEt_lambda(QP qp,Vec *BEt_lambda)
 {
   PetscBool   flg=PETSC_FALSE;
@@ -674,8 +650,6 @@ PetscErrorCode QPCompute_BEt_lambda(QP qp,Vec *BEt_lambda)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPComputeLagrangianGradient"
 PetscErrorCode QPComputeLagrangianGradient(QP qp, Vec x, Vec r, char *kkt_name_[])
 {
   Vec         b,cE,cI,Bt_lambda=NULL;
@@ -780,8 +754,6 @@ PetscErrorCode QPComputeLagrangianGradient(QP qp, Vec x, Vec r, char *kkt_name_[
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPComputeMissingEqMultiplier"
 PetscErrorCode QPComputeMissingEqMultiplier(QP qp)
 {
   Vec r = qp->xwork;
@@ -831,8 +803,6 @@ PetscErrorCode QPComputeMissingEqMultiplier(QP qp)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPComputeMissingBoxMultipliers"
 PetscErrorCode QPComputeMissingBoxMultipliers(QP qp)
 {
   Vec lb,ub;
@@ -900,8 +870,6 @@ PetscErrorCode QPComputeMissingBoxMultipliers(QP qp)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPComputeObjective"
 /*@
    QPComputeObjective - Evaluate the quadratic objective function f(x) = 1/2*x'*A*x - x'*b.
 
@@ -935,8 +903,6 @@ PetscErrorCode QPComputeObjective(QP qp, Vec x, PetscReal *f)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPComputeObjectiveGradient"
 /*@
    QPComputeObjectiveGradient - Computes the gradient of the quadratic objective function g(x) = Ax - b.
 
@@ -965,8 +931,6 @@ PetscErrorCode QPComputeObjectiveGradient(QP qp, Vec x, Vec g)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPComputeObjectiveFromGradient"
 /*@
    QPComputeObjectiveFromGradient - Evaluate the quadratic objective function f(x) = 1/2*x'*A*x - x'*b using known gradient.
 
@@ -1003,8 +967,6 @@ PetscErrorCode QPComputeObjectiveFromGradient(QP qp, Vec x, Vec g, PetscReal *f)
 }
 
 
-#undef __FUNCT__
-#define __FUNCT__ "QPComputeObjectiveAndGradient"
 /*@
    QPComputeObjectiveAndGradient - Computes the objective and gradient at once.
 
@@ -1046,8 +1008,6 @@ PetscErrorCode QPComputeObjectiveAndGradient(QP qp, Vec x, Vec g, PetscReal *f)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPDestroy"
 /*@
    QPDestroy - Destroys the QP object.
 
@@ -1076,8 +1036,6 @@ PetscErrorCode QPDestroy(QP *qp)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSetOperator"
 /*@
    QPSetOperator - Sets the Hessian matrix
 
@@ -1107,8 +1065,6 @@ PetscErrorCode QPSetOperator(QP qp, Mat A)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSetPC"
 /*@
    QPSetPC - Sets preconditioner context.
 
@@ -1134,8 +1090,6 @@ PetscErrorCode QPSetPC(QP qp, PC pc)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPGetOperator"
 /*@
    QPGetOperator - Get the Hessian matrix.
 
@@ -1160,8 +1114,6 @@ PetscErrorCode QPGetOperator(QP qp,Mat *A)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPGetPC"
 /*@
    QPGetPC - Get preconditioner context.
 
@@ -1190,8 +1142,6 @@ PetscErrorCode QPGetPC(QP qp,PC *pc)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSetOperatorNullSpace"
 /*@
    QPSetOperatorNullSpace - Sets matrix with columns representing the null space of the Hessian operator.
 
@@ -1223,8 +1173,6 @@ PetscErrorCode QPSetOperatorNullSpace(QP qp,Mat R)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPGetOperatorNullSpace"
 /*@
    QPGetOperatorNullSpace - Get matrix with columns representing the null space of the Hessian operator.
 
@@ -1249,8 +1197,6 @@ PetscErrorCode QPGetOperatorNullSpace(QP qp,Mat *R)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSetRhs"
 /*@
    QPSetRhs - Set the QP right hand side (linear term) b with '-' sign, i.e. objective function 1/2*x'*A'*x - x'*b.
 
@@ -1287,8 +1233,6 @@ PetscErrorCode QPSetRhs(QP qp,Vec b)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSetRhsPlus"
 /*@
    QPSetRhsPlus - Set the QP right hand side (linear term) b with '+' sign, i.e. objective function 1/2*x'*A'*x + x'*b.
 
@@ -1325,8 +1269,6 @@ PetscErrorCode QPSetRhsPlus(QP qp,Vec b)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPGetRhs"
 /*@
    QPGetRhs - Get the QPs right hand side.
 
@@ -1351,8 +1293,6 @@ PetscErrorCode QPGetRhs(QP qp,Vec *b)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSetIneq"
 /*@
    QPSetIneq - Sets the inequality constraints.
 
@@ -1425,8 +1365,6 @@ PetscErrorCode QPSetIneq(QP qp, Mat Bineq, Vec cineq)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPGetIneq"
 /*@
    QPGetIneq - Get the inequality constraints.
 
@@ -1458,8 +1396,6 @@ PetscErrorCode QPGetIneq(QP qp, Mat *Bineq, Vec *cineq)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSetEq"
 /*@
    QPSetEq - Sets the equality constraints.
 
@@ -1537,8 +1473,6 @@ PetscErrorCode QPSetEq(QP qp, Mat Beq, Vec ceq)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPAddEq"
 /*@
    QPAddEq - Add the equality constraints.
 
@@ -1644,8 +1578,6 @@ PetscErrorCode QPAddEq(QP qp, Mat Beq, Vec ceq)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPGetEqMultiplicityScaling"
 PetscErrorCode QPGetEqMultiplicityScaling(QP qp, Vec *dE_new, Vec *dI_new)
 {
   MPI_Comm comm;
@@ -1824,8 +1756,6 @@ PetscErrorCode QPGetEqMultiplicityScaling(QP qp, Vec *dE_new, Vec *dI_new)
   PetscFunctionReturnI(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPGetEq"
 /*@
    QPGetEq - Get the equality constraints.
 
@@ -1857,8 +1787,6 @@ PetscErrorCode QPGetEq(QP qp, Mat *Beq, Vec *ceq)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSetBox"
 /*@
    QPSetBox - Sets the box constraints.
 
@@ -1899,8 +1827,6 @@ PetscErrorCode QPSetBox(QP qp, IS is, Vec lb, Vec ub)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPGetBox"
 /*@
    QPGetBox - Get the box constraints.
 
@@ -1939,8 +1865,6 @@ PetscErrorCode QPGetBox(QP qp, IS *is, Vec *lb, Vec *ub)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSetEqMultiplier"
 PetscErrorCode QPSetEqMultiplier(QP qp, Vec lambda_E)
 {
   PetscFunctionBegin;
@@ -1959,8 +1883,6 @@ PetscErrorCode QPSetEqMultiplier(QP qp, Vec lambda_E)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSetIneqMultiplier"
 PetscErrorCode QPSetIneqMultiplier(QP qp, Vec lambda_I)
 {
   PetscFunctionBegin;
@@ -1979,8 +1901,6 @@ PetscErrorCode QPSetIneqMultiplier(QP qp, Vec lambda_I)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSetInitialVector"
 /*@
    QPSetInitialVector - Sets the inital guess of the solution.
 
@@ -2017,8 +1937,6 @@ PetscErrorCode QPSetInitialVector(QP qp,Vec x)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPGetSolutionVector"
 /*@
    QPGetSolutionVector - Get the solution vector.
 
@@ -2044,8 +1962,6 @@ PetscErrorCode QPGetSolutionVector(QP qp,Vec *x)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSetWorkVector"
 /*@
    QPSetWorkVector - Set work vector.
 
@@ -2072,8 +1988,6 @@ PetscErrorCode QPSetWorkVector(QP qp,Vec xwork)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPGetVecs"
 /*@
    QPGetVecs - Get vector(s) compatible with the QP operator matrix, i.e. with the same
      parallel layout
@@ -2106,8 +2020,6 @@ PetscErrorCode QPGetVecs(QP qp,Vec *right,Vec *left)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSetChangeListener"
 PetscErrorCode QPSetChangeListener(QP qp,PetscErrorCode (*f)(QP))
 {
   PetscFunctionBegin;
@@ -2116,8 +2028,6 @@ PetscErrorCode QPSetChangeListener(QP qp,PetscErrorCode (*f)(QP))
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPGetChangeListener"
 PetscErrorCode QPGetChangeListener(QP qp,PetscErrorCode (**f)(QP))
 {
   PetscFunctionBegin;
@@ -2126,8 +2036,6 @@ PetscErrorCode QPGetChangeListener(QP qp,PetscErrorCode (**f)(QP))
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSetChangeListenerContext"
 PetscErrorCode QPSetChangeListenerContext(QP qp,void *ctx)
 {
   PetscFunctionBegin;
@@ -2136,8 +2044,6 @@ PetscErrorCode QPSetChangeListenerContext(QP qp,void *ctx)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPGetChangeListenerContext"
 PetscErrorCode QPGetChangeListenerContext(QP qp,void *ctx)
 {
   PetscFunctionBegin;
@@ -2147,8 +2053,6 @@ PetscErrorCode QPGetChangeListenerContext(QP qp,void *ctx)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPGetChild"
 /*@
    QPGetChild - Get QP child within QP chain.
 
@@ -2171,8 +2075,6 @@ PetscErrorCode QPGetChild(QP qp,QP *child)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPGetParent"
 /*@
    QPGetParent - Get QP parent within QP chain.
 
@@ -2195,8 +2097,6 @@ PetscErrorCode QPGetParent(QP qp,QP *parent)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPGetPostSolve"
 /*@
    QPGetPostSolve - Get QP post solve function.
 
@@ -2220,8 +2120,6 @@ PetscErrorCode QPGetPostSolve(QP qp, PetscErrorCode (**f)(QP,QP))
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPGetTransform"
 /*@
    QPGetTransform - Get QP transform which derived this QP.
 
@@ -2243,8 +2141,6 @@ PetscErrorCode QPGetTransform(QP qp,PetscErrorCode(**f)(QP))
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPGetQPPF"
 /*@
    QPGetQPPF - Get QPPF associated with QP.
 
@@ -2274,8 +2170,6 @@ PetscErrorCode QPGetQPPF(QP qp, QPPF *pf)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSetQPPF"
 /*@
    QPSetQPPF - Set QPPF into QP.
 
@@ -2301,8 +2195,6 @@ PetscErrorCode QPSetQPPF(QP qp, QPPF pf)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPIsSolved"
 /*@
    QPIsSolved - Is the QP solved, i.e. is the vector returned by QPGetSolutionVector() the sought-after minimizer?
      Set to PETSC_TRUE if QPSSolve() converges (last QP in chain) or the post-solve function has been called.
@@ -2326,8 +2218,6 @@ PetscErrorCode QPIsSolved(QP qp,PetscBool *flg)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSetQPC"
 /*
    QPSetQPC - add constraints to QP problem
 
@@ -2351,8 +2241,6 @@ PetscErrorCode QPSetQPC(QP qp, QPC qpc)
 }
 
 
-#undef __FUNCT__
-#define __FUNCT__ "QPGetQPC"
 /*
    QPGetQPC - return constraints from QP
 
@@ -2374,8 +2262,6 @@ PetscErrorCode QPGetQPC(QP qp, QPC *qpc)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSetOptionsPrefix"
 /*@
    QPSetOptionsPrefix - Sets the prefix used for searching for all
    QP options in the database.
@@ -2407,8 +2293,6 @@ PetscErrorCode QPSetOptionsPrefix(QP qp,const char prefix[])
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPAppendOptionsPrefix"
 /*@
    QPAppendOptionsPrefix - Appends to the prefix used for searching for all
    QP options in the database.
@@ -2439,8 +2323,6 @@ PetscErrorCode QPAppendOptionsPrefix(QP qp,const char prefix[])
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPGetOptionsPrefix"
 /*@
    QPGetOptionsPrefix - Gets the prefix used for searching for all
    QP options in the database.
@@ -2465,8 +2347,6 @@ PetscErrorCode QPGetOptionsPrefix(QP qp,const char *prefix[])
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSetFromOptions_Private"
 static PetscErrorCode QPSetFromOptions_Private(QP qp)
 {
   PetscFunctionBegin;
@@ -2489,8 +2369,6 @@ static PetscErrorCode QPSetFromOptions_Private(QP qp)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSetFromOptions"
 /*@
    QPSetFromOptions - Sets QP options from the options database.
 

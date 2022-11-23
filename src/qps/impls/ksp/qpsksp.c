@@ -1,8 +1,6 @@
 
 #include <../src/qps/impls/ksp/qpskspimpl.h>
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSKSPConverged_KSP"
 static PetscErrorCode QPSKSPConverged_KSP(KSP ksp,PetscInt i,PetscReal rnorm,KSPConvergedReason *reason,void *ctx)
 {
   QPS qps = (QPS) ctx;
@@ -14,8 +12,6 @@ static PetscErrorCode QPSKSPConverged_KSP(KSP ksp,PetscInt i,PetscReal rnorm,KSP
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSKSPSynchronize_KSP"
 /* synchronize operators and tolerances of the QPS and its underlying KSP */
 static PetscErrorCode QPSKSPSynchronize_KSP(QPS qps)
 {
@@ -39,8 +35,6 @@ static PetscErrorCode QPSKSPSynchronize_KSP(QPS qps)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSKSPSetKSP"
 PetscErrorCode QPSKSPSetKSP(QPS qps,KSP ksp)
 {
   PetscBool flg;
@@ -64,8 +58,6 @@ PetscErrorCode QPSKSPSetKSP(QPS qps,KSP ksp)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSKSPGetKSP"
 PetscErrorCode QPSKSPGetKSP(QPS qps,KSP *ksp)
 {
   PetscBool flg;
@@ -81,8 +73,6 @@ PetscErrorCode QPSKSPGetKSP(QPS qps,KSP *ksp)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSKSPSetType"
 PetscErrorCode QPSKSPSetType(QPS qps,KSPType type)
 {
   PetscBool flg;
@@ -97,8 +87,6 @@ PetscErrorCode QPSKSPSetType(QPS qps,KSPType type)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSKSPGetType"
 PetscErrorCode QPSKSPGetType(QPS qps,KSPType *type)
 {
   PetscBool flg;
@@ -113,8 +101,6 @@ PetscErrorCode QPSKSPGetType(QPS qps,KSPType *type)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSSetUp_KSP"
 PetscErrorCode QPSSetUp_KSP(QPS qps)
 {
   QPS_KSP          *qpsksp = (QPS_KSP*)qps->data;
@@ -127,8 +113,6 @@ PetscErrorCode QPSSetUp_KSP(QPS qps)
   PetscFunctionReturn(0);  
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSSolve_KSP"
 PetscErrorCode QPSSolve_KSP(QPS qps)
 {
   QPS_KSP          *qpsksp = (QPS_KSP*)qps->data;
@@ -148,8 +132,6 @@ PetscErrorCode QPSSolve_KSP(QPS qps)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSSetFromOptions_KSP"
 PetscErrorCode QPSSetFromOptions_KSP(QPS qps,PetscOptionItems *PetscOptionsObject)
 {
   QPS_KSP          *qpsksp = (QPS_KSP*)qps->data;
@@ -159,8 +141,6 @@ PetscErrorCode QPSSetFromOptions_KSP(QPS qps,PetscOptionItems *PetscOptionsObjec
   PetscFunctionReturn(0);  
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSView_KSP"
 PetscErrorCode QPSView_KSP(QPS qps, PetscViewer v)
 {
   QPS_KSP          *qpsksp = (QPS_KSP*)qps->data;
@@ -171,8 +151,6 @@ PetscErrorCode QPSView_KSP(QPS qps, PetscViewer v)
   PetscFunctionReturn(0);  
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSViewConvergence_KSP"
 PetscErrorCode QPSViewConvergence_KSP(QPS qps, PetscViewer v)
 {
   PetscBool     iascii;
@@ -188,8 +166,6 @@ PetscErrorCode QPSViewConvergence_KSP(QPS qps, PetscViewer v)
 }
 
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSDestroy_KSP"
 PetscErrorCode QPSDestroy_KSP(QPS qps)
 {
   QPS_KSP         *qpsksp = (QPS_KSP*)qps->data;
@@ -200,8 +176,6 @@ PetscErrorCode QPSDestroy_KSP(QPS qps)
   PetscFunctionReturn(0);  
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSIsQPCompatible_KSP"
 PetscErrorCode QPSIsQPCompatible_KSP(QPS qps,QP qp,PetscBool *flg)
 {
   Mat Beq,Bineq;
@@ -220,8 +194,6 @@ PetscErrorCode QPSIsQPCompatible_KSP(QPS qps,QP qp,PetscBool *flg)
   PetscFunctionReturn(0);   
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSCreate_KSP"
 FLLOP_EXTERN PetscErrorCode QPSCreate_KSP(QPS qps)
 {
   QPS_KSP         *qpsksp;

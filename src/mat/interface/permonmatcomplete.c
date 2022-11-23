@@ -1,8 +1,6 @@
 
 #include <permon/private/permonmatimpl.h>
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMult_Complete"
 PetscErrorCode MatMult_Complete(Mat A, Vec x, Vec y)
 {
   MatCompleteCtx ctx;
@@ -18,8 +16,6 @@ PetscErrorCode MatMult_Complete(Mat A, Vec x, Vec y)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMultAdd_Complete"
 PetscErrorCode MatMultAdd_Complete(Mat A, Vec x, Vec x1, Vec y)
 {
   MatCompleteCtx ctx;
@@ -36,8 +32,6 @@ PetscErrorCode MatMultAdd_Complete(Mat A, Vec x, Vec x1, Vec y)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatDuplicate_Complete"
 PetscErrorCode MatDuplicate_Complete(Mat A,MatDuplicateOption op,Mat *M)
 {
   MatCompleteCtx ctx;
@@ -57,8 +51,6 @@ PetscErrorCode MatDuplicate_Complete(Mat A,MatDuplicateOption op,Mat *M)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatCompleteCtxCreate"
 PetscErrorCode MatCompleteCtxCreate(Mat A, MatCompleteCtx *ctxout)
 {
   MatCompleteCtx ctx;
@@ -75,8 +67,6 @@ PetscErrorCode MatCompleteCtxCreate(Mat A, MatCompleteCtx *ctxout)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatCompleteCtxDestroy"
 PetscErrorCode MatCompleteCtxDestroy(MatCompleteCtx ctx)
 {
   PetscFunctionBegin;
@@ -85,8 +75,6 @@ PetscErrorCode MatCompleteCtxDestroy(MatCompleteCtx ctx)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatCompleteFromUpperTriangular"
 PetscErrorCode MatCompleteFromUpperTriangular(Mat A)
 {
   MPI_Comm comm;

@@ -4,8 +4,6 @@
 PetscLogEvent Mat_GetMaxEigenvalue,Mat_FilterZeros,Mat_MergeAndDestroy,PermonMat_GetLocalMat;
 PetscInt MatGetMaxEigenvalue_composed_id;
 
-#undef __FUNCT__
-#define __FUNCT__ "MatFactored"
 PetscErrorCode MatFactored(Mat mat, PetscBool *flg)
 {
   PetscFunctionBegin;
@@ -13,8 +11,6 @@ PetscErrorCode MatFactored(Mat mat, PetscBool *flg)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatPrintInfo"
 PetscErrorCode MatPrintInfo(Mat mat)
 {
   PetscInt m, n, M, N, i, tablevel;
@@ -104,8 +100,6 @@ PetscErrorCode MatPrintInfo(Mat mat)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatIsIdentity"
 PetscErrorCode MatIsIdentity(Mat A, PetscReal tol, PetscInt ntrials, PetscBool *flg)
 {
   Mat E;
@@ -126,8 +120,6 @@ PetscErrorCode MatIsIdentity(Mat A, PetscReal tol, PetscInt ntrials, PetscBool *
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatIsZero"
 PetscErrorCode MatIsZero(Mat A, PetscReal tol, PetscInt ntrials, PetscBool *flg)
 {
   Mat O;
@@ -144,8 +136,6 @@ PetscErrorCode MatIsZero(Mat A, PetscReal tol, PetscInt ntrials, PetscBool *flg)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatIsSymmetricByType"
 PetscErrorCode MatIsSymmetricByType(Mat A, PetscBool *flg)
 {
   PetscBool _flg = PETSC_FALSE;
@@ -162,8 +152,6 @@ PetscErrorCode MatIsSymmetricByType(Mat A, PetscBool *flg)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMult_Identity"
 PetscErrorCode MatMult_Identity(Mat E, Vec x, Vec y)
 {
   PetscFunctionBegin;
@@ -171,16 +159,12 @@ PetscErrorCode MatMult_Identity(Mat E, Vec x, Vec y)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMultAdd_Identity"
 PetscErrorCode MatMultAdd_Identity(Mat E, Vec x, Vec y, Vec z)
 {
   PetscFunctionBegin;
   PetscCall(VecWAXPY(z,1.0,x,y));
   PetscFunctionReturn(0);
 }
-#undef __FUNCT__
-#define __FUNCT__ "MatCreateIdentity"
 PetscErrorCode MatCreateIdentity(MPI_Comm comm, PetscInt m, PetscInt n, PetscInt N, Mat *E)
 {
   PetscFunctionBegin;
@@ -194,8 +178,6 @@ PetscErrorCode MatCreateIdentity(MPI_Comm comm, PetscInt m, PetscInt n, PetscInt
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMult_Zero"
 PetscErrorCode MatMult_Zero(Mat O, Vec x, Vec y)
 {
   PetscFunctionBegin;
@@ -203,16 +185,12 @@ PetscErrorCode MatMult_Zero(Mat O, Vec x, Vec y)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMultAdd_Zero"
 PetscErrorCode MatMultAdd_Zero(Mat O, Vec x, Vec y, Vec z)
 {
   PetscFunctionBegin;
   PetscCall(VecZeroEntries(z));
   PetscFunctionReturn(0);
 }
-#undef __FUNCT__
-#define __FUNCT__ "MatCreateZero"
 PetscErrorCode MatCreateZero(MPI_Comm comm, PetscInt m, PetscInt n, PetscInt M, PetscInt N, Mat *O)
 {
   PetscFunctionBegin;
@@ -226,8 +204,6 @@ PetscErrorCode MatCreateZero(MPI_Comm comm, PetscInt m, PetscInt n, PetscInt M, 
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMult_Diag"
 PetscErrorCode MatMult_Diag(Mat D, Vec x, Vec y)
 {
   Vec d;
@@ -238,8 +214,6 @@ PetscErrorCode MatMult_Diag(Mat D, Vec x, Vec y)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMultAdd_Diag"
 PetscErrorCode MatMultAdd_Diag(Mat D, Vec x, Vec y, Vec z)
 {
   Vec d;
@@ -251,8 +225,6 @@ PetscErrorCode MatMultAdd_Diag(Mat D, Vec x, Vec y, Vec z)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatDestroy_Diag"
 PetscErrorCode MatDestroy_Diag(Mat D, Vec x, Vec y, Vec z)
 {
   Vec d;
@@ -263,8 +235,6 @@ PetscErrorCode MatDestroy_Diag(Mat D, Vec x, Vec y, Vec z)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatGetDiagonal_Diag"
 PetscErrorCode MatGetDiagonal_Diag(Mat D,Vec out_d)
 {
   Vec d;
@@ -275,8 +245,6 @@ PetscErrorCode MatGetDiagonal_Diag(Mat D,Vec out_d)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatCreateDiag"
 PetscErrorCode MatCreateDiag(Vec d, Mat *D)
 {
   PetscInt m,M;
@@ -297,8 +265,6 @@ PetscErrorCode MatCreateDiag(Vec d, Mat *D)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatCreateOperatorFromUpperTriangular"
 PetscErrorCode MatCreateOperatorFromUpperTriangular(Mat U, Mat *A)
 {
   Mat A_arr[3],L,D;
@@ -321,8 +287,6 @@ PetscErrorCode MatCreateOperatorFromUpperTriangular(Mat U, Mat *A)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMultEqualTol_Private"
 static PetscErrorCode MatMultEqualTol_Private(Mat A,PetscBool transpose,Mat B,PetscInt n,PetscReal tol,PetscBool  *flg)
 {
   Vec            x,s1,s2;
@@ -389,8 +353,6 @@ static PetscErrorCode MatMultEqualTol_Private(Mat A,PetscBool transpose,Mat B,Pe
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMultEqualTol"
 PetscErrorCode MatMultEqualTol(Mat A,Mat B,PetscInt n,PetscReal tol,PetscBool  *flg)
 {
   PetscFunctionBegin;
@@ -398,8 +360,6 @@ PetscErrorCode MatMultEqualTol(Mat A,Mat B,PetscInt n,PetscReal tol,PetscBool  *
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMultTransposeEqualTol"
 PetscErrorCode MatMultTransposeEqualTol(Mat A,Mat B,PetscInt n,PetscReal tol,PetscBool  *flg)
 {
   PetscFunctionBegin;
@@ -407,8 +367,6 @@ PetscErrorCode MatMultTransposeEqualTol(Mat A,Mat B,PetscInt n,PetscReal tol,Pet
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMatIsZero"
 PetscErrorCode MatMatIsZero(Mat A, Mat B, PetscReal tol, PetscInt ntrials, PetscBool *flg)
 {
   Mat KR, KR_arr[2];
@@ -424,8 +382,6 @@ PetscErrorCode MatMatIsZero(Mat A, Mat B, PetscReal tol, PetscInt ntrials, Petsc
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatGetMaxEigenvalue"
 /*@
    MatGetMaxEigenvalue - Computes approximate maximum eigenvalue lambda
    and its associated eigenvector v (i.e. A*v = lambda*v) with basic power method.
@@ -525,8 +481,6 @@ PetscErrorCode MatGetMaxEigenvalue(Mat A, Vec v, PetscScalar *lambda_out, PetscR
   PetscFunctionReturnI(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatFilterZeros_Default"
 static PetscErrorCode MatFilterZeros_Default(Mat A, PetscReal tol, Mat *newAf)
 {
   PetscInt m, n, M, N, i, ilo, ihi, j, jlo, jhi, jf, ncols, ncolsf;
@@ -592,8 +546,6 @@ static PetscErrorCode MatFilterZeros_Default(Mat A, PetscReal tol, Mat *newAf)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatFilterZeros"
 PetscErrorCode MatFilterZeros(Mat A, PetscReal tol, Mat *Af_new)
 {
   static PetscBool registered = PETSC_FALSE;
@@ -616,8 +568,6 @@ PetscErrorCode MatFilterZeros(Mat A, PetscReal tol, Mat *Af_new)
   PetscFunctionReturnI(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMergeAndDestroy_Default"
 static PetscErrorCode MatMergeAndDestroy_Default(MPI_Comm comm, Mat *local_in, Vec x, Mat *global_out)
 {
   PetscFunctionBegin;
@@ -627,8 +577,6 @@ static PetscErrorCode MatMergeAndDestroy_Default(MPI_Comm comm, Mat *local_in, V
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMergeAndDestroy_SeqDense"
 static PetscErrorCode MatMergeAndDestroy_SeqDense(MPI_Comm comm, Mat *local_in, Vec x, Mat *global_out)
 {
   PetscScalar *arr_in,*arr_out;
@@ -651,8 +599,6 @@ static PetscErrorCode MatMergeAndDestroy_SeqDense(MPI_Comm comm, Mat *local_in, 
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMergeAndDestroy"
 PetscErrorCode MatMergeAndDestroy(MPI_Comm comm, Mat *local_in, Vec column_layout, Mat *global_out)
 {
   static PetscBool registered = PETSC_FALSE;
@@ -712,8 +658,6 @@ PetscErrorCode MatMergeAndDestroy(MPI_Comm comm, Mat *local_in, Vec column_layou
   PetscFunctionReturnI(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatInheritSymmetry"
 PetscErrorCode MatInheritSymmetry(Mat A, Mat B)
 {
   PetscBool symset, symflg;
@@ -725,8 +669,6 @@ PetscErrorCode MatInheritSymmetry(Mat A, Mat B)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatGetRowNormalization2"
 /* not working because N->cmap->rend is 0 in MatGetDiagonal_Normal */
 PetscErrorCode MatGetRowNormalization2(Mat A, Vec *d_new)
 {
@@ -746,8 +688,6 @@ PetscErrorCode MatGetRowNormalization2(Mat A, Vec *d_new)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatGetRowNormalization"
 /*@
    MatGetRowNormalization - Get a vector d.
 
@@ -810,8 +750,6 @@ PetscErrorCode MatGetRowNormalization(Mat A, Vec *d_new)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonMatGetLocalMat_Default"
 static PetscErrorCode PermonMatGetLocalMat_Default(Mat A,Mat *Aloc)
 {
   IS ris,cis;
@@ -827,8 +765,6 @@ static PetscErrorCode PermonMatGetLocalMat_Default(Mat A,Mat *Aloc)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonMatGetLocalMat_MPIAIJ"
 static PetscErrorCode PermonMatGetLocalMat_MPIAIJ(Mat A,Mat *Aloc)
 {
   PetscFunctionBegin;
@@ -836,8 +772,6 @@ static PetscErrorCode PermonMatGetLocalMat_MPIAIJ(Mat A,Mat *Aloc)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonMatGetLocalMat_MPIDense"
 static PetscErrorCode PermonMatGetLocalMat_MPIDense(Mat A,Mat *Aloc)
 {
   PetscFunctionBegin;
@@ -846,8 +780,6 @@ static PetscErrorCode PermonMatGetLocalMat_MPIDense(Mat A,Mat *Aloc)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonMatGetLocalMat"
 PetscErrorCode PermonMatGetLocalMat(Mat A,Mat *Aloc)
 {
   static PetscBool registered = PETSC_FALSE;
@@ -910,8 +842,6 @@ PetscErrorCode PermonMatGetLocalMat(Mat A,Mat *Aloc)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonMatCreateDenseProductMatrix_Default"
 static PetscErrorCode PermonMatCreateDenseProductMatrix_Default(Mat A, PetscBool A_transpose, Mat B, Mat *C)
 {
   PetscFunctionBegin;
@@ -919,8 +849,6 @@ static PetscErrorCode PermonMatCreateDenseProductMatrix_Default(Mat A, PetscBool
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonMatCreateDenseProductMatrix"
 PetscErrorCode PermonMatCreateDenseProductMatrix(Mat A, PetscBool A_transpose, Mat B, Mat *C_new)
 {
   PetscErrorCode (*f)(Mat,PetscBool,Mat,Mat*);
@@ -937,8 +865,6 @@ PetscErrorCode PermonMatCreateDenseProductMatrix(Mat A, PetscBool A_transpose, M
 }
 
 // TODO can be removed with MatProd?
-#undef __FUNCT__
-#define __FUNCT__ "PermonMatMatMult"
 PetscErrorCode PermonMatMatMult(Mat A,Mat B,MatReuse scall,PetscReal fill,Mat *C)
 {
   PetscBool flg_A,flg_B;
@@ -966,8 +892,6 @@ PetscErrorCode PermonMatMatMult(Mat A,Mat B,MatReuse scall,PetscReal fill,Mat *C
   PetscFunctionReturnI(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonMatConvertBlocks"
 PetscErrorCode PermonMatConvertBlocks(Mat A, MatType newtype,MatReuse reuse,Mat *B)
 {
   PetscErrorCode (*f)(Mat,MatType,MatReuse,Mat*);
@@ -991,8 +915,6 @@ PetscErrorCode PermonMatConvertBlocks(Mat A, MatType newtype,MatReuse reuse,Mat 
 }
 
 //TODO remove or fix with MatProd
-#undef __FUNCT__
-#define __FUNCT__ "MatTransposeMatMultWorks"
 PetscErrorCode  MatTransposeMatMultWorks(Mat A,Mat B,PetscBool *flg)
 {
   PetscErrorCode (*fA)(Mat,Mat,Mat);
@@ -1031,8 +953,6 @@ PetscErrorCode  MatTransposeMatMultWorks(Mat A,Mat B,PetscBool *flg)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonMatSetFromOptions"
 /*@
    PermonMatSetFromOptions - The same as MatSetFromOptions but converts
    the matrix if the type has been already set.
@@ -1114,8 +1034,6 @@ PetscErrorCode  PermonMatSetFromOptions(Mat B)
   PetscFunctionReturnI(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonMatCopyProperties"
 PetscErrorCode PermonMatCopyProperties(Mat A,Mat B)
 {
   PetscFunctionBegin;
@@ -1130,8 +1048,6 @@ PetscErrorCode PermonMatCopyProperties(Mat A,Mat B)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonMatConvertInplace"
 PetscErrorCode PermonMatConvertInplace(Mat A, MatType type)
 {
   PetscErrorCode   ierr;

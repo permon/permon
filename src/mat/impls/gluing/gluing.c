@@ -5,8 +5,6 @@
 
 //#define TAG_firstElemGlobIdx 198533
  
-#undef __FUNCT__
-#define __FUNCT__ "FllopMatGetLocalMat_Gluing"
 static PetscErrorCode FllopMatGetLocalMat_Gluing(Mat A,Mat *Aloc)
 {
 
@@ -49,8 +47,6 @@ static PetscErrorCode FllopMatGetLocalMat_Gluing(Mat A,Mat *Aloc)
 }
 
 
-#undef __FUNCT__  
-#define __FUNCT__ "MatMult_Gluing"
 PetscErrorCode MatMult_Gluing(Mat mat, Vec right, Vec left)
 {
 
@@ -89,8 +85,6 @@ PetscErrorCode MatMult_Gluing(Mat mat, Vec right, Vec left)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "MatMultAdd_Gluing"
 PetscErrorCode MatMultAdd_Gluing(Mat mat, Vec right, Vec add, Vec left) {
 
  Mat_Gluing *data = (Mat_Gluing*) mat->data;
@@ -130,8 +124,6 @@ PetscErrorCode MatMultAdd_Gluing(Mat mat, Vec right, Vec add, Vec left) {
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "MatMultTranspose_Gluing"
 PetscErrorCode MatMultTranspose_Gluing(Mat mat, Vec right, Vec left)
 {
   Mat_Gluing *data = (Mat_Gluing*) mat->data;
@@ -175,8 +167,6 @@ PetscErrorCode MatMultTranspose_Gluing(Mat mat, Vec right, Vec left)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "MatMultTransposeAdd_Gluing"
 PetscErrorCode MatMultTransposeAdd_Gluing(Mat mat, Vec right, Vec add, Vec left)
 {
 
@@ -223,8 +213,6 @@ PetscErrorCode MatMultTransposeAdd_Gluing(Mat mat, Vec right, Vec add, Vec left)
 }
 
 
-#undef __FUNCT__  
-#define __FUNCT__ "MatDestroy_Gluing"
 PetscErrorCode MatDestroy_Gluing(Mat mat)
 {
   PetscFunctionBegin;
@@ -236,8 +224,6 @@ PetscErrorCode MatDestroy_Gluing(Mat mat)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "MatCreateGluing"
 PetscErrorCode MatCreateGluing(MPI_Comm comm, PetscInt n_x_localRow, PetscInt n_nonzeroRow, PetscInt n_l_localcol,  const PetscInt *leaves_row,	const PetscReal *leaves_sign, PetscSF SF, Mat *B_out)
 {
   Mat_Gluing *data;
@@ -282,8 +268,6 @@ PetscErrorCode MatCreateGluing(MPI_Comm comm, PetscInt n_x_localRow, PetscInt n_
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatCreate_Gluing"
 FLLOP_EXTERN PetscErrorCode MatCreate_Gluing(Mat B) {
   
   Mat_Gluing *data;

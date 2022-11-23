@@ -2,11 +2,7 @@
 #include <permon/private/petscimpl.h>
 
 #if defined(MatCreateSeqSBAIJWithArrays)
-#undef MatCreateSeqSBAIJWithArrays
-#endif
 
-#undef __FUNCT__
-#define __FUNCT__ "MatCreateSeqSBAIJWithArrays_permonfix"
 PetscErrorCode  MatCreateSeqSBAIJWithArrays_permonfix(MPI_Comm comm,PetscInt bs,PetscInt m,PetscInt n,PetscInt *i,PetscInt *j,PetscScalar *a,Mat *mat)
 {
   Mat_SeqSBAIJ   *sbaij;

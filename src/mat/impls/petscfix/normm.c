@@ -2,11 +2,7 @@
 #include <permon/private/permonmatimpl.h>
 
 #if defined(MatCreateNormal)
-#undef MatCreateNormal
-#endif
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMultAdd_Normal_permonfix"
 PetscErrorCode MatMultAdd_Normal_permonfix(Mat N,Vec v1,Vec v2,Vec v3)
 {
   Mat_Normal     *Na = (Mat_Normal*)N->data;
@@ -43,8 +39,6 @@ PetscErrorCode MatMultAdd_Normal_permonfix(Mat N,Vec v1,Vec v2,Vec v3)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMultTransposeAdd_Normal_permonfix"
 PetscErrorCode MatMultTransposeAdd_Normal_permonfix(Mat N,Vec v1,Vec v2,Vec v3)
 {
   Mat_Normal     *Na = (Mat_Normal*)N->data;
@@ -82,8 +76,6 @@ PetscErrorCode MatMultTransposeAdd_Normal_permonfix(Mat N,Vec v1,Vec v2,Vec v3)
 }
 
 
-#undef __FUNCT__
-#define __FUNCT__ "MatCreateNormal_permonfix"
 PetscErrorCode MatCreateNormal_permonfix(Mat A,Mat *N)
 {
   PetscFunctionBegin;
