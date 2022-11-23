@@ -14,8 +14,6 @@ typedef struct {
   Vec xwork,ywork;
 } PC_Dual;
 
-#undef __FUNCT__
-#define __FUNCT__ "PCDualSetType_Dual"
 static PetscErrorCode PCDualSetType_Dual(PC pc,PCDualType type)
 {
   PC_Dual *data = (PC_Dual*) pc->data;
@@ -26,8 +24,6 @@ static PetscErrorCode PCDualSetType_Dual(PC pc,PCDualType type)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PCDualSetType"
 PetscErrorCode PCDualSetType(PC pc,PCDualType type)
 {
   PetscFunctionBegin;
@@ -37,8 +33,6 @@ PetscErrorCode PCDualSetType(PC pc,PCDualType type)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PCDualGetType_Dual"
 static PetscErrorCode PCDualGetType_Dual(PC pc,PCDualType *type)
 {
   PC_Dual *data = (PC_Dual*) pc->data;
@@ -48,8 +42,6 @@ static PetscErrorCode PCDualGetType_Dual(PC pc,PCDualType *type)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PCDualGetType"
 PetscErrorCode PCDualGetType(PC pc,PCDualType *type)
 {
   PetscFunctionBegin;
@@ -59,8 +51,6 @@ PetscErrorCode PCDualGetType(PC pc,PCDualType *type)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PCApply_Dual"
 static PetscErrorCode PCApply_Dual(PC pc,Vec x,Vec y)
 {
   PC_Dual         *ctx = (PC_Dual*)pc->data;
@@ -78,8 +68,6 @@ static PetscErrorCode PCApply_Dual(PC pc,Vec x,Vec y)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PCApply_Dual_None"
 static PetscErrorCode PCApply_Dual_None(PC pc,Vec x,Vec y)
 {
   PetscFunctionBegin;
@@ -87,8 +75,6 @@ static PetscErrorCode PCApply_Dual_None(PC pc,Vec x,Vec y)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PCSetUp_Dual"
 static PetscErrorCode PCSetUp_Dual(PC pc)
 {
   PC_Dual *ctx = (PC_Dual*)pc->data;
@@ -118,8 +104,6 @@ static PetscErrorCode PCSetUp_Dual(PC pc)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PCReset_Dual"
 static PetscErrorCode PCReset_Dual(PC pc)
 {
   PC_Dual         *ctx = (PC_Dual*)pc->data;
@@ -132,8 +116,6 @@ static PetscErrorCode PCReset_Dual(PC pc)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PCView_Dual"
 static PetscErrorCode PCView_Dual(PC pc,PetscViewer viewer)
 {
   PC_Dual         *ctx = (PC_Dual*)pc->data;
@@ -146,8 +128,6 @@ static PetscErrorCode PCView_Dual(PC pc,PetscViewer viewer)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PCDestroy_Dual"
 static PetscErrorCode PCDestroy_Dual(PC pc)
 {
   //PC_Dual         *ctx = (PC_Dual*)pc->data;
@@ -158,8 +138,6 @@ static PetscErrorCode PCDestroy_Dual(PC pc)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PCSetFromOptions_Dual"
 PetscErrorCode PCSetFromOptions_Dual(PC pc,PetscOptionItems *PetscOptionsObject)
 {
   PC_Dual         *ctx = (PC_Dual*)pc->data;
@@ -172,8 +150,6 @@ PetscErrorCode PCSetFromOptions_Dual(PC pc,PetscOptionItems *PetscOptionsObject)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PCCreate_Dual"
 FLLOP_EXTERN PetscErrorCode PCCreate_Dual(PC pc)
 {
   PC_Dual      *ctx;

@@ -12,8 +12,6 @@ typedef struct {
   /* TODO bool setup */
 } KSP_FETI;
 
-#undef __FUNCT__
-#define __FUNCT__ "KSPFETISetDirichlet_FETI"
 static PetscErrorCode KSPFETISetDirichlet_FETI(KSP ksp,IS isDir,QPFetiNumberingType numtype,PetscBool enforce_by_B)
 {
   KSP_FETI *feti = (KSP_FETI*)ksp->data;
@@ -38,8 +36,6 @@ static PetscErrorCode KSPFETISetDirichlet_FETI(KSP ksp,IS isDir,QPFetiNumberingT
 
 .seealso: QPFETISetDirichlet
 @*/
-#undef __FUNCT__
-#define __FUNCT__ "KSPFETISetDirichlet"
 PetscErrorCode KSPFETISetDirichlet(KSP ksp,IS isDir,QPFetiNumberingType numtype,PetscBool enforce_by_B)
 {
   PetscFunctionBegin;
@@ -52,8 +48,6 @@ PetscErrorCode KSPFETISetDirichlet(KSP ksp,IS isDir,QPFetiNumberingType numtype,
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "KSPQPSSetUp"
 static PetscErrorCode KSPQPSSetUp(KSP ksp)
 {
   KSP_FETI *feti = (KSP_FETI*)ksp->data;
@@ -66,8 +60,6 @@ static PetscErrorCode KSPQPSSetUp(KSP ksp)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "KSPFETISetUp"
 static PetscErrorCode KSPFETISetUp(KSP ksp)
 {
   KSP_FETI *feti = (KSP_FETI*)ksp->data;
@@ -93,8 +85,6 @@ static PetscErrorCode KSPFETISetUp(KSP ksp)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "KSPSetUp_FETI"
 PetscErrorCode KSPSetUp_FETI(KSP ksp)
 {
   KSP_FETI *feti = (KSP_FETI*)ksp->data;
@@ -119,8 +109,6 @@ PetscErrorCode KSPSetUp_FETI(KSP ksp)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "KSPDestroy_FETI"
 PetscErrorCode KSPDestroy_FETI(KSP ksp)
 {
   KSP_FETI *feti = (KSP_FETI*)ksp->data;
@@ -136,8 +124,6 @@ PetscErrorCode KSPDestroy_FETI(KSP ksp)
 }
 
 //TODO implement preconditiong
-#undef __FUNCT__
-#define __FUNCT__ "KSPSolve_FETI"
 PetscErrorCode KSPSolve_FETI(KSP ksp)
 {
   KSP_FETI *feti = (KSP_FETI*)ksp->data;
@@ -165,8 +151,6 @@ PetscErrorCode KSPSolve_FETI(KSP ksp)
   References:
 . 1. - Farhat
 M*/
-#undef __FUNCT__
-#define __FUNCT__ "KSPCreate_FETI"
 FLLOP_EXTERN PetscErrorCode KSPCreate_FETI(KSP ksp)
 {
   KSP_FETI *feti;

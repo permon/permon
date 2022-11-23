@@ -8,8 +8,6 @@ typedef struct {
   Vec xwork;
 } Mat_Penalized;
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMult_Penalized"
 PetscErrorCode MatMult_Penalized(Mat Arho,Vec x,Vec y)
 {
   Mat_Penalized *ctx;
@@ -21,8 +19,6 @@ PetscErrorCode MatMult_Penalized(Mat Arho,Vec x,Vec y)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMultTranspose_Penalized"
 PetscErrorCode MatMultTranspose_Penalized(Mat Arho,Vec x,Vec y)
 {
   Mat_Penalized *ctx;
@@ -34,8 +30,6 @@ PetscErrorCode MatMultTranspose_Penalized(Mat Arho,Vec x,Vec y)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMultAdd_Penalized"
 PetscErrorCode MatMultAdd_Penalized(Mat Arho,Vec x,Vec x2,Vec y)
 {
   Mat_Penalized *ctx;
@@ -54,8 +48,6 @@ PetscErrorCode MatMultAdd_Penalized(Mat Arho,Vec x,Vec x2,Vec y)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMultTransposeAdd_Penalized"
 PetscErrorCode MatMultTransposeAdd_Penalized(Mat Arho,Vec x,Vec x2,Vec y)
 {
   Mat_Penalized *ctx;
@@ -74,8 +66,6 @@ PetscErrorCode MatMultTransposeAdd_Penalized(Mat Arho,Vec x,Vec x2,Vec y)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatGetDiagonal_Penalized"
 PetscErrorCode MatGetDiagonal_Penalized(Mat Arho,Vec d)
 {
   Mat_Penalized *ctx;
@@ -88,8 +78,6 @@ PetscErrorCode MatGetDiagonal_Penalized(Mat Arho,Vec d)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatDestroy_Penalized"
 PetscErrorCode MatDestroy_Penalized(Mat Arho) {
   Mat_Penalized *ctx;
   PetscFunctionBegin;
@@ -102,8 +90,6 @@ PetscErrorCode MatDestroy_Penalized(Mat Arho) {
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatPenalizedSetPenalty_Penalty"
 static PetscErrorCode MatPenalizedSetPenalty_Penalty(Mat Arho,PetscReal rho)
 {
   Mat_Penalized *ctx;
@@ -113,8 +99,6 @@ static PetscErrorCode MatPenalizedSetPenalty_Penalty(Mat Arho,PetscReal rho)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatPenalizedUpdatePenalty_Penalty"
 static PetscErrorCode MatPenalizedUpdatePenalty_Penalty(Mat Arho,PetscReal rho_update)
 {
   Mat_Penalized *ctx;
@@ -128,8 +112,6 @@ static PetscErrorCode MatPenalizedUpdatePenalty_Penalty(Mat Arho,PetscReal rho_u
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatPenalizedGetPenalty_Penalty"
 static PetscErrorCode MatPenalizedGetPenalty_Penalty(Mat Arho,PetscReal *rho)
 {
   Mat_Penalized *ctx;
@@ -139,8 +121,6 @@ static PetscErrorCode MatPenalizedGetPenalty_Penalty(Mat Arho,PetscReal *rho)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatPenalizedGetPenalizedTerm_Penalty"
 static PetscErrorCode MatPenalizedGetPenalizedTerm_Penalty(Mat Arho,Mat *BtB)
 {
   Mat_Penalized *ctx;
@@ -150,8 +130,6 @@ static PetscErrorCode MatPenalizedGetPenalizedTerm_Penalty(Mat Arho,Mat *BtB)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatPenalizedUpdatePenalty"
 PetscErrorCode MatPenalizedUpdatePenalty(Mat Arho,PetscReal rho_update)
 {
   PetscFunctionBegin;
@@ -161,8 +139,6 @@ PetscErrorCode MatPenalizedUpdatePenalty(Mat Arho,PetscReal rho_update)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatPenalizedSetPenalty"
 PetscErrorCode MatPenalizedSetPenalty(Mat Arho,PetscReal rho)
 {
   PetscFunctionBegin;
@@ -172,8 +148,6 @@ PetscErrorCode MatPenalizedSetPenalty(Mat Arho,PetscReal rho)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatPenalizedGetPenalty"
 PetscErrorCode MatPenalizedGetPenalty(Mat Arho,PetscReal *rho)
 {
   PetscFunctionBegin;
@@ -183,8 +157,6 @@ PetscErrorCode MatPenalizedGetPenalty(Mat Arho,PetscReal *rho)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatPenalizedGetPenalizedTerm"
 PetscErrorCode MatPenalizedGetPenalizedTerm(Mat Arho,Mat *BtB)
 {
   PetscFunctionBegin;
@@ -194,8 +166,6 @@ PetscErrorCode MatPenalizedGetPenalizedTerm(Mat Arho,Mat *BtB)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatCreatePenalized"
 PetscErrorCode MatCreatePenalized(QP qp,PetscReal rho,Mat *Arho_new)
 {
   Mat_Penalized *ctx;

@@ -1,8 +1,6 @@
 
 #include <../src/qp/impls/feti/qpfetiimpl.h>
 
-#undef __FUNCT__
-#define __FUNCT__ "QPFetiDirichletCreate"
 PetscErrorCode QPFetiDirichletCreate(IS dbcis, QPFetiNumberingType numtype, PetscBool enforce_by_B, QPFetiDirichlet *dbc_new)
 {
   QPFetiDirichlet dbc;
@@ -17,8 +15,6 @@ PetscErrorCode QPFetiDirichletCreate(IS dbcis, QPFetiNumberingType numtype, Pets
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPFetiDirichletDestroy"
 PetscErrorCode  QPFetiDirichletDestroy(QPFetiDirichlet *dbc)
 {
   PetscFunctionBegin;

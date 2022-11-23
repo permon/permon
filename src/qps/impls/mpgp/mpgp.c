@@ -17,8 +17,6 @@ const char *const QPSMPGPExpansionLengthTypes[] = {"fixed","opt","optapprox","bb
   gr = qps->work[6];
 */
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSMonitorDefault_MPGP"
 PetscErrorCode QPSMonitorDefault_MPGP(QPS qps,PetscInt n,PetscViewer viewer)
 {
    QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
@@ -36,8 +34,6 @@ PetscErrorCode QPSMonitorDefault_MPGP(QPS qps,PetscInt n,PetscViewer viewer)
    PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSMPGPGetCurrentStepType_MPGP"
 PetscErrorCode QPSMPGPGetCurrentStepType_MPGP(QPS qps,char *stepType)
 {
   QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
@@ -47,8 +43,6 @@ PetscErrorCode QPSMPGPGetCurrentStepType_MPGP(QPS qps,char *stepType)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSMPGPGetAlpha_MPGP"
 static PetscErrorCode QPSMPGPGetAlpha_MPGP(QPS qps,PetscReal *alpha,QPSScalarArgType *argtype)
 {
   QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
@@ -59,8 +53,6 @@ static PetscErrorCode QPSMPGPGetAlpha_MPGP(QPS qps,PetscReal *alpha,QPSScalarArg
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSMPGPSetAlpha_MPGP"
 static PetscErrorCode QPSMPGPSetAlpha_MPGP(QPS qps,PetscReal alpha,QPSScalarArgType argtype)
 {
   QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
@@ -72,8 +64,6 @@ static PetscErrorCode QPSMPGPSetAlpha_MPGP(QPS qps,PetscReal alpha,QPSScalarArgT
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSMPGPGetGamma_MPGP"
 static PetscErrorCode QPSMPGPGetGamma_MPGP(QPS qps,PetscReal *gamma)
 {
   QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
@@ -83,8 +73,6 @@ static PetscErrorCode QPSMPGPGetGamma_MPGP(QPS qps,PetscReal *gamma)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSMPGPSetGamma_MPGP"
 static PetscErrorCode QPSMPGPSetGamma_MPGP(QPS qps,PetscReal gamma)
 {
   QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
@@ -94,8 +82,6 @@ static PetscErrorCode QPSMPGPSetGamma_MPGP(QPS qps,PetscReal gamma)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSMPGPGetOperatorMaxEigenvalue_MPGP"
 static PetscErrorCode QPSMPGPGetOperatorMaxEigenvalue_MPGP(QPS qps,PetscReal *maxeig)
 {
   QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
@@ -105,8 +91,6 @@ static PetscErrorCode QPSMPGPGetOperatorMaxEigenvalue_MPGP(QPS qps,PetscReal *ma
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSMPGPSetOperatorMaxEigenvalue_MPGP"
 static PetscErrorCode QPSMPGPSetOperatorMaxEigenvalue_MPGP(QPS qps,PetscReal maxeig)
 {
   QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
@@ -117,8 +101,6 @@ static PetscErrorCode QPSMPGPSetOperatorMaxEigenvalue_MPGP(QPS qps,PetscReal max
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSMPGPUpdateMaxEigenvalue_MPGP"
 static PetscErrorCode  QPSMPGPUpdateMaxEigenvalue_MPGP(QPS qps, PetscReal maxeig_update)
 {
   QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
@@ -145,8 +127,6 @@ static PetscErrorCode  QPSMPGPUpdateMaxEigenvalue_MPGP(QPS qps, PetscReal maxeig
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSMPGPGetOperatorMaxEigenvalueTolerance_MPGP"
 static PetscErrorCode QPSMPGPGetOperatorMaxEigenvalueTolerance_MPGP(QPS qps,PetscReal *tol)
 {
   QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
@@ -156,8 +136,6 @@ static PetscErrorCode QPSMPGPGetOperatorMaxEigenvalueTolerance_MPGP(QPS qps,Pets
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSMPGPSetOperatorMaxEigenvalueTolerance_MPGP"
 static PetscErrorCode QPSMPGPSetOperatorMaxEigenvalueTolerance_MPGP(QPS qps,PetscReal tol)
 {
   QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
@@ -167,8 +145,6 @@ static PetscErrorCode QPSMPGPSetOperatorMaxEigenvalueTolerance_MPGP(QPS qps,Pets
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSMPGPGetOperatorMaxEigenvalueIterations_MPGP"
 static PetscErrorCode QPSMPGPGetOperatorMaxEigenvalueIterations_MPGP(QPS qps,PetscInt *numit)
 {
   QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
@@ -178,8 +154,6 @@ static PetscErrorCode QPSMPGPGetOperatorMaxEigenvalueIterations_MPGP(QPS qps,Pet
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSMPGPSetOperatorMaxEigenvalueIterations_MPGP"
 static PetscErrorCode QPSMPGPSetOperatorMaxEigenvalueIterations_MPGP(QPS qps,PetscInt numit)
 {
   QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
@@ -189,8 +163,6 @@ static PetscErrorCode QPSMPGPSetOperatorMaxEigenvalueIterations_MPGP(QPS qps,Pet
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MPGPGrads"
 /*
 MPGPGrads - compute projected, chopped, and free gradient
 
@@ -225,8 +197,6 @@ static PetscErrorCode MPGPGrads(QPS qps, Vec x, Vec g)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MPGPExpansionLength"
 /*
 MPGPExpansionLength - compute expanson step length type
 
@@ -284,8 +254,6 @@ static PetscErrorCode MPGPExpansionLength(QPS qps)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MPGPExpansion_Std"
 /*
 MPGPExpansion - expand active set
 
@@ -320,8 +288,6 @@ static PetscErrorCode MPGPExpansion_Std(QPS qps, PetscReal afeas, PetscReal acg)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MPGPExpansion_ProjCG"
 /*
 MPGPExpansion - expand active set
 
@@ -346,8 +312,6 @@ static PetscErrorCode MPGPExpansion_ProjCG(QPS qps, PetscReal afeas, PetscReal a
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSSetup_MPGP"
 /*
 QPSSetup_MPGP - the setup function of MPGP algorithm; initialize constant step-size, check the constraints
 
@@ -430,8 +394,6 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSSolve_MPGP"
 /*
 QPSSolve_MPGP - the solver; solve the problem using MPGP algorithm
 
@@ -665,8 +627,6 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSResetStatistics_MPGP"
 PetscErrorCode QPSResetStatistics_MPGP(QPS qps)
 {
   QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
@@ -678,8 +638,6 @@ PetscErrorCode QPSResetStatistics_MPGP(QPS qps)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSDestroy_MPGP"
 /*
 QPSDestroy_MPGP - MPGP afterparty
 
@@ -703,8 +661,6 @@ PetscErrorCode QPSDestroy_MPGP(QPS qps)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSIsQPCompatible_MPGP"
 PetscErrorCode QPSIsQPCompatible_MPGP(QPS qps,QP qp,PetscBool *flg)
 {
   Mat Beq,Bineq;
@@ -723,8 +679,6 @@ PetscErrorCode QPSIsQPCompatible_MPGP(QPS qps,QP qp,PetscBool *flg)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSSetFromOptions_MPGP"
 PetscErrorCode QPSSetFromOptions_MPGP(QPS qps,PetscOptionItems *PetscOptionsObject)
 {
   QPS_MPGP    *mpgp = (QPS_MPGP*)qps->data;
@@ -759,8 +713,6 @@ PetscErrorCode QPSSetFromOptions_MPGP(QPS qps,PetscOptionItems *PetscOptionsObje
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSViewConvergence_MPGP"
 PetscErrorCode QPSViewConvergence_MPGP(QPS qps, PetscViewer v)
 {
   QPS_MPGP      *mpgp = (QPS_MPGP*)qps->data;
@@ -827,8 +779,6 @@ PetscErrorCode QPSViewConvergence_MPGP(QPS qps, PetscViewer v)
            QPSMPGPGetOperatorMaxEigenvalueTolerance(), QPSMPGPGetOperatorMaxEigenvalueIterations(),
            QPSMPGPSetOperatorMaxEigenvalueIterations(), QPSMPGPGetCurrentStepType()
 M*/
-#undef __FUNCT__
-#define __FUNCT__ "QPSCreate_MPGP"
 FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
 {
   QPS_MPGP         *mpgp;
@@ -884,8 +834,6 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
 }
 
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSMPGPGetCurrentStepType"
 PetscErrorCode QPSMPGPGetCurrentStepType(QPS qps,char *stepType)
 {
   PetscFunctionBegin;
@@ -896,8 +844,6 @@ PetscErrorCode QPSMPGPGetCurrentStepType(QPS qps,char *stepType)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSMPGPGetAlpha"
 /*@
 QPSMPGPGetAlpha - get the constant step-size used in algorithm based on spectral properties of Hessian matrix
 
@@ -918,8 +864,6 @@ PetscErrorCode QPSMPGPGetAlpha(QPS qps,PetscReal *alpha,QPSScalarArgType *argtyp
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSMPGPSetAlpha"
 /*@
 QPSMPGPSetAlpha - set the constant step-size used in algorithm based on spectral properties of Hessian matrix
 
@@ -939,8 +883,6 @@ PetscErrorCode QPSMPGPSetAlpha(QPS qps,PetscReal alpha,QPSScalarArgType argtype)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSMPGPGetGamma"
 /*@
 QPSMPGPGetGamma - get the proportioning parameter used in algorithm
 
@@ -959,8 +901,6 @@ PetscErrorCode QPSMPGPGetGamma(QPS qps,PetscReal *gamma)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSMPGPSetGamma"
 /*@
 QPSMPGPSetGamma - set the proportioning parameter used in algorithm
 
@@ -979,8 +919,6 @@ PetscErrorCode QPSMPGPSetGamma(QPS qps,PetscReal gamma)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSMPGPGetOperatorMaxEigenvalue"
 PetscErrorCode QPSMPGPGetOperatorMaxEigenvalue(QPS qps,PetscReal *maxeig)
 {
   PetscFunctionBegin;
@@ -990,8 +928,6 @@ PetscErrorCode QPSMPGPGetOperatorMaxEigenvalue(QPS qps,PetscReal *maxeig)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSMPGPSetOperatorMaxEigenvalue"
 /*@
 QPSMPGPSetOperatorMaxEigenvalue - set the estimation of largest eigenvalue
 
@@ -1011,8 +947,6 @@ PetscErrorCode QPSMPGPSetOperatorMaxEigenvalue(QPS qps,PetscReal maxeig)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSMPGPUpdateMaxEigenvalue"
 PetscErrorCode  QPSMPGPUpdateMaxEigenvalue(QPS qps, PetscReal maxeig_update)
 {
   PetscFunctionBegin;
@@ -1023,8 +957,6 @@ PetscErrorCode  QPSMPGPUpdateMaxEigenvalue(QPS qps, PetscReal maxeig_update)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSMPGPSetOperatorMaxEigenvalueTolerance"
 /*@
 QPSMPGPSetOperatorMaxEigenvalueTolerance - set the tolerance of the largest eigenvalue computation
 
@@ -1043,8 +975,6 @@ PetscErrorCode QPSMPGPSetOperatorMaxEigenvalueTolerance(QPS qps,PetscReal tol)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSMPGPGetOperatorMaxEigenvalueTolerance"
 /*@
 QPSMPGPGetOperatorMaxEigenvalueTolerance - get the tolerance of the largest eigenvalue computation
 
@@ -1063,8 +993,6 @@ PetscErrorCode QPSMPGPGetOperatorMaxEigenvalueTolerance(QPS qps,PetscReal *tol)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSMPGPGetOperatorMaxEigenvalueIterations"
 /*@
 QPSMPGPGetOperatorMaxEigenvalueIterations - get the maximum number of iterations to obtain the largest eigenvalue computation
 
@@ -1083,8 +1011,6 @@ PetscErrorCode QPSMPGPGetOperatorMaxEigenvalueIterations(QPS qps,PetscInt *numit
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSMPGPSetOperatorMaxEigenvalueIterations"
 /*@
 QPSMPGPSetOperatorMaxEigenvalueIterations - set the maximum number of iterations to obtain the largest eigenvalue computation
 

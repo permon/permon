@@ -15,8 +15,6 @@ char     PeFuBe_s_[128];
 char     FLLOP_PathBuffer_Global[FLLOP_MAX_PATH_LEN];
 char     FLLOP_ObjNameBuffer_Global[FLLOP_MAX_NAME_LEN];
 
-#undef __FUNCT__
-#define __FUNCT__ "FllopCreate"
 PetscErrorCode FllopCreate(MPI_Comm comm,FLLOP *fllop_new)
 {
   FLLOP fllop;
@@ -28,8 +26,6 @@ PetscErrorCode FllopCreate(MPI_Comm comm,FLLOP *fllop_new)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "FllopDestroy"
 PetscErrorCode FllopDestroy(FLLOP *fllop)
 {
   PetscFunctionBegin;
@@ -43,8 +39,6 @@ PetscErrorCode FllopDestroy(FLLOP *fllop)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "FllopMakePath"
 PetscErrorCode FllopMakePath(const char *dir, mode_t mode)
 {
     char *tmp = FLLOP_PathBuffer_Global;
@@ -73,8 +67,6 @@ PetscErrorCode FllopMakePath(const char *dir, mode_t mode)
     PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "FllopProcessInfoExclusions"
 PetscErrorCode FllopProcessInfoExclusions(PetscClassId classid, const char *classname)
 {
   char              logList[256];
@@ -108,8 +100,6 @@ PetscErrorCode FllopProcessInfoExclusions(PetscClassId classid, const char *clas
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "FllopSetTrace"
 PetscErrorCode FllopSetTrace(PetscBool flg)
 {
   PetscFunctionBegin;
@@ -117,8 +107,6 @@ PetscErrorCode FllopSetTrace(PetscBool flg)
   PetscFunctionReturn(0);  
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "FllopSetObjectInfo"
 PetscErrorCode FllopSetObjectInfo(PetscBool flg)
 {
   PetscFunctionBegin;
@@ -126,8 +114,6 @@ PetscErrorCode FllopSetObjectInfo(PetscBool flg)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "FllopSetDebug"
 PetscErrorCode FllopSetDebug(PetscBool flg)
 {
   PetscFunctionBegin;
@@ -135,8 +121,6 @@ PetscErrorCode FllopSetDebug(PetscBool flg)
   PetscFunctionReturn(0);  
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "FllopPetscInfoDeactivateAll"
 PetscErrorCode FllopPetscInfoDeactivateAll()
 {
   PetscInt i;
@@ -147,8 +131,6 @@ PetscErrorCode FllopPetscInfoDeactivateAll()
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "FllopSetFromOptions"
 /*@
    FllopSetFromOptions - Sets FLLOP options.
 
@@ -230,8 +212,6 @@ PetscErrorCode FllopSetFromOptions()
 }
 
 /* based on EventRegLogGetEvent but does not throw an error if the event does not exist */
-#undef __FUNCT__
-#define __FUNCT__ "FllopEventRegLogGetEvent"
 PetscErrorCode FllopEventRegLogGetEvent(PetscEventRegLog eventLog, const char name[], PetscLogEvent *event, PetscBool *exists)
 {
   PetscBool      match;
@@ -254,8 +234,6 @@ PetscErrorCode FllopEventRegLogGetEvent(PetscEventRegLog eventLog, const char na
 }
 
 /* based on PetscLogEventGetId but does not throw an error if the event does not exist */
-#undef __FUNCT__
-#define __FUNCT__ "FllopPetscLogEventGetId"
 PetscErrorCode  FllopPetscLogEventGetId(const char name[], PetscLogEvent *event, PetscBool *exists)
 {
   PetscStageLog  stageLog;
@@ -266,8 +244,6 @@ PetscErrorCode  FllopPetscLogEventGetId(const char name[], PetscLogEvent *event,
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "FllopPetscObjectInheritName"
 PetscErrorCode FllopPetscObjectInheritName(PetscObject obj,PetscObject orig,const char *suffix)
 {
   size_t         len1=0,len2=0;
@@ -289,8 +265,6 @@ PetscErrorCode FllopPetscObjectInheritName(PetscObject obj,PetscObject orig,cons
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "FllopPetscObjectInheritPrefix"
 PetscErrorCode FllopPetscObjectInheritPrefix(PetscObject obj,PetscObject orig,const char *suffix)
 {
   size_t         len1=0,len2=0;
@@ -314,8 +288,6 @@ PetscErrorCode FllopPetscObjectInheritPrefix(PetscObject obj,PetscObject orig,co
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "FllopPetscObjectInheritPrefixIfNotSet"
 PetscErrorCode FllopPetscObjectInheritPrefixIfNotSet(PetscObject obj,PetscObject orig,const char *suffix)
 {
   PetscFunctionBegin;
