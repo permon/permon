@@ -6,7 +6,7 @@
 permon-all: permon_chk_all
 	@mkdir -p ./${PETSC_ARCH}/lib/permon/conf
 	${OMAKE_PRINTDIR} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} PERMON_DIR=${PERMON_DIR} PERMON_PKG_DIR=${PERMON_PKG_DIR} permon-all-local 2>&1 | tee ${PERMON_LOG};
-	@egrep -i "( error | error: |no such file or directory)" ${PERMON_LOG} | tee ${PERMON_ERRLOG} > /dev/null
+	@grep -E -i "( error | error: |no such file or directory)" ${PERMON_LOG} | tee ${PERMON_ERRLOG} > /dev/null
 	+@if test -s ${PERMON_ERRLOG}; then \
            printf ${PETSC_TEXT_HILIGHT}"*******************************ERROR************************************\n" 2>&1 | tee -a ${PERMON_LOG}; \
            echo "  Error during compile, check ${PERMON_LOG}" 2>&1 | tee -a ${PERMON_LOG}; \
@@ -197,7 +197,7 @@ permon_html: chk_c2html
               echo "<center><a href=\"$${iroot}\">Actual source code: $${iroot}</a></center><br>" > $${loc}/$$i.html; \
               sed -e "s/CHKERRQ(ierr);//g" -e "s/PetscFunctionReturn(0)/return(0)/g"  \
               -e "s/ierr [ ]*= //g"  $$i | ${C2HTML} -n  | ${PETSC_DIR}/lib/petsc/bin/maint/fixinclude $$i $${ROOT} | \
-              egrep -v '(PetscValid|PetscFunctionBegin|PetscCheck|PetscErrorCode ierr;|#if !defined\(__|#define __|#undef __|EXTERN_C )' | \
+              grep -E -v '(PetscValid|PetscFunctionBegin|PetscCheck|PetscErrorCode ierr;|#if !defined\(__|#define __|#undef __|EXTERN_C )' | \
               ${MAPNAMES} -map /tmp/$$USER.htmlmap -inhtml | sed -e s?ROOT?$${IROOT}?g >> $${loc}/$$i.html ; \
 	    fi; \
          done
