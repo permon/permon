@@ -13,10 +13,13 @@ static PetscErrorCode MatRegularize_GetPivots_Private(Mat R, IS *pivots) {
   PetscScalar vpivot, alpha, t;
   PetscInt i, j, II, J, ipivot, jpivot;
   PetscInt *all, *perm;
-  Mat R_work;
+  Mat R_work,R_work1;
 
   PetscFunctionBeginI;
-  PetscCall(MatConvert(R,MATDENSEPERMON,MAT_INITIAL_MATRIX,&R_work));
+  /*TODO: fix this workaround for prealloc check in MatDenseGetLDA */
+  PetscCall(MatConvert(R,MATDENSE,MAT_INITIAL_MATRIX,&R_work1));
+  PetscCall(MatConvert(R_work1,MATDENSEPERMON,MAT_INITIAL_MATRIX,&R_work));
+  PetscCall(MatDestroy(&R_work1));
   PetscCall(MatGetSize(R_work, &p, &npivots));
   maxdp = PetscMax(npivots, p);
   PetscCall(PetscMalloc(maxdp * sizeof (PetscInt),    &all));
