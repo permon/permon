@@ -692,12 +692,12 @@ static PetscErrorCode MatInvExplicitly_Inv(Mat imat, PetscBool transpose, MatReu
   PetscCall(MatInvGetKSP(imat, &ksp));//innerksp
   PetscCall(MatInvGetRedundancy(imat, &redundancy));
 
-  if (imat==*imat_explicit) SETERRQ(comm, PETSC_ERR_ARG_IDN, "Arguments #1 and #3 cannot be the same matrix.");
 
   if (scall == MAT_INITIAL_MATRIX) {
     PetscCall(MatCreateDensePermon(comm, m, m, M, M, NULL, &B));
     *imat_explicit = B;
   } else {
+    if (imat==*imat_explicit) SETERRQ(comm, PETSC_ERR_ARG_IDN, "Arguments #1 and #3 cannot be the same matrix.");
     B = *imat_explicit;
   }
 
