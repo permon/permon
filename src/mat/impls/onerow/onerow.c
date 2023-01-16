@@ -1,8 +1,6 @@
 
 #include <permon/private/permonmatimpl.h>
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMult_OneRow"
 PetscErrorCode MatMult_OneRow(Mat A, Vec x, Vec z) {
     Vec a;
     PetscScalar alpha;
@@ -14,8 +12,6 @@ PetscErrorCode MatMult_OneRow(Mat A, Vec x, Vec z) {
     PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMultAdd_OneRow"
 PetscErrorCode MatMultAdd_OneRow(Mat A, Vec x, Vec w, Vec z) {
     PetscMPIInt rank;
     Vec a;
@@ -37,8 +33,6 @@ PetscErrorCode MatMultAdd_OneRow(Mat A, Vec x, Vec w, Vec z) {
     PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMultTranspose_OneRow"
 PetscErrorCode MatMultTranspose_OneRow(Mat A, Vec x, Vec z) {
     PetscMPIInt rank;
     Vec a;
@@ -57,8 +51,6 @@ PetscErrorCode MatMultTranspose_OneRow(Mat A, Vec x, Vec z) {
     PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMultTransposeAdd_OneRow"
 PetscErrorCode MatMultTransposeAdd_OneRow(Mat A, Vec x, Vec w, Vec z) { 
     PetscMPIInt rank;
     Vec a;
@@ -80,8 +72,6 @@ PetscErrorCode MatMultTransposeAdd_OneRow(Mat A, Vec x, Vec w, Vec z) {
     PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatDestroy_OneRow"
 PetscErrorCode MatDestroy_OneRow(Mat A) {
     Vec a;
 
@@ -92,8 +82,6 @@ PetscErrorCode MatDestroy_OneRow(Mat A) {
     PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatCreateOneRow"
 PetscErrorCode MatCreateOneRow(Vec a, Mat *A_new)
 {
   PetscInt n;

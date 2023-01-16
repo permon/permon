@@ -15,8 +15,6 @@ static char** fllop_executablePtr = &fllop_executable;
 PetscClassId  FLLOP_CLASSID;
 FLLOP   fllop;
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonInitialize"
 /*@
    FllopInitialize - Initializes PETSc (if not already initialized), init FLLOP, register functions, etc.
    This function must be called in order to use the FLLOP library!
@@ -95,8 +93,6 @@ PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], cons
   return 0;
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonFinalize"
 /*@
    FllopFinalize - Fllop cleanup, PetscFinalize() (if FLLOP started petsc), etc.
 
@@ -127,8 +123,6 @@ PetscErrorCode PermonFinalize()
 
   This one registers all the QP methods in the libfllop.a library.
  */
-#undef __FUNCT__
-#define __FUNCT__ "PetscDLLibraryRegister_permon"
 PetscErrorCode PetscDLLibraryRegister_permon()
 {
   PetscFunctionBegin;

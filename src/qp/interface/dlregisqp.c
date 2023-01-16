@@ -4,8 +4,6 @@
 
 static PetscBool QPPackageInitialized = PETSC_FALSE;
 
-#undef __FUNCT__
-#define __FUNCT__ "QPInitializePackage"
 PetscErrorCode QPInitializePackage()
 {
   PetscFunctionBegin;

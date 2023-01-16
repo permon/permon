@@ -4,8 +4,6 @@
 PetscClassId  QPS_CLASSID;
 PetscLogEvent  QPS_Solve,QPS_PostSolve;
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSQPChangeListener_Private"
 static PetscErrorCode QPSQPChangeListener_Private(QP qp)
 {
   QPS sol;
@@ -17,8 +15,6 @@ static PetscErrorCode QPSQPChangeListener_Private(QP qp)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSAttachQP_Private"
 static PetscErrorCode QPSAttachQP_Private(QPS qps,QP qp)
 {
   PetscFunctionBegin;
@@ -29,8 +25,6 @@ static PetscErrorCode QPSAttachQP_Private(QPS qps,QP qp)
   PetscFunctionReturn(0);  
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSDetachQP_Private"
 static PetscErrorCode QPSDetachQP_Private(QPS qps) {
   PetscFunctionBegin;
   if (!qps->topQP) PetscFunctionReturn(0);
@@ -41,8 +35,6 @@ static PetscErrorCode QPSDetachQP_Private(QPS qps) {
   PetscFunctionReturn(0);  
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSCreate"
 /*@
    QPSCreate - create QP Solver instance
 
@@ -99,8 +91,6 @@ PetscErrorCode QPSCreate(MPI_Comm comm,QPS *qps_new)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSGetQP"
 /*@
    QPSGetQP - Return the user's QP set by QPSSetQP, or a new one if none has been set.
 
@@ -129,8 +119,6 @@ PetscErrorCode QPSGetQP(QPS qps,QP *qp)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSGetSolvedQP"
 /*@
    QPSGetSolvedQP - return the actually solved QP from QPS (typically the most derived - last in QP chain)
 
@@ -155,8 +143,6 @@ PetscErrorCode QPSGetSolvedQP(QPS qps,QP *qp)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSSetQP"
 /*@
    QPSSetQP - set the user's QP to QPS
 
@@ -181,8 +167,6 @@ PetscErrorCode QPSSetQP(QPS qps,QP qp)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSSetUp"
 /*@
    QPSSetUp - set up the QPS; prepare QP chain, check up the QPS compatibility, set up the PC preconditioner  
 
@@ -220,8 +204,6 @@ PetscErrorCode QPSSetUp(QPS qps)
   PetscFunctionReturnI(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSReset"
 /*@
    QPSReset - reset QPS; prepare the instance to new data
 
@@ -248,8 +230,6 @@ PetscErrorCode QPSReset(QPS qps)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSResetStatistics"
 /*@
    QPSResetStatistics - Reset QPSSolve statistics. Called in QPSReset().
 
@@ -274,8 +254,6 @@ PetscErrorCode QPSResetStatistics(QPS qps)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSView"
 /*@
    QPSView - view the basic properties of QPS
 
@@ -305,8 +283,6 @@ PetscErrorCode QPSView(QPS qps,PetscViewer v)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSDestroyDefault"
 /*
    QPSDestroyDefault - destroy the QPS content
 
@@ -326,8 +302,6 @@ PetscErrorCode QPSDestroyDefault(QPS qps)
 }
 
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSDestroy"
 /*@
    QPSDestroy - destroy the QPS instance
 
@@ -364,8 +338,6 @@ PetscErrorCode QPSDestroy(QPS *qps)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSSetType"
 /*@
    QPSSetType - set the type of solver
 
@@ -408,8 +380,6 @@ PetscErrorCode QPSSetType(QPS qps, const QPSType type)
     PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSSetDefaultType"
 /*@
    QPSSetDefaultType - set the type of solver to the default one corresponding to prescribed constraints
 
@@ -457,8 +427,6 @@ PetscErrorCode QPSSetDefaultType(QPS qps)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSSetDefaultTypeIfNotSpecified"
 PetscErrorCode QPSSetDefaultTypeIfNotSpecified(QPS qps)
 {
   PetscFunctionBegin;
@@ -469,8 +437,6 @@ PetscErrorCode QPSSetDefaultTypeIfNotSpecified(QPS qps)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSGetType"
 /*@
    QPSGetType - return the type of solver
 
@@ -494,8 +460,6 @@ PetscErrorCode QPSGetType(QPS qps,const QPSType *type)
   *type = ((PetscObject)qps)->type_name;
   PetscFunctionReturn(0);}
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSIsQPCompatible"
 /*@
    QPSIsQPCompatible - check that given solver is able to solve given QP
 
@@ -522,8 +486,6 @@ PetscErrorCode QPSIsQPCompatible(QPS qps,QP qp,PetscBool *flg)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSSolve"
 /*@
    QPSSolve - solve the QP using QPS; initiate the solver
 
@@ -558,8 +520,6 @@ PetscErrorCode QPSSolve(QPS qps)
   PetscFunctionReturnI(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSPostSolve"
 /*@
    QPSPostSolve - Apply post solve functions and optionally view. 
 
@@ -616,8 +576,6 @@ PetscErrorCode QPSPostSolve(QPS qps)
   PetscFunctionReturnI(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSSetConvergenceTest"
 PetscErrorCode QPSSetConvergenceTest(QPS qps,PetscErrorCode (*converge)(QPS,KSPConvergedReason*),void *cctx,PetscErrorCode (*destroy)(void*))
 {
   PetscFunctionBegin;
@@ -631,8 +589,6 @@ PetscErrorCode QPSSetConvergenceTest(QPS qps,PetscErrorCode (*converge)(QPS,KSPC
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSGetConvergenceContext"
 PetscErrorCode QPSGetConvergenceContext(QPS qps,void **ctx)
 {
   PetscFunctionBegin;
@@ -641,8 +597,6 @@ PetscErrorCode QPSGetConvergenceContext(QPS qps,void **ctx)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSConvergedDefault"
 /*@C
    QPSConvergedDefault - Determines convergence of the QPS iterative solvers (default code).
 
@@ -719,8 +673,6 @@ PetscErrorCode QPSConvergedDefault(QPS qps,KSPConvergedReason *reason)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSConvergedDefaultSetUp"
 PetscErrorCode QPSConvergedDefaultSetUp(QPS qps)
 {
   QPSConvergedDefaultCtx *cctx = (QPSConvergedDefaultCtx*) qps->cnvctx;
@@ -737,8 +689,6 @@ PetscErrorCode QPSConvergedDefaultSetUp(QPS qps)
 }
 
 //TODO this is just a quick&dirty solution
-#undef __FUNCT__
-#define __FUNCT__ "QPSConvergedDefaultSetRhsForDivergence"
 PetscErrorCode QPSConvergedDefaultSetRhsForDivergence(void *ctx, Vec b)
 {
   QPSConvergedDefaultCtx *cctx = (QPSConvergedDefaultCtx*) ctx;
@@ -747,8 +697,6 @@ PetscErrorCode QPSConvergedDefaultSetRhsForDivergence(void *ctx, Vec b)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSConvergedDefaultDestroy"
 PetscErrorCode QPSConvergedDefaultDestroy(void *ctx)
 {
   QPSConvergedDefaultCtx *cctx = (QPSConvergedDefaultCtx*) ctx;
@@ -759,8 +707,6 @@ PetscErrorCode QPSConvergedDefaultDestroy(void *ctx)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSConvergedDefaultCreate"
 PetscErrorCode QPSConvergedDefaultCreate(void **ctx)
 {
   QPSConvergedDefaultCtx *cctx;
@@ -774,8 +720,6 @@ PetscErrorCode QPSConvergedDefaultCreate(void **ctx)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSConvergedSkip"
 PetscErrorCode QPSConvergedSkip(QPS qps,KSPConvergedReason *reason)
 {
   PetscFunctionBegin;
@@ -785,8 +729,6 @@ PetscErrorCode QPSConvergedSkip(QPS qps,KSPConvergedReason *reason)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSGetConvergedReason"
 PetscErrorCode QPSGetConvergedReason(QPS qps,KSPConvergedReason *reason)
 {
   PetscFunctionBegin;
@@ -796,8 +738,6 @@ PetscErrorCode QPSGetConvergedReason(QPS qps,KSPConvergedReason *reason)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSGetResidualNorm"
 PetscErrorCode QPSGetResidualNorm(QPS qps,PetscReal *rnorm)
 {
   PetscFunctionBegin;
@@ -807,8 +747,6 @@ PetscErrorCode QPSGetResidualNorm(QPS qps,PetscReal *rnorm)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSGetIterationNumber"
 PetscErrorCode QPSGetIterationNumber(QPS qps,PetscInt *its)
 {
   PetscFunctionBegin;
@@ -818,8 +756,6 @@ PetscErrorCode QPSGetIterationNumber(QPS qps,PetscInt *its)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSGetAccumulatedIterationNumber"
 PetscErrorCode QPSGetAccumulatedIterationNumber(QPS qps,PetscInt *its)
 {
   PetscFunctionBegin;
@@ -829,8 +765,6 @@ PetscErrorCode QPSGetAccumulatedIterationNumber(QPS qps,PetscInt *its)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSSetOptionsPrefix"
 PetscErrorCode QPSSetOptionsPrefix(QPS qps,const char prefix[])
 {
   PetscFunctionBegin;
@@ -839,8 +773,6 @@ PetscErrorCode QPSSetOptionsPrefix(QPS qps,const char prefix[])
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSAppendOptionsPrefix"
 PetscErrorCode QPSAppendOptionsPrefix(QPS qps,const char prefix[])
 {
   PetscFunctionBegin;
@@ -849,8 +781,6 @@ PetscErrorCode QPSAppendOptionsPrefix(QPS qps,const char prefix[])
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSGetOptionsPrefix"
 PetscErrorCode QPSGetOptionsPrefix(QPS qps,const char *prefix[])
 {
   PetscFunctionBegin;
@@ -859,8 +789,6 @@ PetscErrorCode QPSGetOptionsPrefix(QPS qps,const char *prefix[])
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSSetFromOptions"
 PetscErrorCode QPSSetFromOptions(QPS qps)
 {
   PetscBool flg;
@@ -903,8 +831,6 @@ PetscErrorCode QPSSetFromOptions(QPS qps)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSSetTolerances"
 PetscErrorCode QPSSetTolerances(QPS qps,PetscReal rtol,PetscReal atol,PetscReal divtol,PetscInt max_it)
 {
   PetscFunctionBegin;
@@ -933,8 +859,6 @@ PetscErrorCode QPSSetTolerances(QPS qps,PetscReal rtol,PetscReal atol,PetscReal 
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSGetTolerances"
 PetscErrorCode QPSGetTolerances(QPS qps,PetscReal *rtol,PetscReal *atol,PetscReal *divtol,PetscInt *max_it)
 {
   PetscFunctionBegin;
@@ -946,8 +870,6 @@ PetscErrorCode QPSGetTolerances(QPS qps,PetscReal *rtol,PetscReal *atol,PetscRea
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSSetAutoPostSolve"
 PetscErrorCode QPSSetAutoPostSolve(QPS qps,PetscBool flg)
 {
   PetscFunctionBegin;
@@ -957,8 +879,6 @@ PetscErrorCode QPSSetAutoPostSolve(QPS qps,PetscBool flg)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSGetAutoPostSolve"
 PetscErrorCode QPSGetAutoPostSolve(QPS qps,PetscBool *flg)
 {
   PetscFunctionBegin;
@@ -968,8 +888,6 @@ PetscErrorCode QPSGetAutoPostSolve(QPS qps,PetscBool *flg)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSViewConvergence"
 PetscErrorCode QPSViewConvergence(QPS qps, PetscViewer v)
 {
   MPI_Comm comm;
@@ -1004,8 +922,6 @@ PetscErrorCode QPSViewConvergence(QPS qps, PetscViewer v)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSGetVecs"
 /*@C
    QPSGetVecs - Gets a number of work vectors.
 
@@ -1045,8 +961,6 @@ PetscErrorCode QPSGetVecs(QPS qps,PetscInt rightn, Vec **right,PetscInt leftn,Ve
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSSetWorkVecs"
 /*
    QPSSetWorkVecs - Sets a number of work vectors into a QPS object
 
@@ -1071,8 +985,6 @@ PetscErrorCode QPSSetWorkVecs(QPS qps,PetscInt nw)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSWorkVecStateUpdate"
 PetscErrorCode QPSWorkVecStateUpdate(QPS qps,PetscInt idx)
 {
   PetscFunctionBegin;
@@ -1080,8 +992,6 @@ PetscErrorCode QPSWorkVecStateUpdate(QPS qps,PetscInt idx)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSSolutionVecStateUpdate"
 PetscErrorCode QPSSolutionVecStateUpdate(QPS qps)
 {
   PetscFunctionBegin;
@@ -1090,8 +1000,6 @@ PetscErrorCode QPSSolutionVecStateUpdate(QPS qps)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSWorkVecStateChanged"
 PetscErrorCode QPSWorkVecStateChanged(QPS qps,PetscInt idx,PetscBool *flg)
 {
   PetscObjectState state_saved,state_current;
@@ -1103,8 +1011,6 @@ PetscErrorCode QPSWorkVecStateChanged(QPS qps,PetscInt idx,PetscBool *flg)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSSolutionVecStateChanged"
 PetscErrorCode QPSSolutionVecStateChanged(QPS qps,PetscBool *flg)
 {
   PetscObjectState state_saved,state_current;
@@ -1117,8 +1023,6 @@ PetscErrorCode QPSSolutionVecStateChanged(QPS qps,PetscBool *flg)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSMonitor"
 /*@
    QPSMonitor - runs the user provided monitor routines, if they exist
 
@@ -1148,8 +1052,6 @@ PetscErrorCode QPSMonitor(QPS qps, PetscInt it, PetscReal rnorm)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSMonitorSet"
 /*@
    QPSMonitorSet - Sets an ADDITIONAL function to be called at every iteration to monitor the residual/error etc.
 
@@ -1213,8 +1115,6 @@ PetscErrorCode  QPSMonitorSet(QPS qps,PetscErrorCode (*monitor)(QPS,PetscInt,Pet
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSMonitorCancel"
 /*@
    QPSMonitorCancel - Clears all monitors for a QPS object.
 
@@ -1245,8 +1145,6 @@ PetscErrorCode  QPSMonitorCancel(QPS qps)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSGetMonitorContext"
 /*@
    QPSGetMonitorContext - Gets the monitoring context, as set by
      QPSMonitorSet() for the FIRST monitor only.
@@ -1272,8 +1170,6 @@ PetscErrorCode  QPSGetMonitorContext(QPS qps,void **ctx)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSSetResidualHistory"
 /*@
    QPSSetResidualHistory - Sets the array used to hold the residual history.
      If set, this array will contain the residual norms computed at each
@@ -1320,8 +1216,6 @@ PetscErrorCode  QPSSetResidualHistory(QPS qps,PetscReal a[],PetscInt na,PetscBoo
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSGetResidualHistory"
 /*@
    QPSGetResidualHistory - Gets the array used to hold the residual history
        and the number of residuals it contains.
@@ -1352,8 +1246,6 @@ PetscErrorCode  QPSGetResidualHistory(QPS qps,PetscReal *a[],PetscInt *na)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "QPSMonitorDefault"
 /*@
    QPSMonitorDefault - Print the projected gradient norm at each iteration of an
                        iterative solver. 
@@ -1398,8 +1290,6 @@ PetscErrorCode QPSMonitorDefault(QPS qps,PetscInt n,PetscReal rnorm,void *ctx)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSMonitorCostFunction"
 /*@
    QPSMonitorDefault - Print the value of the cost function at each iteration of an
                        iterative solver.

@@ -9,8 +9,6 @@ static inline PetscErrorCode MatMatMultByColumns_Private(Mat A, PetscBool A_tran
 static PetscErrorCode MatMatBlockDiagMultByColumns_Private(Mat B, PetscBool B_transpose, Mat R, PetscBool filter, Mat *Gt_new);
 
 //TODO add an argument specifying whether values should be copied back during Restore
-#undef __FUNCT__
-#define __FUNCT__ "MatGetColumnVectors_Default"
 static PetscErrorCode MatGetColumnVectors_Default(Mat A, Vec *cols_new[])
 {
   PetscInt       i,j,nnz,ilo,ihi,N;
@@ -45,8 +43,6 @@ static PetscErrorCode MatGetColumnVectors_Default(Mat A, Vec *cols_new[])
 }
 
 //TODO add an argument specifying whether values should be copied back during Restore
-#undef __FUNCT__
-#define __FUNCT__ "MatRestoreColumnVectors_Default"
 static PetscErrorCode MatRestoreColumnVectors_Default(Mat A, Vec *cols[])
 {
   PetscFunctionBegin;
@@ -55,8 +51,6 @@ static PetscErrorCode MatRestoreColumnVectors_Default(Mat A, Vec *cols[])
 }
 
 //TODO add an argument specifying whether values should be copied back during Restore
-#undef __FUNCT__
-#define __FUNCT__ "MatGetColumnVectors"
 PetscErrorCode MatGetColumnVectors(Mat A, PetscInt *ncols, Vec *cols_new[])
 {
   static PetscBool registered = PETSC_FALSE;
@@ -84,8 +78,6 @@ PetscErrorCode MatGetColumnVectors(Mat A, PetscInt *ncols, Vec *cols_new[])
 }
 
 //TODO add an argument specifying whether values should be copied back during Restore
-#undef __FUNCT__
-#define __FUNCT__ "MatRestoreColumnVectors"
 PetscErrorCode MatRestoreColumnVectors(Mat A, PetscInt *ncols, Vec *cols_new[])
 {
   static PetscBool registered = PETSC_FALSE;
@@ -113,8 +105,6 @@ PetscErrorCode MatRestoreColumnVectors(Mat A, PetscInt *ncols, Vec *cols_new[])
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMatMultByColumns_MatMult_Private"
 static inline PetscErrorCode MatMatMultByColumns_MatMult_Private(Mat A, PetscBool A_transpose, Mat B, Mat C)
 {
   PetscInt N,N1,j;
@@ -139,8 +129,6 @@ static inline PetscErrorCode MatMatMultByColumns_MatMult_Private(Mat A, PetscBoo
   PetscFunctionReturnI(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMatMultByColumns_MatFilterZeros_Private"
 static inline PetscErrorCode MatMatMultByColumns_MatFilterZeros_Private(Mat *C,PetscBool filter)
 {
   Mat C_new;
@@ -156,8 +144,6 @@ static inline PetscErrorCode MatMatMultByColumns_MatFilterZeros_Private(Mat *C,P
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMatBlockDiagMultByColumns_Private"
 static PetscErrorCode MatMatBlockDiagMultByColumns_Private(Mat B, PetscBool B_transpose, Mat R, PetscBool filter, Mat *Gt_new)
 {
   Mat Bt;
@@ -203,8 +189,6 @@ static PetscErrorCode MatMatBlockDiagMultByColumns_Private(Mat B, PetscBool B_tr
   PetscFunctionReturnI(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMatMultByColumns_Private"
 static inline PetscErrorCode MatMatMultByColumns_Private(Mat A, PetscBool A_transpose, Mat B, PetscBool filter, Mat *C_new)
 {
   PetscBool flg;
@@ -221,8 +205,6 @@ static inline PetscErrorCode MatMatMultByColumns_Private(Mat A, PetscBool A_tran
   PetscFunctionReturnI(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMatMultByColumns"
 PetscErrorCode MatMatMultByColumns(Mat A, Mat B, PetscBool filter, Mat *C_new)
 {
   static PetscBool registered = PETSC_FALSE;
@@ -242,8 +224,6 @@ PetscErrorCode MatMatMultByColumns(Mat A, Mat B, PetscBool filter, Mat *C_new)
   PetscFunctionReturnI(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatTransposeMatMultByColumns"
 PetscErrorCode MatTransposeMatMultByColumns(Mat A, Mat B, PetscBool filter, Mat *C_new)
 {
   static PetscBool registered = PETSC_FALSE;

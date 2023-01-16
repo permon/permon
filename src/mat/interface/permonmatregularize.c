@@ -3,8 +3,6 @@
 
 PetscLogEvent Mat_Regularize;
 
-#undef __FUNCT__  
-#define __FUNCT__ "MatRegularize_GetPivots_Private"
 static PetscErrorCode MatRegularize_GetPivots_Private(Mat R, IS *pivots) {
 
   PetscInt p, npivots, maxdp;
@@ -117,8 +115,6 @@ static PetscErrorCode MatRegularize_GetPivots_Private(Mat R, IS *pivots) {
   PetscFunctionReturnI(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "MatRegularize_GetRegularization_Private"
 static PetscErrorCode MatRegularize_GetRegularization_Private(Mat K_loc, Mat R_loc, IS pivots, Mat *newQ)
 {
   Mat Q_loc_condensed=NULL, Q_loc=NULL;
@@ -201,8 +197,6 @@ static PetscErrorCode MatRegularize_GetRegularization_Private(Mat K_loc, Mat R_l
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__  
-#define __FUNCT__ "MatRegularize"
 PetscErrorCode MatRegularize(Mat K, Mat R, MatRegularizationType type, Mat *newKreg) {
   static PetscBool      registered = PETSC_FALSE;
   static PetscInt       regularized_id;

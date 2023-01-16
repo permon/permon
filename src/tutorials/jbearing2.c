@@ -63,8 +63,6 @@ static PetscErrorCode Monitor(Tao, void*);
 static PetscErrorCode ConvergenceTest(Tao, void*);
 extern PetscErrorCode CallPermonAndCompareResults(Tao, void*);
 
-#undef __FUNCT__
-#define __FUNCT__ "main"
 int main( int argc, char **argv )
 {
   PetscInt           Nx, Ny;          /* number of processors in x- and y- directions */
@@ -201,8 +199,6 @@ static PetscReal p(PetscReal xi, PetscReal ecc)
   return (t*t*t);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "ComputeB"
 PetscErrorCode ComputeB(AppCtx* user)
 {
   PetscInt       i,j,k;
@@ -240,8 +236,6 @@ PetscErrorCode ComputeB(AppCtx* user)
   return 0;
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "FormFunctionGradient"
 PetscErrorCode FormFunctionGradient(Tao tao, Vec X, PetscReal *fcn,Vec G,void *ptr)
 {
   AppCtx*        user=(AppCtx*)ptr;
@@ -345,8 +339,6 @@ PetscErrorCode FormFunctionGradient(Tao tao, Vec X, PetscReal *fcn,Vec G,void *p
 }
 
 
-#undef __FUNCT__
-#define __FUNCT__ "FormHessian"
 /*
    FormHessian computes the quadratic term in the quadratic objective function
    Notice that the objective function in this problem is quadratic (therefore a constant
@@ -444,8 +436,6 @@ PetscErrorCode FormHessian(Tao tao,Vec X,Mat hes, Mat Hpre, void *ptr)
   return 0;
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "Monitor"
 PetscErrorCode Monitor(Tao tao, void *ctx)
 {
   PetscInt           its;
@@ -460,8 +450,6 @@ PetscErrorCode Monitor(Tao tao, void *ctx)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "ConvergenceTest"
 PetscErrorCode ConvergenceTest(Tao tao, void *ctx)
 {
   PetscInt           its;
@@ -477,8 +465,6 @@ PetscErrorCode ConvergenceTest(Tao tao, void *ctx)
 
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "CallPermonAndCompareResults"
 PetscErrorCode CallPermonAndCompareResults(Tao tao, void *ctx)
 {
   AppCtx*        user=(AppCtx*)ctx;

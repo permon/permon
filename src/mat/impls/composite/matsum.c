@@ -1,8 +1,6 @@
 #include <permonmat.h>
 #include <../src/mat/impls/composite/permoncompositeimpl.h>
 
-#undef __FUNCT__
-#define __FUNCT__ "MatSumGetMat_Sum"
 static PetscErrorCode MatSumGetMat_Sum(Mat A,PetscInt index,Mat *Ai)
 {
   Mat_Composite     *shell = (Mat_Composite*)A->data;
@@ -24,8 +22,6 @@ static PetscErrorCode MatSumGetMat_Sum(Mat A,PetscInt index,Mat *Ai)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatSumGetMat"
 PetscErrorCode MatSumGetMat(Mat A,PetscInt i,Mat *Ai)
 {
   PetscFunctionBegin;
@@ -36,8 +32,6 @@ PetscErrorCode MatSumGetMat(Mat A,PetscInt i,Mat *Ai)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMult_Sum"
 PetscErrorCode MatMult_Sum(Mat A,Vec x,Vec y)
 {
   Mat_Composite     *shell = (Mat_Composite*)A->data;
@@ -74,8 +68,6 @@ PetscErrorCode MatMult_Sum(Mat A,Vec x,Vec y)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMultTranspose_Sum"
 PetscErrorCode MatMultTranspose_Sum(Mat A,Vec x,Vec y)
 {
   Mat_Composite     *shell = (Mat_Composite*)A->data;
@@ -103,8 +95,6 @@ PetscErrorCode MatMultTranspose_Sum(Mat A,Vec x,Vec y)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMultAdd_Sum"
 PetscErrorCode MatMultAdd_Sum(Mat A,Vec x,Vec y,Vec z)
 {
   Mat_Composite *shell = (Mat_Composite *) A->data;
@@ -123,8 +113,6 @@ PetscErrorCode MatMultAdd_Sum(Mat A,Vec x,Vec y,Vec z)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMultTransposeAdd_Sum"
 PetscErrorCode MatMultTransposeAdd_Sum(Mat A,Vec x,Vec y,Vec z)
 {
   PetscFunctionBegin;
@@ -133,8 +121,6 @@ PetscErrorCode MatMultTransposeAdd_Sum(Mat A,Vec x,Vec y,Vec z)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatCreate_Sum"
 FLLOP_EXTERN PetscErrorCode  MatCreate_Sum(Mat A)
 {
   PetscErrorCode (*createComposite)(Mat);
@@ -160,8 +146,6 @@ FLLOP_EXTERN PetscErrorCode  MatCreate_Sum(Mat A)
   PetscFunctionReturn(0);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatCreateSum"
 /*@C
    MatCreateSum - Creates a matrix as the implicit sum of zero or more matrices.
    This class is an adoption of MATCOMPOSITE type in PETSc.

@@ -1,8 +1,6 @@
 #include <permonksp.h>
 #include <permon/private/permonimpl.h>
 
-#undef __FUNCT__
-#define __FUNCT__ "KSPViewBriefInfo"
 PetscErrorCode KSPViewBriefInfo(KSP ksp, PetscViewer viewer)
 {
   KSPType                 ksptype;
