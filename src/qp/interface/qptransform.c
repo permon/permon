@@ -1087,6 +1087,30 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
 
   PetscCall(PetscObjectSetName((PetscObject)Kplus,"Kplus"));
 
+  {
+    //PetscViewer fd;
+    //Mat out;
+    //PetscInt i,ncols;
+
+    //PetscCall( PetscViewerBinaryOpen(comm,"Bt.bin",FILE_MODE_WRITE,&fd) );
+    //PetscCall( MatComputeExplicitOperator(Bt,&out) );
+    //PetscCall( MatView(out,fd) );
+    //PetscCall( MatDestroy(&out) );
+    //PetscCall( PetscViewerDestroy(&fd) );
+
+    //PetscCall( PetscViewerBinaryOpen(comm,"R.bin",FILE_MODE_WRITE,&fd) );
+    //PetscCall( MatComputeExplicitOperator(R,&out) );
+    //PetscCall( MatView(out,fd) );
+    //PetscCall( MatDestroy(&out) );
+    //PetscCall( PetscViewerDestroy(&fd) );
+
+    //PetscCall( PetscViewerBinaryOpen(comm,"Kplus.bin",FILE_MODE_WRITE,&fd) );
+    //PetscCall( MatComputeExplicitOperator(Kplus,&out) );
+    //PetscCall( MatView(out,fd) );
+    //PetscCall( MatDestroy(&out) );
+    //PetscCall( PetscViewerDestroy(&fd) );
+  }
+
   G = NULL;
   e = NULL;
   if (R) {

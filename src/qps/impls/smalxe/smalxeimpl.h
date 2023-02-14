@@ -31,12 +31,15 @@ typedef struct {
   PetscReal rho_update;                           /* rho_update > 1 */
   PetscReal rho_update_late;                      /* rho_update_late > 1 */
   PetscInt  rho_updates;
+  PetscReal rho_orig,rho_old;
 
   PetscReal eta_user, eta;                        /* eta > 0 */
   QPSScalarArgType eta_type;
   PetscInt  eta_hits;
 
   PetscReal update_threshold;
+
+  PetscReal cnst;
 
   PetscReal maxeig;
   PetscReal maxeig_tol;
@@ -53,9 +56,11 @@ typedef struct {
   PetscInt  inner_iter_accu;
   PetscBool setfromoptionscalled;
   PetscReal normBu,normBu_old,normBu_prev;
+  PetscReal normb0;
   PetscInt  offset;
   PetscReal enorm;
 
+  PetscReal Lag, Lag_old;
   PetscBool lag_enabled;
   PetscBool lag_monitor;
   PetscBool lag_compare;
@@ -63,6 +68,8 @@ typedef struct {
   PetscReal lower, upper;
 
   PetscBool knoll;
+  PetscBool snew;
+  PetscBool snew2;
 
   PetscErrorCode (*computeInnerTol)(QPS qps,Vec u,PetscReal *tol);
   PetscErrorCode (*updateNormBu)(QPS qps,Vec u,PetscReal *normBu,PetscReal *enorm);

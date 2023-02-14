@@ -263,18 +263,33 @@ static PetscErrorCode QPSSMALXESetCriterion_SMALXE(QPS qps,QPSSMALXECriterionTyp
   switch (type) {
     case QPS_SMALXE_CRITERION_STD:
       smalxe->computeInnerTol = QPSSMALXEInnerTolStd_SMALXE;
+      //smalxe->setupInnerTol   = QPSSMALXESetUpInnerTolNOP_SMALXE;
       break;
-    //case QPS_SMALXE_CRITERION_ALAPC:
-    //  smalxe->computeInnerTol = QPSSMALXEInnerTolALAPC_SMALXE;
-    //  break;
-    //case QPS_SMALXE_CRITERION_LAG:
-    //  smalxe->computeInnerTol = QPSSMALXEInnerTolLag_SMALXE;
-    //  break;
+    case QPS_SMALXE_CRITERION_ALAPC:
+      smalxe->computeInnerTol = QPSSMALXEInnerTolALAPC_SMALXE;
+      //smalxe->setupInnerTol   = QPSSMALXESetUpInnerTolNOP_SMALXE;
+      break;
+    case QPS_SMALXE_CRITERION_LAG:
+      smalxe->computeInnerTol = QPSSMALXEInnerTolLag_SMALXE;
+      //smalxe->setupInnerTol   = QPSSMALXESetUpInnerTolLag_SMALXE;
+      break;
     default: SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_PLIB,"Unknown SMALXE inner stopping criterion type");            
     }
     
   PetscFunctionReturn(0);
 }
+
+//#undef __FUNCT__
+//#define __FUNCT__ "QPSSMALXESetUpInnerTolNOP_SMALXE"
+//PetscErrorCode QPSSMALXESetUpInnerTolNOP_SMALXE(QPS qps)
+//{
+//  PetscFunctionBegin;
+//  PetscFunctionReturn(0);
+//}
+//
+//#undef __FUNCT__
+//#define __FUNCT__ "QPSSMALXESetUpInnerTolLag_SMALXE"
+//PetscErrorCode QPSSMALXESetUpInnerTolLag_SMALXE(QPS qps)
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSSMALXEInnerTolStd_SMALXE"
@@ -284,6 +299,55 @@ PetscErrorCode QPSSMALXEInnerTolStd_SMALXE(QPS qps,Vec u,PetscReal *tol)
 
   PetscFunctionBegin;
   *tol = PetscMin(smalxe->M1*smalxe->normBu,smalxe->eta);
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "QPSSMALXEInnerTolALAPC_SMALXE"
+PetscErrorCode QPSSMALXEInnerTolALAPC_SMALXE(QPS qps,Vec u,PetscReal *tol)
+{
+  QPS_SMALXE *smalxe = (QPS_SMALXE*)qps->data;
+  QPS qps_inner = smalxe->inner;
+  QP qp_inner = qps_inner->solQP;
+  QP qp = qps->solQP;
+  PetscReal normb;
+  PetscReal rho,diff;
+  Mat A_inner;
+
+  PetscFunctionBegin;
+  //PetscCall(VecNorm(qp_inner->b, NORM_2, &normb));
+  //*tol = PetscMin(smalxe->normBu,smalxe->M1*normb);
+
+  PetscCall(QPGetOperator(qp_inner, &A_inner));
+  PetscCall(MatPenalizedGetPenalty(A_inner, &rho));
+  PetscCall(VecNorm(qp->b, NORM_2, &normb));
+  *tol = smalxe->M1*normb/rho;
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "QPSSMALXEInnerTolLag_SMALXE"
+PetscErrorCode QPSSMALXEInnerTolLag_SMALXE(QPS qps,Vec u,PetscReal *tol)
+{
+  QPS_SMALXE *smalxe = (QPS_SMALXE*)qps->data;
+  QPS qps_inner = smalxe->inner;
+  QP qp_inner = qps_inner->solQP;
+  QPSConvergedCtx_Inner_SMALXE *cctx = (QPSConvergedCtx_Inner_SMALXE*) qps_inner->cnvctx;
+  Mat A_inner;
+  PetscReal rho,diff;
+
+  PetscFunctionBegin;
+  PetscCall(QPGetOperator(qp_inner, &A_inner));
+  PetscCall(MatPenalizedGetPenalty(A_inner, &rho));
+  diff = smalxe->Lag-smalxe->Lag_old;
+  diff = 2*diff/rho;
+  diff = PetscRealPartComplex(PetscSqrtComplex(diff));
+
+  //*tol = PetscMin(PetscMax(smalxe->normBu,diff),smalxe->eta);
+  *tol = PetscMax(smalxe->normBu,diff);
+  //*tol = smalxe->M1*PetscMax(smalxe->normBu,diff);
+  //*tol = smalxe->normBu;
+  //PetscPrintf(PETSC_COMM_WORLD,"max(%f,%f) = %f\n",diff,smalxe->normBu,*tol);
   PetscFunctionReturn(0);
 }
 
@@ -438,6 +502,41 @@ static PetscErrorCode QPSSMALXEUpdateRho_SMALXE(QPS qps, PetscBool Lagrangian_fl
 }
 
 #undef __FUNCT__
+#define __FUNCT__ "QPSSMALXEUpdateRhoM_SMALXE"
+static PetscErrorCode QPSSMALXEUpdateRhoM_SMALXE(QPS qps, PetscBool Lagrangian_flag)
+{
+  QPS_SMALXE    *smalxe = (QPS_SMALXE*)qps->data;
+  Mat           A_inner = smalxe->qp_penalized->A;
+  PetscReal     rho,rho_update;
+
+  PetscFunctionBegin;
+  //if (!Lagrangian_flag || !smalxe->snew) PetscFunctionReturn(0);
+  //PetscCall(MatPenalizedGetPenalty(A_inner, &smalxe->rho_old));
+  //rho=PetscMax(smalxe->rho_orig, smalxe->normb0/smalxe->normBu);
+  //rho_update = rho/smalxe->rho_old;
+  //smalxe->M1=smalxe->M1_initial*rho_update;
+  //
+  //PetscCall(PetscInfo(qps,"NEW updating rho, multiply by rho_update%d = %.4e\n",-1,rho_update));
+  //PetscCall(MatPenalizedUpdatePenalty(A_inner, rho_update));
+  //PetscCall(QPSMPGPUpdateMaxEigenvalue(smalxe->inner, rho_update));
+  //smalxe->rho_updates++;
+  if (!Lagrangian_flag || !smalxe->snew) PetscFunctionReturn(0);
+  PetscCall(MatPenalizedGetPenalty(A_inner, &smalxe->rho_old));
+  if (smalxe->cnst < 0) {
+    smalxe->cnst = smalxe->normBu*smalxe->rho_old/smalxe->normb0;
+  }
+  rho=PetscMax(smalxe->rho_orig, smalxe->cnst*smalxe->normb0/smalxe->normBu);
+  rho_update = rho/smalxe->rho_old;
+  smalxe->M1=smalxe->M1_initial*PetscSqrtReal(rho_update);
+  
+  PetscCall(PetscInfo(qps,"NEW updating rho, multiply by rho_update%d = %.4e\n",-1,rho_update));
+  PetscCall(MatPenalizedUpdatePenalty(A_inner, rho_update));
+  PetscCall(QPSMPGPUpdateMaxEigenvalue(smalxe->inner, rho_update));
+  smalxe->rho_updates++;
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ "QPSSMALXEUpdateLambda_SMALXE"
 static PetscErrorCode QPSSMALXEUpdateLambda_SMALXE(QPS qps,PetscReal rho)
 {
@@ -510,6 +609,9 @@ PetscErrorCode QPSSMALXEUpdate_SMALXE(QPS qps, PetscReal Lag_old, PetscReal Lag,
         gnorm, (gnorm < cctx->gtol)?'<':'>', cctx->gtol));
   }
 
+  if (smalxe->snew2) M1_update = 1./PetscSqrtReal(smalxe->rho_update);
+  printf("%e\n",M1_update);
+
   if (flag && M1_update != 1.0) {
     if (smalxe->inner->reason != KSP_CONVERGED_ATOL) {
       PetscCall(PetscInfo(qps,"not updating M1 as the inner solver has not returned due to M1\n"));
@@ -523,6 +625,7 @@ PetscErrorCode QPSSMALXEUpdate_SMALXE(QPS qps, PetscReal Lag_old, PetscReal Lag,
     }
   }
 
+  PetscCall(QPSSMALXEUpdateRhoM_SMALXE(qps,flag));
   if (smalxe->inner->rnorm > smalxe->enorm) {
     PetscCall(PetscInfo(qps,"not updating rho because G = %.8e > %.8e = E\n",smalxe->inner->rnorm,smalxe->enorm));
     PetscFunctionReturn(0);
@@ -583,6 +686,9 @@ PetscErrorCode QPSConvergedSetUp_Inner_SMALXE(QPS qps_inner)
 {
   QPSConvergedCtx_Inner_SMALXE *cctx = (QPSConvergedCtx_Inner_SMALXE*) qps_inner->cnvctx;
   QPS qps_outer = cctx->qps_outer;
+  //QPS_SMALXE *smalxe = (QPS_SMALXE*)qps_outer->data;
+  //QP qp_inner = qps_inner->solQP;
+  //Vec u = qp_inner->x;
   Vec b_inner = qps_inner->solQP->b;
   Vec b_outer = qps_outer->solQP->b;
 
@@ -594,6 +700,9 @@ PetscErrorCode QPSConvergedSetUp_Inner_SMALXE(QPS qps_inner)
   PetscCall(PetscInfo(qps_inner,"  gtol = rtol * norm_rhs_outer= %.4e * %.4e = %.4e\n",qps_outer->rtol,cctx->norm_rhs_outer,cctx->gtol));
   cctx->ttol_outer = PetscMax(qps_outer->rtol*cctx->norm_rhs_outer, qps_outer->atol);
   PetscCall(PetscInfo(qps_outer,"  ttol_outer = max(rtol_outer*norm_rhs_outer, atol_outer) = max(%.4e * %.4e, %.4e) = %.4e\n",qps_outer->rtol,cctx->norm_rhs_outer,qps_outer->atol,cctx->ttol_outer));
+
+
+  //PetscCall(smalxe->SetUpInnerTol(qps_inner));
 
   //TODO this is just a quick&dirty solution
   /* use inner b for divergence criterion of outer solver */
@@ -670,8 +779,9 @@ PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,KSPConvergedReason *reaso
   PetscCall(smalxe->updateNormBu(qps_outer,u,&smalxe->normBu,&smalxe->enorm));
   qps_outer->rnorm = PetscMax(smalxe->enorm,gnorm);
   cctx->MNormBu = smalxe->M1 * smalxe->normBu;
-  //qps_inner->atol = PetscMin(cctx->MNormBu, smalxe->eta);
   PetscCall(smalxe->computeInnerTol(qps_outer,u,&qps_inner->atol));
+  //qps_inner->atol = PetscMin(cctx->MNormBu, smalxe->eta);
+  //printf("tol %e\n",qps_inner->atol);
   
   PetscCall(QPSConverged_Inner_SMALXE_Monitor_Outer(qps_inner,qp_inner,i,gnorm,cctx,PETSC_TRUE));
   PetscCall(QPSConverged_Inner_SMALXE_Monitor_Inner(qps_inner,qp_inner,i,gnorm,cctx));
@@ -818,6 +928,8 @@ PetscErrorCode QPSSetFromOptions_SMALXE(PetscOptionItems *PetscOptionsObject,QPS
   PetscCall(PetscOptionsReal("-qps_smalxe_norm_update_lag_upper","","",smalxe->upper,&smalxe->upper,NULL));
 
   PetscCall(PetscOptionsBool("-qps_smalxe_knoll","","",smalxe->knoll,&smalxe->knoll,NULL));
+  PetscCall(PetscOptionsBool("-qps_smalxe_snew","","",smalxe->snew,&smalxe->snew,NULL));
+  PetscCall(PetscOptionsBool("-qps_smalxe_snew2","","",smalxe->snew2,&smalxe->snew2,NULL));
   smalxe->setfromoptionscalled = PETSC_TRUE;
   PetscOptionsTail();
   PetscFunctionReturn(0);
@@ -884,6 +996,7 @@ PetscErrorCode QPSSetUp_SMALXE(QPS qps)
   } else {
     rho = smalxe->rho_user;
   }
+  smalxe->rho_orig = rho;
 
   PetscCall(PetscInfo(qps,"   eta=%.8e eta_user=%.8e eta_type=%c\n",smalxe->eta,smalxe->eta_user,smalxe->eta_type==QPS_ARG_DIRECT?'D':'M'));
   PetscCall(PetscInfo(qps,"maxeig=%.8e\n",smalxe->maxeig));
@@ -910,6 +1023,7 @@ PetscErrorCode QPSSetUp_SMALXE(QPS qps)
   PetscCall(VecDuplicate(qp->b, &b_inner));
   PetscCall(VecCopy(qp->b, b_inner));
   PetscCall(QPSetRhs(qp_inner, b_inner));
+  PetscCall(VecNorm(b_inner,NORM_2,&smalxe->normb0));
   PetscCall(VecDestroy(&b_inner));
 
   /* inject the QP with penalized Hessian into inner solver */
@@ -1008,7 +1122,8 @@ PetscErrorCode QPSSolve_SMALXE(QPS qps)
   }
 
   /* compute initial value of Lagrangian */
-  PetscCall(QPComputeObjective(qp_inner,u,&Lag_old));
+  PetscCall(QPComputeObjective(qp_inner,u,&smalxe->Lag_old));
+  smalxe->Lag=smalxe->Lag_old;
 
   /* update BtBu and normBu */
   PetscCall(smalxe->updateNormBu(qps,u,&smalxe->normBu_old,&smalxe->enorm));
@@ -1043,12 +1158,12 @@ PetscErrorCode QPSSolve_SMALXE(QPS qps)
     /* store rho used in inner solve before update */
     PetscCall(MatPenalizedGetPenalty(A_inner, &rho));
 
+    smalxe->Lag_old = smalxe->Lag;
     /* compute current value of Lagrangian */
-    PetscCall(QPComputeObjective(qp_inner,u,&Lag));
+    PetscCall(QPComputeObjective(qp_inner,u,&smalxe->Lag));
 
     /* update M1, rho if needed */
-    PetscCall(QPSSMALXEUpdate_SMALXE(qps,Lag_old,Lag,rho));
-    Lag_old = Lag;
+    PetscCall(QPSSMALXEUpdate_SMALXE(qps,smalxe->Lag_old,smalxe->Lag,rho));
     smalxe->normBu_old = smalxe->normBu;
   }
   if (i == maxits) {
@@ -1222,6 +1337,9 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_SMALXE(QPS qps)
   /* inner data that should be reinitialized in QPSReset */
   smalxe->Bu = NULL;
   smalxe->qp_penalized          = NULL;
+  smalxe->Lag                   = NAN;
+  smalxe->Lag_old               = NAN;
+  smalxe->normb0                = NAN;
   smalxe->normBu                = NAN;
   smalxe->normBu_old            = NAN;
   smalxe->normBu_prev           = NAN;
@@ -1243,6 +1361,12 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_SMALXE(QPS qps)
   smalxe->rho_type    = QPS_ARG_MULTIPLE;
   smalxe->rho_update = 1.0;
   smalxe->rho_update_late = 2.0;
+  smalxe->rho_orig    = NAN;
+  smalxe->rho_old     = NAN;
+
+  smalxe->snew         = PETSC_FALSE;
+  smalxe->snew2         = PETSC_FALSE;
+  smalxe->cnst         = -1;
 
   smalxe->eta_user    = 1e-1;
   smalxe->eta_type    = QPS_ARG_MULTIPLE;
