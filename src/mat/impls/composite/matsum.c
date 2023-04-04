@@ -2,37 +2,11 @@
 #include <../src/mat/impls/composite/permoncompositeimpl.h>
 
 #undef __FUNCT__
-#define __FUNCT__ "MatSumGetMat_Sum"
-static PetscErrorCode MatSumGetMat_Sum(Mat A,PetscInt index,Mat *Ai)
-{
-  Mat_Composite     *shell = (Mat_Composite*)A->data;
-  Mat_CompositeLink ilink;
-  PetscInt          i;
-
-  PetscFunctionBegin;
-  PetscValidHeaderSpecific(A,MAT_CLASSID,1);
-  ilink  = shell->head;
-  for (i=0; i<index; i++) {
-    if (ilink) {
-      ilink = ilink->next;
-    } else {
-      break;
-    }
-  }
-  if (!ilink) SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_OUTOFRANGE,"partial matrix index out of range: %d",i);
-  *Ai = ilink->mat;
-  PetscFunctionReturn(0);
-}
-
-#undef __FUNCT__
 #define __FUNCT__ "MatSumGetMat"
 PetscErrorCode MatSumGetMat(Mat A,PetscInt i,Mat *Ai)
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(A,MAT_CLASSID,1);
-  PetscValidLogicalCollectiveInt(A,i,2);
-  PetscValidPointer(Ai,3);
-  PetscUseMethod(A,"MatSumGetMat_Sum_C",(Mat,PetscInt,Mat*),(A,i,Ai));
+  PetscCall(MatCompositeGetMat(A,i,Ai));
   PetscFunctionReturn(0);
 }
 
@@ -144,8 +118,6 @@ FLLOP_EXTERN PetscErrorCode  MatCreate_Sum(Mat A)
   PetscCall(PetscFunctionListFind(MatList,MATCOMPOSITE,(void(**)(void))&createComposite));
   PetscCall(createComposite(A));
   composite = (Mat_Composite*)A->data;
-
-  PetscCall(PetscObjectComposeFunction((PetscObject)A,"MatSumGetMat_Sum_C",MatSumGetMat_Sum));
 
   A->ops->mult              = MatMult_Sum;
   A->ops->multtranspose     = MatMultTranspose_Sum;
