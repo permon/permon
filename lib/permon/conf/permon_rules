@@ -36,6 +36,11 @@ deletelibs:
 allclean:
 	-@${OMAKE} -f gmakefile clean
 
+# Makes install_lib_dir; removed from PETSc in MR 6201
+chklib_dir:
+	@if [ ! -d "${INSTALL_LIB_DIR}" ]; then \
+		echo Making directory ${INSTALL_LIB_DIR} for library; ${MKDIR} ${INSTALL_LIB_DIR} ; fi
+
 #
 # Check if PETSC_DIR variable specified is valid
 #
