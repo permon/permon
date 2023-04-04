@@ -45,7 +45,7 @@ typedef struct {
   PetscScalar *svalues, *rvalues; /* sending and receiving data */
   PetscInt     rmax;              /* maximum message length */
 #if defined(PETSC_USE_CTABLE)
-  PetscTable colmap;
+  PetscHMapI colmap;
 #else
   PetscInt *colmap; /* local col number of off-diag col */
 #endif
@@ -80,6 +80,8 @@ typedef struct {
   PetscCount  *Cperm1;                     /* [sendlen] Permutation to fill MPI send buffer. 'C' for communication */
   PetscScalar *sendbuf, *recvbuf;          /* Buffers for remote values in MatSetValuesCOO() */
   PetscInt     sendlen, recvlen;           /* Lengths (in unit of PetscScalar) of send/recvbuf */
+
+  struct _MatOps cops;
 } Mat_MPIAIJ;
 
 

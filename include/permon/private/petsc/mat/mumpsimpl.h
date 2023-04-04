@@ -111,7 +111,7 @@ struct Mat_MUMPS {
 
   /* stuff used by petsc/mumps OpenMP support*/
   PetscBool    use_petsc_omp_support;
-  PetscOmpCtrl omp_ctrl;             /* an OpenMP controler that blocked processes will release their CPU (MPI_Barrier does not have this guarantee) */
+  PetscOmpCtrl omp_ctrl;             /* an OpenMP controller that blocked processes will release their CPU (MPI_Barrier does not have this guarantee) */
   MPI_Comm     petsc_comm, omp_comm; /* petsc_comm is petsc matrix's comm */
   PetscInt64  *recvcount;            /* a collection of nnz on omp_master */
   PetscMPIInt  tag, omp_comm_size;

@@ -3,7 +3,33 @@
 #define __AIJ_H
 
 #include <petsc/private/matimpl.h>
-#include <petscctable.h>
+#include <petsc/private/hashmapi.h>
+#include <petsc/private/hashmapijv.h>
+
+/*
+ Used by MatCreateSubMatrices_MPIXAIJ_Local()
+*/
+typedef struct { /* used by MatCreateSubMatrices_MPIAIJ_SingleIS_Local() and MatCreateSubMatrices_MPIAIJ_Local */
+  PetscInt   id; /* index of submats, only submats[0] is responsible for deleting some arrays below */
+  PetscInt   nrqs, nrqr;
+  PetscInt **rbuf1, **rbuf2, **rbuf3, **sbuf1, **sbuf2;
+  PetscInt **ptr;
+  PetscInt  *tmp;
+  PetscInt  *ctr;
+  PetscInt  *pa; /* proc array */
+  PetscInt  *req_size, *req_source1, *req_source2;
+  PetscBool  allcolumns, allrows;
+  PetscBool  singleis;
+  PetscInt  *row2proc; /* row to proc map */
+  PetscInt   nstages;
+#if defined(PETSC_USE_CTABLE)
+  PetscHMapI cmap, rmap;
+  PetscInt  *cmap_loc, *rmap_loc;
+#else
+  PetscInt *cmap, *rmap;
+#endif
+  PetscErrorCode (*destroy)(Mat);
+} Mat_SubSppt;
 
 /* Operations provided by MATSEQAIJ and its subclasses */
 typedef struct {
@@ -127,6 +153,11 @@ typedef struct {
   PetscCount  Atot;  /* Total number of valid (i.e., w/ non-negative indices) entries in the COO array */
   PetscCount *jmap;  /* perm[jmap[i]..jmap[i+1]) give indices of entries in v[] associated with i-th nonzero of the matrix */
   PetscCount *perm;  /* The permutation array in sorting (i,j) by row and then by col */
+
+  /* MatSetValues() via hash related fields */
+  PetscHMapIJV   ht;
+  PetscInt      *dnz;
+  struct _MatOps cops;
 } Mat_SeqAIJ;
 
 /*
@@ -135,6 +166,8 @@ typedef struct {
 static inline PetscErrorCode MatSeqXAIJFreeAIJ(Mat AA, MatScalar **a, PetscInt **j, PetscInt **i)
 {
   Mat_SeqAIJ *A = (Mat_SeqAIJ *)AA->data;
+
+  PetscFunctionBegin;
   if (A->singlemalloc) {
     PetscCall(PetscFree3(*a, *j, *i));
   } else {
@@ -142,6 +175,6 @@ static inline PetscErrorCode MatSeqXAIJFreeAIJ(Mat AA, MatScalar **a, PetscInt *
     if (A->free_ij) PetscCall(PetscFree(*j));
     if (A->free_ij) PetscCall(PetscFree(*i));
   }
-  return 0;
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 #endif
