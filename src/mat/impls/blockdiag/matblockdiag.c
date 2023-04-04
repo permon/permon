@@ -432,6 +432,14 @@ PetscErrorCode MatDestroy_BlockDiag(Mat mat) {
   PetscCall(VecDestroy(&data->xloc1));
   PetscCall(VecDestroy(&data->yloc1));
   PetscCall(PetscFree(data));
+  PetscCall(PetscObjectComposeFunction((PetscObject)mat,"MatGetColumnVectors_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)mat,"MatRestoreColumnVectors_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)mat,"MaProductSetFromOptions_blockdiag_aij_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)mat,"MaProductSetFromOptions_blockdiag_seqaij_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)mat,"MaProductSetFromOptions_blockdiag_mpiaij",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)mat,"MatConvert_blockdiag_aij_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)mat,"MatOrthColumns_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)mat,"PermonMatConvertBlocks_C",NULL));
   PetscFunctionReturn(0);
 }
 

@@ -1107,6 +1107,18 @@ PetscErrorCode MatDestroy_Extension(Mat TA) {
   PetscCall(VecScatterDestroy(&data->cscatter));
   PetscCall(VecScatterDestroy(&data->rscatter));
   PetscCall(PetscFree(data));
+  PetscCall(PetscObjectComposeFunction((PetscObject)TA,"MatConvert_nestpermon_extension_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)TA,"MatExtensionCreateCondensedRows_Extension_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)TA,"MatExtensionCreateLocalMat_Extension_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)TA,"MatExtensionGetColumnIS_Extension_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)TA,"MatExtensionSetColumnIS_Extension_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)TA,"MatExtensionGetRowIS_Extension_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)TA,"MatExtensionGetRowISLocal_Extension_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)TA,"MatExtensionSetRowIS_Extension_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)TA,"MatExtensionGetCondensed_Extension_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)TA,"MatExtensionSetCondensed_Extension_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)TA,"MatExtensionSetUp_Extension_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)TA,"MatProductSetFromOptions_blockdiag_extension_C",NULL));
   PetscFunctionReturn(0);
 }
 

@@ -1075,6 +1075,7 @@ PetscErrorCode QPSDestroy_SMALXE(QPS qps)
   PetscFunctionBegin;
   PetscCall(QPSReset_SMALXE(qps));
   PetscCall(QPSDestroy(&smalxe->inner));
+  PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSSMALXEGetInnerQPS_SMALXE_C",NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSSMALXEGetOperatorMaxEigenvalue_SMALXE_C",NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSSMALXESetOperatorMaxEigenvalue_SMALXE_C",NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSSMALXEGetM1Initial_SMALXE_C",NULL));
@@ -1087,8 +1088,6 @@ PetscErrorCode QPSDestroy_SMALXE(QPS qps)
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSSMALXESetRhoInitial_SMALXE_C",NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSSMALXEGetRhoUpdate_SMALXE_C",NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSSMALXESetRhoUpdate_SMALXE_C",NULL));
-  PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSSMALXEGetRhoUpdate2_SMALXE_C",NULL));
-  PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSSMALXESetRhoUpdate2_SMALXE_C",NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSSMALXEGetRhoUpdateLate_SMALXE_C",NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSSMALXESetRhoUpdateLate_SMALXE_C",NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSSMALXEGetInjectOperatorMaxEigenvalue_SMALXE_C",NULL));

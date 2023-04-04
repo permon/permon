@@ -2,6 +2,8 @@
 #include <permon/private/permonmatimpl.h>
 #include <permon/private/petscimpl.h>
 
+PETSC_EXTERN PetscErrorCode MatDestroy_NestPermon(Mat mat);
+
 #undef __FUNCT__
 #define __FUNCT__ "MatGetColumnVectors_NestPermon"
 static PetscErrorCode MatGetColumnVectors_NestPermon(Mat A, Vec *cols_new[])
@@ -631,7 +633,35 @@ PETSC_EXTERN PetscErrorCode MatConvert_Nest_NestPermon(Mat A,MatType type,MatReu
   PetscCall(PetscObjectComposeFunction((PetscObject)B,"MatConvert_nest_nestpermon_C", MatConvert_Nest_NestPermon));
   PetscCall(PetscObjectComposeFunction((PetscObject)B,"MatExtensionCreateCondensedRows_Extension_C",MatExtensionCreateCondensedRows_NestPermon));
 
+  /* Replace MatDestroy, stash the old one */
+  PetscCall(PetscObjectComposeFunction((PetscObject)B,"MatDestroy_nest",B->ops->destroy));
+  B->ops->destroy = MatDestroy_NestPermon;
+
   *newmat = B;
+  PetscFunctionReturn(0);
+}
+
+
+#undef __FUNCT__
+#define __FUNCT__ "MatDestroy_NestPermon"
+PETSC_EXTERN PetscErrorCode MatDestroy_NestPermon(Mat mat)
+{
+  PetscFunctionBegin;
+  PetscUseMethod((PetscObject)mat,"MatDestroy_nest",(Mat),(mat));
+  PetscCall(PetscObjectComposeFunction((PetscObject)mat,"MatDestroy_nest",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)mat,"MatGetColumnVectors_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)mat,"MatRestoreColumnVectors_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)mat,"MatFilterZeros_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)mat,"PermonMatCreateDenseProductMatrix_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)mat,"PermonMatTranspose_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)mat,"PermonMatGetLocalMat_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)mat,"MatMergeAndDestroy_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)mat,"PermonMatConvertBlocks_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)mat,"MatNestPermonGetVecs_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)mat,"MatNestPermonGetColumnISs_NestPermon_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)mat,"MatNestSetVecType_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)mat,"MatConvert_nest_nestpermon_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)mat,"MatExtensionCreateCondensedRows_Extension_C",NULL));
   PetscFunctionReturn(0);
 }
 

@@ -155,6 +155,8 @@ static PetscErrorCode PCDestroy_Dual(PC pc)
   PetscFunctionBegin;
   PetscCall(PCReset_Dual(pc));
   PetscCall(PetscFree(pc->data));
+  PetscCall(PetscObjectComposeFunction((PetscObject)pc,"PCDualSetType_Dual_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)pc,"PCDualGetType_Dual_C",NULL));
   PetscFunctionReturn(0);
 }
 

@@ -99,6 +99,10 @@ PetscErrorCode MatDestroy_Penalized(Mat Arho) {
   PetscCall(VecDestroy(&ctx->xwork));
   PetscCall(PetscFree(ctx));
   PetscCall(MatShellSetContext(Arho, NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)Arho,"MatPenalizedGetPenalty_Penalty_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)Arho,"MatPenalizedSetPenalty_Penalty_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)Arho,"MatPenalizedUpdatePenalty_Penalty_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)Arho,"MatPenalizedGetPenalizedTerm_Penalty_C",NULL));
   PetscFunctionReturn(0);
 }
 

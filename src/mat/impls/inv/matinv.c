@@ -794,6 +794,26 @@ PetscErrorCode MatDestroy_Inv(Mat imat)
   PetscCall(MatDestroy(&inv->R));
   PetscCall(KSPDestroy(&inv->ksp));
   PetscCall(PetscFree(inv));
+  PetscCall(PetscObjectComposeFunction((PetscObject)imat,"MatInvExplicitly_Inv_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)imat,"MatInvReset_Inv_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)imat,"MatInvSetUp_Inv_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)imat,"MatInvGetRegularizationType_Inv_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)imat,"MatInvSetRegularizationType_Inv_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)imat,"MatInvGetNullSpace_Inv_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)imat,"MatInvSetNullSpace_Inv_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)imat,"MatInvComputeNullSpace_Inv_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)imat,"MatInvSetTolerances_Inv_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)imat,"MatInvGetKSP_Inv_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)imat,"MatInvGetRegularizedMat_Inv_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)imat,"MatInvGetMat_Inv_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)imat,"MatInvSetMat_Inv_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)imat,"MatInvGetPC_Inv_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)imat,"MatInvGetRedundancy_Inv_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)imat,"MatInvSetRedundancy_Inv_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)imat,"MatInvGetPsubcommType_Inv_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)imat,"MatInvSetPsubcommType_Inv_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)imat,"MatInvGetType_Inv_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)imat,"MatInvSetType_Inv_C",NULL));
   PetscFunctionReturn(0);
 }
 

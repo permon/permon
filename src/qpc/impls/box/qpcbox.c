@@ -446,6 +446,9 @@ PetscErrorCode QPCDestroy_Box(QPC qpc)
     PetscCall(VecDestroy(&ctx->ub));
     PetscCall(VecDestroy(&ctx->lub));
   }
+  PetscCall(PetscObjectComposeFunction((PetscObject)qpc,"QPCBoxSet_Box_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)qpc,"QPCBoxGet_Box_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)qpc,"QPCBoxGetMultipliers_Box_C",NULL));
   PetscFunctionReturn(0);
 }
 

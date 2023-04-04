@@ -233,6 +233,7 @@ PetscErrorCode MatDestroy_Gluing(Mat mat)
   PetscCall(PetscFree(data->leaves_row));
   PetscCall(PetscFree(data->leaves_sign));
   PetscCall(PetscFree(data));
+  PetscCall(PetscObjectComposeFunction((PetscObject)mat,"FllopMatGetLocalMat_C",NULL));
   PetscFunctionReturn(0);
 }
 

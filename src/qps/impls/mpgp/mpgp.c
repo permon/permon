@@ -689,6 +689,7 @@ Parameters:
 PetscErrorCode QPSDestroy_MPGP(QPS qps)
 {
   PetscFunctionBegin;
+  PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetCurrentStepType_MPGP_C",NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetAlpha_MPGP_C",NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetAlpha_MPGP_C",NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetGamma_MPGP_C",NULL));
@@ -699,6 +700,7 @@ PetscErrorCode QPSDestroy_MPGP(QPS qps)
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetOperatorMaxEigenvalueTolerance_MPGP_C",NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetOperatorMaxEigenvalueIterations_MPGP_C",NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetOperatorMaxEigenvalueIterations_MPGP_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPUpdateMaxEigenvalue_MPGP_C",NULL));
   PetscCall(QPSDestroyDefault(qps));
   PetscFunctionReturn(0);
 }
