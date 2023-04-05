@@ -67,7 +67,7 @@ PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], cons
     PetscCall(PetscGetHomeDirectory(pfile,PETSC_MAX_PATH_LEN-16));
     /* warning: assumes all processes have a home directory or none, but nothing in between */
     if (pfile[0]) {
-      PetscCall(PetscStrcat(pfile,"/.flloprc"));
+      PetscCall(PetscStrlcat(pfile,"/.flloprc",sizeof(pfile)));
       PetscCall(PetscOptionsInsertFile(PETSC_COMM_WORLD,NULL,pfile,PETSC_FALSE));
     }
     PetscCall(PetscOptionsInsertFile(PETSC_COMM_WORLD,NULL, "flloprc", PETSC_FALSE));

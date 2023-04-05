@@ -24,7 +24,7 @@ static PetscErrorCode QPTransformBegin_Private(PetscErrorCode(*transform)(QP), c
   PetscCall(QPSetUpInnerObjects(qp));
   PetscCall(QPChainAdd(qp,opt,&child));
   child->transform = transform;
-  PetscCall(PetscStrcpy(child->transform_name, trname));
+  PetscCall(PetscStrncpy(child->transform_name, trname, sizeof(child->transform_name)));
   PetscCall(QPSetPC(child,qp->pc));
   if (qp->changeListener) PetscCall((*qp->changeListener)(qp));
 

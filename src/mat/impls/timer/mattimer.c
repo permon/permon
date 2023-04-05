@@ -114,9 +114,9 @@ PetscErrorCode MatTimerSetOperation(Mat mat, MatOperation op, const char *opname
   PetscCall(MatShellGetContext(mat,(void*)&ctx));
   PetscCall(PetscObjectGetName((PetscObject)ctx->A,&name));
 
-  PetscCall(PetscStrcpy(eventName, opname));
-  PetscCall(PetscStrcat(eventName, "_"));
-  PetscCall(PetscStrcat(eventName, name));
+  PetscCall(PetscStrncpy(eventName, opname, sizeof(eventName)));
+  PetscCall(PetscStrlcat(eventName, "_", sizeof(eventName)));
+  PetscCall(PetscStrlcat(eventName, name, sizeof(eventName)));
 
   PetscCall(FllopPetscLogEventGetId(eventName,&event,&exists));
   if (!exists) PetscCall(PetscLogEventRegister(eventName, MAT_CLASSID, &event));

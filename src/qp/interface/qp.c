@@ -723,22 +723,22 @@ PetscErrorCode QPComputeLagrangianGradient(QP qp, Vec x, Vec r, char *kkt_name_[
     PetscCall(VecIsInvalidated(qp->Bt_lambda,&flg));
     if (!flg) {
       PetscCall(VecCopy(qp->Bt_lambda,Bt_lambda));                                  /* Bt_lambda = (B'*lambda) */
-      if (kkt_name_) PetscCall(PetscStrcat(kkt_name," + (B'*lambda)"));
+      if (kkt_name_) PetscCall(PetscStrlcat(kkt_name," + (B'*lambda)",sizeof(kkt_name)));
       goto endif;
     }
 
     PetscCall(VecIsInvalidated(qp->lambda,&flg));
     if (!flg && qp->B->ops->multtranspose) {
       PetscCall(MatMultTranspose(qp->B, qp->lambda, Bt_lambda));                    /* Bt_lambda = B'*lambda */
-      if (kkt_name_) PetscCall(PetscStrcat(kkt_name," + B'*lambda"));
+      if (kkt_name_) PetscCall(PetscStrlcat(kkt_name," + B'*lambda",sizeof(kkt_name)));
       goto endif;
     }
 
     if (qp->BE) {
-      if (kkt_name_) PetscCall(PetscStrcat(kkt_name," + BE'*lambda_E"));
+      if (kkt_name_) PetscCall(PetscStrlcat(kkt_name," + BE'*lambda_E",sizeof(kkt_name)));
     }
     if (qp->BI) {
-      if (kkt_name_) PetscCall(PetscStrcat(kkt_name," + BI'*lambda_I"));
+      if (kkt_name_) PetscCall(PetscStrlcat(kkt_name," + BI'*lambda_I",sizeof(kkt_name)));
     }
 
     if (qp->BE) {
@@ -767,10 +767,10 @@ PetscErrorCode QPComputeLagrangianGradient(QP qp, Vec x, Vec r, char *kkt_name_[
     PetscCall(QPGetBox(qp,NULL,&lb,&ub));
     PetscCall(VecAXPY(r,1.0,Bt_lambda));                                            /* r = r + Bt_lambda */
     if (lb) {
-      if (kkt_name_) PetscCall(PetscStrcat(kkt_name," - lambda_lb"));
+      if (kkt_name_) PetscCall(PetscStrlcat(kkt_name," - lambda_lb",sizeof(kkt_name)));
     }
     if (ub) {
-      if (kkt_name_) PetscCall(PetscStrcat(kkt_name," + lambda_ub"));
+      if (kkt_name_) PetscCall(PetscStrlcat(kkt_name," + lambda_ub",sizeof(kkt_name)));
     }
   } else {
     PetscCall(VecInvalidate(r));

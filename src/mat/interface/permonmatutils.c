@@ -1020,11 +1020,11 @@ PetscErrorCode  MatTransposeMatMultWorks(Mat A,Mat B,PetscBool *flg)
   } else {
     /* dispatch based on the type of A and B from their PetscObject's PetscFunctionLists. */
     char multname[256];
-    PetscCall(PetscStrcpy(multname,"MatTransposeMatMult_"));
-    PetscCall(PetscStrcat(multname,((PetscObject)A)->type_name));
-    PetscCall(PetscStrcat(multname,"_"));
-    PetscCall(PetscStrcat(multname,((PetscObject)B)->type_name));
-    PetscCall(PetscStrcat(multname,"_C")); /* e.g., multname = "MatMatMult_seqdense_seqaij_C" */
+    PetscCall(PetscStrncpy(multname,"MatTransposeMatMult_",sizeof(multname)));
+    PetscCall(PetscStrlcat(multname,((PetscObject)A)->type_name,sizeof(multname)));
+    PetscCall(PetscStrlcat(multname,"_",sizeof(multname)));
+    PetscCall(PetscStrlcat(multname,((PetscObject)B)->type_name,sizeof(multname)));
+    PetscCall(PetscStrlcat(multname,"_C",sizeof(multname))); /* e.g., multname = "MatMatMult_seqdense_seqaij_C" */
     PetscCall(PetscObjectQueryFunction((PetscObject)B,multname,&transposematmult));
     if (!transposematmult) *flg = PETSC_FALSE;
   }

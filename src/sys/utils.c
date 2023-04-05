@@ -282,8 +282,8 @@ PetscErrorCode FllopPetscObjectInheritName(PetscObject obj,PetscObject orig,cons
   PetscCall(PetscStrlen(orig->name,&len1));
   PetscCall(PetscStrlen(suffix,&len2));
   PetscCall(PetscMalloc((1+len1+len2)*sizeof(char),&name));
-  PetscCall(PetscStrcpy(name,orig->name));
-  PetscCall(PetscStrcat(name,suffix));
+  PetscCall(PetscStrncpy(name,orig->name,sizeof(name)));
+  PetscCall(PetscStrlcat(name,suffix,sizeof(name)));
   PetscCall(PetscFree(obj->name));
   obj->name = name;
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -309,8 +309,8 @@ PetscErrorCode FllopPetscObjectInheritPrefix(PetscObject obj,PetscObject orig,co
   PetscCall(PetscStrlen(orig->prefix,&len1));
   PetscCall(PetscStrlen(suffix,&len2));
   PetscCall(PetscMalloc((1+len1+len2)*sizeof(char),&obj->prefix));
-  PetscCall(PetscStrcpy(obj->prefix,orig->prefix));
-  PetscCall(PetscStrcat(obj->prefix,suffix));
+  PetscCall(PetscStrncpy(obj->prefix,orig->prefix,sizeof(obj->prefix)));
+  PetscCall(PetscStrlcat(obj->prefix,suffix,sizeof(obj->prefix)));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
