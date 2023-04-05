@@ -1310,8 +1310,8 @@ PetscErrorCode  QPSSetResidualHistory(QPS qps,PetscReal a[],PetscInt na,PetscBoo
     qps->res_hist_max = na;
   } else {
     if (na != PETSC_DECIDE && na != PETSC_DEFAULT) qps->res_hist_max = na;
-    else                                           qps->res_hist_max = 10000; /* like default ksp->max_it */
-    PetscMalloc(qps->res_hist_max,&qps->res_hist_alloc);
+    else qps->res_hist_max = 10000; /* like default ksp->max_it */
+    PetscCall(PetscMalloc(qps->res_hist_max,&qps->res_hist_alloc));
 
     qps->res_hist = qps->res_hist_alloc;
   }

@@ -141,7 +141,7 @@ int main(int argc,char **args)
 
   /* Check that QPS converged */
   PetscCall(QPIsSolved(qp,&converged));
-  if (!converged) PetscPrintf(PETSC_COMM_WORLD,"QPS did not converge!\n");
+  if (!converged) PetscCall(PetscPrintf(PETSC_COMM_WORLD,"QPS did not converge!\n"));
 
   PetscCall(ISDestroy(&is));
   PetscCall(QPSDestroy(&qps));

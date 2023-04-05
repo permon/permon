@@ -1872,7 +1872,7 @@ static PetscErrorCode QPTPostSolve_QPTMatISToBlockDiag(QP child,QP parent)
   if (ctx->isDir) {
     if (computeNorm) {
       /* TODO: change implementation for submat copies for PETSc>=3.8 */
-      MatDuplicate(child->A,MAT_COPY_VALUES,&AsubCopy);
+      PetscCall(MatDuplicate(child->A,MAT_COPY_VALUES,&AsubCopy));
       //PetscCall(MatGetLocalToGlobalMapping(child->A,&l2g,NULL));
       //PetscCall(ISGlobalToLocalMappingApplyIS(l2g,IS_GTOLM_DROP,ctx->isDir,&isDirLoc));
       //PetscCall(MatGetLocalSubMatrix(parent->A,isDirLoc,isDirLoc,&Asub));

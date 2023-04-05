@@ -37,13 +37,13 @@ FLLOP_EXTERN char FLLOP_ObjNameBuffer_Global[FLLOP_MAX_NAME_LEN];
 FLLOP_EXTERN PetscErrorCode _fllop_ierr;
 #define PERMON_ASSERT(c,...)                 if (PetscUnlikely(!(c))) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_PLIB,__VA_ARGS__);
 
-#define FllopDebug(msg)                       0; do { if (FllopDebugEnabled) PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg); } while(0)
-#define FllopDebug1(msg,a1)                   0; do { if (FllopDebugEnabled) PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1); } while(0)
-#define FllopDebug2(msg,a1,a2)                0; do { if (FllopDebugEnabled) PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1,a2); } while(0)
-#define FllopDebug3(msg,a1,a2,a3)             0; do { if (FllopDebugEnabled) PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1,a2,a3); } while(0)
-#define FllopDebug4(msg,a1,a2,a3,a4)          0; do { if (FllopDebugEnabled) PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1,a2,a3,a4); } while(0)
-#define FllopDebug5(msg,a1,a2,a3,a4,a5)       0; do { if (FllopDebugEnabled) PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1,a2,a3,a4,a5); } while(0)
-#define FllopDebug6(msg,a1,a2,a3,a4,a5,a6)    0; do { if (FllopDebugEnabled) PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1,a2,a3,a4,a5,a6); } while(0)
+#define FllopDebug(msg)                       0; do { if (FllopDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg)); } while(0)
+#define FllopDebug1(msg,a1)                   0; do { if (FllopDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1)); } while(0)
+#define FllopDebug2(msg,a1,a2)                0; do { if (FllopDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1,a2)); } while(0)
+#define FllopDebug3(msg,a1,a2,a3)             0; do { if (FllopDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1,a2,a3)); } while(0)
+#define FllopDebug4(msg,a1,a2,a3,a4)          0; do { if (FllopDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1,a2,a3,a4)); } while(0)
+#define FllopDebug5(msg,a1,a2,a3,a4,a5)       0; do { if (FllopDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1,a2,a3,a4,a5)); } while(0)
+#define FllopDebug6(msg,a1,a2,a3,a4,a5,a6)    0; do { if (FllopDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1,a2,a3,a4,a5,a6)); } while(0)
 
 static inline PetscErrorCode PetscBoolGlobalAnd(MPI_Comm comm,PetscBool loc,PetscBool *glob)
 {
@@ -56,12 +56,13 @@ static inline PetscErrorCode PetscBoolGlobalOr(MPI_Comm comm,PetscBool loc,Petsc
 }
 
 static inline void FLLTIC(PetscLogDouble *t) {
-    PetscTime(t);
+    PetscCallVoid(PetscTime(t));
 }
 
 static inline void FLLTOC(PetscLogDouble *t) {
     PetscLogDouble toc_time;
-    PetscTime(&toc_time);
+
+    PetscCallVoid(PetscTime(&toc_time));
     *t = toc_time - *t;
 }
 

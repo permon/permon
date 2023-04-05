@@ -114,7 +114,7 @@ PetscErrorCode PermonFinalize()
   PetscCall(FllopDestroy(&fllop));
 
   if (FllopBeganPetsc) {
-    PetscFinalize();
+    PetscCall(PetscFinalize());
   } 
   FllopInitializeCalled = PETSC_FALSE;
   PetscFunctionReturn(0);

@@ -117,7 +117,7 @@ PetscErrorCode QPCView(QPC qpc,PetscViewer v)
 
   /* print IS */
   PetscCall(PetscViewerASCIIPrintf(v, "index set:\n"));
-  PetscViewerASCIIPushTab(v);
+  PetscCall(PetscViewerASCIIPushTab(v));
   if(qpc->is){
     PetscCall(ISView(qpc->is,v));
     // TODO: make ISViewBlock to view IS in blocks
@@ -126,7 +126,7 @@ PetscErrorCode QPCView(QPC qpc,PetscViewer v)
     PetscCall(PetscViewerASCIIPrintf(v, "not present; all components are constrained or QPC is composite\n"));
   }
 
-  PetscViewerASCIIPopTab(v);
+  PetscCall(PetscViewerASCIIPopTab(v));
 
   if (*qpc->ops->view) {
     PetscUseTypeMethod(qpc,view,v);
