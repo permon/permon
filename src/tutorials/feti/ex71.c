@@ -184,18 +184,18 @@ int main(int argc,char **args)
                                          user.per[2] ? DM_BOUNDARY_PERIODIC : DM_BOUNDARY_NONE,
                                          DMDA_STENCIL_BOX,user.cells[0]+1,user.cells[1]+1,user.cells[2]+1,
                                          PETSC_DECIDE,PETSC_DECIDE,PETSC_DECIDE,user.dof,
-                                         1,PETSC_NULL,PETSC_NULL,PETSC_NULL,&da);PetscCall(ierr);
+                                         1,NULL,NULL,NULL,&da);PetscCall(ierr);
     break;
   case 2:
     ierr = DMDACreate2d(PETSC_COMM_WORLD,user.per[0] ? DM_BOUNDARY_PERIODIC : DM_BOUNDARY_NONE,
                                          user.per[1] ? DM_BOUNDARY_PERIODIC : DM_BOUNDARY_NONE,
                                          DMDA_STENCIL_BOX,user.cells[0]+1,user.cells[1]+1,
                                          PETSC_DECIDE,PETSC_DECIDE,user.dof,
-                                         1,PETSC_NULL,PETSC_NULL,&da);PetscCall(ierr);
+                                         1,NULL,NULL,&da);PetscCall(ierr);
     break;
   case 1:
     ierr = DMDACreate1d(PETSC_COMM_WORLD,user.per[0] ? DM_BOUNDARY_PERIODIC : DM_BOUNDARY_NONE,
-                                         user.cells[0]+1,user.dof,1,PETSC_NULL,&da);PetscCall(ierr);
+                                         user.cells[0]+1,user.dof,1,NULL,&da);PetscCall(ierr);
     break;
   default: SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Unsupported dimension %" PetscInt_FMT "",user.dim);
   }
