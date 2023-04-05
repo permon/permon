@@ -10,7 +10,7 @@ PetscErrorCode MatMult_Timer(Mat W, Vec x, Vec y) {
     PetscCall(PetscLogEventBegin(ctx->events[MATOP_MULT],ctx->A,x,y,0));
     PetscCall(MatMult(ctx->A,x,y));
     PetscCall(PetscLogEventEnd(  ctx->events[MATOP_MULT],ctx->A,x,y,0));
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -22,7 +22,7 @@ PetscErrorCode MatMultAdd_Timer(Mat W, Vec x, Vec y, Vec z) {
     PetscCall(PetscLogEventBegin(ctx->events[MATOP_MULT_ADD],ctx->A,x,y,0));
     PetscCall(MatMultAdd(ctx->A,x,y,z));
     PetscCall(PetscLogEventEnd(  ctx->events[MATOP_MULT_ADD],ctx->A,x,y,0));
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -34,7 +34,7 @@ PetscErrorCode MatMultTranspose_Timer(Mat W, Vec x, Vec y) {
     PetscCall(PetscLogEventBegin(ctx->events[MATOP_MULT_TRANSPOSE],ctx->A,x,y,0));
     PetscCall(MatMultTranspose(ctx->A,x,y));
     PetscCall(PetscLogEventEnd(  ctx->events[MATOP_MULT_TRANSPOSE],ctx->A,x,y,0));
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -46,7 +46,7 @@ PetscErrorCode MatMultTransposeAdd_Timer(Mat W, Vec x, Vec y, Vec z) {
     PetscCall(PetscLogEventBegin(ctx->events[MATOP_MULT_TRANSPOSE_ADD],ctx->A,x,y,0));
     PetscCall(MatMultTransposeAdd(ctx->A,x,y,z));
     PetscCall(PetscLogEventEnd(  ctx->events[MATOP_MULT_TRANSPOSE_ADD],ctx->A,x,y,0));
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -58,7 +58,7 @@ PetscErrorCode MatDestroy_Timer(Mat W) {
     PetscCall(MatDestroy(&ctx->A));
     PetscCall(PetscFree(ctx));
     PetscCall(MatShellSetContext(W, NULL));
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -97,7 +97,7 @@ PetscErrorCode MatCreateTimer(Mat A, Mat *B) {
     PetscCall(MatTimerSetOperation(W,MATOP_MULT_TRANSPOSE_ADD,"MatMultTrAdd",(void(*)(void))MatMultTransposeAdd_Timer));
     
     *B = W;
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -123,7 +123,7 @@ PetscErrorCode MatTimerSetOperation(Mat mat, MatOperation op, const char *opname
   ctx->events[op] = event;
 
   PetscCall(MatShellSetOperation(mat,op,opf));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -133,6 +133,6 @@ PetscErrorCode MatTimerGetMat(Mat W, Mat *A) {
     PetscFunctionBegin;
     PetscCall(MatShellGetContext(W,(void*)&ctx));
     *A = ctx->A;
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
 }
 

@@ -34,7 +34,7 @@ PetscErrorCode MatGetColumnVectors_DensePermon(Mat A, Vec *cols_new[])
     col_arr += m;
   }
   *cols_new=cols;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -51,7 +51,7 @@ PetscErrorCode MatRestoreColumnVectors_DensePermon(Mat A, Vec *cols[])
   PetscCall(VecDestroyVecs(N,cols));
   PetscCall(MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY));
   PetscCall(MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -61,7 +61,7 @@ PetscErrorCode MatConvertFrom_SeqDensePermon(Mat A,MatType type,MatReuse reuse,M
   PetscFunctionBegin;
   PetscCall(MatConvert(A,MATSEQDENSE,reuse,newmat));
   PetscCall(MatConvert_SeqDense_SeqDensePermon(*newmat,MATSEQDENSEPERMON,MAT_INPLACE_MATRIX,newmat));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -71,7 +71,7 @@ PetscErrorCode MatConvertFrom_MPIDensePermon(Mat A,MatType type,MatReuse reuse,M
   PetscFunctionBegin;
   PetscCall(MatConvert(A,MATMPIDENSE,reuse,newmat));
   PetscCall(MatConvert_MPIDense_MPIDensePermon(*newmat,MATMPIDENSEPERMON,MAT_INPLACE_MATRIX,newmat));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -97,7 +97,7 @@ PETSC_EXTERN PetscErrorCode MatConvert_SeqDense_SeqDensePermon(Mat A,MatType typ
   B->ops->destroy = MatDestroy_SeqDensePermon;
   
   *newmat = B;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -123,7 +123,7 @@ PETSC_EXTERN PetscErrorCode MatConvert_MPIDense_MPIDensePermon(Mat A,MatType typ
   B->ops->destroy = MatDestroy_MPIDensePermon;
   
   *newmat = B;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -133,7 +133,7 @@ PETSC_EXTERN PetscErrorCode MatCreate_MPIDensePermon(Mat mat)
   PetscFunctionBegin;
   PetscCall(MatSetType(mat,MATMPIDENSE));
   PetscCall(MatConvert_MPIDense_MPIDensePermon(mat,MATMPIDENSEPERMON,MAT_INPLACE_MATRIX,&mat));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -143,7 +143,7 @@ PETSC_EXTERN PetscErrorCode MatCreate_SeqDensePermon(Mat mat)
   PetscFunctionBegin;
   PetscCall(MatSetType(mat,MATSEQDENSE));
   PetscCall(MatConvert_SeqDense_SeqDensePermon(mat,MATSEQDENSEPERMON,MAT_INPLACE_MATRIX,&mat));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -156,7 +156,7 @@ PETSC_EXTERN PetscErrorCode MatDestroy_SeqDensePermon(Mat mat)
   PetscCall(PetscObjectComposeFunction((PetscObject)mat,"MatGetColumnVectors_C",NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)mat,"MatRestoreColumnVectors_C",NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)mat,"MatConvert_seqdense_seqdensepermon",NULL));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -169,7 +169,7 @@ PETSC_EXTERN PetscErrorCode MatDestroy_MPIDensePermon(Mat mat)
   PetscCall(PetscObjectComposeFunction((PetscObject)mat,"MatGetColumnVectors_C",NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)mat,"MatRestoreColumnVectors_C",NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)mat,"MatConvert_mpidense_mpidensepermon",NULL));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -189,5 +189,5 @@ PetscErrorCode MatCreateDensePermon(MPI_Comm comm,PetscInt m,PetscInt n,PetscInt
     PetscCall(MatSetType(*A,MATSEQDENSEPERMON));
     PetscCall(MatSeqDenseSetPreallocation(*A,data));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }

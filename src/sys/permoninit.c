@@ -108,7 +108,7 @@ PetscErrorCode PermonFinalize()
 {
   PetscFunctionBegin;
   if (!FllopInitializeCalled) {
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
   PetscCall(PetscInfo(fllop,"FllopFinalize() called\n"));  
   PetscCall(FllopDestroy(&fllop));
@@ -117,7 +117,7 @@ PetscErrorCode PermonFinalize()
     PetscCall(PetscFinalize());
   } 
   FllopInitializeCalled = PETSC_FALSE;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #if defined(PETSC_HAVE_DYNAMIC_LIBRARIES)
@@ -135,6 +135,6 @@ PetscErrorCode PetscDLLibraryRegister_permon()
   PetscCall(QPPFInitializePackage());
   PetscCall(QPInitializePackage());
   PetscCall(QPSInitializePackage());
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 #endif /* PETSC_HAVE_DYNAMIC_LIBRARIES */

@@ -22,7 +22,7 @@ static PetscErrorCode KSPFETISetDirichlet_FETI(KSP ksp,IS isDir,QPFetiNumberingT
   feti->isDir = isDir;
   feti->dirNumType = numtype;
   feti->dirEnforceExt = enforce_by_B;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 /*@
@@ -49,7 +49,7 @@ PetscErrorCode KSPFETISetDirichlet(KSP ksp,IS isDir,QPFetiNumberingType numtype,
   PetscValidLogicalCollectiveBool(ksp,enforce_by_B,4);
   PetscCall(KSPSetUp(ksp));
   PetscTryMethod(ksp,"KSPFETISetDirichlet_C",(KSP,IS,QPFetiNumberingType,PetscBool),(ksp,isDir,numtype,enforce_by_B));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -63,7 +63,7 @@ static PetscErrorCode KSPQPSSetUp(KSP ksp)
   PetscCall(QPSSetQP(feti->qps,feti->qp));
   PetscCall(QPSSetFromOptions(feti->qps));
   PetscCall(QPSSetUp(feti->qps));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -90,7 +90,7 @@ static PetscErrorCode KSPFETISetUp(KSP ksp)
   PetscCall(QPFetiSetUp(feti->qp));
   PetscCall(QPTFromOptions(feti->qp));
   PetscCall(QPGetParent(feti->qp,&feti->qp));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -116,7 +116,7 @@ PetscErrorCode KSPSetUp_FETI(KSP ksp)
     KSPFETISetUp(ksp);
   }
   */
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -132,7 +132,7 @@ PetscErrorCode KSPDestroy_FETI(KSP ksp)
   PetscCall(QPDestroy(&feti->qp));
   PetscCall(KSPDestroyDefault(ksp));
   PetscCall(PetscObjectComposeFunction((PetscObject)ksp,"KSPFETISetDirichlet_C",NULL));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 //TODO implement preconditiong
@@ -149,7 +149,7 @@ PetscErrorCode KSPSolve_FETI(KSP ksp)
   PetscCall(QPSGetConvergedReason(feti->qps,&ksp->reason));
   PetscCall(QPSGetIterationNumber(feti->qps,&ksp->its));
   PetscCall(QPGetSolutionVector(feti->qp,&ksp->vec_sol));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 /*MC
@@ -183,5 +183,5 @@ FLLOP_EXTERN PetscErrorCode KSPCreate_FETI(KSP ksp)
   ksp->ops->destroy        = KSPDestroy_FETI;
 
   PetscCall(PetscObjectComposeFunction((PetscObject)ksp,"KSPFETISetDirichlet_C",KSPFETISetDirichlet_FETI));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }

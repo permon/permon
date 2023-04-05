@@ -35,7 +35,7 @@ PetscErrorCode viewDraw(Vec x) {
   PetscCall(PetscDrawSetFromOptions(draw));
   PetscCall(VecView(x,v1));
   PetscCall(PetscViewerDestroy(&v1));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 /* Lower bound (obstacle) function */

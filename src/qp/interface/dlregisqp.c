@@ -9,7 +9,7 @@ static PetscBool QPPackageInitialized = PETSC_FALSE;
 PetscErrorCode QPInitializePackage()
 {
   PetscFunctionBegin;
-  if (QPPackageInitialized) PetscFunctionReturn(0);
+  if (QPPackageInitialized) PetscFunctionReturn(PETSC_SUCCESS);
   QPPackageInitialized = PETSC_TRUE;
   /* Register Classes */
   PetscCall(PetscClassIdRegister("QP Problem",         &QP_CLASSID));
@@ -28,5 +28,5 @@ PetscErrorCode QPInitializePackage()
   PetscCall(PetscLogEventRegister("QPTSplitBE",        QP_CLASSID, &QPT_SplitBE));
   /* Process info & summary exclusions */
   PetscCall(FllopProcessInfoExclusions(QP_CLASSID, QP_CLASS_NAME));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }

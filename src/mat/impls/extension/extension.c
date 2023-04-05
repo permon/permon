@@ -18,7 +18,7 @@ static PetscErrorCode MatExtensionGetColumnIS_Extension(Mat TA,IS *cis)
 
   PetscFunctionBegin;
   *cis = data->cis;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -29,7 +29,7 @@ PetscErrorCode MatExtensionGetColumnIS(Mat TA,IS *cis)
   PetscValidHeaderSpecific(TA,MAT_CLASSID,1);
   PetscValidPointer(cis,2);
   PetscUseMethod(TA,"MatExtensionGetColumnIS_Extension_C",(Mat,IS*),(TA,cis));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -42,7 +42,7 @@ static PetscErrorCode MatExtensionSetColumnIS_Extension(Mat TA,IS cis)
   if (data->setupcalled) SETERRQ(PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONGSTATE,"cannot alter inner data after first MatMult* call");
   data->cis = cis;
   PetscCall(PetscObjectReference((PetscObject)cis));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -53,7 +53,7 @@ PetscErrorCode MatExtensionSetColumnIS(Mat TA,IS cis)
   PetscValidHeaderSpecific(TA,MAT_CLASSID,1);
   if (cis) PetscValidHeaderSpecific(cis,IS_CLASSID,2);
   PetscTryMethod(TA,"MatExtensionSetColumnIS_Extension_C",(Mat,IS),(TA,cis));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -64,7 +64,7 @@ static PetscErrorCode MatExtensionGetRowIS_Extension(Mat TA,IS *ris)
 
   PetscFunctionBegin;
   *ris = data->ris;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -75,7 +75,7 @@ PetscErrorCode MatExtensionGetRowIS(Mat TA,IS *ris)
   PetscValidHeaderSpecific(TA,MAT_CLASSID,1);
   PetscValidPointer(ris,2);
   PetscUseMethod(TA,"MatExtensionGetRowIS_Extension_C",(Mat,IS*),(TA,ris));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -86,7 +86,7 @@ static PetscErrorCode MatExtensionGetRowISLocal_Extension(Mat TA,IS *ris)
 
   PetscFunctionBegin;
   *ris = data->ris_local;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -97,7 +97,7 @@ PetscErrorCode MatExtensionGetRowISLocal(Mat TA,IS *ris)
   PetscValidHeaderSpecific(TA,MAT_CLASSID,1);
   PetscValidPointer(ris,2);
   PetscUseMethod(TA,"MatExtensionGetRowISLocal_Extension_C",(Mat,IS*),(TA,ris));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -115,7 +115,7 @@ static PetscErrorCode MatExtensionSetRowIS_Extension(Mat TA,IS ris,PetscBool row
   }
   PetscCall(PetscObjectReference((PetscObject)ris));
   data->rows_use_global_numbering = rows_use_global_numbering;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -127,7 +127,7 @@ PetscErrorCode MatExtensionSetRowIS(Mat TA,IS ris,PetscBool rows_use_global_numb
   if (ris) PetscValidHeaderSpecific(ris,IS_CLASSID,2);
   PetscValidLogicalCollectiveBool(TA,rows_use_global_numbering,3);
   PetscTryMethod(TA,"MatExtensionSetRowIS_Extension_C",(Mat,IS,PetscBool),(TA,ris,rows_use_global_numbering));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -138,7 +138,7 @@ static PetscErrorCode MatExtensionGetCondensed_Extension(Mat TA,Mat *A)
 
   PetscFunctionBegin;
   *A = data->A;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -149,7 +149,7 @@ PetscErrorCode MatExtensionGetCondensed(Mat TA,Mat *A)
   PetscValidHeaderSpecific(TA,MAT_CLASSID,1);
   PetscValidPointer(A,2);
   PetscUseMethod(TA,"MatExtensionGetCondensed_Extension_C",(Mat,Mat*),(TA,A));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -162,7 +162,7 @@ static PetscErrorCode MatExtensionCreateCondensedRows_Extension(Mat TA,Mat *A,IS
   PetscCall(MatExtensionSetUp(TA));
   PetscCall(MatCreateExtension(PetscObjectComm((PetscObject)TA),data->A->rmap->n,TA->cmap->n,PETSC_DECIDE,TA->cmap->N,data->A,NULL,PETSC_TRUE,data->cis,A));
   if (ris_local) PetscCall(ISDuplicate(data->ris_local,ris_local));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -173,7 +173,7 @@ PetscErrorCode MatExtensionCreateCondensedRows(Mat TA,Mat *A,IS *ris_local)
   PetscValidHeaderSpecific(TA,MAT_CLASSID,1);
   PetscValidPointer(A,2);
   PetscUseMethod(TA,"MatExtensionCreateCondensedRows_Extension_C",(Mat,Mat*,IS*),(TA,A,ris_local));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -188,7 +188,7 @@ static PetscErrorCode MatExtensionCreateLocalMat_Extension(Mat TA,Mat *A)
   PetscCall(ISOnComm(data->ris_local,PETSC_COMM_SELF,PETSC_COPY_VALUES,&ris));
   PetscCall(ISOnComm(data->cis,PETSC_COMM_SELF,PETSC_COPY_VALUES,&cis));
   PetscCall(MatCreateExtension(PETSC_COMM_SELF,TA->rmap->n,TA->cmap->N,TA->rmap->n,TA->cmap->N,data->A,ris,PETSC_TRUE,cis,A));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -199,7 +199,7 @@ PetscErrorCode MatExtensionCreateLocalMat(Mat TA,Mat *local)
   PetscValidHeaderSpecific(TA,MAT_CLASSID,1);
   PetscValidPointer(local,2);
   PetscUseMethod(TA,"MatExtensionCreateLocalMat_Extension_C",(Mat,Mat*),(TA,local));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -215,7 +215,7 @@ static PetscErrorCode MatExtensionSetCondensed_Extension(Mat TA,Mat A)
   if (commsize > 1) SETERRQ(PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONG,"inner matrix must be sequential");
   data->A = A;
   PetscCall(PetscObjectReference((PetscObject)A));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -226,7 +226,7 @@ PetscErrorCode MatExtensionSetCondensed(Mat TA,Mat A)
   PetscValidHeaderSpecific(TA,MAT_CLASSID,1);
   PetscValidHeaderSpecific(A,MAT_CLASSID,2);
   PetscTryMethod(TA,"MatExtensionSetCondensed_Extension_C",(Mat,Mat),(TA,A));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -238,7 +238,7 @@ static PetscErrorCode MatExtensionSetUp_Extension(Mat TA)
   PetscInt lo;
 
   PetscFunctionBegin;
-  if (data->setupcalled) PetscFunctionReturn(0);
+  if (data->setupcalled) PetscFunctionReturn(PETSC_SUCCESS);
   PetscCall(PetscLayoutSetUp(TA->rmap));
   PetscCall(PetscLayoutSetUp(TA->cmap));
   lo = TA->rmap->rstart;
@@ -267,7 +267,7 @@ static PetscErrorCode MatExtensionSetUp_Extension(Mat TA)
   PetscCall(VecDestroy(&c));
   PetscCall(VecDestroy(&r));
   data->setupcalled = PETSC_TRUE;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -277,7 +277,7 @@ PetscErrorCode MatExtensionSetUp(Mat TA)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(TA,MAT_CLASSID,1);
   PetscTryMethod(TA,"MatExtensionSetUp_Extension_C",(Mat),(TA));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -331,7 +331,7 @@ PetscErrorCode MatConvertFrom_Extension(Mat A,MatType type,MatReuse reuse,Mat *n
   } else {
     *newmat = B;
   }
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -491,7 +491,7 @@ PETSC_EXTERN PetscErrorCode MatConvert_NestPermon_Extension(Mat A,MatType type,M
   } else {
     *newmat = B;
   }
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -507,7 +507,7 @@ PetscErrorCode MatMult_Extension(Mat TA, Vec c, Vec r) {
   PetscCall(MatMult(data->A,data->cwork,data->rwork));
   PetscCall(VecScatterBegin(data->rscatter,data->rwork,r,ADD_VALUES,SCATTER_FORWARD));
   PetscCall(VecScatterEnd(  data->rscatter,data->rwork,r,ADD_VALUES,SCATTER_FORWARD));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -523,7 +523,7 @@ PetscErrorCode MatMultAdd_Extension(Mat TA, Vec c, Vec r1, Vec r) {
   PetscCall(MatMult(data->A,data->cwork,data->rwork));
   PetscCall(VecScatterBegin(data->rscatter,data->rwork,r,ADD_VALUES,SCATTER_FORWARD));
   PetscCall(VecScatterEnd(  data->rscatter,data->rwork,r,ADD_VALUES,SCATTER_FORWARD));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -539,7 +539,7 @@ PetscErrorCode MatMultTranspose_Extension(Mat TA, Vec r, Vec c) {
   PetscCall(MatMultTranspose(data->A,data->rwork,data->cwork));
   PetscCall(VecScatterBegin(data->cscatter,data->cwork,c,ADD_VALUES,SCATTER_REVERSE));
   PetscCall(VecScatterEnd(  data->cscatter,data->cwork,c,ADD_VALUES,SCATTER_REVERSE));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -555,7 +555,7 @@ PetscErrorCode MatMultTransposeAdd_Extension(Mat TA, Vec r, Vec c1, Vec c) {
   PetscCall(MatMultTranspose(data->A,data->rwork,data->cwork));
   PetscCall(VecScatterBegin(data->cscatter,data->cwork,c,ADD_VALUES,SCATTER_REVERSE));
   PetscCall(VecScatterEnd(  data->cscatter,data->cwork,c,ADD_VALUES,SCATTER_REVERSE));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -610,7 +610,7 @@ PetscErrorCode MatTransposeMatMult_BlockDiag_Extension_2extension(Mat B, Mat TA,
   PetscCall(ISDestroy(&is_cols));
   PetscCall(MatDestroy(&C_loc));
   *C = C_out;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -677,7 +677,7 @@ PetscErrorCode MatTransposeMatMult_BlockDiag_Extension_2MPIAIJ(Mat B, Mat TA, Ma
   *C = C_out;
   PetscCall(ISRestoreIndices(data->cis, &isCols));
   PetscCall(ISDestroy(&is_self));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -707,7 +707,7 @@ static PetscErrorCode MatProductNumeric_BlockDiag_Extension(Mat C)
   PetscCall(MatHeaderReplace(C,&newmat));
   C->product = product;
   C->ops->productnumeric = MatProductNumeric_BlockDiag_Extension;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -716,7 +716,7 @@ static PetscErrorCode MatProductSymbolic_BlockDiag_Extension(Mat C) {
 
   PetscFunctionBegin;
   C->ops->productnumeric  = MatProductNumeric_BlockDiag_Extension;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -725,7 +725,7 @@ static PetscErrorCode MatProductSetFromOptions_BlockDiag_Extension(Mat C) {
 
   PetscFunctionBegin;
   C->ops->productsymbolic = MatProductSymbolic_BlockDiag_Extension;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1041,7 +1041,7 @@ PetscErrorCode MatMatTransposeMult_Extension_Extension_same(Mat A, Mat B, MatReu
   PetscCall(MatAssemblyBegin(C_out,MAT_FINAL_ASSEMBLY));
   PetscCall(MatAssemblyEnd(C_out,MAT_FINAL_ASSEMBLY));
   *C = C_out;
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1072,7 +1072,7 @@ static PetscErrorCode MatProductNumeric_Extension(Mat C)
   PetscCall(MatHeaderReplace(C,&newmat));
   C->product = product;
   C->ops->productnumeric = MatProductNumeric_Extension;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1081,7 +1081,7 @@ PetscErrorCode MatProductSymbolic_Extension(Mat C)
 {
   PetscFunctionBegin;
   C->ops->productnumeric  = MatProductNumeric_Extension;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1089,7 +1089,7 @@ PetscErrorCode MatProductSymbolic_Extension(Mat C)
 static PetscErrorCode MatProductSetFromOptions_Extension(Mat C) {
   PetscFunctionBegin;
   C->ops->productsymbolic = MatProductSymbolic_Extension;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1119,7 +1119,7 @@ PetscErrorCode MatDestroy_Extension(Mat TA) {
   PetscCall(PetscObjectComposeFunction((PetscObject)TA,"MatExtensionSetCondensed_Extension_C",NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)TA,"MatExtensionSetUp_Extension_C",NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)TA,"MatProductSetFromOptions_blockdiag_extension_C",NULL));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1172,7 +1172,7 @@ FLLOP_EXTERN PetscErrorCode MatCreate_Extension(Mat TA)
   PetscCall(PetscObjectComposeFunction((PetscObject)TA,"MatExtensionSetCondensed_Extension_C",MatExtensionSetCondensed_Extension));
   PetscCall(PetscObjectComposeFunction((PetscObject)TA,"MatExtensionSetUp_Extension_C",MatExtensionSetUp_Extension));
   PetscCall(PetscObjectComposeFunction((PetscObject)TA,"MatProductSetFromOptions_blockdiag_extension_C",MatProductSetFromOptions_BlockDiag_Extension));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1207,6 +1207,6 @@ PetscErrorCode MatCreateExtension(MPI_Comm comm, PetscInt m, PetscInt n, PetscIn
   PetscCall(MatExtensionSetColumnIS(TA,cis));
   PetscCall(MatExtensionSetUp(TA));
   *TA_new = TA;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 

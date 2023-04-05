@@ -11,7 +11,7 @@ static PetscErrorCode QPSSMALXEGetOperatorMaxEigenvalue_SMALXE(QPS qps,PetscReal
   
   PetscFunctionBegin;
   *maxeig = smalxe->maxeig;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -23,7 +23,7 @@ static PetscErrorCode QPSSMALXESetOperatorMaxEigenvalue_SMALXE(QPS qps,PetscReal
   PetscFunctionBegin;
   smalxe->maxeig = maxeig;
   qps->setupcalled = PETSC_FALSE;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -35,7 +35,7 @@ static PetscErrorCode QPSSMALXEGetM1Initial_SMALXE(QPS qps,PetscReal *M1_initial
   PetscFunctionBegin;
   if (M1_initial) *M1_initial = smalxe->M1_user;
   if (argtype) *argtype = smalxe->M1_type;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -47,7 +47,7 @@ static PetscErrorCode QPSSMALXESetM1Initial_SMALXE(QPS qps,PetscReal M1_initial,
   PetscFunctionBegin;
   smalxe->M1_user = M1_initial;
   smalxe->M1_type = argtype;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -63,7 +63,7 @@ static PetscErrorCode QPSSMALXEGetEta_SMALXE(QPS qps,PetscReal *eta,QPSScalarArg
   if (argtype) {
     *argtype = smalxe->eta_type;
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -76,7 +76,7 @@ static PetscErrorCode QPSSMALXESetEta_SMALXE(QPS qps,PetscReal eta,QPSScalarArgT
   smalxe->eta_user = eta;
   smalxe->eta_type = argtype;
   qps->setupcalled = PETSC_FALSE;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -92,7 +92,7 @@ static PetscErrorCode QPSSMALXEGetRhoInitial_SMALXE(QPS qps,PetscReal *rho_initi
   if (argtype) {
     *argtype = smalxe->rho_type;
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -105,7 +105,7 @@ static PetscErrorCode QPSSMALXESetRhoInitial_SMALXE(QPS qps,PetscReal rho_initia
   smalxe->rho_user = rho_initial;
   smalxe->rho_type = argtype;
   qps->setupcalled = PETSC_FALSE;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -116,7 +116,7 @@ static PetscErrorCode QPSSMALXEGetM1Update_SMALXE(QPS qps,PetscReal *M1_update)
   
   PetscFunctionBegin;
   *M1_update = smalxe->M1_update;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -127,7 +127,7 @@ static PetscErrorCode QPSSMALXESetM1Update_SMALXE(QPS qps,PetscReal M1_update)
   
   PetscFunctionBegin;
   smalxe->M1_update = M1_update;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -138,7 +138,7 @@ static PetscErrorCode QPSSMALXEGetRhoUpdate_SMALXE(QPS qps,PetscReal *rho_update
   
   PetscFunctionBegin;
   *rho_update = smalxe->rho_update;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -149,7 +149,7 @@ static PetscErrorCode QPSSMALXESetRhoUpdate_SMALXE(QPS qps,PetscReal rho_update)
   
   PetscFunctionBegin;
   smalxe->rho_update = rho_update;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -160,7 +160,7 @@ static PetscErrorCode QPSSMALXEGetRhoUpdateLate_SMALXE(QPS qps,PetscReal *rho_up
   
   PetscFunctionBegin;
   *rho_update_late = smalxe->rho_update_late;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -171,7 +171,7 @@ static PetscErrorCode QPSSMALXESetRhoUpdateLate_SMALXE(QPS qps,PetscReal rho_upd
   
   PetscFunctionBegin;
   smalxe->rho_update_late = rho_update_late;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -182,7 +182,7 @@ static PetscErrorCode QPSSMALXEGetOperatorMaxEigenvalueIterations_SMALXE(QPS qps
   
   PetscFunctionBegin;
   *numit = smalxe->maxeig_iter;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -193,7 +193,7 @@ static PetscErrorCode QPSSMALXESetOperatorMaxEigenvalueIterations_SMALXE(QPS qps
   
   PetscFunctionBegin;
   smalxe->maxeig_iter = numit;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -204,7 +204,7 @@ static PetscErrorCode QPSSMALXEGetOperatorMaxEigenvalueTolerance_SMALXE(QPS qps,
   
   PetscFunctionBegin;
   *tol = smalxe->maxeig_tol;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -215,7 +215,7 @@ static PetscErrorCode QPSSMALXESetOperatorMaxEigenvalueTolerance_SMALXE(QPS qps,
   
   PetscFunctionBegin;
   smalxe->maxeig_tol = tol;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -226,7 +226,7 @@ static PetscErrorCode QPSSMALXESetInjectOperatorMaxEigenvalue_SMALXE(QPS qps,Pet
   
   PetscFunctionBegin;
   smalxe->inject_maxeig = flg;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -237,7 +237,7 @@ static PetscErrorCode QPSSMALXEGetInjectOperatorMaxEigenvalue_SMALXE(QPS qps,Pet
   
   PetscFunctionBegin;
   *flg = smalxe->inject_maxeig;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -248,7 +248,7 @@ static PetscErrorCode QPSSMALXESetMonitor_SMALXE(QPS qps,PetscBool flg)
   
   PetscFunctionBegin;
   smalxe->monitor = flg;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -266,7 +266,7 @@ PetscErrorCode QPSSMALXEUpdateNormBu_SMALXE(QPS qps,Vec u,PetscReal *normBu,Pets
   if (cE) PetscCall(VecAXPY(rE, -1.0, cE));                     /* Bu = Bu - c */
   PetscCall(VecNorm(rE, NORM_2, normBu));                       /* normBu = norm(Bu) */
   *enorm = *normBu / smalxe->rtol_E;                        /* enorm = norm(Bu)/rtol_E */
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -289,7 +289,7 @@ static PetscErrorCode QPSSMALXEUpdateNormBu_SMALXEON(QPS qps,Vec u,PetscReal *no
   PetscCall(VecDot(u,BtBu,normBu));                         /* normBu = u'*B'*B*u */
   *normBu = PetscSqrtReal(*normBu);                     /* normBu = sqrt(u'*B'*B*u) */
   *enorm = *normBu / smalxe->rtol_E;                    /* enorm = norm(Bu)/rtol_E */
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -376,7 +376,7 @@ static PetscErrorCode QPSSMALXEUpdateNormBu_Lag_SMALXEON(QPS qps,Vec u,PetscReal
 
   *normBu = normBu_approx;
   *enorm = *normBu / smalxe->rtol_E;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 #undef __FUNCT__
 #define __FUNCT__ "QPSSMALXEUpdateRho_SMALXE"
@@ -392,13 +392,13 @@ static PetscErrorCode QPSSMALXEUpdateRho_SMALXE(QPS qps, PetscBool Lagrangian_fl
     case 3: rho_update = smalxe->rho_update_late; Lagrangian_flag = PETSC_TRUE; break;
     default: SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_WRONGSTATE,"invalid SMALXE state");
   }
-  if (!Lagrangian_flag || rho_update == 1.0) PetscFunctionReturn(0);
+  if (!Lagrangian_flag || rho_update == 1.0) PetscFunctionReturn(PETSC_SUCCESS);
   
   PetscCall(PetscInfo(qps,"updating rho, multiply by rho_update%d = %.4e\n",smalxe->state,rho_update));
   PetscCall(MatPenalizedUpdatePenalty(A_inner, rho_update));
   PetscCall(QPSMPGPUpdateMaxEigenvalue(smalxe->inner, rho_update));
   smalxe->rho_updates++;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -435,7 +435,7 @@ static PetscErrorCode QPSSMALXEUpdateLambda_SMALXE(QPS qps,PetscReal rho)
 
   /* Update Btmu (eq. con. multiplier pre-multiplied by eq. con. matrix transpose) */
   PetscCall(VecAXPY(Btmu,rho,BtBu));                      /* Btmu = Btmu + rho*BtBu = Btmu + rho*B'*B*u  */
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -489,11 +489,11 @@ PetscErrorCode QPSSMALXEUpdate_SMALXE(QPS qps, PetscReal Lag_old, PetscReal Lag,
 
   if (smalxe->inner->rnorm > smalxe->enorm) {
     PetscCall(PetscInfo(qps,"not updating rho because G = %.8e > %.8e = E\n",smalxe->inner->rnorm,smalxe->enorm));
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
 
   PetscCall(QPSSMALXEUpdateRho_SMALXE(qps,flag));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -511,7 +511,7 @@ PetscErrorCode QPSSMALXEGetInnerQPS_SMALXE(QPS qps, QPS *inner)
     PetscCall(QPSAppendOptionsPrefix(smalxe->inner, "smalxe_"));
   }
   *inner = smalxe->inner;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -522,7 +522,7 @@ PetscErrorCode QPSConvergedDestroy_Inner_SMALXE(void *ctx)
 
   PetscFunctionBegin;
   PetscCall(PetscFree(cctx));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -538,7 +538,7 @@ PetscErrorCode QPSConvergedCreate_Inner_SMALXE(QPS qps_outer, void **ctx)
   cctx->qps_outer = qps_outer;
   PetscCall(QPSGetSolvedQP(qps_outer, &cctx->qp_outer));
   *ctx = cctx;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -562,7 +562,7 @@ PetscErrorCode QPSConvergedSetUp_Inner_SMALXE(QPS qps_inner)
   //TODO this is just a quick&dirty solution
   /* use inner b for divergence criterion of outer solver */
   PetscCall(QPSConvergedDefaultSetRhsForDivergence(cctx->qps_outer->cnvctx, b_inner));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -574,7 +574,7 @@ static inline PetscErrorCode QPSConverged_Inner_SMALXE_Monitor_Outer(QPS qps_inn
   PetscReal rho;
 
   PetscFunctionBegin;
-  if (i)  PetscFunctionReturn(0);
+  if (i)  PetscFunctionReturn(PETSC_SUCCESS);
   if (smalxe->monitor_outer) {
     PetscCall(MatPenalizedGetPenalty(qp_inner->A, &rho));
     PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps_outer),"BEGIN outer %3d:   M1         rho        eta             gtol            rtol_E\n", qps_outer->iteration));
@@ -587,7 +587,7 @@ static inline PetscErrorCode QPSConverged_Inner_SMALXE_Monitor_Outer(QPS qps_inn
       PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps_outer),"in_ac    in        ||g||       ||Bx||    out           M           rho               Lag\n"));
     }
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -611,7 +611,7 @@ static inline PetscErrorCode QPSConverged_Inner_SMALXE_Monitor_Inner(QPS qps_inn
     PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps_outer),"%5d  %4d   %.4e   %.4e   %4d   %.4e   %.4e   %.8e\n",
         smalxe->inner_iter_accu+i, i, gnorm, smalxe->normBu, qps_outer->iteration, smalxe->M1, rho, Lag));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -644,14 +644,14 @@ PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,KSPConvergedReason *reaso
     qps_outer->reason = KSP_DIVERGED_BREAKDOWN;
     PetscCall(PetscInfo(qps_inner,"Inner QP solver is diverging (iteration count reached the maximum).\n"));
     PetscCall(PetscInfo(qps_inner,"Current residual norm %14.12e at inner iteration %" PetscInt_FMT "\n",(double)gnorm,i));
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
 
   if (PetscIsInfOrNanScalar(gnorm)) {
     *reason = KSP_DIVERGED_NANORINF;
     qps_outer->reason = KSP_DIVERGED_BREAKDOWN;
     PetscCall(PetscInfo(qps_inner,"Inner QP solver has created a not a number (NaN) as the residual norm, declaring divergence.\n"));
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
 
   
@@ -665,7 +665,7 @@ PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,KSPConvergedReason *reaso
       *reason = KSP_DIVERGED_BREAKDOWN;
       PetscCall(PetscInfo(qps_inner,"Inner QP solver has diverged due to divergence of the outer solver.\n"));
     }
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
 
   if (gnorm < qps_inner->atol) {
@@ -676,11 +676,11 @@ PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,KSPConvergedReason *reaso
     } else {
       smalxe->eta_hits++;
     }
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
 
   if (smalxe->state == 3 && (i < smalxe->inner_iter_min || smalxe->inner_no_gtol_stop)) {
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
 
   if (gnorm <= cctx->gtol) {
@@ -699,7 +699,7 @@ PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,KSPConvergedReason *reaso
       }
     }
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 
@@ -777,7 +777,7 @@ PetscErrorCode QPSSetFromOptions_SMALXE(QPS qps,PetscOptionItems *PetscOptionsOb
   PetscCall(PetscOptionsBool("-qps_smalxe_knoll","","",smalxe->knoll,&smalxe->knoll,NULL));
   smalxe->setfromoptionscalled = PETSC_TRUE;
   PetscOptionsHeadEnd();
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 
@@ -906,7 +906,7 @@ PetscErrorCode QPSSetUp_SMALXE(QPS qps)
   }
 
   PetscCall(QPGetOperator(qp_inner, &A_inner));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1019,7 +1019,7 @@ PetscErrorCode QPSSolve_SMALXE(QPS qps)
   if (!smalxe->get_Bt_lambda) {
     PetscCall(VecInvalidate(qp->Bt_lambda));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1041,7 +1041,7 @@ PetscErrorCode QPSViewConvergence_SMALXE(QPS qps, PetscViewer v)
     PetscCall(PetscViewerASCIIPrintf(v,"inner "));
     PetscCall(QPSViewConvergence(smalxe->inner,v));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -1063,7 +1063,7 @@ PetscErrorCode QPSReset_SMALXE(QPS qps)
   smalxe->rho_updates           = 0;
   PetscCall(VecDestroy(&smalxe->Bu));
   if (smalxe->inner) PetscCall(QPSReset(smalxe->inner));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -1098,7 +1098,7 @@ PetscErrorCode QPSDestroy_SMALXE(QPS qps)
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSSMALXEGetOperatorMaxEigenvalueTolerance_SMALXE_C",NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSSMALXESetMonitor_SMALXE_C",NULL));
   PetscCall(QPSDestroyDefault(qps));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -1115,7 +1115,7 @@ PetscErrorCode QPSIsQPCompatible_SMALXE(QPS qps,QP qp,PetscBool *flg)
   if (!Beq || Bineq) {
     *flg = PETSC_FALSE;
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -1233,7 +1233,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_SMALXE(QPS qps)
 
   smalxe->inner_iter_min      = 1;
   smalxe->inner_no_gtol_stop  = PETSC_FALSE;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 
@@ -1245,7 +1245,7 @@ PetscErrorCode QPSSMALXEGetInnerQPS(QPS qps,QPS *inner)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidPointer(inner,2);
   PetscUseMethod(qps,"QPSSMALXEGetInnerQPS_SMALXE_C",(QPS,QPS*),(qps,inner));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1256,7 +1256,7 @@ PetscErrorCode QPSSMALXEGetOperatorMaxEigenvalue(QPS qps,PetscReal *maxeig)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidPointer(maxeig,2);
   PetscUseMethod(qps,"QPSSMALXEGetOperatorMaxEigenvalue_SMALXE_C",(QPS,PetscReal*),(qps,maxeig));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1268,7 +1268,7 @@ PetscErrorCode QPSSMALXESetOperatorMaxEigenvalue(QPS qps,PetscReal maxeig)
   PetscValidLogicalCollectiveReal(qps,maxeig,2);
   if (maxeig <= 0 && maxeig != PETSC_DECIDE) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be positive");
   PetscTryMethod(qps,"QPSSMALXESetOperatorMaxEigenvalue_SMALXE_C",(QPS,PetscReal),(qps,maxeig));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1280,7 +1280,7 @@ PetscErrorCode QPSSMALXEGetM1Initial(QPS qps,PetscReal *M1_initial,QPSScalarArgT
   if (M1_initial) PetscValidPointer(M1_initial,2);
   if (argtype) PetscValidPointer(argtype,3);
   PetscUseMethod(qps,"QPSSMALXEGetM1Initial_SMALXE_C",(QPS,PetscReal*,QPSScalarArgType*),(qps,M1_initial,argtype));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1293,7 +1293,7 @@ PetscErrorCode QPSSMALXESetM1Initial(QPS qps,PetscReal M1_initial,QPSScalarArgTy
   PetscValidLogicalCollectiveEnum(qps,argtype,3);
   if (M1_initial <= 0) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be positive");
   PetscTryMethod(qps,"QPSSMALXESetM1Initial_SMALXE_C",(QPS,PetscReal,QPSScalarArgType),(qps,M1_initial,argtype));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1305,7 +1305,7 @@ PetscErrorCode QPSSMALXEGetEta(QPS qps,PetscReal *eta,QPSScalarArgType *argtype)
   if (eta) PetscValidPointer(eta,2);
   if (argtype) PetscValidPointer(argtype,3);
   PetscUseMethod(qps,"QPSSMALXEGetEta_SMALXE_C",(QPS,PetscReal*,QPSScalarArgType*),(qps,eta,argtype));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1318,7 +1318,7 @@ PetscErrorCode QPSSMALXESetEta(QPS qps,PetscReal eta,QPSScalarArgType argtype)
   PetscValidLogicalCollectiveEnum(qps,argtype,3);
   if (eta <= 0) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be positive");
   PetscTryMethod(qps,"QPSSMALXESetEta_SMALXE_C",(QPS,PetscReal,QPSScalarArgType),(qps,eta,argtype));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1330,7 +1330,7 @@ PetscErrorCode QPSSMALXEGetRhoInitial(QPS qps,PetscReal *rho_initial,QPSScalarAr
   if (rho_initial) PetscValidPointer(rho_initial,2);
   if (argtype) PetscValidPointer(argtype,3);
   PetscUseMethod(qps,"QPSSMALXEGetRhoInitial_SMALXE_C",(QPS,PetscReal*,QPSScalarArgType*),(qps,rho_initial,argtype));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1343,7 +1343,7 @@ PetscErrorCode QPSSMALXESetRhoInitial(QPS qps,PetscReal rho_initial,QPSScalarArg
   PetscValidLogicalCollectiveEnum(qps,argtype,3);
   if (rho_initial <= 0) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be positive");
   PetscTryMethod(qps,"QPSSMALXESetRhoInitial_SMALXE_C",(QPS,PetscReal,QPSScalarArgType),(qps,rho_initial,argtype));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1354,7 +1354,7 @@ PetscErrorCode QPSSMALXEGetM1Update(QPS qps,PetscReal *M1_update)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidPointer(M1_update,2);
   PetscUseMethod(qps,"QPSSMALXEGetM1Update_SMALXE_C",(QPS,PetscReal*),(qps,M1_update));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1366,7 +1366,7 @@ PetscErrorCode QPSSMALXESetM1Update(QPS qps,PetscReal M1_update)
   PetscValidLogicalCollectiveReal(qps,M1_update,2);
   //if (M1_update < 1) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be >= 1");
   PetscTryMethod(qps,"QPSSMALXESetM1Update_SMALXE_C",(QPS,PetscReal),(qps,M1_update));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1377,7 +1377,7 @@ PetscErrorCode QPSSMALXEGetRhoUpdate(QPS qps,PetscReal *rho_update)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidPointer(rho_update,2);
   PetscUseMethod(qps,"QPSSMALXEGetRhoUpdate_SMALXE_C",(QPS,PetscReal*),(qps,rho_update));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1389,7 +1389,7 @@ PetscErrorCode QPSSMALXESetRhoUpdate(QPS qps,PetscReal rho_update)
   PetscValidLogicalCollectiveReal(qps,rho_update,2);
   if (rho_update < 1) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be >= 1");
   PetscTryMethod(qps,"QPSSMALXESetRhoUpdate_SMALXE_C",(QPS,PetscReal),(qps,rho_update));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1400,7 +1400,7 @@ PetscErrorCode QPSSMALXEGetRhoUpdateLate(QPS qps,PetscReal *rho_update_late)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidPointer(rho_update_late,2);
   PetscUseMethod(qps,"QPSSMALXEGetRhoUpdateLate_SMALXE_C",(QPS,PetscReal*),(qps,rho_update_late));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1412,7 +1412,7 @@ PetscErrorCode QPSSMALXESetRhoUpdateLate(QPS qps,PetscReal rho_update_late)
   PetscValidLogicalCollectiveReal(qps,rho_update_late,2);
   if (rho_update_late < 1) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be >= 1");
   PetscTryMethod(qps,"QPSSMALXESetRhoUpdateLate_SMALXE_C",(QPS,PetscReal),(qps,rho_update_late));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1423,7 +1423,7 @@ PetscErrorCode QPSSMALXEGetOperatorMaxEigenvalueIterations(QPS qps,PetscInt *num
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidPointer(numit,2);
   PetscUseMethod(qps,"QPSSMALXEGetOperatorMaxEigenvalueIterations_SMALXE_C",(QPS,PetscInt*),(qps,numit));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1435,7 +1435,7 @@ PetscErrorCode QPSSMALXESetOperatorMaxEigenvalueIterations(QPS qps,PetscInt numi
   PetscValidLogicalCollectiveInt(qps,numit,2);
   if (numit <= 1) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be > 1");
   PetscTryMethod(qps,"QPSSMALXESetOperatorMaxEigenvalueIterations_SMALXE_C",(QPS,PetscInt),(qps,numit));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1446,7 +1446,7 @@ PetscErrorCode QPSSMALXESetInjectOperatorMaxEigenvalue(QPS qps,PetscBool flg)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidLogicalCollectiveBool(qps,flg,2);
   PetscTryMethod(qps,"QPSSMALXESetInjectOperatorMaxEigenvalue_SMALXE_C",(QPS,PetscBool),(qps,flg));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1457,7 +1457,7 @@ PetscErrorCode QPSSMALXEGetInjectOperatorMaxEigenvalue(QPS qps,PetscBool *flg)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidPointer(flg,2);
   PetscUseMethod(qps,"QPSSMALXEGetInjectOperatorMaxEigenvalue_SMALXE_C",(QPS,PetscBool*),(qps,flg));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1468,7 +1468,7 @@ PetscErrorCode QPSSMALXESetOperatorMaxEigenvalueTolerance(QPS qps,PetscReal tol)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidLogicalCollectiveReal(qps,tol,2);
   PetscTryMethod(qps,"QPSSMALXESetOperatorMaxEigenvalueTolerance_SMALXE_C",(QPS,PetscReal),(qps,tol));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1479,7 +1479,7 @@ PetscErrorCode QPSSMALXEGetOperatorMaxEigenvalueTolerance(QPS qps,PetscReal *tol
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidPointer(tol,2);
   PetscUseMethod(qps,"QPSSMALXEGetOperatorMaxEigenvalueTolerance_SMALXE_C",(QPS,PetscReal*),(qps,tol));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 //TODO temporary solution, monitors should be implemented more generally
@@ -1491,5 +1491,5 @@ PetscErrorCode QPSSMALXESetMonitor(QPS qps,PetscBool flg)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidLogicalCollectiveBool(qps,flg,2);
   PetscTryMethod(qps,"QPSSMALXESetMonitor_SMALXE_C",(QPS,PetscBool),(qps,flg));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }

@@ -9,7 +9,7 @@ static PetscBool QPSPackageInitialized = PETSC_FALSE;
 PetscErrorCode QPSInitializePackage(void)
 {
   PetscFunctionBegin;
-  if (QPSPackageInitialized) PetscFunctionReturn(0);
+  if (QPSPackageInitialized) PetscFunctionReturn(PETSC_SUCCESS);
   QPSPackageInitialized = PETSC_TRUE;
   /* Register Classes */
   PetscCall(PetscClassIdRegister("QP Solver",&QPS_CLASSID));
@@ -21,7 +21,7 @@ PetscErrorCode QPSInitializePackage(void)
   /* Process info & summary exclusions */
   PetscCall(FllopProcessInfoExclusions(QPS_CLASSID, QPS_CLASS_NAME));
   PetscCall(PetscRegisterFinalize(QPSFinalizePackage));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -32,5 +32,5 @@ PetscErrorCode QPSFinalizePackage(void)
   PetscCall(PetscFunctionListDestroy(&QPSList));
   QPSPackageInitialized = PETSC_FALSE;
   QPSRegisterAllCalled  = PETSC_FALSE;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }

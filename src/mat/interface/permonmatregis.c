@@ -24,5 +24,5 @@ PetscErrorCode  PermonMatRegisterAll()
   PetscCall(MatRegister(MATEXTENSION,     MatCreate_Extension));
   PetscCall(MatRegister(MATGLUING,        MatCreate_Gluing));
   PetscCall(MatRegisterRootName(MATDENSEPERMON,MATSEQDENSEPERMON,MATMPIDENSEPERMON));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }

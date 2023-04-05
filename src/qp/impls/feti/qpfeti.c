@@ -29,7 +29,7 @@ PetscErrorCode QPFetiCtxCreate(QPFetiCtx *ctxout)
   ctx->l2g_map = NULL;
   ctx->setupcalled = PETSC_FALSE;
   *ctxout = ctx;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -43,7 +43,7 @@ PetscErrorCode QPFetiCtxDestroy(QPFetiCtx ctx)
   PetscCall(ISLocalToGlobalMappingDestroy(&ctx->l2g_map));
   PetscCall(QPFetiDirichletDestroy(&ctx->dbc));
   PetscCall(PetscFree(ctx));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -65,7 +65,7 @@ PetscErrorCode QPFetiGetCtx(QP qp,QPFetiCtx *ctxout)
   }
   PetscCall(PetscContainerGetPointer(ctr,(void**)&ctx));
   *ctxout = ctx;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -82,7 +82,7 @@ PetscErrorCode QPFetiSetLocalToGlobalMapping(QP qp, IS l2g)
   PetscCall(PetscObjectReference((PetscObject)l2g));
   PetscCall(ISLocalToGlobalMappingCreateIS(l2g,&ctx->l2g_map));
   ctx->setupcalled = PETSC_FALSE;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -99,7 +99,7 @@ PetscErrorCode QPFetiSetInterfaceToGlobalMapping(QP qp, IS i2g)
   PetscCall(PetscObjectReference((PetscObject)i2g));
   PetscCall(ISLocalToGlobalMappingCreateIS(i2g,&ctx->i2g_map));
   ctx->setupcalled = PETSC_FALSE;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -117,7 +117,7 @@ PetscErrorCode QPFetiSetDirichlet(QP qp, IS dbcis, QPFetiNumberingType numtype, 
   PetscCall(QPFetiDirichletDestroy(&ctx->dbc));
   PetscCall(QPFetiDirichletCreate(dbcis,numtype,enforce_by_B,&ctx->dbc));
   ctx->setupcalled = PETSC_FALSE;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -130,7 +130,7 @@ static PetscErrorCode QPFetiAssembleDirichlet_ModifyR_Private(QP qp, IS dbcis)
 
   PetscFunctionBegin;
   PetscCall(QPGetOperatorNullSpace(qp, &R));
-  if (!R) PetscFunctionReturn(0);
+  if (!R) PetscFunctionReturn(PETSC_SUCCESS);
 
   PetscCall(MatGetDiagonalBlock(R, &R_loc));
   PetscCall(ISGetLocalSize(dbcis, &n_dbc_local));
@@ -149,7 +149,7 @@ static PetscErrorCode QPFetiAssembleDirichlet_ModifyR_Private(QP qp, IS dbcis)
   PetscCall(QPSetOperatorNullSpace(qp, R));
   PetscCall(MatDestroy(&R_loc));
   PetscCall(MatDestroy(&R));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -174,7 +174,7 @@ PetscErrorCode QPFetiAssembleDirichlet(QP qp)
   PetscCall(PetscLogEventBegin(QP_Feti_AssembleDirichlet,qp,0,0,0));
   PetscCall(QPFetiGetCtx(qp,&ctx));
 
-  if (!ctx->dbc) PetscFunctionReturnI(0);
+  if (!ctx->dbc) PetscFunctionReturnI(PETSC_SUCCESS);
   dbcis = ctx->dbc->is;
   numtype = ctx->dbc->numtype;
   enforce_by_B = ctx->dbc->enforce_by_B;
@@ -314,7 +314,7 @@ PetscErrorCode QPFetiAssembleDirichlet(QP qp)
   PetscCall(ISDestroy(&dbc_dg));
   PetscCall(ISDestroy(&dbc_l));
   PetscCall(PetscLogEventEnd(QP_Feti_AssembleDirichlet,qp,0,0,0));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -331,7 +331,7 @@ PetscErrorCode QPFetiSetUp(QP qp)
 
   FllopTracedFunctionBegin;
   PetscCall(QPFetiGetCtx(qp,&ctx));
-  if (ctx->setupcalled) PetscFunctionReturn(0);
+  if (ctx->setupcalled) PetscFunctionReturn(PETSC_SUCCESS);
 
   if (!registered) {
     PetscCall(PetscLogEventRegister("QPFetiSetUp",QP_CLASSID,&QP_Feti_SetUp));
@@ -362,7 +362,7 @@ PetscErrorCode QPFetiSetUp(QP qp)
   if (!qp->BE) printf("child (BE) is needed for dualization\n");
   ctx->setupcalled = PETSC_TRUE;
   PetscCall(PetscLogEventEnd  (QP_Feti_SetUp,qp,0,0,0));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -406,7 +406,7 @@ PetscErrorCode QPFetiGetI2Lmapping(MPI_Comm comm, IS l2g,  IS i2g,  IS *i2l_new)
   PetscCall(PetscFree3(i2l_arr, idx, l2g_arr_copy));
 
   PetscCall(PetscLogEventEnd(QP_Feti_GetI2Lmapping,0,0,0,0));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -468,7 +468,7 @@ PetscErrorCode QPFetiAssembleGluing(QP qp, FetiGluingType type, PetscBool exclud
   PetscCall(MatDestroy(&Bgt));
 
   PetscCall(PetscLogEventEnd(QP_Feti_AssemGluing,0,0,0,0));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -937,7 +937,7 @@ PetscErrorCode QPFetiGetBgtSF(MPI_Comm comm, IS i2g, PetscInt Nu, IS i2l, PetscI
   PetscCall(PetscLayoutDestroy(&links));
 
   PetscCall(PetscLogEventEnd(QP_Feti_GetBgtSF,0,0,0,0));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -987,5 +987,5 @@ PetscErrorCode QPFetiGetGlobalDir(QP qp, IS dbc, QPFetiNumberingType numtype, IS
     PetscCall(PetscObjectReference((PetscObject)dbc));
     *dbc_g =dbc;
   } 
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }

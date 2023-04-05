@@ -40,7 +40,7 @@ PetscErrorCode MatMultAdd_Normal_permonfix(Mat N,Vec v1,Vec v2,Vec v3)
   } else {
     PetscCall(MatMultTransposeAdd(Na->A,Na->w,v2,v3));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -78,7 +78,7 @@ PetscErrorCode MatMultTransposeAdd_Normal_permonfix(Mat N,Vec v1,Vec v2,Vec v3)
   } else {
     PetscCall(MatMultTransposeAdd(Na->A,Na->w,v2,v3));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 
@@ -91,7 +91,7 @@ PetscErrorCode MatCreateNormal_permonfix(Mat A,Mat *N)
   (*N)->ops->multadd = MatMultAdd_Normal_permonfix;
   (*N)->ops->multtransposeadd = MatMultTransposeAdd_Normal_permonfix;
   PetscCall(MatSetUp(*N));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #define MatCreateNormal(A,N) MatCreateNormal_permonfix(A,N)

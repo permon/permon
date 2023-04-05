@@ -21,7 +21,7 @@ static PetscErrorCode QPPFMatMult_P(Mat matP, Vec v, Vec Pv)
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(matP, (QPPF*)&cp));
   PetscCall(QPPFApplyP(cp, v, Pv));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -33,7 +33,7 @@ static PetscErrorCode QPPFMatMult_Q(Mat matQ, Vec v, Vec Qv)
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(matQ, (QPPF*)&cp));
   PetscCall(QPPFApplyQ(cp, v, Qv));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -45,7 +45,7 @@ static PetscErrorCode QPPFMatMult_HalfQ(Mat matHalfQ, Vec x, Vec y)
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(matHalfQ, (QPPF*)&cp));
   PetscCall(QPPFApplyHalfQ(cp,x,y));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -57,7 +57,7 @@ static PetscErrorCode QPPFMatMultTranspose_HalfQ(Mat matHalfQ, Vec x, Vec y)
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(matHalfQ, (QPPF*)&cp));
   PetscCall(QPPFApplyHalfQTranspose(cp,x,y));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -69,7 +69,7 @@ static PetscErrorCode QPPFMatMult_GtG(Mat matGtG, Vec v, Vec GtGv)
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(matGtG, (QPPF*)&cp));
   PetscCall(QPPFApplyGtG(cp, v, GtGv));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -110,7 +110,7 @@ PetscErrorCode QPPFCreate(MPI_Comm comm, QPPF* qppf_new)
 
   *qppf_new = cp;
   PetscCallMPI(MPI_Barrier(comm));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -128,7 +128,7 @@ PetscErrorCode QPPFSetG(QPPF cp, Mat G)
     cp->G_has_orthonormal_rows_implicitly = PETSC_TRUE;
   }
 
-  if (cp->G  == G) PetscFunctionReturn(0);
+  if (cp->G  == G) PetscFunctionReturn(PETSC_SUCCESS);
   PetscCall(MatDestroy(&cp->G));
   cp->G  = G;
   PetscCall(MatGetSize(G, &cp->GM, &cp->GN));
@@ -137,7 +137,7 @@ PetscErrorCode QPPFSetG(QPPF cp, Mat G)
   PetscCall(PetscObjectIncrementTabLevel((PetscObject) G, (PetscObject) cp, 1));
   cp->dataChange = PETSC_TRUE;
   cp->setupcalled = PETSC_FALSE;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -153,7 +153,7 @@ PetscErrorCode QPPFSetExplicitInv(QPPF cp, PetscBool explicitInv)
     cp->explicitInvChange = PETSC_TRUE;
     cp->setupcalled = PETSC_FALSE;
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -163,9 +163,9 @@ PetscErrorCode QPPFSetRedundancy(QPPF cp, PetscInt nred)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(cp, QPPF_CLASSID, 1);
   PetscValidLogicalCollectiveInt(cp, nred, 2);
-  if (cp->redundancy == nred) PetscFunctionReturn(0);
+  if (cp->redundancy == nred) PetscFunctionReturn(PETSC_SUCCESS);
   cp->redundancy = nred;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -187,7 +187,7 @@ PetscErrorCode QPPFSetFromOptions(QPPF cp)
   
   cp->setfromoptionscalled++;
   PetscOptionsEnd();
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -210,7 +210,7 @@ static PetscErrorCode QPPFSetUpGt_Private(QPPF cp, Mat *newGt)
   PetscCall(PetscObjectSetName((PetscObject)Gt,"Gt"));
   PetscCall(PetscObjectIncrementTabLevel((PetscObject) Gt,(PetscObject) cp, 1));
   *newGt = Gt;
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -230,7 +230,7 @@ static PetscErrorCode QPPFSetUpGGt_Private(QPPF cp, Mat *newGGt)
   if (cp->G_has_orthonormal_rows_explicitly) {
     PetscCall(PetscInfo(cp, "G has orthonormal rows, returning GGt = NULL\n"));
     *newGGt = NULL;
-    PetscFunctionReturnI(0);
+    PetscFunctionReturnI(PETSC_SUCCESS);
   }
 
   PetscCall(PetscLogEventBegin(QPPF_SetUp_GGt,cp,0,0,0));
@@ -281,7 +281,7 @@ static PetscErrorCode QPPFSetUpGGt_Private(QPPF cp, Mat *newGGt)
     PetscCall(FllopDebug("assert GGt always PSD (MAT_SYMMETRIC=1, MAT_SYMMETRIC_ETERNAL=1, MAT_SPD=1)\n"));
   }
   *newGGt = GGt;
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -298,7 +298,7 @@ static PetscErrorCode QPPFSetUpGGtinv_Private(QPPF cp, Mat *GGtinv_new)
   PetscCall(QPPFSetUpGGt_Private(cp, &GGt));
   if (!GGt) {
     *GGtinv_new = NULL;
-    PetscFunctionReturnI(0)
+    PetscFunctionReturnI(PETSC_SUCCESS)
   }
 
   PetscCall(PetscLogEventBegin(QPPF_SetUp_GGtinv,cp,0,0,0));
@@ -338,7 +338,7 @@ static PetscErrorCode QPPFSetUpGGtinv_Private(QPPF cp, Mat *GGtinv_new)
 
   *GGtinv_new = GGtinv;
   PetscCall(PetscLogEventEnd(  QPPF_SetUp_GGtinv,cp,0,0,0));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -356,7 +356,7 @@ static PetscErrorCode QPPFSetUpView_Private(QPPF cp)
     PetscCall(QPPFView(cp,viewer));
     PetscCall(PetscViewerDestroy(&viewer));
   }  
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -372,7 +372,7 @@ PetscErrorCode QPPFReset(QPPF cp)
   PetscCall(VecDestroy(&cp->alpha_tilde));
   PetscCall(VecDestroy(&cp->QPPFApplyQ_last_Qv));
   PetscCall(MatDestroy(&cp->Gt));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -386,8 +386,8 @@ PetscErrorCode QPPFSetUp(QPPF cp)
   FllopTracedFunctionBegin;
   PetscValidHeaderSpecific(cp, QPPF_CLASSID, 1);
   
-  //if (cp->setupcalled && !cp->explicitInv) PetscFunctionReturn(0); //TODO why the &&?
-  if (cp->setupcalled) PetscFunctionReturn(0);
+  //if (cp->setupcalled && !cp->explicitInv) PetscFunctionReturn(PETSC_SUCCESS); //TODO why the &&?
+  if (cp->setupcalled) PetscFunctionReturn(PETSC_SUCCESS);
 
   FllopTraceBegin;
   PetscCall(PetscLogEventBegin(QPPF_SetUp, cp, cp->GGtinv, cp->G, cp->Gt));
@@ -444,7 +444,7 @@ PetscErrorCode QPPFSetUp(QPPF cp)
 #endif
 
   PetscCall(QPPFSetUpView_Private(cp));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -456,7 +456,7 @@ PetscErrorCode QPPFGetAlphaTilde(QPPF cp, Vec *alpha_tilde)
   PetscValidPointer(alpha_tilde,2);
   
   *alpha_tilde = cp->alpha_tilde;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -474,7 +474,7 @@ PetscErrorCode QPPFApplyQ(QPPF cp, Vec v, Vec Qv)
   /* if v is the same as the last time, reuse the last computed product Q*v */
   if (v == cp->QPPFApplyQ_last_v && ((PetscObject)v)->state == cp->QPPFApplyQ_last_v_state && cp->QPPFApplyQ_last_Qv) {
     PetscCall(VecCopy(cp->QPPFApplyQ_last_Qv, Qv));
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
   
   PetscCall(QPPFSetUp(cp));
@@ -510,7 +510,7 @@ PetscErrorCode QPPFApplyQ(QPPF cp, Vec v, Vec Qv)
 
   PetscCall(PetscLogEventEnd(QPPF_ApplyQ,cp,v,Qv,0));
   PetscCall(PetscObjectStateIncrease((PetscObject)Qv));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -536,7 +536,7 @@ PetscErrorCode QPPFApplyHalfQ(QPPF cp, Vec x, Vec y)
 
   PetscCall(PetscLogEventEnd(QPPF_ApplyHalfQ,cp,x,y,0));
   PetscCall(PetscObjectStateIncrease((PetscObject)y));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -567,7 +567,7 @@ PetscErrorCode QPPFApplyHalfQTranspose(QPPF cp, Vec x, Vec y)
 
   PetscCall(PetscLogEventEnd(QPPF_ApplyHalfQ,cp,x,y,0));
   PetscCall(PetscObjectStateIncrease((PetscObject)y));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -583,7 +583,7 @@ PetscErrorCode QPPFApplyP(QPPF cp, Vec v, Vec Pv)
   PetscCall(VecAYPX(Pv, -1.0, v));  //Pv = v - Pv
   PetscCall(PetscLogEventEnd(QPPF_ApplyP,cp,v,Pv,0));
   PetscCall(PetscObjectStateIncrease((PetscObject)Pv));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -597,7 +597,7 @@ PetscErrorCode QPPFApplyGtG(QPPF cp, Vec v, Vec GtGv)
   PetscValidHeaderSpecific(GtGv,VEC_CLASSID,3);
   if (cp->G_has_orthonormal_rows_explicitly || cp->G_has_orthonormal_rows_implicitly) {
     PetscCall(QPPFApplyQ(cp,v,GtGv));
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
 
   PetscCall(QPPFSetUp(cp));
@@ -613,7 +613,7 @@ PetscErrorCode QPPFApplyGtG(QPPF cp, Vec v, Vec GtGv)
   PetscCall(PetscLogEventEnd(QPPF_ApplyGt,cp,v,GtGv,0));
 
   PetscCall(PetscObjectStateIncrease((PetscObject)GtGv));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -653,7 +653,7 @@ PetscErrorCode QPPFApplyCP(QPPF cp, Vec x, Vec y)
     
   PetscCall(PetscLogEventEnd(  QPPF_ApplyCP, cp, cp->GGtinv, x, y));
   PetscCall(PetscObjectStateIncrease((PetscObject)y));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -671,7 +671,7 @@ PetscErrorCode QPPFCreateQ(QPPF cp, Mat *newQ)
   PetscCall(PetscObjectCompose((PetscObject)Q,"qppf",(PetscObject)cp));
   PetscCall(PetscObjectSetName((PetscObject)Q, "Q"));
   *newQ = Q;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -690,7 +690,7 @@ PetscErrorCode QPPFCreateHalfQ(QPPF cp, Mat *newHalfQ)
   PetscCall(PetscObjectCompose((PetscObject)HalfQ,"qppf",(PetscObject)cp));
   PetscCall(PetscObjectSetName((PetscObject)HalfQ, "HalfQ"));
   *newHalfQ = HalfQ;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -708,7 +708,7 @@ PetscErrorCode QPPFCreateP(QPPF cp, Mat *newP)
   PetscCall(PetscObjectCompose((PetscObject)P,"qppf",(PetscObject)cp));
   PetscCall(PetscObjectSetName((PetscObject)P, "P"));
   *newP = P;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -726,7 +726,7 @@ PetscErrorCode QPPFCreateGtG(QPPF cp, Mat *newGtG)
   PetscCall(PetscObjectCompose((PetscObject)GtG,"qppf",(PetscObject)cp));
   PetscCall(PetscObjectSetName((PetscObject)GtG, "GtG"));
   *newGtG = GtG;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -737,7 +737,7 @@ PetscErrorCode QPPFGetG(QPPF cp, Mat *G)
   PetscValidHeaderSpecific(cp,QPPF_CLASSID,1);
   PetscValidPointer(G,2);
   *G = cp->G;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -748,7 +748,7 @@ PetscErrorCode QPPFGetGHasOrthonormalRows(QPPF cp, PetscBool *flg)
   PetscValidHeaderSpecific(cp,QPPF_CLASSID,1);
   PetscValidPointer(flg,2);
   *flg = (PetscBool) (cp->G_has_orthonormal_rows_explicitly || cp->G_has_orthonormal_rows_implicitly);
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -763,7 +763,7 @@ PetscErrorCode QPPFGetGGt(QPPF cp, Mat *GGt)
   PetscCall(QPPFGetGGtinv(cp,&GGtinv));
   *GGt = NULL;
   if ((GGtinv != NULL) & !cp->explicitInv) PetscCall(MatInvGetMat(GGtinv,GGt));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -774,7 +774,7 @@ PetscErrorCode QPPFGetGGtinv(QPPF cp, Mat *GGtinv)
   PetscValidHeaderSpecific(cp,QPPF_CLASSID,1);
   PetscValidPointer(GGtinv,2);
   *GGtinv = cp->GGtinv;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -789,7 +789,7 @@ PetscErrorCode QPPFGetKSP(QPPF cp, KSP *ksp)
   PetscCall(QPPFGetGGtinv(cp,&GGtinv));
   *ksp = NULL;
   if (GGtinv) PetscCall(MatInvGetKSP(GGtinv,ksp));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -841,7 +841,7 @@ PetscErrorCode QPPFView(QPPF cp, PetscViewer viewer)
   if (cp->Gt)   PetscCall(MatPrintInfo(cp->Gt));
   PetscCall(PetscViewerPopFormat(viewer));
   PetscCall(PetscViewerASCIIPopTab(viewer));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -849,15 +849,15 @@ PetscErrorCode QPPFView(QPPF cp, PetscViewer viewer)
 PetscErrorCode QPPFDestroy(QPPF *cp)
 {
   PetscFunctionBegin;
-  if (!*cp) PetscFunctionReturn(0);
+  if (!*cp) PetscFunctionReturn(PETSC_SUCCESS);
   PetscValidHeaderSpecific(*cp, QPPF_CLASSID, 1);
   if (--((PetscObject) (*cp))->refct > 0)
   {
     *cp = 0;
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
   PetscCall(QPPFReset(*cp));
   PetscCall(MatDestroy(&(*cp)->G));
   PetscCall(PetscHeaderDestroy(cp));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }

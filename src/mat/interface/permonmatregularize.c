@@ -114,7 +114,7 @@ static PetscErrorCode MatRegularize_GetPivots_Private(Mat R, IS *pivots) {
   PetscCall(PetscFree(perm));
   PetscCall(PetscFree(v1));
   PetscCall(PetscFree(v2));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -198,7 +198,7 @@ static PetscErrorCode MatRegularize_GetRegularization_Private(Mat K_loc, Mat R_l
   PetscCall(MatInheritSymmetry(K_loc,Q_loc)); 
   PetscCall(MatDestroy(&Q_loc_condensed));
   *newQ = Q_loc;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -223,7 +223,7 @@ PetscErrorCode MatRegularize(Mat K, Mat R, MatRegularizationType type, Mat *newK
     PetscCall(PetscInfo(K,"MatRegularizationType set to MAT_REG_NONE, returning input matrix\n"));
     *newKreg = K;
     PetscCall(PetscObjectReference((PetscObject)K));
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
 
   if (!registered) {
@@ -237,7 +237,7 @@ PetscErrorCode MatRegularize(Mat K, Mat R, MatRegularizationType type, Mat *newK
     PetscCall(PetscInfo(K,"matrix marked as regularized, returning input matrix\n"));
     *newKreg = K;
     PetscCall(PetscObjectReference((PetscObject)K));
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
   
   PetscValidHeaderSpecific(R,MAT_CLASSID,2);
@@ -290,5 +290,5 @@ PetscErrorCode MatRegularize(Mat K, Mat R, MatRegularizationType type, Mat *newK
   PetscCall(PetscObjectComposedDataSetInt((PetscObject)Kreg,regularized_id,PETSC_TRUE));
   *newKreg = Kreg;
   PetscCall(PetscLogEventEnd(Mat_Regularize,K,R,0,0));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }

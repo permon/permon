@@ -457,7 +457,7 @@ PetscErrorCode Monitor(Tao tao, void *ctx)
   if (!(its%5)) {
     PetscCall(PetscPrintf(PETSC_COMM_WORLD,"iteration=%" PetscInt_FMT "\tf=%g\n",its,(double)f));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -473,7 +473,7 @@ PetscErrorCode ConvergenceTest(Tao tao, void *ctx)
   if (its == 100) {
     PetscCall(TaoSetConvergedReason(tao,TAO_DIVERGED_MAXITS));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 
 }
 
@@ -555,7 +555,7 @@ PetscErrorCode CallPermonAndCompareResults(Tao tao, void *ctx)
   PetscCall(QPSDestroy(&qps));
   PetscCall(QPDestroy(&qp));
   PetscCall(VecDestroy(&x_diff));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
   
 }
 

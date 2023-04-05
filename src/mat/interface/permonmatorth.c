@@ -16,7 +16,7 @@ static PetscErrorCode MatMult_ForwardSolve(Mat T, Vec x, Vec y)
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(T, (Mat*)&t));
   PetscCall(MatForwardSolve(t, x, y));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -28,7 +28,7 @@ static PetscErrorCode MatMultTranspose_ForwardSolve(Mat T, Vec x, Vec y)
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(T, (Mat*)&t));
   PetscCall(MatBackwardSolve(t, x, y));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -138,7 +138,7 @@ static PetscErrorCode MatOrthColumns_Cholesky_Default(Mat A, MatOrthType type, M
   } else {
     PetscCall(MatDestroy(&S));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -169,7 +169,7 @@ static PetscErrorCode MatOrthColumns_Implicit_Default(Mat A, MatOrthType type, M
   } else {
     PetscCall(MatDestroy(&S));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -200,7 +200,7 @@ static PetscErrorCode MatOrthRows_Implicit_Default(Mat A, MatOrthType type, MatO
   } else {
     PetscCall(MatDestroy(&T));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -230,7 +230,7 @@ static PetscErrorCode MatOrthColumns_GS_Default(MPI_Comm comm, PetscInt N, Vec q
   }
   *o_acc = o_acc_;
   *o_max = o_max_;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -241,7 +241,7 @@ static inline PetscErrorCode PetscScalarNormSquared(PetscInt n,const PetscScalar
   PetscFunctionBegin;
   PetscCall(PetscBLASIntCast(n,&bn));
   *z   = PetscRealPart(BLASdot_(&bn,xx,&one,xx,&one));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -280,7 +280,7 @@ static PetscErrorCode MatOrthColumns_GS_Lingen(MPI_Comm comm, PetscInt N, Vec q[
   }
   *o_acc = o_acc_;
   *o_max = o_max_;
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -366,7 +366,7 @@ static PetscErrorCode MatOrthColumns_GS(Mat A, MatOrthType type, MatOrthForm for
       PetscCall(MatDestroy(&S));
     }
   }
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -414,7 +414,7 @@ PetscErrorCode MatOrthColumns(Mat A, MatOrthType type, MatOrthForm form, Mat *Q_
       PetscCall(PetscObjectReference((PetscObject)A));
     }
     if (S_new) PetscCall(MatCreateIdentity(PetscObjectComm((PetscObject)A),A->cmap->n,A->cmap->n,A->cmap->N,S_new));
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
 
   FllopTraceBegin;
@@ -467,7 +467,7 @@ PetscErrorCode MatOrthColumns(Mat A, MatOrthType type, MatOrthForm form, Mat *Q_
   if (S_new) {
     PetscCall(PetscObjectSetName((PetscObject)*S_new,"S"));
   }
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 /*@
@@ -502,7 +502,7 @@ PetscErrorCode MatOrthRows(Mat A, MatOrthType type, MatOrthForm form, Mat *Qt_ne
     PetscCall(MatOrthRows_Implicit_Default(A,type,form,Qt_new,T_new));
     PetscCall(PetscObjectSetName((PetscObject)*Qt_new,"Qt"));
     PetscCall(PetscObjectSetName((PetscObject)*T_new,"T"));
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
 
   PetscCall(PermonMatTranspose(A,MAT_TRANSPOSE_EXPLICIT,&At));
@@ -518,7 +518,7 @@ PetscErrorCode MatOrthRows(Mat A, MatOrthType type, MatOrthForm form, Mat *Qt_ne
     PetscCall(MatDestroy(&Tt));
   }
   PetscCall(MatDestroy(&At));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -533,7 +533,7 @@ PetscErrorCode MatHasOrthonormalRowsImplicitly(Mat A,PetscBool *flg)
   if (T) {
     *flg = PETSC_TRUE;
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -548,7 +548,7 @@ PetscErrorCode MatHasOrthonormalColumnsImplicitly(Mat A,PetscBool *flg)
   if (S) {
     *flg = PETSC_TRUE;
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -560,14 +560,14 @@ PetscErrorCode MatHasOrthonormalRows(Mat A,PetscReal tol,PetscInt ntrials,PetscB
   PetscFunctionBegin;
   PetscCall(MatHasOrthonormalRowsImplicitly(A,flg));
   if (*flg) {
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
   PetscCall(PermonMatTranspose(A,MAT_TRANSPOSE_CHEAPEST,&At));
   PetscCall(MatCreateNormal(At,&AAt));
   PetscCall(MatIsIdentity(AAt,tol,ntrials,flg));
   PetscCall(MatDestroy(&At));
   PetscCall(MatDestroy(&AAt));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -579,10 +579,10 @@ PetscErrorCode MatHasOrthonormalColumns(Mat A,PetscReal tol,PetscInt ntrials,Pet
   PetscFunctionBegin;
   PetscCall(MatHasOrthonormalColumnsImplicitly(A,flg));
   if (*flg) {
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
   PetscCall(MatCreateNormal(A,&AtA));
   PetscCall(MatIsIdentity(AtA,tol,ntrials,flg));
   PetscCall(MatDestroy(&AtA));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }

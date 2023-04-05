@@ -14,7 +14,7 @@ PetscErrorCode QPFetiDirichletCreate(IS dbcis, QPFetiNumberingType numtype, Pets
   dbc->numtype = numtype;
   dbc->enforce_by_B = enforce_by_B;
   *dbc_new = dbc;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -22,10 +22,10 @@ PetscErrorCode QPFetiDirichletCreate(IS dbcis, QPFetiNumberingType numtype, Pets
 PetscErrorCode  QPFetiDirichletDestroy(QPFetiDirichlet *dbc)
 {
   PetscFunctionBegin;
-  if (!*dbc) PetscFunctionReturn(0);
+  if (!*dbc) PetscFunctionReturn(PETSC_SUCCESS);
   PetscCall(ISDestroy(&(*dbc)->is));
   PetscCall(PetscFree(*dbc));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 

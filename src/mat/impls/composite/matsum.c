@@ -7,7 +7,7 @@ PetscErrorCode MatSumGetMat(Mat A,PetscInt i,Mat *Ai)
 {
   PetscFunctionBegin;
   PetscCall(MatCompositeGetMat(A,i,Ai));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -45,7 +45,7 @@ PetscErrorCode MatMult_Sum(Mat A,Vec x,Vec y)
     PetscCall(VecPointwiseMult(y,shell->left,y));
   }
   PetscCall(VecScale(y,shell->scale));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -74,7 +74,7 @@ PetscErrorCode MatMultTranspose_Sum(Mat A,Vec x,Vec y)
     PetscCall(VecPointwiseMult(y,shell->right,y));
   }
   PetscCall(VecScale(y,shell->scale));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -94,7 +94,7 @@ PetscErrorCode MatMultAdd_Sum(Mat A,Vec x,Vec y,Vec z)
     PetscCall(MatMult(A,x,shell->rightwork));
     PetscCall(VecAXPY(z,1.0,shell->rightwork));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -104,7 +104,7 @@ PetscErrorCode MatMultTransposeAdd_Sum(Mat A,Vec x,Vec y,Vec z)
   PetscFunctionBegin;
   PetscCall(MatMultTranspose_Sum(A, x, z));
   PetscCall(VecAXPY(z, 1.0, y));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -129,7 +129,7 @@ FLLOP_EXTERN PetscErrorCode  MatCreate_Sum(Mat A)
   composite->tail           = NULL;
 
   PetscCall(PetscObjectChangeTypeName((PetscObject)A,MATSUM));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -183,5 +183,5 @@ PetscErrorCode  MatCreateSum(MPI_Comm comm,PetscInt nmat,const Mat *mats,Mat *ma
   }
   PetscCall(MatAssemblyBegin(*mat,MAT_FINAL_ASSEMBLY));
   PetscCall(MatAssemblyEnd(*mat,MAT_FINAL_ASSEMBLY));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }

@@ -11,7 +11,7 @@ static PetscErrorCode QPSKSPConverged_KSP(KSP ksp,PetscInt i,PetscReal rnorm,KSP
   qps->iteration = i;
   qps->rnorm = rnorm;
   PetscCall((*qps->convergencetest)(qps,reason));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -36,7 +36,7 @@ static PetscErrorCode QPSKSPSynchronize_KSP(QPS qps)
   PetscCall(KSPSetOperators(ksp,qp->A,qp->A));
   PetscCall(KSPSetConvergenceTest(ksp, QPSKSPConverged_KSP, qps, NULL));
   PetscCall(KSPSetTolerances(ksp, qps->rtol, qps->atol, qps->divtol, qps->max_it));  
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -61,7 +61,7 @@ PetscErrorCode QPSKSPSetKSP(QPS qps,KSP ksp)
   PetscCall(QPSGetOptionsPrefix(qps,&prefix));
   PetscCall(KSPSetOptionsPrefix(ksp,prefix)); 
   PetscCall(KSPAppendOptionsPrefix(ksp,"qps_"));  
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -78,7 +78,7 @@ PetscErrorCode QPSKSPGetKSP(QPS qps,KSP *ksp)
   if (!flg) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"This is a QPSKSP specific routine!");
   qpsksp = (QPS_KSP*)qps->data;
   *ksp = qpsksp->ksp;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -94,7 +94,7 @@ PetscErrorCode QPSKSPSetType(QPS qps,KSPType type)
   if (!flg) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"This is a QPSKSP specific routine!");
   qpsksp = (QPS_KSP*)qps->data;
   PetscCall(KSPSetType(qpsksp->ksp,type));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -110,7 +110,7 @@ PetscErrorCode QPSKSPGetType(QPS qps,KSPType *type)
   if (!flg) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"This is a QPSKSP specific routine!");
   qpsksp = (QPS_KSP*)qps->data;
   PetscCall(KSPGetType(qpsksp->ksp,type));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -124,7 +124,7 @@ PetscErrorCode QPSSetUp_KSP(QPS qps)
   PetscCall(QPSKSPSynchronize_KSP(qps));
   if (qpsksp->setfromoptionscalled) PetscCall(KSPSetFromOptions(ksp));
   PetscCall(KSPSetUp(ksp));
-  PetscFunctionReturn(0);  
+  PetscFunctionReturn(PETSC_SUCCESS);  
 }
 
 #undef __FUNCT__  
@@ -145,7 +145,7 @@ PetscErrorCode QPSSolve_KSP(QPS qps)
   PetscCall(KSPGetIterationNumber(ksp,&qps->iteration));
   PetscCall(KSPGetResidualNorm(   ksp,&qps->rnorm));
   PetscCall(KSPGetConvergedReason(ksp,&qps->reason));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -156,7 +156,7 @@ PetscErrorCode QPSSetFromOptions_KSP(QPS qps,PetscOptionItems *PetscOptionsObjec
   
   PetscFunctionBegin;
   qpsksp->setfromoptionscalled = PETSC_TRUE;
-  PetscFunctionReturn(0);  
+  PetscFunctionReturn(PETSC_SUCCESS);  
 }
 
 #undef __FUNCT__  
@@ -168,7 +168,7 @@ PetscErrorCode QPSView_KSP(QPS qps, PetscViewer v)
   
   PetscFunctionBegin;
   PetscCall(KSPView(ksp, v));
-  PetscFunctionReturn(0);  
+  PetscFunctionReturn(PETSC_SUCCESS);  
 }
 
 #undef __FUNCT__
@@ -184,7 +184,7 @@ PetscErrorCode QPSViewConvergence_KSP(QPS qps, PetscViewer v)
     PetscCall(QPSKSPGetType(qps, &ksptype));
     PetscCall(PetscViewerASCIIPrintf(v, "KSPType: %s\n", ksptype));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 
@@ -197,7 +197,7 @@ PetscErrorCode QPSDestroy_KSP(QPS qps)
   PetscFunctionBegin;
   PetscCall(KSPDestroy(&qpsksp->ksp));
   PetscCall(QPSDestroyDefault(qps));
-  PetscFunctionReturn(0);  
+  PetscFunctionReturn(PETSC_SUCCESS);  
 }
 
 #undef __FUNCT__  
@@ -217,7 +217,7 @@ PetscErrorCode QPSIsQPCompatible_KSP(QPS qps,QP qp,PetscBool *flg)
   {
     *flg = PETSC_FALSE;
   }
-  PetscFunctionReturn(0);   
+  PetscFunctionReturn(PETSC_SUCCESS);   
 }
 
 #undef __FUNCT__  
@@ -256,5 +256,5 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_KSP(QPS qps)
     PetscCall(KSPGetPC(qpsksp->ksp, &pc));
     PetscCall(PCSetType(pc, PCNONE));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }

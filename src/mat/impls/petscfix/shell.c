@@ -18,7 +18,7 @@ static PetscErrorCode MatMultAdd_ShellPermon(Mat A,Vec x,Vec y,Vec z)
     PetscCall(MatMult(A,x,z));
     PetscCall(VecAXPY(z,1.0,y));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -28,7 +28,7 @@ PetscErrorCode MatCreateShellPermon(MPI_Comm comm,PetscInt m,PetscInt n,PetscInt
   PetscFunctionBegin;
   PetscCall(MatCreateShell(comm,m,n,M,N,ctx,A));
   PetscCall(MatShellSetOperation(*A,MATOP_MULT_ADD,(void(*)())MatMultAdd_ShellPermon));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 
@@ -39,5 +39,5 @@ PetscErrorCode MatCreateDummy(MPI_Comm comm,PetscInt m,PetscInt n,PetscInt M,Pet
   PetscFunctionBegin;
   PetscCall(MatCreateShell(comm,m,n,M,N,ctx,A));
   PetscCall(PetscObjectChangeTypeName((PetscObject)*A,MATDUMMY));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }

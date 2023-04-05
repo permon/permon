@@ -24,7 +24,7 @@ PetscErrorCode QPChainAdd(QP qp, QPDuplicateOption opt, QP *newchild)
   PetscValidPointer(newchild,2);
   PetscCall(QPChainGetLast(qp, &last));
   PetscCall(QPAddChild(last,opt,newchild));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -45,7 +45,7 @@ PetscErrorCode QPChainPop(QP qp)
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
   PetscCall(QPChainGetLast(qp, &last));
   if (last->parent) PetscCall(QPRemoveChild(last->parent));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -85,7 +85,7 @@ PetscErrorCode QPChainFind(QP qp,PetscErrorCode(*transform)(QP),QP *child)
     }
     PetscCall(QPGetChild(cchild, &cchild));
   };
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -118,7 +118,7 @@ PetscErrorCode QPChainGetLast(QP qp,QP *last)
   } while (tchild);
 
   *last = qp;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -141,7 +141,7 @@ PetscErrorCode QPChainSetUp(QP qp)
     PetscCall(QPSetUp(qp));
     PetscCall(QPGetChild(qp,&qp));
   } while (qp);
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -172,7 +172,7 @@ PetscErrorCode QPChainSetFromOptions(QP qp)
     PetscCall(QPGetChild(qp,&qp));
   } while (qp);
   PetscOptionsEnd();
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -274,7 +274,7 @@ PetscErrorCode QPChainPostSolve(QP qp)
     PetscCall(PetscViewerASCIIPrintf(v,"=====================\n"));
     PetscCall(PetscViewerDestroy(&v));
   }
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -319,7 +319,7 @@ PetscErrorCode QPChainViewKKT(QP qp, PetscViewer v)
     if (cqp == qp) break;
   }
   PetscCall(PetscViewerASCIIPrintf(v,"=====================\n"));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -360,7 +360,7 @@ PetscErrorCode QPChainView(QP qp, PetscViewer v)
     PetscCall(QPGetChild(qp, &qp));
   }
   PetscCall(PetscViewerASCIIPrintf(v,"=====================\n"));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -410,5 +410,5 @@ PetscErrorCode QPChainViewQPPF(QP qp,PetscViewer v)
   }
   PetscCall(PetscViewerASCIIPopTab(v));
   PetscCall(PetscViewerASCIIPrintf(v,"=====================\n"));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }

@@ -7,7 +7,7 @@ PetscErrorCode MatProdGetMat(Mat A,PetscInt i,Mat *Ai)
 {
   PetscFunctionBegin;
   PetscCall(MatCompositeGetMat(A,i,Ai));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -42,7 +42,7 @@ PetscErrorCode MatMult_Prod(Mat A,Vec x,Vec y)
     PetscCall(VecPointwiseMult(y,shell->left,y));
   }
   PetscCall(VecScale(y,shell->scale));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -77,7 +77,7 @@ PetscErrorCode MatMultTranspose_Prod(Mat A,Vec x,Vec y)
     PetscCall(VecPointwiseMult(y,shell->right,y));
   }
   PetscCall(VecScale(y,shell->scale));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -96,7 +96,7 @@ PetscErrorCode MatMultAdd_Prod(Mat A,Vec x,Vec y,Vec z)
     PetscCall(MatMult_Prod(A,x,z));
     PetscCall(VecAXPY(z,1.0,y));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -115,7 +115,7 @@ PetscErrorCode MatMultTransposeAdd_Prod(Mat A,Vec x,Vec y, Vec z)
     PetscCall(MatMultTranspose_Prod(A,x,z));
     PetscCall(VecAXPY(z,1.0,y));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -142,7 +142,7 @@ FLLOP_EXTERN PetscErrorCode  MatCreate_Prod(Mat A)
   composite->tail           = NULL;
 
   PetscCall(PetscObjectChangeTypeName((PetscObject)A,MATPROD));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -198,5 +198,5 @@ PetscErrorCode  MatCreateProd(MPI_Comm comm,PetscInt nmat,const Mat *mats,Mat *m
   }
   PetscCall(MatAssemblyBegin(*mat,MAT_FINAL_ASSEMBLY));
   PetscCall(MatAssemblyEnd(*mat,MAT_FINAL_ASSEMBLY));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }

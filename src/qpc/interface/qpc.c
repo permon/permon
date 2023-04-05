@@ -30,7 +30,7 @@ PetscErrorCode QPCCreate(MPI_Comm comm,QPC *qpc_new)
   qpc->setupcalled  = PETSC_FALSE; /* the setup was not called yet */
 
   *qpc_new = qpc;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -41,7 +41,7 @@ PetscErrorCode QPCSetUp(QPC qpc)
   PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
 
   /* if the setup was already called, then ignore this calling */
-  if (qpc->setupcalled) PetscFunctionReturn(0);
+  if (qpc->setupcalled) PetscFunctionReturn(PETSC_SUCCESS);
 
   FllopTraceBegin;
 
@@ -59,7 +59,7 @@ PetscErrorCode QPCSetUp(QPC qpc)
 
   /* the setup was now called, do not call it again */
   qpc->setupcalled = PETSC_TRUE;
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -72,7 +72,7 @@ PetscErrorCode QPCReset(QPC qpc)
   PetscCall(ISDestroy(&qpc->is));
   PetscTryTypeMethod(qpc,reset);
   qpc->setupcalled = PETSC_FALSE;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -136,7 +136,7 @@ PetscErrorCode QPCView(QPC qpc,PetscViewer v)
     PetscCall(PetscInfo(qpc,"Warning: QPCView not implemented yet for type %s\n",type));
   }
   PetscCall(PetscViewerASCIIPopTab(v));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -154,7 +154,7 @@ PetscErrorCode QPCViewKKT(QPC qpc, Vec x, PetscReal normb, PetscViewer v)
   PetscCall(QPCGetSubvector(qpc,x,&x_sub));
   PetscUseTypeMethod(qpc,viewkkt,x_sub,normb,v);
   PetscCall(QPCRestoreSubvector(qpc,x,&x_sub));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -168,11 +168,11 @@ Parameters:
 PetscErrorCode QPCDestroy(QPC *qpc)
 {
   PetscFunctionBegin;
-  if (!*qpc) PetscFunctionReturn(0);
+  if (!*qpc) PetscFunctionReturn(PETSC_SUCCESS);
   PetscValidHeaderSpecific((*qpc), QPC_CLASSID, 1);
   if (--((PetscObject) (*qpc))->refct > 0) {
     *qpc = 0;
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
 
   PetscCall(QPCReset(*qpc));
@@ -181,7 +181,7 @@ PetscErrorCode QPCDestroy(QPC *qpc)
 
   PetscCall(PetscFree((*qpc)->data));
   PetscCall(PetscHeaderDestroy(qpc));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -203,7 +203,7 @@ PetscErrorCode QPCSetType(QPC qpc, const QPCType type)
     PetscValidCharPointer(type,2);
 
     PetscCall(PetscObjectTypeCompare((PetscObject)qpc,type,&issame));
-    if (issame) PetscFunctionReturn(0);
+    if (issame) PetscFunctionReturn(PETSC_SUCCESS);
 
     PetscCall(PetscFunctionListFind(QPCList,type,(void(**)(void))&create));
     if (!create) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_UNKNOWN_TYPE,"Unable to find requested QPC type %s",type);
@@ -218,7 +218,7 @@ PetscErrorCode QPCSetType(QPC qpc, const QPCType type)
 
     PetscCall((*create)(qpc));
     PetscCall(PetscObjectChangeTypeName((PetscObject)qpc,type));
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -236,7 +236,7 @@ PetscErrorCode QPCGetType(QPC qpc,const QPCType *type)
   PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
   PetscValidPointer(type,2);
   *type = ((PetscObject)qpc)->type_name;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -252,7 +252,7 @@ PetscErrorCode QPCSetIS(QPC qpc,IS is)
   }
   PetscCall(ISDestroy(&qpc->is));
   qpc->is = is;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -263,7 +263,7 @@ PetscErrorCode QPCGetIS(QPC qpc,IS *is)
   PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
   PetscValidPointer(is,2);
   *is = qpc->is;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -281,7 +281,7 @@ PetscErrorCode QPCGetBlockSize(QPC qpc,PetscInt *bs)
   PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
   PetscValidIntPointer(bs,2);
   PetscUseTypeMethod(qpc,getblocksize,bs);
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -304,7 +304,7 @@ PetscErrorCode QPCIsLinear(QPC qpc,PetscBool *linear)
   } else {
       PetscUseTypeMethod(qpc,islinear,linear);
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -327,7 +327,7 @@ PetscErrorCode QPCIsSubsymmetric(QPC qpc,PetscBool *subsym)
   } else {
       PetscUseTypeMethod(qpc,issubsymmetric,subsym);
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -346,7 +346,7 @@ PetscErrorCode QPCGetNumberOfConstraints(QPC qpc,PetscInt *num)
   PetscValidIntPointer(num,2);
 
   PetscUseTypeMethod(qpc,getnumberofconstraints,num);
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -384,7 +384,7 @@ PetscErrorCode QPCGetConstraintFunction(QPC qpc, Vec x, Vec *hx)
   PetscCall(QPCRestoreSubvector(qpc,x,&x_sub));
 
   *hx = hx_type;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -409,7 +409,7 @@ PetscErrorCode QPCRestoreConstraintFunction(QPC qpc,Vec x, Vec *hx)
   PetscCall(QPCGetBlockSize(qpc,&bs));
 
   PetscTryTypeMethod(qpc,restoreconstraintfunction,x,hx);
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -434,7 +434,7 @@ PetscErrorCode QPCGetSubvector(QPC qpc,Vec x,Vec *xc)
   }
 
   *xc = xc_out;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -452,7 +452,7 @@ PetscErrorCode QPCRestoreSubvector(QPC qpc,Vec x,Vec *xc)
   } else {
     PetscCall(VecDestroy(xc));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -490,7 +490,7 @@ PetscErrorCode QPCProject(QPC qpc,Vec x, Vec Px)
   PetscCall(QPCRestoreSubvector(qpc,Px,&Px_sub));
   PetscCall(QPCRestoreSubvector(qpc,x,&x_sub));
 
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -526,7 +526,7 @@ PetscErrorCode QPCFeas(QPC qpc, Vec x, Vec d, PetscScalar *alpha)
   /* restore the gradients */
   PetscCall(QPCRestoreSubvector( qpc, x, &x_sub));
   PetscCall(QPCRestoreSubvector( qpc, d, &d_sub));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -568,7 +568,7 @@ PetscErrorCode QPCGrads(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
   PetscCall(QPCRestoreSubvector( qpc, g, &g_sub));
   PetscCall(QPCRestoreSubvector( qpc, gf, &gf_sub));
   PetscCall(QPCRestoreSubvector( qpc, gc, &gc_sub));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -614,6 +614,6 @@ PetscErrorCode QPCGradReduced(QPC qpc, Vec x, Vec gf, PetscReal alpha, Vec gr)
   PetscCall(QPCRestoreSubvector( qpc, x, &x_sub));
   PetscCall(QPCRestoreSubvector( qpc, gf, &gf_sub));
   PetscCall(QPCRestoreSubvector( qpc, gr, &gr_sub));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 

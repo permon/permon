@@ -11,7 +11,7 @@ PetscErrorCode MatMult_OneRow(Mat A, Vec x, Vec z) {
     PetscCall(MatShellGetContext(A, (void*) &a));
     PetscCall(VecDot(a,x,&alpha));
     PetscCall(VecSet(z,alpha));  /* z has length 1 */
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -34,7 +34,7 @@ PetscErrorCode MatMultAdd_OneRow(Mat A, Vec x, Vec w, Vec z) {
     }
     PetscCall(VecRestoreArrayRead(w,&warr));
     PetscCall(VecRestoreArray(z,&zarr));
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -54,7 +54,7 @@ PetscErrorCode MatMultTranspose_OneRow(Mat A, Vec x, Vec z) {
     PetscCallMPI(MPI_Bcast(&xval,1,MPIU_SCALAR,0,PetscObjectComm((PetscObject)A)));
     PetscCall(VecCopy(a,z));
     PetscCall(VecScale(z,xval));
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -77,7 +77,7 @@ PetscErrorCode MatMultTransposeAdd_OneRow(Mat A, Vec x, Vec w, Vec z) {
     } else {
       PetscCall(VecWAXPY(z,xval,a,w));
     }
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -89,7 +89,7 @@ PetscErrorCode MatDestroy_OneRow(Mat A) {
     PetscCall(MatShellGetContext(A, (void*) &a));
     PetscCall(VecDestroy(&a));
     PetscCall(MatShellSetContext(A, NULL));
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -111,5 +111,5 @@ PetscErrorCode MatCreateOneRow(Vec a, Mat *A_new)
   PetscCall(MatShellSetOperation(A,MATOP_MULT_TRANSPOSE,(void(*)(void))MatMultTranspose_OneRow));
   PetscCall(MatShellSetOperation(A,MATOP_MULT_TRANSPOSE_ADD,(void(*)(void))MatMultTransposeAdd_OneRow));
   *A_new = A;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }

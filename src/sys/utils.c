@@ -25,7 +25,7 @@ PetscErrorCode FllopCreate(MPI_Comm comm,FLLOP *fllop_new)
   PetscValidPointer(fllop_new,2);
   PetscCall(PetscHeaderCreate(fllop,FLLOP_CLASSID,"FLLOP","FLLOP","FLLOP",comm,0,0));
   *fllop_new = fllop;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -33,14 +33,14 @@ PetscErrorCode FllopCreate(MPI_Comm comm,FLLOP *fllop_new)
 PetscErrorCode FllopDestroy(FLLOP *fllop)
 {
   PetscFunctionBegin;
-  if (!*fllop) PetscFunctionReturn(0);
+  if (!*fllop) PetscFunctionReturn(PETSC_SUCCESS);
   PetscValidHeaderSpecific(*fllop, FLLOP_CLASSID, 1);
   if (--((PetscObject) (*fllop))->refct > 0) {
     *fllop = 0;
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
   PetscCall(PetscHeaderDestroy(fllop));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -70,7 +70,7 @@ PetscErrorCode FllopMakePath(const char *dir, mode_t mode)
     
     PetscCall(PetscTestDirectory(dir, 'x', &flg));    
     if (!flg) SETERRQ(PETSC_COMM_SELF, PETSC_ERR_FILE_WRITE, "Directory %s was not created properly.", dir);
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -105,7 +105,7 @@ PetscErrorCode FllopProcessInfoExclusions(PetscClassId classid, const char *clas
     }
   }  
   
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -114,7 +114,7 @@ PetscErrorCode FllopSetTrace(PetscBool flg)
 {
   PetscFunctionBegin;
   FllopTraceEnabled = flg;  
-  PetscFunctionReturn(0);  
+  PetscFunctionReturn(PETSC_SUCCESS);  
 }
 
 #undef __FUNCT__
@@ -123,7 +123,7 @@ PetscErrorCode FllopSetObjectInfo(PetscBool flg)
 {
   PetscFunctionBegin;
   FllopObjectInfoEnabled = flg;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -132,7 +132,7 @@ PetscErrorCode FllopSetDebug(PetscBool flg)
 {
   PetscFunctionBegin;
   FllopDebugEnabled = flg;  
-  PetscFunctionReturn(0);  
+  PetscFunctionReturn(PETSC_SUCCESS);  
 }
 
 #undef __FUNCT__
@@ -144,7 +144,7 @@ PetscErrorCode FllopPetscInfoDeactivateAll()
   PetscFunctionBegin;
   for (i = PETSC_SMALLEST_CLASSID+1; i < PETSC_SMALLEST_CLASSID+60; i++) PetscCall(PetscInfoDeactivateClass(i));
   PetscCall(PetscInfoDeactivateClass(0));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -226,7 +226,7 @@ PetscErrorCode FllopSetFromOptions()
     }
   }
 #endif
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 /* based on EventRegLogGetEvent but does not throw an error if the event does not exist */
@@ -250,7 +250,7 @@ PetscErrorCode FllopEventRegLogGetEvent(PetscEventRegLog eventLog, const char na
       break;
     }
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 /* based on PetscLogEventGetId but does not throw an error if the event does not exist */
@@ -263,7 +263,7 @@ PetscErrorCode  FllopPetscLogEventGetId(const char name[], PetscLogEvent *event,
   PetscFunctionBegin;
   PetscCall(PetscLogGetStageLog(&stageLog));
   PetscCall(FllopEventRegLogGetEvent(stageLog->eventLog, name, event, exists));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -278,7 +278,7 @@ PetscErrorCode FllopPetscObjectInheritName(PetscObject obj,PetscObject orig,cons
   PetscValidHeader(orig,2);
   if (suffix) PetscValidCharPointer(suffix,3);
   PetscCall(PetscObjectName((PetscObject)orig));
-  if (obj==orig && !suffix) PetscFunctionReturn(0);
+  if (obj==orig && !suffix) PetscFunctionReturn(PETSC_SUCCESS);
   PetscCall(PetscStrlen(orig->name,&len1));
   PetscCall(PetscStrlen(suffix,&len2));
   PetscCall(PetscMalloc((1+len1+len2)*sizeof(char),&name));
@@ -286,7 +286,7 @@ PetscErrorCode FllopPetscObjectInheritName(PetscObject obj,PetscObject orig,cons
   PetscCall(PetscStrcat(name,suffix));
   PetscCall(PetscFree(obj->name));
   obj->name = name;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -303,7 +303,7 @@ PetscErrorCode FllopPetscObjectInheritPrefix(PetscObject obj,PetscObject orig,co
 
   if (!orig->prefix) {
     PetscCall(PetscStrallocpy(suffix,&obj->prefix));
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
 
   PetscCall(PetscStrlen(orig->prefix,&len1));
@@ -311,7 +311,7 @@ PetscErrorCode FllopPetscObjectInheritPrefix(PetscObject obj,PetscObject orig,co
   PetscCall(PetscMalloc((1+len1+len2)*sizeof(char),&obj->prefix));
   PetscCall(PetscStrcpy(obj->prefix,orig->prefix));
   PetscCall(PetscStrcat(obj->prefix,suffix));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -322,7 +322,7 @@ PetscErrorCode FllopPetscObjectInheritPrefixIfNotSet(PetscObject obj,PetscObject
   PetscValidHeader(obj,1);
   PetscValidHeader(orig,2);
   if (suffix) PetscValidCharPointer(suffix,3);
-  if (obj->prefix) PetscFunctionReturn(0);
+  if (obj->prefix) PetscFunctionReturn(PETSC_SUCCESS);
   PetscCall(FllopPetscObjectInheritPrefix(obj,orig,suffix));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
