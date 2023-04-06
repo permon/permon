@@ -41,6 +41,6 @@ PetscErrorCode KSPViewBriefInfo(KSP ksp, PetscViewer viewer)
   PetscCall(PetscViewerASCIIPrintf(viewer,"MatType:          %s\n",mattype));
   PetscCall(PetscViewerASCIIPrintf(viewer,"(rtol, dtol, atol, maxit) = (%.1e, %.1e, %.1e, %d)\n",rtol,dtol,atol,maxit));
   PetscCall(PetscViewerASCIIPopTab(viewer));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 

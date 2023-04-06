@@ -74,7 +74,7 @@ PetscErrorCode MatRemoveGluingOfDirichletDofs_old(Mat Bgt, Vec cg, Mat Bdt, Mat 
   }
   PetscCall(PetscFree(remove));
   PetscCall(PetscFree(idx));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -167,5 +167,5 @@ PetscErrorCode MatRemoveGluingOfDirichletDofs(Mat Bgt, Vec cg, Mat Bdt, Mat *Bgt
   } else {
     PetscCall(ISDestroy(&iscol));
   }
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }

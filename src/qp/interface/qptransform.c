@@ -24,7 +24,7 @@ static PetscErrorCode QPTransformBegin_Private(PetscErrorCode(*transform)(QP), c
   PetscCall(QPSetUpInnerObjects(qp));
   PetscCall(QPChainAdd(qp,opt,&child));
   child->transform = transform;
-  PetscCall(PetscStrcpy(child->transform_name, trname));
+  PetscCall(PetscStrncpy(child->transform_name, trname, sizeof(child->transform_name)));
   PetscCall(QPSetPC(child,qp->pc));
   if (qp->changeListener) PetscCall((*qp->changeListener)(qp));
 
@@ -37,7 +37,7 @@ static PetscErrorCode QPTransformBegin_Private(PetscErrorCode(*transform)(QP), c
   *qp_inout = qp;
   *child_new = child;
   PetscCall(PetscInfo(qp,"QP %p (#%d) transformed by %s to QP %p (#%d)\n",(void*)qp,qp->id,trname,(void*)child,child->id));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #define QPTransformBegin(transform,postSolve,postSolveCtxDestroy,opt,qp,child,comm) QPTransformBegin_Private((PetscErrorCode(*)(QP))transform,__FUNCT__,\
@@ -52,7 +52,7 @@ PetscErrorCode QPDefaultPostSolve(QP child,QP parent)
   PetscValidHeaderSpecific(child,QP_CLASSID,1);
   PetscValidHeaderSpecific(parent,QP_CLASSID,2);
   PetscCall(VecCopy(child->x,parent->x));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -91,7 +91,7 @@ static PetscErrorCode QPTEnforceEqByProjectorPostSolve_Private(QP child,QP paren
     PetscCall(QPPFApplyQ(parent->pf,r,Bt_lambda) );
     PetscCall(VecAXPY(Bt_lambda,1.0,child->Bt_lambda));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 typedef struct {
@@ -113,7 +113,7 @@ static PetscErrorCode PCDestroy_QPTEnforceEqByProjector(PC pc)
   PetscCall(PCDestroy(&ctx->pc));
   PetscCall(VecDestroy(&ctx->work));
   PetscCall(PetscFree(ctx));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -126,7 +126,7 @@ static PetscErrorCode PCApply_QPTEnforceEqByProjector(PC pc,Vec x,Vec y)
   PetscCall(PCShellGetContext(pc,(void**)&ctx));
   PetscCall(PCApply(ctx->pc,x,ctx->work));
   PetscCall(MatMult(ctx->P,ctx->work,y));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -140,7 +140,7 @@ static PetscErrorCode PCApply_QPTEnforceEqByProjector_Symmetric(PC pc,Vec x,Vec 
   PetscCall(MatMult(ctx->P,x,y));
   PetscCall(PCApply(ctx->pc,y,ctx->work));
   PetscCall(MatMult(ctx->P,ctx->work,y));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -149,7 +149,7 @@ static PetscErrorCode PCApply_QPTEnforceEqByProjector_None(PC pc,Vec x,Vec y)
 {
   PetscFunctionBegin;
   PetscCall(VecCopy(x,y));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 
@@ -182,7 +182,7 @@ static PetscErrorCode PCSetUp_QPTEnforceEqByProjector(PC pc)
   } else {
     PetscCall(PCShellSetApply(pc,PCApply_QPTEnforceEqByProjector));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -210,7 +210,7 @@ PetscErrorCode PCCreate_QPTEnforceEqByProjector(PC pc_orig,Mat P,PetscBool symme
   PetscCall(PCShellSetSetUp(pc,PCSetUp_QPTEnforceEqByProjector));
 
   *pc_new = pc;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -233,7 +233,7 @@ PetscErrorCode QPTEnforceEqByProjector(QP qp)
   if (!qp->BE) {
     PetscCall(PetscInfo(qp, "no lin. eq. con. matrix specified ==> nothing to enforce\n"));
     PetscCall(VecDestroy(&qp->cE));
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
 
   FllopTraceBegin;
@@ -312,7 +312,7 @@ PetscErrorCode QPTEnforceEqByProjector(QP qp)
 
   PetscCall(MatDestroy(&P));
   PetscCall(PetscLogEventEnd(QPT_EnforceEqByProjector,qp,0,0,0));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -320,7 +320,7 @@ PetscErrorCode QPTEnforceEqByProjector(QP qp)
 static PetscErrorCode QPTEnforceEqByPenalty_PostSolve_Private(QP child,QP parent)
 {
   PetscFunctionBegin;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 //TODO allow to set multiple of max eigenvalue
@@ -343,7 +343,7 @@ PetscErrorCode QPTEnforceEqByPenalty(QP qp, PetscReal rho_user, PetscBool rho_di
 
   if (!rho_user) {
     PetscCall(PetscInfo(qp, "penalty=0.0 ==> no effect, returning...\n"));
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
 
   PetscCall(QPChainGetLast(qp,&qp));
@@ -351,7 +351,7 @@ PetscErrorCode QPTEnforceEqByPenalty(QP qp, PetscReal rho_user, PetscBool rho_di
   if (!qp->BE) {
     PetscCall(PetscInfo(qp, "no lin. eq. con. matrix specified ==> nothing to enforce\n"));
     PetscCall(VecDestroy(&qp->cE));
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
 
   FllopTraceBegin;
@@ -408,7 +408,7 @@ PetscErrorCode QPTEnforceEqByPenalty(QP qp, PetscReal rho_user, PetscBool rho_di
   PetscCall(QPSetWorkVector(child,qp->xwork));
 
   PetscCall(PetscLogEventEnd(QPT_EnforceEqByPenalty,qp,0,0,0));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 
@@ -421,7 +421,7 @@ static PetscErrorCode QPTHomogenizeEqPostSolve_Private(QP child,QP parent)
   PetscFunctionBegin;
   /* x_parent = x_child + xtilde */
   PetscCall(VecWAXPY(parent->x,1.0,child->x,xtilde));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -432,7 +432,7 @@ static PetscErrorCode QPTHomogenizeEqPostSolveCtxDestroy_Private(void *ctx)
 
   PetscFunctionBegin;
   PetscCall(VecDestroy(&xtilde));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -453,7 +453,7 @@ PetscErrorCode QPTHomogenizeEq(QP qp)
   PetscCall(QPChainGetLast(qp,&qp));
   if (!qp->cE) {
     PetscCall(PetscInfo(qp, "lin. eq. con. already homogenous ==> nothing to homogenize\n"));
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
 
   FllopTraceBegin;
@@ -525,7 +525,7 @@ PetscErrorCode QPTHomogenizeEq(QP qp)
 
   child->postSolveCtx = xtilde;
   PetscCall(PetscLogEventEnd(QPT_HomogenizeEq,qp,0,0,0));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -549,7 +549,7 @@ static PetscErrorCode QPTPostSolve_QPTOrthonormalizeEq(QP child,QP parent)
     /* lambda_E_p = (G*G')\G(G'*lambda_c) where G'*lambda_c = child->Bt_lambda */
     PetscCall(QPPFApplyHalfQ(child->pf,child->Bt_lambda,parent->lambda_E));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -560,7 +560,7 @@ static PetscErrorCode QPTPostSolveDestroy_QPTOrthonormalizeEq(void *ctx)
 
   PetscFunctionBegin;
   PetscCall(MatDestroy(&T));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -578,11 +578,11 @@ PetscErrorCode QPTOrthonormalizeEq(QP qp,MatOrthType type,MatOrthForm form)
   PetscCall(QPChainGetLast(qp,&qp));
   if (!qp->BE) {
     PetscCall(PetscInfo(qp, "no lin. eq. con. ==> nothing to orthonormalize\n"));
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
   if (type == MAT_ORTH_NONE) {
     PetscCall(PetscInfo(qp, "MAT_ORTH_NONE ==> skipping orthonormalization\n"));
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
 
   FllopTraceBegin;
@@ -638,7 +638,7 @@ PetscErrorCode QPTOrthonormalizeEq(QP qp,MatOrthType type,MatOrthForm form)
   PetscCall(VecDestroy(&TcE));
   child->postSolveCtx = T;
   PetscCall(PetscLogEventEnd(QPT_OrthonormalizeEq,qp,0,0,0));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -658,7 +658,7 @@ PetscErrorCode QPTOrthonormalizeEqFromOptions(QP qp)
   PetscCall(PetscInfo(qp, "-qp_E_orth_form %s\n",MatOrthForms[eq_orth_form]));
   PetscCall(QPTOrthonormalizeEq(last,eq_orth_type,eq_orth_form));
   PetscOptionsEnd();
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -687,7 +687,7 @@ static PetscErrorCode QPTDualizeViewBSpectra_Private(Mat B)
   PetscCall(PetscPrintf(PetscObjectComm((PetscObject)B),"||%s * %s'|| = %.12e (10 power method iterations)\n",name,name,norm));
   PetscCall(MatDestroy(&BBt));
   PetscCall(MatDestroy(&Bt));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #define QPTDualizeView_Private_SetName(mat,matname) if (mat && !((PetscObject)mat)->name) PetscCall(PetscObjectSetName((PetscObject)mat,matname) )
@@ -775,7 +775,7 @@ static PetscErrorCode QPTDualizeView_Private(QP qp, QP child)
         "    ||d||\t= %.12e  d = B*Kplus*f-c \n"
         "    ||e||\t= %.12e  e = R'*f \n",norm1,norm2,norm3,norm4));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -831,7 +831,7 @@ static PetscErrorCode QPTDualizePostSolve_Private(QP child,QP parent)
       PetscCall(MatMult(parent->R, alpha, tprim));
       PetscCall(VecAXPY(u, -1.0, tprim));
     }
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 //TODO this a prototype, integrate to API
@@ -869,7 +869,7 @@ static PetscErrorCode MatTransposeMatMult_R_Bt(Mat R, Mat Bt, Mat *G_new)
     PetscCall(MatDestroy(&G_arr[0]));
     PetscCall(MatDestroy(&Rt));
     *G_new = G;
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
 
   PetscCall(PetscObjectTypeCompareAny((PetscObject)Bt,&flg,MATNEST,MATNESTPERMON,""));
@@ -903,7 +903,7 @@ static PetscErrorCode MatTransposeMatMult_R_Bt(Mat R, Mat Bt, Mat *G_new)
 
   PetscCall(PetscObjectSetName((PetscObject)G,"G"));
   *G_new = G;
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1191,7 +1191,7 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
   PetscCall(VecDestroy(&d));
   PetscCall(VecDestroy(&e));
   PetscCall(VecDestroy(&lb));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1204,7 +1204,7 @@ PetscErrorCode QPTFetiPrepare(QP qp,PetscBool regularize)
   PetscCall(QPTHomogenizeEq(qp));
   PetscCall(QPTEnforceEqByProjector(qp));
   PetscCall(PetscLogEventEnd  (QPT_FetiPrepare,qp,0,0,0));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1235,7 +1235,7 @@ PetscErrorCode QPTFetiPrepareReuseCP(QP qp,PetscBool regularize)
 
   PetscCall(QPTHomogenizeEq(qp));
   PetscCall(QPTEnforceEqByProjector(qp));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1245,7 +1245,7 @@ PetscErrorCode QPTFetiPrepareReuseCPReset()
   PetscFunctionBegin;
   PetscCall(QPPFDestroy(&QPReusedCP));
   QPReusedCP = NULL;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1309,7 +1309,7 @@ static PetscErrorCode QPTPostSolve_QPTRemoveGluingOfDirichletDofs(QP child,QP pa
   }
 
   PetscCall(PetscFree4(iss_parent,iss_child,lambda_parent,lambda_child));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1320,7 +1320,7 @@ static PetscErrorCode QPTPostSolveDestroy_QPTRemoveGluingOfDirichletDofs(void *c
 
   PetscFunctionBegin;
   PetscCall(ISDestroy(&is));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1388,7 +1388,7 @@ PetscErrorCode QPTRemoveGluingOfDirichletDofs(QP qp)
 
   PetscCall(MatDestroy(&Bg_new));
   PetscCall(PetscLogEventEnd(QPT_RemoveGluingOfDirichletDofs,qp,0,0,0));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1404,7 +1404,7 @@ static PetscErrorCode QPTPostSolve_QPTScale(QP child,QP parent)
   if (ctx->dI) {
     PetscCall(VecPointwiseMult(parent->lambda_I,ctx->dI,child->lambda_I));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -1418,7 +1418,7 @@ static PetscErrorCode QPTPostSolveDestroy_QPTScale(void *ctx)
   PetscCall(VecDestroy(&cctx->dI));
   PetscCall(VecDestroy(&cctx->dO));
   PetscCall(PetscFree(cctx));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1437,7 +1437,7 @@ PetscErrorCode QPTScale_Private(Mat A,Vec b,Vec d,Mat *DA,Vec *Db)
   } else {
     *Db = NULL;
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1561,7 +1561,7 @@ PetscErrorCode QPTScale(QP qp)
 
   PetscOptionsEnd();
   child->postSolveCtx = ctx;
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1578,7 +1578,7 @@ PetscErrorCode QPTNormalizeObjective(QP qp)
   PetscCall(PetscInfo(qp,"||A||=%.12e, scale A by 1/||A||=%.12e\n",norm_A,1.0/norm_A));
   PetscCall(PetscInfo(qp,"||b||=%.12e, scale b by 1/||b||=%.12e\n",norm_b,1.0/norm_b));
   PetscCall(QPTScaleObjectiveByScalar(qp, 1.0/norm_A, 1.0/norm_b));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1593,7 +1593,7 @@ PetscErrorCode QPTNormalizeHessian(QP qp)
   PetscCall(MatGetMaxEigenvalue(qp->A, NULL, &norm_A, PETSC_DECIDE, PETSC_DECIDE));
   PetscCall(PetscInfo(qp,"||A||=%.12e, scale A by 1/||A||=%.12e\n",norm_A,1.0/norm_A));
   PetscCall(QPTScaleObjectiveByScalar(qp, 1.0/norm_A, 1.0/norm_A));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1637,7 +1637,7 @@ static PetscErrorCode QPTPostSolve_QPTScaleObjectiveByScalar(QP child,QP parent)
     PetscCall(VecCopy(child->lambda_I,parent->lambda_I));
     PetscCall(VecScale(parent->lambda_I,1.0/scale_b));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1646,7 +1646,7 @@ static PetscErrorCode QPTPostSolveDestroy_QPTScaleObjectiveByScalar(void *ctx)
 {
   PetscFunctionBegin;
   PetscFree(ctx);
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1721,7 +1721,7 @@ PetscErrorCode QPTScaleObjectiveByScalar(QP qp,PetscScalar scale_A,PetscScalar s
     PetscCall(VecNorm(child->b,NORM_2,&norm_b));
     PetscCall(FllopDebug1("||b_new||=%.12e\n",norm_b));
   }
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1757,7 +1757,7 @@ static PetscErrorCode QPTPostSolve_QPTFreezeIneq(QP child,QP parent)
   } else { /* n==1 => there had been only ineq. con. before */
     PetscCall(VecCopy(child->lambda_E,parent->lambda_I));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1776,7 +1776,7 @@ PetscErrorCode QPTFreezeIneq(QP qp)
   PetscCall(QPAddEq(child,BI,cI));
   PetscCall(QPSetEqMultiplier(child,NULL));
   PetscCall(QPSetIneq(child,NULL,NULL));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1852,7 +1852,7 @@ PetscErrorCode QPTSplitBE(QP qp)
 
   PetscCall(ISDestroy(&isrowg));
   PetscCall(ISDestroy(&isrowd));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1872,7 +1872,7 @@ static PetscErrorCode QPTPostSolve_QPTMatISToBlockDiag(QP child,QP parent)
   if (ctx->isDir) {
     if (computeNorm) {
       /* TODO: change implementation for submat copies for PETSc>=3.8 */
-      MatDuplicate(child->A,MAT_COPY_VALUES,&AsubCopy);
+      PetscCall(MatDuplicate(child->A,MAT_COPY_VALUES,&AsubCopy));
       //PetscCall(MatGetLocalToGlobalMapping(child->A,&l2g,NULL));
       //PetscCall(ISGlobalToLocalMappingApplyIS(l2g,IS_GTOLM_DROP,ctx->isDir,&isDirLoc));
       //PetscCall(MatGetLocalSubMatrix(parent->A,isDirLoc,isDirLoc,&Asub));
@@ -1931,7 +1931,7 @@ static PetscErrorCode QPTPostSolve_QPTMatISToBlockDiag(QP child,QP parent)
     PetscCall(PetscPrintf(PETSC_COMM_WORLD,"Dirichlet in Hess: %d, r = ||Ax-b|| = %e, r/||b|| = %e\n",!ctx->isDir,norm,norm/normb));
     PetscCall(VecDestroy(&resid));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1943,7 +1943,7 @@ static PetscErrorCode QPTPostSolveDestroy_QPTMatISToBlockDiag(void *ctx)
   PetscFunctionBegin;
   PetscCall(ISDestroy(&cctx->isDir));
   PetscCall(PetscFree(cctx));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 /*@
@@ -2101,7 +2101,7 @@ PetscErrorCode QPTMatISToBlockDiag(QP qp)
   PetscCall(VecDestroy(&b));
   PetscCall(MatDestroy(&A));
   
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -2160,7 +2160,7 @@ PetscErrorCode QPTAllInOne(QP qp,MatInvType invType,PetscBool dual,PetscBool pro
 
   PetscCall(QPTEnforceEqByPenalty(qp,penalty,penalty_direct));
   PetscCall(PetscLogEventEnd  (QPT_AllInOne,qp,0,0,0));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -2194,6 +2194,6 @@ PetscErrorCode QPTFromOptions(QP qp)
   }
   PetscOptionsEnd();
   PetscCall(QPTAllInOne(qp, invType, dual, project, penalty, penalty_direct, regularize));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 #undef QPTransformBegin

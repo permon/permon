@@ -2,38 +2,12 @@
 #include <../src/mat/impls/composite/permoncompositeimpl.h>
 
 #undef __FUNCT__
-#define __FUNCT__ "MatProdGetMat_Prod"
-static PetscErrorCode MatProdGetMat_Prod(Mat A,PetscInt index,Mat *Ai)
-{
-  Mat_Composite     *shell = (Mat_Composite*)A->data;
-  Mat_CompositeLink ilink;
-  PetscInt          i;
-
-  PetscFunctionBegin;
-  PetscValidHeaderSpecific(A,MAT_CLASSID,1);
-  ilink  = shell->head;
-  for (i=0; i<index; i++) {
-    if (ilink) {
-      ilink = ilink->next;
-    } else {
-      break;
-    }
-  }
-  if (!ilink) SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_OUTOFRANGE,"partial matrix index out of range: %d",i);
-  *Ai = ilink->mat;
-  PetscFunctionReturn(0);
-}
-
-#undef __FUNCT__
 #define __FUNCT__ "MatProdGetMat"
 PetscErrorCode MatProdGetMat(Mat A,PetscInt i,Mat *Ai)
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(A,MAT_CLASSID,1);
-  PetscValidLogicalCollectiveInt(A,i,2);
-  PetscValidPointer(Ai,3);
-  PetscUseMethod(A,"MatProdGetMat_Prod_C",(Mat,PetscInt,Mat*),(A,i,Ai));
-  PetscFunctionReturn(0);
+  PetscCall(MatCompositeGetMat(A,i,Ai));
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -68,7 +42,7 @@ PetscErrorCode MatMult_Prod(Mat A,Vec x,Vec y)
     PetscCall(VecPointwiseMult(y,shell->left,y));
   }
   PetscCall(VecScale(y,shell->scale));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -103,7 +77,7 @@ PetscErrorCode MatMultTranspose_Prod(Mat A,Vec x,Vec y)
     PetscCall(VecPointwiseMult(y,shell->right,y));
   }
   PetscCall(VecScale(y,shell->scale));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -122,7 +96,7 @@ PetscErrorCode MatMultAdd_Prod(Mat A,Vec x,Vec y,Vec z)
     PetscCall(MatMult_Prod(A,x,z));
     PetscCall(VecAXPY(z,1.0,y));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -141,7 +115,7 @@ PetscErrorCode MatMultTransposeAdd_Prod(Mat A,Vec x,Vec y, Vec z)
     PetscCall(MatMultTranspose_Prod(A,x,z));
     PetscCall(VecAXPY(z,1.0,y));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -163,14 +137,12 @@ FLLOP_EXTERN PetscErrorCode  MatCreate_Prod(Mat A)
   A->ops->getdiagonal        = NULL;
   composite->type            = MAT_COMPOSITE_MULTIPLICATIVE;
 
-  PetscCall(PetscObjectComposeFunction((PetscObject)A,"MatProdGetMat_Prod_C",MatProdGetMat_Prod));
-
   composite->type           = MAT_COMPOSITE_MULTIPLICATIVE;
   composite->head           = NULL;
   composite->tail           = NULL;
 
   PetscCall(PetscObjectChangeTypeName((PetscObject)A,MATPROD));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -226,5 +198,5 @@ PetscErrorCode  MatCreateProd(MPI_Comm comm,PetscInt nmat,const Mat *mats,Mat *m
   }
   PetscCall(MatAssemblyBegin(*mat,MAT_FINAL_ASSEMBLY));
   PetscCall(MatAssemblyEnd(*mat,MAT_FINAL_ASSEMBLY));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }

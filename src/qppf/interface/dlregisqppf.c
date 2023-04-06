@@ -9,7 +9,7 @@ static PetscBool QPPFPackageInitialized = PETSC_FALSE;
 PetscErrorCode QPPFInitializePackage()
 {
   PetscFunctionBegin;
-  if (QPPFPackageInitialized) PetscFunctionReturn(0);
+  if (QPPFPackageInitialized) PetscFunctionReturn(PETSC_SUCCESS);
   QPPFPackageInitialized = PETSC_TRUE;
   /* Register Classes */
   PetscCall(PetscClassIdRegister("QP Projector Factory",&QPPF_CLASSID));
@@ -28,5 +28,5 @@ PetscErrorCode QPPFInitializePackage()
   PetscCall(PetscLogEventRegister("QPPFApplyGt",     QPPF_CLASSID, &QPPF_ApplyGt));
   /* Process info & summary exclusions */
   PetscCall(FllopProcessInfoExclusions(QPPF_CLASSID, QPPF_CLASS_NAME));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }

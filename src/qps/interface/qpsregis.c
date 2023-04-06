@@ -24,7 +24,7 @@ PetscErrorCode  QPSRegisterAll(void)
   PetscCall(QPSRegister(QPSSMALXE,   QPSCreate_SMALXE));
   PetscCall(QPSRegister(QPSTAO,      QPSCreate_Tao));
   PetscCall(QPSRegister(QPSPCPG,     QPSCreate_PCPG));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -33,5 +33,5 @@ PetscErrorCode QPSRegister(const char sname[],PetscErrorCode (*function)(QPS))
 {
   PetscFunctionBegin;
   PetscCall(PetscFunctionListAdd(&QPSList,sname,function));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }

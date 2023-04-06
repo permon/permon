@@ -17,7 +17,7 @@ PetscErrorCode QPSIsQPCompatible_PCPG(QPS qps,QP qp,PetscBool *flg){
     } else {
       *flg = PETSC_TRUE;
     }
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
 
 }
 
@@ -38,7 +38,7 @@ PetscErrorCode QPSSetup_PCPG(QPS qps){
     PetscCall(QPTHomogenizeEq(qps->solQP));
     PetscCall(QPChainGetLast(qps->solQP, &qps->solQP));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -130,7 +130,7 @@ PetscErrorCode QPSSolve_PCPG(QPS qps){
     
     qps->iteration++;
   } while (qps->iteration < qps->max_it);
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -145,5 +145,5 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_PCPG(QPS qps)
   qps->ops->setup = QPSSetup_PCPG;
   qps->ops->solve = QPSSolve_PCPG;
   qps->ops->isqpcompatible = QPSIsQPCompatible_PCPG;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }

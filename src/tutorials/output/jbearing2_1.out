@@ -40,7 +40,7 @@ QPS Object: 1 MPI process
                 Number of updates: 39
                 Number of rejects: 0
                 Number of resets: 1
-        TaoLineSearch Object: 1 MPI process
+        TaoLineSearch Object: (qps_) 1 MPI process
           type: more-thuente
           maximum function evaluations=30
           tolerances: ftol=0.0001, rtol=1e-10, gtol=0.9

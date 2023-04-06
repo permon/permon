@@ -45,7 +45,7 @@ static PetscErrorCode FllopMatGetLocalMat_Gluing(Mat A,Mat *Aloc)
   PetscCall(PetscFree(rootdata));
   PetscCall(PetscLayoutDestroy(&links));
 
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 
@@ -86,7 +86,7 @@ PetscErrorCode MatMult_Gluing(Mat mat, Vec right, Vec left)
   PetscCall(PetscFree(x_onleaves));
   PetscCall(PetscFree(lambda_onleaves));
 
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -127,7 +127,7 @@ PetscErrorCode MatMultAdd_Gluing(Mat mat, Vec right, Vec add, Vec left) {
   
   PetscCall(VecAXPY(left, 1, add));
   
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -172,7 +172,7 @@ PetscErrorCode MatMultTranspose_Gluing(Mat mat, Vec right, Vec left)
   PetscCall(PetscFree(lambda_onleaves));
   PetscCall(PetscFree(idxL));
 
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -219,7 +219,7 @@ PetscErrorCode MatMultTransposeAdd_Gluing(Mat mat, Vec right, Vec add, Vec left)
 
   PetscCall(VecAXPY(left, 1, add));
 
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 
@@ -233,7 +233,8 @@ PetscErrorCode MatDestroy_Gluing(Mat mat)
   PetscCall(PetscFree(data->leaves_row));
   PetscCall(PetscFree(data->leaves_sign));
   PetscCall(PetscFree(data));
-  PetscFunctionReturn(0);
+  PetscCall(PetscObjectComposeFunction((PetscObject)mat,"FllopMatGetLocalMat_C",NULL));
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__  
@@ -279,7 +280,7 @@ PetscErrorCode MatCreateGluing(MPI_Comm comm, PetscInt n_x_localRow, PetscInt n_
   PetscCall(PetscLayoutGetRange(B->cmap,&clo,&chi));
     
   *B_out = B;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -309,5 +310,5 @@ FLLOP_EXTERN PetscErrorCode MatCreate_Gluing(Mat B) {
   B->ops->multtransposeadd   = MatMultTransposeAdd_Gluing;
   PetscCall(PetscObjectComposeFunction((PetscObject)B,"FllopMatGetLocalMat_C",FllopMatGetLocalMat_Gluing));
  
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 } 

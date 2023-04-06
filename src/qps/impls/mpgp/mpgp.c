@@ -33,7 +33,7 @@ PetscErrorCode QPSMonitorDefault_MPGP(QPS qps,PetscInt n,PetscViewer viewer)
    PetscCall(PetscViewerASCIIPrintf(viewer,",\t||gc||=%.10e",(double)mpgp->gcnorm));
    PetscCall(PetscViewerASCIIPrintf(viewer,",\talpha=%.10e",(double)mpgp->alpha));
    PetscCall(PetscViewerASCIIPrintf(viewer,"\n"));
-   PetscFunctionReturn(0);
+   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -44,7 +44,7 @@ PetscErrorCode QPSMPGPGetCurrentStepType_MPGP(QPS qps,char *stepType)
 
   PetscFunctionBegin;
   *stepType = mpgp->currentStepType;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -56,7 +56,7 @@ static PetscErrorCode QPSMPGPGetAlpha_MPGP(QPS qps,PetscReal *alpha,QPSScalarArg
   PetscFunctionBegin;
   if (alpha) *alpha = mpgp->alpha_user;
   if (argtype) *argtype = mpgp->alpha_type;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -69,7 +69,7 @@ static PetscErrorCode QPSMPGPSetAlpha_MPGP(QPS qps,PetscReal alpha,QPSScalarArgT
   mpgp->alpha_user = alpha;
   mpgp->alpha_type = argtype;
   qps->setupcalled = PETSC_FALSE;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -80,7 +80,7 @@ static PetscErrorCode QPSMPGPGetGamma_MPGP(QPS qps,PetscReal *gamma)
 
   PetscFunctionBegin;
   *gamma = mpgp->gamma;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -91,7 +91,7 @@ static PetscErrorCode QPSMPGPSetGamma_MPGP(QPS qps,PetscReal gamma)
 
   PetscFunctionBegin;
   mpgp->gamma = gamma;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -102,7 +102,7 @@ static PetscErrorCode QPSMPGPGetOperatorMaxEigenvalue_MPGP(QPS qps,PetscReal *ma
 
   PetscFunctionBegin;
   *maxeig = mpgp->maxeig;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -114,7 +114,7 @@ static PetscErrorCode QPSMPGPSetOperatorMaxEigenvalue_MPGP(QPS qps,PetscReal max
   PetscFunctionBegin;
   mpgp->maxeig = maxeig;
   qps->setupcalled = PETSC_FALSE;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -142,7 +142,7 @@ static PetscErrorCode  QPSMPGPUpdateMaxEigenvalue_MPGP(QPS qps, PetscReal maxeig
     PetscCall(MatGetMaxEigenvalue(qps->solQP->A,NULL,&lambda,mpgp->maxeig_tol,mpgp->maxeig_iter));
     PetscCall(FllopDebug1("|maxeig_from_power_method - mpgp->maxeig| = %8e\n",PetscAbs(lambda-mpgp->maxeig)));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -153,7 +153,7 @@ static PetscErrorCode QPSMPGPGetOperatorMaxEigenvalueTolerance_MPGP(QPS qps,Pets
 
   PetscFunctionBegin;
   *tol = mpgp->maxeig_tol;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -164,7 +164,7 @@ static PetscErrorCode QPSMPGPSetOperatorMaxEigenvalueTolerance_MPGP(QPS qps,Pets
 
   PetscFunctionBegin;
   mpgp->maxeig_tol = tol;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -175,7 +175,7 @@ static PetscErrorCode QPSMPGPGetOperatorMaxEigenvalueIterations_MPGP(QPS qps,Pet
 
   PetscFunctionBegin;
   *numit = mpgp->maxeig_iter;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -186,7 +186,7 @@ static PetscErrorCode QPSMPGPSetOperatorMaxEigenvalueIterations_MPGP(QPS qps,Pet
 
   PetscFunctionBegin;
   mpgp->maxeig_iter = numit;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -222,7 +222,7 @@ static PetscErrorCode MPGPGrads(QPS qps, Vec x, Vec g)
   PetscCall(QPCGrads(qpc,x,g,gf,gc));
   PetscCall(QPCGradReduced(qpc,x,gf,mpgp->alpha,gr));
   PetscCall(VecWAXPY(gP,1.0,gf,gc));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -281,7 +281,7 @@ static PetscErrorCode MPGPExpansionLength(QPS qps)
       break;
     default: SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_PLIB,"Unknown MPGP expansion length type");
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -317,7 +317,7 @@ static PetscErrorCode MPGPExpansion_Std(QPS qps, PetscReal afeas, PetscReal acg)
 
   PetscCall(MPGPExpansionLength(qps));
   PetscCall(VecAXPY(x, -mpgp->alpha, mpgp->expdirection));      /* x=x-abar*direction */
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -343,7 +343,7 @@ static PetscErrorCode MPGPExpansion_ProjCG(QPS qps, PetscReal afeas, PetscReal a
 
   /* make projected CG step */
   PetscCall(VecAXPY(x, -acg, p));               /* x=x-acg*p      */
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -427,7 +427,7 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
     mpgp->alpha = mpgp->alpha_user;
   }
   PetscCall(PetscInfo(qps,  "alpha      = %.8e\n", mpgp->alpha));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -662,7 +662,7 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   mpgp->nprop   += nprop;
   mpgp->nfinc    += nfinc;
   mpgp->nfall   += nfall;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -675,7 +675,7 @@ PetscErrorCode QPSResetStatistics_MPGP(QPS qps)
   mpgp->nexp  = 0;
   mpgp->nmv   = 0;
   mpgp->nprop = 0;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -689,6 +689,7 @@ Parameters:
 PetscErrorCode QPSDestroy_MPGP(QPS qps)
 {
   PetscFunctionBegin;
+  PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetCurrentStepType_MPGP_C",NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetAlpha_MPGP_C",NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetAlpha_MPGP_C",NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetGamma_MPGP_C",NULL));
@@ -699,8 +700,9 @@ PetscErrorCode QPSDestroy_MPGP(QPS qps)
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetOperatorMaxEigenvalueTolerance_MPGP_C",NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetOperatorMaxEigenvalueIterations_MPGP_C",NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetOperatorMaxEigenvalueIterations_MPGP_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPUpdateMaxEigenvalue_MPGP_C",NULL));
   PetscCall(QPSDestroyDefault(qps));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -720,7 +722,7 @@ PetscErrorCode QPSIsQPCompatible_MPGP(QPS qps,QP qp,PetscBool *flg)
   } else {
     PetscCall(PetscObjectTypeCompare((PetscObject)qpc,QPCBOX,flg));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -756,7 +758,7 @@ PetscErrorCode QPSSetFromOptions_MPGP(QPS qps,PetscOptionItems *PetscOptionsObje
   PetscCall(PetscOptionsBool("-qps_mpgp_fallback2","Same as fallback which is done only if the next step is proportioning","",(PetscBool) mpgp->fallback2,&mpgp->fallback2,NULL));
   if (mpgp->fallback2) mpgp->fallback = PETSC_FALSE;
   PetscOptionsHeadEnd();
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -779,7 +781,7 @@ PetscErrorCode QPSViewConvergence_MPGP(QPS qps, PetscViewer v)
       PetscCall(PetscViewerASCIIPrintf(v,"number of fallbacks: %d\n",mpgp->nfall));
     }
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 /*MC
@@ -880,7 +882,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetOperatorMaxEigenvalueIterations_MPGP_C",QPSMPGPGetOperatorMaxEigenvalueIterations_MPGP));
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetOperatorMaxEigenvalueIterations_MPGP_C",QPSMPGPSetOperatorMaxEigenvalueIterations_MPGP));
   PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPUpdateMaxEigenvalue_MPGP_C",QPSMPGPUpdateMaxEigenvalue_MPGP));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 
@@ -893,7 +895,7 @@ PetscErrorCode QPSMPGPGetCurrentStepType(QPS qps,char *stepType)
   if (stepType) PetscValidRealPointer(stepType,2);
   *stepType = ' ';
   PetscTryMethod(qps,"QPSMPGPGetCurrentStepType_MPGP_C",(QPS,char*),(qps,stepType));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -915,7 +917,7 @@ PetscErrorCode QPSMPGPGetAlpha(QPS qps,PetscReal *alpha,QPSScalarArgType *argtyp
   if (alpha) PetscValidPointer(alpha,2);
   if (argtype) PetscValidPointer(argtype,3);
   PetscUseMethod(qps,"QPSMPGPGetAlpha_MPGP_C",(QPS,PetscReal*,QPSScalarArgType*),(qps,alpha,argtype));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -936,7 +938,7 @@ PetscErrorCode QPSMPGPSetAlpha(QPS qps,PetscReal alpha,QPSScalarArgType argtype)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidLogicalCollectiveReal(qps,alpha,2);
   PetscTryMethod(qps,"QPSMPGPSetAlpha_MPGP_C",(QPS,PetscReal,QPSScalarArgType),(qps,alpha,argtype));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -956,7 +958,7 @@ PetscErrorCode QPSMPGPGetGamma(QPS qps,PetscReal *gamma)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidPointer(gamma,2);
   PetscUseMethod(qps,"QPSMPGPGetGamma_MPGP_C",(QPS,PetscReal*),(qps,gamma));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -976,7 +978,7 @@ PetscErrorCode QPSMPGPSetGamma(QPS qps,PetscReal gamma)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidLogicalCollectiveReal(qps,gamma,2);
   PetscTryMethod(qps,"QPSMPGPSetGamma_MPGP_C",(QPS,PetscReal),(qps,gamma));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -987,7 +989,7 @@ PetscErrorCode QPSMPGPGetOperatorMaxEigenvalue(QPS qps,PetscReal *maxeig)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidPointer(maxeig,2);
   PetscUseMethod(qps,"QPSMPGPGetOperatorMaxEigenvalue_MPGP_C",(QPS,PetscReal*),(qps,maxeig));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1008,7 +1010,7 @@ PetscErrorCode QPSMPGPSetOperatorMaxEigenvalue(QPS qps,PetscReal maxeig)
   PetscValidLogicalCollectiveReal(qps,maxeig,2);
   if (maxeig < 0 && maxeig != PETSC_DECIDE) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be nonnegative");
   PetscTryMethod(qps,"QPSMPGPSetOperatorMaxEigenvalue_MPGP_C",(QPS,PetscReal),(qps,maxeig));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1018,9 +1020,9 @@ PetscErrorCode  QPSMPGPUpdateMaxEigenvalue(QPS qps, PetscReal maxeig_update)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidLogicalCollectiveReal(qps,maxeig_update,2);
-  if (maxeig_update == 1.0) PetscFunctionReturn(0);
+  if (maxeig_update == 1.0) PetscFunctionReturn(PETSC_SUCCESS);
   PetscTryMethod(qps,"QPSMPGPUpdateMaxEigenvalue_MPGP_C",(QPS,PetscReal),(qps,maxeig_update));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1040,7 +1042,7 @@ PetscErrorCode QPSMPGPSetOperatorMaxEigenvalueTolerance(QPS qps,PetscReal tol)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidLogicalCollectiveReal(qps,tol,2);
   PetscTryMethod(qps,"QPSMPGPSetOperatorMaxEigenvalueTolerance_MPGP_C",(QPS,PetscReal),(qps,tol));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1060,7 +1062,7 @@ PetscErrorCode QPSMPGPGetOperatorMaxEigenvalueTolerance(QPS qps,PetscReal *tol)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidPointer(tol,2);
   PetscTryMethod(qps,"QPSMPGPGetOperatorMaxEigenvalueTolerance_MPGP_C",(QPS,PetscReal*),(qps,tol));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1080,7 +1082,7 @@ PetscErrorCode QPSMPGPGetOperatorMaxEigenvalueIterations(QPS qps,PetscInt *numit
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidPointer(numit,2);
   PetscUseMethod(qps,"QPSMPGPGetOperatorMaxEigenvalueIterations_MPGP_C",(QPS,PetscInt*),(qps,numit));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -1101,6 +1103,6 @@ PetscErrorCode QPSMPGPSetOperatorMaxEigenvalueIterations(QPS qps,PetscInt numit)
   PetscValidLogicalCollectiveInt(qps,numit,2);
   if (numit <= 1) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Argument must be > 1");
   PetscTryMethod(qps,"QPSMPGPSetOperatorMaxEigenvalueIterations_MPGP_C",(QPS,PetscInt),(qps,numit));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 

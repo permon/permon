@@ -67,7 +67,7 @@ PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], cons
     PetscCall(PetscGetHomeDirectory(pfile,PETSC_MAX_PATH_LEN-16));
     /* warning: assumes all processes have a home directory or none, but nothing in between */
     if (pfile[0]) {
-      PetscCall(PetscStrcat(pfile,"/.flloprc"));
+      PetscCall(PetscStrlcat(pfile,"/.flloprc",sizeof(pfile)));
       PetscCall(PetscOptionsInsertFile(PETSC_COMM_WORLD,NULL,pfile,PETSC_FALSE));
     }
     PetscCall(PetscOptionsInsertFile(PETSC_COMM_WORLD,NULL, "flloprc", PETSC_FALSE));
@@ -108,16 +108,16 @@ PetscErrorCode PermonFinalize()
 {
   PetscFunctionBegin;
   if (!FllopInitializeCalled) {
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
   PetscCall(PetscInfo(fllop,"FllopFinalize() called\n"));  
   PetscCall(FllopDestroy(&fllop));
 
   if (FllopBeganPetsc) {
-    PetscFinalize();
+    PetscCall(PetscFinalize());
   } 
   FllopInitializeCalled = PETSC_FALSE;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #if defined(PETSC_HAVE_DYNAMIC_LIBRARIES)
@@ -135,6 +135,6 @@ PetscErrorCode PetscDLLibraryRegister_permon()
   PetscCall(QPPFInitializePackage());
   PetscCall(QPInitializePackage());
   PetscCall(QPSInitializePackage());
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 #endif /* PETSC_HAVE_DYNAMIC_LIBRARIES */

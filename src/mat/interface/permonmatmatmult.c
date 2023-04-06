@@ -41,7 +41,7 @@ static PetscErrorCode MatGetColumnVectors_Default(Mat A, Vec *cols_new[])
   PetscCall(VecRestoreArrays(cols, N, &A_cols_arrs));
 
   *cols_new=cols;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 //TODO add an argument specifying whether values should be copied back during Restore
@@ -51,7 +51,7 @@ static PetscErrorCode MatRestoreColumnVectors_Default(Mat A, Vec *cols[])
 {
   PetscFunctionBegin;
   PetscCall(VecDestroyVecs(A->cmap->N,cols));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 //TODO add an argument specifying whether values should be copied back during Restore
@@ -72,7 +72,7 @@ PetscErrorCode MatGetColumnVectors(Mat A, PetscInt *ncols, Vec *cols_new[])
   if (ncols) *ncols = A->cmap->N;
   if (!A->cmap->N) {
     *cols_new = NULL;
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
   PetscCall(PetscObjectQueryFunction((PetscObject)A,"MatGetColumnVectors_C",&f));
   if (!f) f = MatGetColumnVectors_Default;
@@ -80,7 +80,7 @@ PetscErrorCode MatGetColumnVectors(Mat A, PetscInt *ncols, Vec *cols_new[])
   PetscCall(PetscLogEventBegin(Mat_GetColumnVectors,A,0,0,0));
   PetscCall((*f)(A,cols_new));
   PetscCall(PetscLogEventEnd(  Mat_GetColumnVectors,A,0,0,0));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 //TODO add an argument specifying whether values should be copied back during Restore
@@ -101,7 +101,7 @@ PetscErrorCode MatRestoreColumnVectors(Mat A, PetscInt *ncols, Vec *cols_new[])
   if (ncols) *ncols = 0;
   if (!A->cmap->N) {
     *cols_new = NULL;
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
   PetscCall(PetscObjectQueryFunction((PetscObject)A,"MatRestoreColumnVectors_C",&f));
   if (!f) f = MatRestoreColumnVectors_Default;
@@ -110,7 +110,7 @@ PetscErrorCode MatRestoreColumnVectors(Mat A, PetscInt *ncols, Vec *cols_new[])
   PetscCall((*f)(A,cols_new));
   PetscCall(PetscLogEventEnd(  Mat_RestoreColumnVectors,A,0,0,0));
   *cols_new = NULL;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -136,7 +136,7 @@ static inline PetscErrorCode MatMatMultByColumns_MatMult_Private(Mat A, PetscBoo
   PetscCall(MatRestoreColumnVectors(C,&N1,&C_cols));
   PetscCall(MatAssemblyBegin(C,MAT_FINAL_ASSEMBLY));
   PetscCall(MatAssemblyEnd(C,MAT_FINAL_ASSEMBLY));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -151,9 +151,9 @@ static inline PetscErrorCode MatMatMultByColumns_MatFilterZeros_Private(Mat *C,P
     PetscCall(MatFilterZeros(*C,PETSC_MACHINE_EPSILON,&C_new));
     PetscCall(MatDestroy(C));
     *C = C_new;
-    PetscFunctionReturnI(0);
+    PetscFunctionReturnI(PETSC_SUCCESS);
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -200,7 +200,7 @@ static PetscErrorCode MatMatBlockDiagMultByColumns_Private(Mat B, PetscBool B_tr
 
   PetscCall(VecDestroy(&lambda));
   PetscCall(MatDestroy(&Gt_loc));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -218,7 +218,7 @@ static inline PetscErrorCode MatMatMultByColumns_Private(Mat A, PetscBool A_tran
     PetscCall(MatMatMultByColumns_MatMult_Private(A,A_transpose,B,*C_new));
     PetscCall(MatMatMultByColumns_MatFilterZeros_Private(C_new,filter));
   }
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -239,7 +239,7 @@ PetscErrorCode MatMatMultByColumns(Mat A, Mat B, PetscBool filter, Mat *C_new)
   PetscCall(PetscLogEventBegin(Mat_MatMultByColumns,A,0,0,0));
   PetscCall(MatMatMultByColumns_Private(A,PETSC_FALSE,B,filter,C_new));
   PetscCall(PetscLogEventEnd(  Mat_MatMultByColumns,A,0,0,0));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -260,6 +260,6 @@ PetscErrorCode MatTransposeMatMultByColumns(Mat A, Mat B, PetscBool filter, Mat 
   PetscCall(PetscLogEventBegin(Mat_TransposeMatMultByColumns,A,0,0,0));
   PetscCall(MatMatMultByColumns_Private(A,PETSC_TRUE,B,filter,C_new));
   PetscCall(PetscLogEventEnd(  Mat_TransposeMatMultByColumns,A,0,0,0));
-  PetscFunctionReturnI(0);
+  PetscFunctionReturnI(PETSC_SUCCESS);
 }
 

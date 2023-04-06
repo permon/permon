@@ -10,7 +10,7 @@ PetscErrorCode MatIsImplicitTranspose(Mat A,PetscBool *flg)
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
   PetscValidPointer(flg,2);
   PetscCall(PetscObjectTypeCompare((PetscObject)A,MATTRANSPOSEVIRTUAL,flg));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -33,7 +33,7 @@ static PetscErrorCode PermonMatTranspose_Transpose(Mat A,MatTransposeType type,M
       PetscCall(MatDestroy(&Ae));
   }
   *At_out = At;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -52,7 +52,7 @@ static PetscErrorCode PermonMatTranspose_Default(Mat A,MatTransposeType type,Mat
       PetscCall(MatCreateTransposePermon(A,&At));
   }
   *At_out = At;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -63,7 +63,7 @@ PetscErrorCode MatDiagonalScale_TransposePermon(Mat At,Vec l,Vec r)
 
   PetscFunctionBegin;
   PetscCall(MatDiagonalScale(data->A,r,l));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -78,7 +78,7 @@ PetscErrorCode MatDuplicate_TransposePermon(Mat mat,MatDuplicateOption op,Mat *M
   PetscCall(FllopPetscObjectInheritName((PetscObject)A1,(PetscObject)A,NULL));
   PetscCall(MatCreateTransposePermon(A1,M));
   PetscCall(MatDestroy(&A1));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -89,7 +89,7 @@ PetscErrorCode MatCreateTransposePermon(Mat A,Mat *At)
   PetscCall(MatCreateTranspose(A,At));
   (*At)->ops->diagonalscale = MatDiagonalScale_TransposePermon;
   (*At)->ops->duplicate     = MatDuplicate_TransposePermon;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -122,5 +122,5 @@ PetscErrorCode PermonMatTranspose(Mat A,MatTransposeType type,Mat *At_out)
   if (!((PetscObject)(*At_out))->name) {
     PetscCall(FllopPetscObjectInheritName((PetscObject)*At_out,(PetscObject)A,"_T"));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }

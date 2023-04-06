@@ -23,7 +23,7 @@ static PetscErrorCode PCDualSetType_Dual(PC pc,PCDualType type)
   PetscFunctionBegin;
   data->pcdualtype = type;
   PetscCall(PCReset(pc));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -34,7 +34,7 @@ PetscErrorCode PCDualSetType(PC pc,PCDualType type)
   PetscValidHeaderSpecific(pc,PC_CLASSID,1);
   PetscValidLogicalCollectiveEnum(pc,type,2);
   PetscTryMethod(pc,"PCDualSetType_Dual_C",(PC,PCDualType),(pc,type));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -45,7 +45,7 @@ static PetscErrorCode PCDualGetType_Dual(PC pc,PCDualType *type)
 
   PetscFunctionBegin;
   *type = data->pcdualtype;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -56,7 +56,7 @@ PetscErrorCode PCDualGetType(PC pc,PCDualType *type)
   PetscValidHeaderSpecific(pc,PC_CLASSID,1);
   PetscValidPointer(type,2);
   PetscTryMethod(pc,"PCDualGetType_Dual_C",(PC,PCDualType*),(pc,type));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -75,7 +75,7 @@ static PetscErrorCode PCApply_Dual(PC pc,Vec x,Vec y)
 
   PetscCall(MatMultTranspose(ctx->At,ctx->ywork,y));
   PetscCall(PetscLogEventEnd(PC_Dual_Apply,pc,x,y,0));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -84,7 +84,7 @@ static PetscErrorCode PCApply_Dual_None(PC pc,Vec x,Vec y)
 {
   PetscFunctionBegin;
   PetscCall(VecCopy(x,y));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -100,7 +100,7 @@ static PetscErrorCode PCSetUp_Dual(PC pc)
 
   if (ctx->pcdualtype == PC_DUAL_NONE) {
     pc->ops->apply = PCApply_Dual_None;
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
 
   pc->ops->apply = PCApply_Dual;
@@ -115,7 +115,7 @@ static PetscErrorCode PCSetUp_Dual(PC pc)
     PetscCall(PetscObjectReference((PetscObject)K));
     PetscCall(MatCreateVecs(ctx->C_bb,&ctx->xwork,&ctx->ywork));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -129,7 +129,7 @@ static PetscErrorCode PCReset_Dual(PC pc)
   PetscCall(MatDestroy(&ctx->C_bb));
   PetscCall(VecDestroy(&ctx->xwork));
   PetscCall(VecDestroy(&ctx->ywork));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -141,9 +141,9 @@ static PetscErrorCode PCView_Dual(PC pc,PetscViewer viewer)
 
   PetscFunctionBegin;
   PetscCall(PetscObjectTypeCompare((PetscObject)viewer,PETSCVIEWERASCII,&iascii));
-  if (!iascii) PetscFunctionReturn(0);
+  if (!iascii) PetscFunctionReturn(PETSC_SUCCESS);
   PetscCall(PetscViewerASCIIPrintf(viewer,"  PCDualType: %d (%s)\n",ctx->pcdualtype,PCDualTypes[ctx->pcdualtype]));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -155,7 +155,9 @@ static PetscErrorCode PCDestroy_Dual(PC pc)
   PetscFunctionBegin;
   PetscCall(PCReset_Dual(pc));
   PetscCall(PetscFree(pc->data));
-  PetscFunctionReturn(0);
+  PetscCall(PetscObjectComposeFunction((PetscObject)pc,"PCDualSetType_Dual_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)pc,"PCDualGetType_Dual_C",NULL));
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -169,7 +171,7 @@ PetscErrorCode PCSetFromOptions_Dual(PC pc,PetscOptionItems *PetscOptionsObject)
   PetscCall(PetscOptionsEnum("-pc_dual_type", "PCDUAL type", "PCDualSetType", PCDualTypes, (PetscEnum)ctx->pcdualtype, (PetscEnum*)&ctx->pcdualtype, NULL));
   PetscOptionsHeadEnd();
   ctx->setfromoptionscalled = PETSC_TRUE;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -208,6 +210,6 @@ FLLOP_EXTERN PetscErrorCode PCCreate_Dual(PC pc)
   }
 
   /* initialize inner data */
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 

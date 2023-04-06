@@ -35,7 +35,7 @@ PetscErrorCode viewDraw(Vec x) {
   PetscCall(PetscDrawSetFromOptions(draw));
   PetscCall(VecView(x,v1));
   PetscCall(PetscViewerDestroy(&v1));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 /* Lower bound (obstacle) function */
@@ -136,7 +136,7 @@ int main(int argc,char **args)
 
   /* Check that QPS converged */
   PetscCall(QPIsSolved(qp,&converged));
-  if (!converged) PetscPrintf(PETSC_COMM_WORLD,"QPS did not converge!\n");
+  if (!converged) PetscCall(PetscPrintf(PETSC_COMM_WORLD,"QPS did not converge!\n"));
   if (viewSol) PetscCall(VecView(x,PETSC_VIEWER_STDOUT_WORLD));
   if (viewSol) PetscCall(viewDraw(c));
   if (viewSol) PetscCall(viewDraw(x));

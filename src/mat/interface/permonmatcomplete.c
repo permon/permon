@@ -15,7 +15,7 @@ PetscErrorCode MatMult_Complete(Mat A, Vec x, Vec y)
   PetscCall(VecScale(y, -1.0));
   PetscCall((ctx->multadd)(A,x,y,y));
   PetscCall((ctx->multtransposeadd)(A,x,y,y));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -33,7 +33,7 @@ PetscErrorCode MatMultAdd_Complete(Mat A, Vec x, Vec x1, Vec y)
   PetscCall((ctx->multadd)(A,x,y,y));
   PetscCall((ctx->multtransposeadd)(A,x,y,y));
   PetscCall(VecAXPY(y, 1.0, x1));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -54,7 +54,7 @@ PetscErrorCode MatDuplicate_Complete(Mat A,MatDuplicateOption op,Mat *M)
   _M->ops->multtransposeadd  = ctx->multtransposeadd;
   _M->ops->duplicate         = ctx->duplicate;
   *M = _M;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -72,7 +72,7 @@ PetscErrorCode MatCompleteCtxCreate(Mat A, MatCompleteCtx *ctxout)
   PetscCall(MatCreateVecs(A, NULL, &ctx->d));
   PetscCall(MatGetDiagonal(A, ctx->d));
   *ctxout = ctx;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -82,7 +82,7 @@ PetscErrorCode MatCompleteCtxDestroy(MatCompleteCtx ctx)
   PetscFunctionBegin;
   PetscCall(VecDestroy(&ctx->d));
   PetscCall(PetscFree(ctx));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -96,12 +96,12 @@ PetscErrorCode MatCompleteFromUpperTriangular(Mat A)
   
   PetscFunctionBegin;
   PetscCall(PetscObjectQuery((PetscObject)A, "fllop_mat_complete_ctx", (PetscObject*)&container));
-  if (container) PetscFunctionReturn(0);
+  if (container) PetscFunctionReturn(PETSC_SUCCESS);
 
   PetscCall(MatIsSymmetricByType(A, &flg));
   if (flg) {
     PetscCall(PetscInfo(fllop, "A is symmetric by type\n"));
-    PetscFunctionReturn(0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   } else {
     PetscCall(PetscInfo(fllop, "A is NOT symmetric by type\n"));
   }
@@ -118,6 +118,6 @@ PetscErrorCode MatCompleteFromUpperTriangular(Mat A)
   A->ops->multadd           = MatMultAdd_Complete;
   A->ops->multtransposeadd  = MatMultAdd_Complete;
   A->ops->duplicate         = MatDuplicate_Complete;
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 

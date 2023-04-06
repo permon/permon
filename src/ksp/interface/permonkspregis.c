@@ -9,5 +9,5 @@ PetscErrorCode PermonKSPRegisterAll()
 {
   PetscFunctionBegin;
   PetscCall(KSPRegister(KSPFETI, KSPCreate_FETI));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }

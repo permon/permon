@@ -9,5 +9,5 @@ PetscErrorCode  FllopPCRegisterAll()
 {
   PetscFunctionBegin;
   PetscCall(PCRegister(PCDUAL, PCCreate_Dual));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }

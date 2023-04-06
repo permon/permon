@@ -6,8 +6,8 @@ TAO tolerances are gatol = 1.000000e-08, grtol =  1.000000e-50, gttol = 1.000000
 Setting PERMON rtol = gttol, atol = gatol
 QPS Object: 2 MPI processes
   type: tao
-  last QPSSolve CONVERGED due to CONVERGED_RTOL, KSPReason=2, required 71 iterations
-  all 1 QPSSolves from last QPSReset/QPSResetStatistics have required 71 iterations
+  last QPSSolve CONVERGED due to CONVERGED_RTOL, KSPReason=2, required 55 iterations
+  all 1 QPSSolves from last QPSReset/QPSResetStatistics have required 55 iterations
   tolerances: rtol=1.0e-06, abstol=1.0e-08, dtol=1.0e+04, maxits=10000
   tao specific:
     TaoType: blmvm
@@ -26,7 +26,7 @@ QPS Object: 2 MPI processes
             Convex factors: phi=0., theta=0.125
             Max. storage: 5
             Used storage: 5
-            Number of updates: 70
+            Number of updates: 54
             Number of rejects: 0
             Number of resets: 1
             Mat Object: (qps_tao_blmvm_J0_) 2 MPI processes
@@ -37,10 +37,10 @@ QPS Object: 2 MPI processes
                 Convex factor: theta=0.125
                 Max. storage: 1
                 Used storage: 1
-                Number of updates: 70
+                Number of updates: 54
                 Number of rejects: 0
                 Number of resets: 1
-        TaoLineSearch Object: 2 MPI processes
+        TaoLineSearch Object: (qps_) 2 MPI processes
           type: more-thuente
           maximum function evaluations=30
           tolerances: ftol=0.0001, rtol=1e-10, gtol=0.9
@@ -51,9 +51,9 @@ QPS Object: 2 MPI processes
           Termination reason: 1
         Active Set subset type: subvec
         convergence tolerances: gatol=1e-08,         steptol=0.,         gttol=0.
-        Residual in Function/Gradient:=6.14524e-07
+        Residual in Function/Gradient:=5.96806e-07
         Objective value=-0.182408
-        total number of iterations=71,                                (max: 2000)
-        total number of function/gradient evaluations=112,            (max: 4000)
+        total number of iterations=55,                                (max: 2000)
+        total number of function/gradient evaluations=80,            (max: 4000)
         Solution converged:          User Terminated
-Norm of difference of results from TAO and QP = 5.251991e-07 <= 6.303904e-06 = tolerance
+Norm of difference of results from TAO and QP = 4.751828e-07 <= 6.303904e-06 = tolerance

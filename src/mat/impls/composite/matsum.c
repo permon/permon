@@ -2,38 +2,12 @@
 #include <../src/mat/impls/composite/permoncompositeimpl.h>
 
 #undef __FUNCT__
-#define __FUNCT__ "MatSumGetMat_Sum"
-static PetscErrorCode MatSumGetMat_Sum(Mat A,PetscInt index,Mat *Ai)
-{
-  Mat_Composite     *shell = (Mat_Composite*)A->data;
-  Mat_CompositeLink ilink;
-  PetscInt          i;
-
-  PetscFunctionBegin;
-  PetscValidHeaderSpecific(A,MAT_CLASSID,1);
-  ilink  = shell->head;
-  for (i=0; i<index; i++) {
-    if (ilink) {
-      ilink = ilink->next;
-    } else {
-      break;
-    }
-  }
-  if (!ilink) SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_OUTOFRANGE,"partial matrix index out of range: %d",i);
-  *Ai = ilink->mat;
-  PetscFunctionReturn(0);
-}
-
-#undef __FUNCT__
 #define __FUNCT__ "MatSumGetMat"
 PetscErrorCode MatSumGetMat(Mat A,PetscInt i,Mat *Ai)
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(A,MAT_CLASSID,1);
-  PetscValidLogicalCollectiveInt(A,i,2);
-  PetscValidPointer(Ai,3);
-  PetscUseMethod(A,"MatSumGetMat_Sum_C",(Mat,PetscInt,Mat*),(A,i,Ai));
-  PetscFunctionReturn(0);
+  PetscCall(MatCompositeGetMat(A,i,Ai));
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -71,7 +45,7 @@ PetscErrorCode MatMult_Sum(Mat A,Vec x,Vec y)
     PetscCall(VecPointwiseMult(y,shell->left,y));
   }
   PetscCall(VecScale(y,shell->scale));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -100,7 +74,7 @@ PetscErrorCode MatMultTranspose_Sum(Mat A,Vec x,Vec y)
     PetscCall(VecPointwiseMult(y,shell->right,y));
   }
   PetscCall(VecScale(y,shell->scale));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -120,7 +94,7 @@ PetscErrorCode MatMultAdd_Sum(Mat A,Vec x,Vec y,Vec z)
     PetscCall(MatMult(A,x,shell->rightwork));
     PetscCall(VecAXPY(z,1.0,shell->rightwork));
   }
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -130,7 +104,7 @@ PetscErrorCode MatMultTransposeAdd_Sum(Mat A,Vec x,Vec y,Vec z)
   PetscFunctionBegin;
   PetscCall(MatMultTranspose_Sum(A, x, z));
   PetscCall(VecAXPY(z, 1.0, y));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -145,8 +119,6 @@ FLLOP_EXTERN PetscErrorCode  MatCreate_Sum(Mat A)
   PetscCall(createComposite(A));
   composite = (Mat_Composite*)A->data;
 
-  PetscCall(PetscObjectComposeFunction((PetscObject)A,"MatSumGetMat_Sum_C",MatSumGetMat_Sum));
-
   A->ops->mult              = MatMult_Sum;
   A->ops->multtranspose     = MatMultTranspose_Sum;
   A->ops->multadd           = MatMultAdd_Sum;
@@ -157,7 +129,7 @@ FLLOP_EXTERN PetscErrorCode  MatCreate_Sum(Mat A)
   composite->tail           = NULL;
 
   PetscCall(PetscObjectChangeTypeName((PetscObject)A,MATSUM));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -211,5 +183,5 @@ PetscErrorCode  MatCreateSum(MPI_Comm comm,PetscInt nmat,const Mat *mats,Mat *ma
   }
   PetscCall(MatAssemblyBegin(*mat,MAT_FINAL_ASSEMBLY));
   PetscCall(MatAssemblyEnd(*mat,MAT_FINAL_ASSEMBLY));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }

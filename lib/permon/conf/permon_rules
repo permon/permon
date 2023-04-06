@@ -26,7 +26,12 @@ permon_chk_all: chk_permon_pkg_dir chk_permon_petsc_dir chklib_dir
 # Builds the PERMON library using PETSc GNU Make parallel buildsystem
 #
 permon_libs:
-	+@cd ${PERMON_PKG_DIR} && MAKEFLAGS="-j$(MAKE_NP) -l$(MAKE_LOAD) $(MAKEFLAGS)" ${OMAKE_PRINTDIR} -f gmakefile ${MAKE_PAR_OUT_FLG} V=${V}
+				+@r=`echo "${MAKEFLAGS}" | grep ' -j'`; \
+        if [ "$$?" = 0 ]; then make_j=""; else make_j="-j${MAKE_NP}"; fi; \
+        r=`echo "${MAKEFLAGS}" | grep ' -l'`; \
+        if [ "$$?" = 0 ]; then make_l=""; else make_l="-l${MAKE_LOAD}"; fi; \
+        cmd="${OMAKE_PRINTDIR} -f gmakefile $${make_j} $${make_l} ${MAKE_PAR_OUT_FLG} V=${V}"; \
+        cd ${PERMON_PKG_DIR} && echo $${cmd} && exec $${cmd}
 
 # Deletes PERMON library
 deletelibs:
@@ -35,6 +40,11 @@ deletelibs:
 # Cleans up build
 allclean:
 	-@${OMAKE} -f gmakefile clean
+
+# Makes install_lib_dir; removed from PETSc in MR 6201
+chklib_dir:
+	@if [ ! -d "${INSTALL_LIB_DIR}" ]; then \
+		echo Making directory ${INSTALL_LIB_DIR} for library; ${MKDIR} ${INSTALL_LIB_DIR} ; fi
 
 #
 # Check if PETSC_DIR variable specified is valid

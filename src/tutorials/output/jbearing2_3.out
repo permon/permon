@@ -6,8 +6,8 @@ TAO tolerances are gatol = 1.000000e-08, grtol =  1.000000e-50, gttol = 1.000000
 Setting PERMON rtol = gttol, atol = gatol
 QPS Object: 3 MPI processes
   type: tao
-  last QPSSolve CONVERGED due to CONVERGED_RTOL, KSPReason=2, required 311 iterations
-  all 1 QPSSolves from last QPSReset/QPSResetStatistics have required 311 iterations
+  last QPSSolve CONVERGED due to CONVERGED_RTOL, KSPReason=2, required 725 iterations
+  all 1 QPSSolves from last QPSReset/QPSResetStatistics have required 725 iterations
   tolerances: rtol=1.0e-06, abstol=1.0e-08, dtol=1.0e+04, maxits=10000
   tao specific:
     TaoType: blmvm
@@ -16,7 +16,7 @@ QPS Object: 3 MPI processes
     Information about last TAOSolve:
       Tao Object: (qps_) 3 MPI processes
         type: blmvm
-        Gradient steps: 31
+        Gradient steps: 0
         Mat Object: (qps_tao_blmvm_) 3 MPI processes
           type: lmvmbfgs
           rows=900, cols=900
@@ -26,9 +26,9 @@ QPS Object: 3 MPI processes
             Convex factors: phi=0., theta=0.125
             Max. storage: 5
             Used storage: 0
-            Number of updates: 309
-            Number of rejects: 1
-            Number of resets: 33
+            Number of updates: 717
+            Number of rejects: 7
+            Number of resets: 8
             Mat Object: (qps_tao_blmvm_J0_) 3 MPI processes
               type: lmvmdiagbroyden
               rows=900, cols=900
@@ -37,10 +37,10 @@ QPS Object: 3 MPI processes
                 Convex factor: theta=0.125
                 Max. storage: 1
                 Used storage: 0
-                Number of updates: 309
+                Number of updates: 717
                 Number of rejects: 0
-                Number of resets: 34
-        TaoLineSearch Object: 3 MPI processes
+                Number of resets: 15
+        TaoLineSearch Object: (qps_) 3 MPI processes
           type: more-thuente
           maximum function evaluations=30
           tolerances: ftol=0.0001, rtol=1e-10, gtol=0.9
@@ -51,9 +51,9 @@ QPS Object: 3 MPI processes
           Termination reason: 1
         Active Set subset type: subvec
         convergence tolerances: gatol=1e-08,         steptol=0.,         gttol=0.
-        Residual in Function/Gradient:=2.71102e-07
+        Residual in Function/Gradient:=2.66173e-07
         Objective value=-0.180302
-        total number of iterations=311,                                (max: 2000)
-        total number of function/gradient evaluations=525,            (max: 4000)
+        total number of iterations=725,                                (max: 2000)
+        total number of function/gradient evaluations=1365,            (max: 4000)
         Solution converged:          User Terminated
-Norm of difference of results from TAO and QP = 2.276309e-06 <= 2.819765e-06 = tolerance
+Norm of difference of results from TAO and QP = 2.213309e-06 <= 2.819765e-06 = tolerance
