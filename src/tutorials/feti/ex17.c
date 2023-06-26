@@ -167,7 +167,7 @@ static PetscErrorCode ProcessOptions(MPI_Comm comm, AppCtx *options)
   options->x_n              = 3;
   ierr = PetscStrncpy(options->dmType, DMPLEX, 256);CHKERRQ(ierr);
 
-  ierr = PetscOptionsBegin(comm, "", "Linear Elasticity Problem Options", "DMPLEX");CHKERRQ(ierr);
+  PetscOptionsBegin(comm, "", "Linear Elasticity Problem Options", "DMPLEX");CHKERRQ(ierr);
   ierr = PetscOptionsInt("-dim", "The topological mesh dimension", "ex17.c", options->dim, &options->dim, NULL);CHKERRQ(ierr);
   ierr = PetscOptionsIntArray("-cells", "The initial mesh division", "ex17.c", options->cells, &n, NULL);CHKERRQ(ierr);
   ierr = PetscOptionsBool("-simplex", "Simplicial (true) or tensor (false) mesh", "ex17.c", options->simplex, &options->simplex, NULL);CHKERRQ(ierr);
@@ -185,7 +185,7 @@ static PetscErrorCode ProcessOptions(MPI_Comm comm, AppCtx *options)
   ierr = PetscOptionsRealArray("-y", "y coords to fit the slope separation interface", "ex17.c", options->y, &options->x_n, &flg);CHKERRQ(ierr);
   if (!flg) options->x_n = 0;
   ierr = PetscOptionsInt("-n", "number of points on slope separation interface in initial mesh", "ex17.c", options->n, &options->n, NULL);CHKERRQ(ierr);
-  ierr = PetscOptionsEnd();
+  PetscOptionsEnd();
   PetscFunctionReturn(0);
 }
 
@@ -725,6 +725,7 @@ static PetscErrorCode SetupPrimalProblem(DM dm, AppCtx *user)
   PetscDS        prob;
   PetscInt       id;
   PetscInt       dim;
+  DMLabel        label;
   PetscErrorCode ierr;
 
   PetscFunctionBeginUser;
@@ -735,7 +736,8 @@ static PetscErrorCode SetupPrimalProblem(DM dm, AppCtx *user)
     //exact = uniform_strain_u;
   //ierr = PetscDSSetExactSolution(prob, 0, exact, user);CHKERRQ(ierr);
   id = 1;
-  ierr = DMAddBoundary(dm,   DM_BC_ESSENTIAL, "bottom", "Faces", 0, 0, NULL, (void (*)(void)) zero, NULL, 1, &id, user);CHKERRQ(ierr);
+  ierr = DMGetLabel(dm, "Faces", &label);CHKERRQ(ierr);
+  ierr = DMAddBoundary(dm,   DM_BC_ESSENTIAL, "bottom", label , 1, &id, 0, 0, NULL, (void (*)(void)) zero, NULL, user, NULL);CHKERRQ(ierr);
   PetscFunctionReturn(0);
 }
 
@@ -865,10 +867,11 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
 {
   Mat A,Aloc,B,Be,Beloc,R,Bif,H,Hg,K;
   Mat **Be_arr,mats[4],mts[2];
-  Vec b,bglob,uglob,ce,cineq,z;
+  Vec b,bglob,uglob,ce,cineq,z,vcoords;
   QP  qp,qpm;
   QPS qps;
   PetscBool converged;
+  IS islpoints;
   PetscInt i,j,l,n,m,M,N,ncols,*scols,shift,*lpoints;
   const PetscInt *cols;
   PetscScalar *varr,*uarr;
@@ -983,12 +986,13 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
   ierr = MPI_Bcast(user->ifcoordsx,user->n,MPIU_REAL,0,PetscObjectComm((PetscObject)qpm));CHKERRQ(ierr);
   ierr = MPI_Bcast(user->ifcoordsy,user->n,MPIU_REAL,0,PetscObjectComm((PetscObject)qpm));CHKERRQ(ierr);
   ierr = PetscMalloc1(2*user->n-4,&coords);CHKERRQ(ierr);
-  ierr = PetscMalloc1(user->n-2,&lpoints);CHKERRQ(ierr);
   for (i=0;i<user->n-2;i++) {
     coords[2*i] = user->ifcoordsx[i+1];
     coords[2*i+1] = user->ifcoordsy[i+1];
   }
-  ierr = DMPlexFindVertices(dm,user->n-2,coords,10.*PETSC_MACHINE_EPSILON,lpoints);CHKERRQ(ierr);
+  ierr = VecCreateSeqWithArray(PETSC_COMM_SELF,1,2*user->n-4,coords,&vcoords);CHKERRQ(ierr);
+  ierr = DMPlexFindVertices(dm,vcoords,10.*PETSC_MACHINE_EPSILON,&islpoints);CHKERRQ(ierr);
+  ierr = ISGetIndices(islpoints,&lpoints);CHKERRQ(ierr);
   /* Create eq mat */
   ierr = MatCreateAIJ(PETSC_COMM_WORLD,PETSC_DECIDE,N,(user->n-2)*user->dim,n,4,NULL,4,NULL,&Bif);CHKERRQ(ierr);CHKERRQ(ierr);
   ierr = MatCreateAIJ(PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,(user->n-2)*user->dim,(user->n-2)*user->dim,1,NULL,0,NULL,&H);CHKERRQ(ierr);CHKERRQ(ierr);
@@ -1070,6 +1074,7 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
   ierr = MatCreateComposite(PETSC_COMM_WORLD,2,mts,&K);CHKERRQ(ierr);
   ierr = QPSetOperator(qp,K);CHKERRQ(ierr);
   ierr = QPTEnforceEqByProjector(qp);CHKERRQ(ierr);
+  ierr = QPSetOperator(qp,A);CHKERRQ(ierr);
 
 
   ierr = QPSCreate(PetscObjectComm((PetscObject)qp),&qps);CHKERRQ(ierr);
@@ -1077,10 +1082,10 @@ static PetscErrorCode SolverQPS(DM dm,AppCtx *user,Vec u)
   ierr = QPSSetFromOptions(qps);CHKERRQ(ierr);
 
   ierr = QPSSolve(qps);CHKERRQ(ierr);
-  ierr = QPSetOperator(qp,A);CHKERRQ(ierr);
-  ierr = QPSPostSolve(qps);CHKERRQ(ierr);
   ierr = QPIsSolved(qp,&converged);CHKERRQ(ierr);
   if (!converged) PetscPrintf(PETSC_COMM_WORLD,"QPS did not converge!\n");
+  ierr = QPSPostSolve(qps);CHKERRQ(ierr);
+
   ierr = QPGetOperator(qpm,&A);CHKERRQ(ierr);
   ierr = QPChainPostSolve(qpm);CHKERRQ(ierr);
   ierr = QPGetParent(qpm,&qpm);CHKERRQ(ierr);
