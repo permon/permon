@@ -47,12 +47,16 @@ FLLOP_EXTERN PetscErrorCode _fllop_ierr;
 
 static inline PetscErrorCode PetscBoolGlobalAnd(MPI_Comm comm,PetscBool loc,PetscBool *glob)
 {
-  return MPI_Allreduce(&loc,glob,1,MPIU_BOOL,MPI_LAND,comm);
+  PetscFunctionBegin;
+  PetscCallMPI(MPI_Allreduce(&loc,glob,1,MPIU_BOOL,MPI_LAND,comm));
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 static inline PetscErrorCode PetscBoolGlobalOr(MPI_Comm comm,PetscBool loc,PetscBool *glob)
 {
-  return MPI_Allreduce(&loc,glob,1,MPIU_BOOL,MPI_LOR,comm);
+  PetscFunctionBegin;
+  PetscCallMPI(MPI_Allreduce(&loc,glob,1,MPIU_BOOL,MPI_LOR,comm));
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 static inline void FLLTIC(PetscLogDouble *t) {

@@ -320,7 +320,7 @@ PetscErrorCode VecIsInvalidated(Vec vec,PetscBool *flg)
     *flg = PETSC_FALSE;
     PetscFunctionReturn(PETSC_SUCCESS);
   }
-  PetscCall(PetscContainerGetPointer(container,(void*)&state));
+  PetscCall(PetscContainerGetPointer(container,(void**)&state));
   PetscCall(PetscObjectStateGet((PetscObject)vec,&vecstate));
   if (vecstate > *state) {
     *flg = PETSC_FALSE;
