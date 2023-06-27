@@ -199,7 +199,7 @@ static PetscErrorCode PCSetUp_Dual(PC pc)
     break;
       
     default:
-      FLLOP_SETERRQ1(PetscObjectComm((PetscObject)pc),PETSC_ERR_ARG_OUTOFRANGE,"unknown PCDualType: %d",ctx->pcdualtype);
+      SETERRQ(PetscObjectComm((PetscObject)pc),PETSC_ERR_ARG_OUTOFRANGE,"unknown PCDualType: %d",ctx->pcdualtype);
   }
   
   flg = PETSC_FALSE;
