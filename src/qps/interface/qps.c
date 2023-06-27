@@ -1304,7 +1304,7 @@ PetscErrorCode  QPSGetMonitorContext(QPS qps,void **ctx)
 PetscErrorCode  QPSSetResidualHistory(QPS qps,PetscReal a[],PetscInt na,PetscBool reset)
 {
   PetscFunctionBegin;  
-  PetscFree(qps->res_hist_alloc);
+  PetscCall(PetscFree(qps->res_hist_alloc));
   if (na != PETSC_DECIDE && na != PETSC_DEFAULT && a) {
     qps->res_hist     = a;
     qps->res_hist_max = na;

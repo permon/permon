@@ -627,7 +627,7 @@ static PetscErrorCode MatInvExplicitly_Private(KSP ksp, Mat imat_explicit)
   }
   PetscCall(VecDestroy(&col_imat));
   PetscCall(VecDestroy(&col_I));
-  PetscFree(rows);
+  PetscCall(PetscFree(rows));
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
@@ -664,7 +664,7 @@ static PetscErrorCode MatInvExplicitlyTranspose_Private(PetscInt ilo, PetscInt i
   }
   PetscCall(VecDestroy(&row_imat));
   PetscCall(VecDestroy(&col_I));
-  PetscFree(idxn);
+  PetscCall(PetscFree(idxn));
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
