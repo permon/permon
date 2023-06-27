@@ -32,8 +32,12 @@ GPATH
 GRTAGS
 GSYMS
 GTAGS
-/src/**/tests/**/ex[0-9]*
-/src/**/tutorials/**/ex[0-9]*
+/src/**/tests/**/ex[0-9]
+/src/**/tests/**/ex[0-9][0-9]
+/src/**/tests/**/ex[0-9][0-9][0-9]
+/src/**/tutorials/**/ex[0-9]
+/src/**/tutorials/**/ex[0-9][0-9]
+/src/**/tutorials/**/ex[0-9][0-9][0-9]
 /src/tutorials/jbearing2
 *.h.html
 *.c.html
