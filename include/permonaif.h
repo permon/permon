@@ -42,7 +42,7 @@ FLLOP_EXTERN PetscErrorCode FllopAIFSetDefaultType();
 FLLOP_EXTERN PetscErrorCode FllopAIFEnforceEqByProjector();
 FLLOP_EXTERN PetscErrorCode FllopAIFEnforceEqByPenalty(PetscReal rho);
 FLLOP_EXTERN PetscErrorCode FllopAIFHomogenizeEq();
-FLLOP_EXTERN PetscErrorCode FllopAIFDualize();
+FLLOP_EXTERN PetscErrorCode FllopAIFDualize(MatRegularizationType regtype);
 FLLOP_EXTERN PetscErrorCode FllopAIFFromOptions();
 FLLOP_EXTERN PetscErrorCode FllopAIFOperatorShift(PetscScalar a);
 
