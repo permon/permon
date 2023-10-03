@@ -1207,7 +1207,7 @@ PetscErrorCode MatInvGetRedundancy(Mat imat, PetscInt *red)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
-  PetscValidIntPointer(red,2);
+  PetscAssertPointer(red,2);
   PetscUseMethod(imat,"MatInvGetRedundancy_Inv_C",(Mat,PetscInt*),(imat,red));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1237,7 +1237,7 @@ PetscErrorCode MatInvGetPsubcommType(Mat imat, PetscSubcommType *type)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
-  PetscValidIntPointer(type,2);
+  PetscAssertPointer(type,2);
   PetscUseMethod(imat,"MatInvGetPsubcommType_Inv_C",(Mat,PetscSubcommType*),(imat,type));
   PetscFunctionReturn(PETSC_SUCCESS);
 }

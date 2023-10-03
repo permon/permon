@@ -892,7 +892,7 @@ PetscErrorCode QPSMPGPGetCurrentStepType(QPS qps,char *stepType)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  if (stepType) PetscValidRealPointer(stepType,2);
+  if (stepType) PetscAssertPointer(stepType,2);
   *stepType = ' ';
   PetscTryMethod(qps,"QPSMPGPGetCurrentStepType_MPGP_C",(QPS,char*),(qps,stepType));
   PetscFunctionReturn(PETSC_SUCCESS);

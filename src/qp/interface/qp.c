@@ -926,7 +926,7 @@ PetscErrorCode QPComputeObjective(QP qp, Vec x, PetscReal *f)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
   PetscValidHeaderSpecific(x,VEC_CLASSID,2);
-  PetscValidRealPointer(f,3);
+  PetscAssertPointer(f,3);
   if (!qp->setupcalled) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ORDER,"QPSetUp must be called first.");
   PetscCall(MatMult(qp->A,x,qp->xwork));
   PetscCall(VecAYPX(qp->xwork,-0.5,qp->b));
@@ -992,7 +992,7 @@ PetscErrorCode QPComputeObjectiveFromGradient(QP qp, Vec x, Vec g, PetscReal *f)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
   PetscValidHeaderSpecific(x,VEC_CLASSID,2);
-  PetscValidRealPointer(f,4);
+  PetscAssertPointer(f,4);
   PetscValidHeaderSpecific(g,VEC_CLASSID,3);
   if (!qp->setupcalled) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ORDER,"QPSetUp must be called first.");
 
@@ -1030,7 +1030,7 @@ PetscErrorCode QPComputeObjectiveAndGradient(QP qp, Vec x, Vec g, PetscReal *f)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
   PetscValidHeaderSpecific(x,VEC_CLASSID,2);
-  if (f) PetscValidRealPointer(f,4);
+  if (f) PetscAssertPointer(f,4);
   if (g) PetscValidHeaderSpecific(g,VEC_CLASSID,3);
   if (!qp->setupcalled) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ORDER,"QPSetUp must be called first.");
 

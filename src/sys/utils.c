@@ -251,7 +251,7 @@ PetscErrorCode FllopPetscObjectInheritName(PetscObject obj,PetscObject orig,cons
   PetscFunctionBegin;
   PetscValidHeader(obj,1);
   PetscValidHeader(orig,2);
-  if (suffix) PetscValidCharPointer(suffix,3);
+  if (suffix) PetscAssertPointer(suffix,3);
   PetscCall(PetscObjectName((PetscObject)orig));
   if (obj==orig && !suffix) PetscFunctionReturn(PETSC_SUCCESS);
   PetscCall(PetscStrlen(orig->name,&len1));
@@ -273,7 +273,7 @@ PetscErrorCode FllopPetscObjectInheritPrefix(PetscObject obj,PetscObject orig,co
   PetscFunctionBegin;
   PetscValidHeader(obj,1);
   PetscValidHeader(orig,2);
-  if (suffix) PetscValidCharPointer(suffix,3);
+  if (suffix) PetscAssertPointer(suffix,3);
   PetscCall(PetscFree(obj->prefix));
 
   if (!orig->prefix) {
@@ -296,7 +296,7 @@ PetscErrorCode FllopPetscObjectInheritPrefixIfNotSet(PetscObject obj,PetscObject
   PetscFunctionBegin;
   PetscValidHeader(obj,1);
   PetscValidHeader(orig,2);
-  if (suffix) PetscValidCharPointer(suffix,3);
+  if (suffix) PetscAssertPointer(suffix,3);
   if (obj->prefix) PetscFunctionReturn(PETSC_SUCCESS);
   PetscCall(FllopPetscObjectInheritPrefix(obj,orig,suffix));
   PetscFunctionReturn(PETSC_SUCCESS);

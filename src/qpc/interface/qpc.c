@@ -200,7 +200,7 @@ PetscErrorCode QPCSetType(QPC qpc, const QPCType type)
 
     PetscFunctionBegin;
     PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
-    PetscValidCharPointer(type,2);
+    PetscAssertPointer(type,2);
 
     PetscCall(PetscObjectTypeCompare((PetscObject)qpc,type,&issame));
     if (issame) PetscFunctionReturn(PETSC_SUCCESS);
@@ -279,7 +279,7 @@ PetscErrorCode QPCGetBlockSize(QPC qpc,PetscInt *bs)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
-  PetscValidIntPointer(bs,2);
+  PetscAssertPointer(bs,2);
   PetscUseTypeMethod(qpc,getblocksize,bs);
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -343,7 +343,7 @@ PetscErrorCode QPCGetNumberOfConstraints(QPC qpc,PetscInt *num)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
-  PetscValidIntPointer(num,2);
+  PetscAssertPointer(num,2);
 
   PetscUseTypeMethod(qpc,getnumberofconstraints,num);
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -512,7 +512,7 @@ PetscErrorCode QPCFeas(QPC qpc, Vec x, Vec d, PetscScalar *alpha)
   PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
   PetscValidHeaderSpecific(x,VEC_CLASSID,2);
   PetscValidHeaderSpecific(d,VEC_CLASSID,3);
-  PetscValidScalarPointer(alpha,4);
+  PetscAssertPointer(alpha,4);
   if (!qpc->ops->feas) SETERRQ(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
 
   /* scatter the gradients */

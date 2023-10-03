@@ -182,7 +182,7 @@ PetscErrorCode MatPenalizedGetPenalty(Mat Arho,PetscReal *rho)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(Arho,MAT_CLASSID,1);
-  PetscValidRealPointer(rho,2);
+  PetscAssertPointer(rho,2);
   PetscUseMethod(Arho,"MatPenalizedGetPenalty_Penalty_C",(Mat,PetscReal*),(Arho,rho));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
