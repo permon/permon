@@ -22,7 +22,7 @@ PetscErrorCode FllopCreate(MPI_Comm comm,FLLOP *fllop_new)
   FLLOP fllop;
 
   PetscFunctionBegin;
-  PetscValidPointer(fllop_new,2);
+  PetscAssertPointer(fllop_new,2);
   PetscCall(PetscHeaderCreate(fllop,FLLOP_CLASSID,"FLLOP","FLLOP","FLLOP",comm,0,0));
   *fllop_new = fllop;
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -229,40 +229,15 @@ PetscErrorCode FllopSetFromOptions()
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-/* based on EventRegLogGetEvent but does not throw an error if the event does not exist */
-#undef __FUNCT__
-#define __FUNCT__ "FllopEventRegLogGetEvent"
-PetscErrorCode FllopEventRegLogGetEvent(PetscEventRegLog eventLog, const char name[], PetscLogEvent *event, PetscBool *exists)
-{
-  PetscBool      match;
-  int            e;
-
-  PetscFunctionBegin;
-  PetscValidCharPointer(name,2);
-  PetscValidIntPointer(event,3);
-  *event = -1;
-  *exists = PETSC_FALSE;
-  for (e = 0; e < eventLog->numEvents; e++) {
-    PetscCall(PetscStrcasecmp(eventLog->eventInfo[e].name, name, &match));
-    if (match) {
-      *event = e;
-      *exists = PETSC_TRUE;
-      break;
-    }
-  }
-  PetscFunctionReturn(PETSC_SUCCESS);
-}
-
 /* based on PetscLogEventGetId but does not throw an error if the event does not exist */
 #undef __FUNCT__
 #define __FUNCT__ "FllopPetscLogEventGetId"
 PetscErrorCode  FllopPetscLogEventGetId(const char name[], PetscLogEvent *event, PetscBool *exists)
 {
-  PetscStageLog  stageLog;
-
   PetscFunctionBegin;
-  PetscCall(PetscLogGetStageLog(&stageLog));
-  PetscCall(FllopEventRegLogGetEvent(stageLog->eventLog, name, event, exists));
+  *exists = PETSC_FALSE;
+  PetscCall(PetscLogEventGetId(name,event));
+  if (event) *exists = PETSC_TRUE;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -276,7 +251,7 @@ PetscErrorCode FllopPetscObjectInheritName(PetscObject obj,PetscObject orig,cons
   PetscFunctionBegin;
   PetscValidHeader(obj,1);
   PetscValidHeader(orig,2);
-  if (suffix) PetscValidCharPointer(suffix,3);
+  if (suffix) PetscAssertPointer(suffix,3);
   PetscCall(PetscObjectName((PetscObject)orig));
   if (obj==orig && !suffix) PetscFunctionReturn(PETSC_SUCCESS);
   PetscCall(PetscStrlen(orig->name,&len1));
@@ -298,7 +273,7 @@ PetscErrorCode FllopPetscObjectInheritPrefix(PetscObject obj,PetscObject orig,co
   PetscFunctionBegin;
   PetscValidHeader(obj,1);
   PetscValidHeader(orig,2);
-  if (suffix) PetscValidCharPointer(suffix,3);
+  if (suffix) PetscAssertPointer(suffix,3);
   PetscCall(PetscFree(obj->prefix));
 
   if (!orig->prefix) {
@@ -321,7 +296,7 @@ PetscErrorCode FllopPetscObjectInheritPrefixIfNotSet(PetscObject obj,PetscObject
   PetscFunctionBegin;
   PetscValidHeader(obj,1);
   PetscValidHeader(orig,2);
-  if (suffix) PetscValidCharPointer(suffix,3);
+  if (suffix) PetscAssertPointer(suffix,3);
   if (obj->prefix) PetscFunctionReturn(PETSC_SUCCESS);
   PetscCall(FllopPetscObjectInheritPrefix(obj,orig,suffix));
   PetscFunctionReturn(PETSC_SUCCESS);

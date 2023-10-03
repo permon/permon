@@ -54,7 +54,7 @@ PetscErrorCode PCDualGetType(PC pc,PCDualType *type)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(pc,PC_CLASSID,1);
-  PetscValidPointer(type,2);
+  PetscAssertPointer(type,2);
   PetscTryMethod(pc,"PCDualGetType_Dual_C",(PC,PCDualType*),(pc,type));
   PetscFunctionReturn(PETSC_SUCCESS);
 }

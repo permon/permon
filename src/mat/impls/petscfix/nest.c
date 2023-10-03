@@ -397,7 +397,7 @@ PetscErrorCode MatNestPermonGetColumnISs(Mat A,IS **is_new)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
-  PetscValidPointer(is_new,2);
+  PetscAssertPointer(is_new,2);
   PetscUseMethod(A,"MatNestPermonGetColumnISs_NestPermon_C",(Mat,IS**),(A,is_new));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -410,8 +410,8 @@ PetscErrorCode MatNestPermonGetVecs(Mat A,Vec *x,Vec *y)
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
-  if (x) PetscValidPointer(x,2);
-  if (y) PetscValidPointer(y,3);
+  if (x) PetscAssertPointer(x,2);
+  if (y) PetscAssertPointer(y,3);
   PetscCall(PetscObjectQueryFunction((PetscObject)A,"MatNestPermonGetVecs_C",&f));
   if (!f) f = MatCreateVecs;
   PetscCall((*f)(A,x,y));
@@ -757,9 +757,9 @@ PetscErrorCode MatCreateNestPermonVerticalMerge(MPI_Comm comm,PetscInt nmats,Mat
 
 
   PetscFunctionBegin;
-  PetscValidPointer(mats,2);
+  PetscAssertPointer(mats,2);
   for (i=0; i<nmats; i++) PetscValidHeaderSpecific(mats[i],MAT_CLASSID,2);
-  PetscValidPointer(merged,3);
+  PetscAssertPointer(merged,3);
   if (!nmats) {
     *merged = NULL;
     PetscFunctionReturn(PETSC_SUCCESS);

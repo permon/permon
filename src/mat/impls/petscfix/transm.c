@@ -8,7 +8,7 @@ PetscErrorCode MatIsImplicitTranspose(Mat A,PetscBool *flg)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
-  PetscValidPointer(flg,2);
+  PetscAssertPointer(flg,2);
   PetscCall(PetscObjectTypeCompare((PetscObject)A,MATTRANSPOSEVIRTUAL,flg));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -102,7 +102,7 @@ PetscErrorCode PermonMatTranspose(Mat A,MatTransposeType type,Mat *At_out)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
   PetscValidLogicalCollectiveEnum(A,type,2);
-  PetscValidPointer(At_out,3);
+  PetscAssertPointer(At_out,3);
 
   /* try to find a type-specific implementation */
   PetscCall(PetscObjectQueryFunction((PetscObject)A,"PermonMatTranspose_C",&f));

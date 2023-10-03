@@ -771,7 +771,7 @@ PetscErrorCode MatCreateBlockDiag(MPI_Comm comm, Mat block, Mat *B_new) {
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(block,MAT_CLASSID,2);
-  PetscValidPointer(B_new,3);
+  PetscAssertPointer(B_new,3);
   PetscCallMPI(MPI_Comm_size(PetscObjectComm((PetscObject)block),&size));
   if (size > 1) SETERRQ(comm,PETSC_ERR_ARG_WRONG,"block (arg #2) must be sequential");
   

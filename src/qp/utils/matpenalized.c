@@ -182,7 +182,7 @@ PetscErrorCode MatPenalizedGetPenalty(Mat Arho,PetscReal *rho)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(Arho,MAT_CLASSID,1);
-  PetscValidRealPointer(rho,2);
+  PetscAssertPointer(rho,2);
   PetscUseMethod(Arho,"MatPenalizedGetPenalty_Penalty_C",(Mat,PetscReal*),(Arho,rho));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -193,7 +193,7 @@ PetscErrorCode MatPenalizedGetPenalizedTerm(Mat Arho,Mat *BtB)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(Arho,MAT_CLASSID,1);
-  PetscValidPointer(BtB,2);
+  PetscAssertPointer(BtB,2);
   PetscUseMethod(Arho,"MatPenalizedGetPenalizedTerm_Penalty_C",(Mat,Mat*),(Arho,BtB));
   PetscFunctionReturn(PETSC_SUCCESS);
 }

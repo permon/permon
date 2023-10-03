@@ -1022,7 +1022,7 @@ PetscErrorCode MatCreateInv(Mat A, MatInvType invType, Mat *newimat)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
   PetscValidLogicalCollectiveEnum(A,invType,2);
-  PetscValidPointer(newimat,3);
+  PetscAssertPointer(newimat,3);
 
   PetscCall(PetscObjectGetComm((PetscObject)A, &comm));
   PetscCall(MatCreate(comm, &imat));
@@ -1042,7 +1042,7 @@ PetscErrorCode MatInvExplicitly(Mat imat, PetscBool transpose, MatReuse scall, M
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
   PetscValidLogicalCollectiveBool(imat,transpose,2);
   PetscValidLogicalCollectiveEnum(imat,scall,3);
-  PetscValidPointer(imat_explicit,4);
+  PetscAssertPointer(imat_explicit,4);
   PetscUseMethod(imat,"MatInvExplicitly_Inv_C",(Mat,PetscBool,MatReuse,Mat*),(imat,transpose,scall,imat_explicit));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1094,7 +1094,7 @@ PetscErrorCode MatInvGetRegularizationType(Mat imat,MatRegularizationType *type)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
-  PetscValidPointer(type,2);
+  PetscAssertPointer(type,2);
   PetscUseMethod(imat,"MatInvGetRegularizationType_Inv_C",(Mat,MatRegularizationType*),(imat,type));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1126,7 +1126,7 @@ PetscErrorCode MatInvGetNullSpace(Mat imat,Mat *R)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
-  PetscValidPointer(R,2);
+  PetscAssertPointer(R,2);
   PetscUseMethod(imat,"MatInvGetNullSpace_Inv_C",(Mat,Mat*),(imat,R));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1151,7 +1151,7 @@ PetscErrorCode MatInvGetKSP(Mat imat, KSP *ksp)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
-  PetscValidPointer(ksp,2);
+  PetscAssertPointer(ksp,2);
   PetscUseMethod(imat,"MatInvGetKSP_Inv_C",(Mat,KSP*),(imat,ksp));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1162,7 +1162,7 @@ PetscErrorCode MatInvGetRegularizedMat(Mat imat, Mat *A)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
-  PetscValidPointer(A,2);
+  PetscAssertPointer(A,2);
   PetscUseMethod(imat,"MatInvGetRegularizedMat_Inv_C",(Mat,Mat*),(imat,A));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1173,7 +1173,7 @@ PetscErrorCode MatInvGetMat(Mat imat, Mat *A)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
-  PetscValidPointer(A,2);
+  PetscAssertPointer(A,2);
   PetscUseMethod(imat,"MatInvGetMat_Inv_C",(Mat,Mat*),(imat,A));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1184,7 +1184,7 @@ PetscErrorCode MatInvGetPC(Mat imat, PC *pc)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
-  PetscValidPointer(pc,2);
+  PetscAssertPointer(pc,2);
   PetscUseMethod(imat,"MatInvGetPC_Inv_C",(Mat,PC*),(imat,pc));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1207,7 +1207,7 @@ PetscErrorCode MatInvGetRedundancy(Mat imat, PetscInt *red)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
-  PetscValidIntPointer(red,2);
+  PetscAssertPointer(red,2);
   PetscUseMethod(imat,"MatInvGetRedundancy_Inv_C",(Mat,PetscInt*),(imat,red));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1237,7 +1237,7 @@ PetscErrorCode MatInvGetPsubcommType(Mat imat, PetscSubcommType *type)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
-  PetscValidIntPointer(type,2);
+  PetscAssertPointer(type,2);
   PetscUseMethod(imat,"MatInvGetPsubcommType_Inv_C",(Mat,PetscSubcommType*),(imat,type));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1258,7 +1258,7 @@ PetscErrorCode MatInvGetType(Mat imat, MatInvType *type)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
-  PetscValidPointer(type,2);
+  PetscAssertPointer(type,2);
   PetscUseMethod(imat,"MatInvGetType_Inv_C",(Mat,MatInvType*),(imat,type));
   PetscFunctionReturn(PETSC_SUCCESS);
 }

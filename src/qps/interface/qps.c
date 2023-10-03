@@ -64,7 +64,7 @@ PetscErrorCode QPSCreate(MPI_Comm comm,QPS *qps_new)
   void             *ctx;
   
   PetscFunctionBegin;
-  PetscValidPointer(qps_new,2);
+  PetscAssertPointer(qps_new,2);
   *qps_new = 0;
   PetscCall(QPSInitializePackage());
   
@@ -118,7 +118,7 @@ PetscErrorCode QPSGetQP(QPS qps,QP *qp)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscValidPointer(qp,2);
+  PetscAssertPointer(qp,2);
   if (!qps->topQP) {
     QP qp_;
     PetscCall(QPCreate(PetscObjectComm((PetscObject)qps),&qp_));
@@ -150,7 +150,7 @@ PetscErrorCode QPSGetSolvedQP(QPS qps,QP *qp)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscValidPointer(qp,2);
+  PetscAssertPointer(qp,2);
   *qp = qps->solQP;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -386,7 +386,7 @@ PetscErrorCode QPSSetType(QPS qps, const QPSType type)
 
     PetscFunctionBegin;
     PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-    PetscValidCharPointer(type,2);
+    PetscAssertPointer(type,2);
     
     PetscCall(PetscObjectTypeCompare((PetscObject)qps,type,&issame));
     if (issame) PetscFunctionReturn(PETSC_SUCCESS);
@@ -490,7 +490,7 @@ PetscErrorCode QPSGetType(QPS qps,const QPSType *type)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscValidPointer(type,2);
+  PetscAssertPointer(type,2);
   *type = ((PetscObject)qps)->type_name;
   PetscFunctionReturn(PETSC_SUCCESS);}
 
@@ -791,7 +791,7 @@ PetscErrorCode QPSGetConvergedReason(QPS qps,KSPConvergedReason *reason)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscValidPointer(reason,2);
+  PetscAssertPointer(reason,2);
   *reason = qps->reason;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -802,7 +802,7 @@ PetscErrorCode QPSGetResidualNorm(QPS qps,PetscReal *rnorm)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscValidScalarPointer(rnorm,2);
+  PetscAssertPointer(rnorm,2);
   *rnorm = qps->rnorm;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -813,7 +813,7 @@ PetscErrorCode QPSGetIterationNumber(QPS qps,PetscInt *its)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscValidIntPointer(its,2);
+  PetscAssertPointer(its,2);
   *its = qps->iteration;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -824,7 +824,7 @@ PetscErrorCode QPSGetAccumulatedIterationNumber(QPS qps,PetscInt *its)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscValidIntPointer(its,2);
+  PetscAssertPointer(its,2);
   *its = qps->iterations_accumulated;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -963,7 +963,7 @@ PetscErrorCode QPSGetAutoPostSolve(QPS qps,PetscBool *flg)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscValidPointer(flg,2);
+  PetscAssertPointer(flg,2);
   *flg = qps->autoPostSolve;
   PetscFunctionReturn(PETSC_SUCCESS);
 }

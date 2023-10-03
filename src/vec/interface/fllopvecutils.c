@@ -13,7 +13,7 @@ PetscErrorCode ISAdd(IS is,PetscInt value,IS *isnew)
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(is,IS_CLASSID,1);
-  PetscValidPointer(isnew,3);
+  PetscAssertPointer(isnew,3);
   PetscCall(ISGetLocalSize(is,&n));
   PetscCall(ISGetIndices(is,&idx_read));
   PetscCall(PetscMalloc1(n,&idx));
@@ -35,8 +35,8 @@ PetscErrorCode VecMergeAndDestroy(MPI_Comm comm, Vec *local_in, Vec *global_out)
   PetscMPIInt size;
 
   PetscFunctionBegin;
-  PetscValidPointer(local_in,2);
-  PetscValidPointer(global_out,3);
+  PetscAssertPointer(local_in,2);
+  PetscAssertPointer(global_out,3);
   local = *local_in;
   PetscCallMPI(MPI_Comm_size(comm,&size));
   PetscCall(PetscBoolGlobalOr(comm, local ? PETSC_TRUE : PETSC_FALSE, &any_nonnull));
@@ -110,7 +110,7 @@ PetscErrorCode ISCreateFromVec(Vec vec, IS *is)
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(vec,VEC_CLASSID,1);
-  PetscValidPointer(is,2);
+  PetscAssertPointer(is,2);
   PetscCall(VecGetLocalSize(vec, &n));
   PetscCall(PetscMalloc(n*sizeof(PetscInt), &ia));
     
@@ -133,7 +133,7 @@ PetscErrorCode VecCreateFromIS(IS is, Vec *vecout)
     
   PetscFunctionBegin;
   PetscValidHeaderSpecific(is,IS_CLASSID,1);
-  PetscValidPointer(vecout,2);
+  PetscAssertPointer(vecout,2);
   PetscCall(ISGetLocalSize(is, &n));
   PetscCall(ISGetSize(is, &N));
   PetscCall(VecCreate(PetscObjectComm((PetscObject)is),&vec));
@@ -165,7 +165,7 @@ PetscErrorCode ISGetVec(IS is, Vec *vec)
   
   PetscFunctionBegin;
   PetscValidHeaderSpecific(is,IS_CLASSID,1);
-  PetscValidPointer(vec,2);
+  PetscAssertPointer(vec,2);
   PetscCall(VecCreate(PetscObjectComm((PetscObject)is),vec));
   PetscCall(ISGetLocalSize(is,&m));
   PetscCall(ISGetSize(is,&M));
@@ -199,7 +199,7 @@ PetscErrorCode ISGetVecBlock(IS is, Vec *vec, PetscInt bs)
 
   /* control the validity of given objects*/
   PetscValidHeaderSpecific(is,IS_CLASSID,1);
-  PetscValidPointer(vec,2);
+  PetscAssertPointer(vec,2);
 
   /* create the vector */
   PetscCall(VecCreate(PetscObjectComm((PetscObject)is),vec));
@@ -314,7 +314,7 @@ PetscErrorCode VecIsInvalidated(Vec vec,PetscBool *flg)
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(vec,VEC_CLASSID,1);
-  PetscValidPointer(flg,2);
+  PetscAssertPointer(flg,2);
   PetscCall(PetscObjectQuery((PetscObject)vec,"VecInvalidState",(PetscObject*)&container));
   if (!container) {
     *flg = PETSC_FALSE;
@@ -341,7 +341,7 @@ PetscErrorCode VecHasValidValues(Vec vec,PetscBool *flg)
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(vec,VEC_CLASSID,1);
-  PetscValidPointer(flg,2);
+  PetscAssertPointer(flg,2);
   tflg = PETSC_TRUE;
   PetscCall(VecGetLocalSize(vec,&n));
   PetscCall(VecGetArrayRead(vec,&x));

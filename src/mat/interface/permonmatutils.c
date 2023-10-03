@@ -602,7 +602,7 @@ PetscErrorCode MatFilterZeros(Mat A, PetscReal tol, Mat *Af_new)
   PetscFunctionBeginI;
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
   PetscValidLogicalCollectiveReal(A,tol,2);
-  PetscValidPointer(Af_new,3);
+  PetscAssertPointer(Af_new,3);
   if (!registered) {
     PetscCall(PetscLogEventRegister("MatFilterZeros",MAT_CLASSID,&Mat_FilterZeros));
     registered = PETSC_TRUE;
@@ -662,9 +662,9 @@ PetscErrorCode MatMergeAndDestroy(MPI_Comm comm, Mat *local_in, Vec column_layou
   Mat A = *local_in;
 
   PetscFunctionBeginI;
-  PetscValidPointer(local_in,2);
+  PetscAssertPointer(local_in,2);
   PetscValidHeaderSpecific(A,MAT_CLASSID,2);
-  PetscValidPointer(global_out,4);
+  PetscAssertPointer(global_out,4);
   PetscCallMPI(MPI_Comm_size(PetscObjectComm((PetscObject)A),&size));
   if (size > 1) SETERRQ(comm,PETSC_ERR_ARG_WRONG,"currently input matrices must be sequential");
   if (!registered) {
@@ -857,7 +857,7 @@ PetscErrorCode PermonMatGetLocalMat(Mat A,Mat *Aloc)
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
-  PetscValidPointer(Aloc,2);
+  PetscAssertPointer(Aloc,2);
   if (!registered) {
     PetscCall(PetscLogEventRegister("FlMatGetLocalMat",MAT_CLASSID,&PermonMat_GetLocalMat));
     registered = PETSC_TRUE;
@@ -929,7 +929,7 @@ PetscErrorCode PermonMatCreateDenseProductMatrix(Mat A, PetscBool A_transpose, M
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
   PetscValidLogicalCollectiveBool(A,A_transpose,2);
   PetscValidHeaderSpecific(B,MAT_CLASSID,3);
-  PetscValidPointer(C_new,4);
+  PetscAssertPointer(C_new,4);
   PetscCall(PetscObjectQueryFunction((PetscObject)A,"PermonMatCreateDenseProductMatrix_C",&f));
   if (!f) f = PermonMatCreateDenseProductMatrix_Default;
   PetscCall((*f)(A,A_transpose,B,C_new));
@@ -949,7 +949,7 @@ PetscErrorCode PermonMatMatMult(Mat A,Mat B,MatReuse scall,PetscReal fill,Mat *C
   PetscValidHeaderSpecific(B,MAT_CLASSID,2);
   PetscValidLogicalCollectiveEnum(A,scall,3);
   PetscValidLogicalCollectiveReal(A,fill,4);
-  PetscValidPointer(C,5);
+  PetscAssertPointer(C,5);
 
   PetscCall(MatIsImplicitTranspose(A, &flg_A));
   PetscCall(MatIsImplicitTranspose(B, &flg_B));
@@ -976,7 +976,7 @@ PetscErrorCode PermonMatConvertBlocks(Mat A, MatType newtype,MatReuse reuse,Mat 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
   PetscValidType(A,1);
-  PetscValidPointer(B,4);
+  PetscAssertPointer(B,4);
 
   PetscCall(PetscStrallocpy(((PetscObject)A)->name,&name));
 

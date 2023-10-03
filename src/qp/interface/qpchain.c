@@ -21,7 +21,7 @@ PetscErrorCode QPChainAdd(QP qp, QPDuplicateOption opt, QP *newchild)
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  PetscValidPointer(newchild,2);
+  PetscAssertPointer(newchild,2);
   PetscCall(QPChainGetLast(qp, &last));
   PetscCall(QPAddChild(last,opt,newchild));
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -71,7 +71,7 @@ PetscErrorCode QPChainFind(QP qp,PetscErrorCode(*transform)(QP),QP *child)
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp, QP_CLASSID, 1);
-  PetscValidPointer(child, 3);
+  PetscAssertPointer(child, 3);
 
   *child = NULL;
   ctransform = NULL;
@@ -109,7 +109,7 @@ PetscErrorCode QPChainGetLast(QP qp,QP *last)
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  PetscValidPointer(last,2);
+  PetscAssertPointer(last,2);
 
   tchild = qp;
   do {
