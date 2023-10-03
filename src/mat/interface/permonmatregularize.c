@@ -217,7 +217,7 @@ PetscErrorCode MatRegularize(Mat K, Mat R, MatRegularizationType type, Mat *newK
   FllopTracedFunctionBegin;
   PetscValidHeaderSpecific(K,MAT_CLASSID,1);
   PetscValidLogicalCollectiveEnum(K,type,3);
-  PetscValidPointer(newKreg,4);
+  PetscAssertPointer(newKreg,4);
 
   if (type == MAT_REG_NONE) {
     PetscCall(PetscInfo(K,"MatRegularizationType set to MAT_REG_NONE, returning input matrix\n"));

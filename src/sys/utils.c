@@ -22,7 +22,7 @@ PetscErrorCode FllopCreate(MPI_Comm comm,FLLOP *fllop_new)
   FLLOP fllop;
 
   PetscFunctionBegin;
-  PetscValidPointer(fllop_new,2);
+  PetscAssertPointer(fllop_new,2);
   PetscCall(PetscHeaderCreate(fllop,FLLOP_CLASSID,"FLLOP","FLLOP","FLLOP",comm,0,0));
   *fllop_new = fllop;
   PetscFunctionReturn(PETSC_SUCCESS);

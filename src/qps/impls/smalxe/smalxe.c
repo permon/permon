@@ -1243,7 +1243,7 @@ PetscErrorCode QPSSMALXEGetInnerQPS(QPS qps,QPS *inner)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscValidPointer(inner,2);
+  PetscAssertPointer(inner,2);
   PetscUseMethod(qps,"QPSSMALXEGetInnerQPS_SMALXE_C",(QPS,QPS*),(qps,inner));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1254,7 +1254,7 @@ PetscErrorCode QPSSMALXEGetOperatorMaxEigenvalue(QPS qps,PetscReal *maxeig)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscValidPointer(maxeig,2);
+  PetscAssertPointer(maxeig,2);
   PetscUseMethod(qps,"QPSSMALXEGetOperatorMaxEigenvalue_SMALXE_C",(QPS,PetscReal*),(qps,maxeig));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1277,8 +1277,8 @@ PetscErrorCode QPSSMALXEGetM1Initial(QPS qps,PetscReal *M1_initial,QPSScalarArgT
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  if (M1_initial) PetscValidPointer(M1_initial,2);
-  if (argtype) PetscValidPointer(argtype,3);
+  if (M1_initial) PetscAssertPointer(M1_initial,2);
+  if (argtype) PetscAssertPointer(argtype,3);
   PetscUseMethod(qps,"QPSSMALXEGetM1Initial_SMALXE_C",(QPS,PetscReal*,QPSScalarArgType*),(qps,M1_initial,argtype));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1302,8 +1302,8 @@ PetscErrorCode QPSSMALXEGetEta(QPS qps,PetscReal *eta,QPSScalarArgType *argtype)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  if (eta) PetscValidPointer(eta,2);
-  if (argtype) PetscValidPointer(argtype,3);
+  if (eta) PetscAssertPointer(eta,2);
+  if (argtype) PetscAssertPointer(argtype,3);
   PetscUseMethod(qps,"QPSSMALXEGetEta_SMALXE_C",(QPS,PetscReal*,QPSScalarArgType*),(qps,eta,argtype));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1327,8 +1327,8 @@ PetscErrorCode QPSSMALXEGetRhoInitial(QPS qps,PetscReal *rho_initial,QPSScalarAr
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  if (rho_initial) PetscValidPointer(rho_initial,2);
-  if (argtype) PetscValidPointer(argtype,3);
+  if (rho_initial) PetscAssertPointer(rho_initial,2);
+  if (argtype) PetscAssertPointer(argtype,3);
   PetscUseMethod(qps,"QPSSMALXEGetRhoInitial_SMALXE_C",(QPS,PetscReal*,QPSScalarArgType*),(qps,rho_initial,argtype));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1352,7 +1352,7 @@ PetscErrorCode QPSSMALXEGetM1Update(QPS qps,PetscReal *M1_update)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscValidPointer(M1_update,2);
+  PetscAssertPointer(M1_update,2);
   PetscUseMethod(qps,"QPSSMALXEGetM1Update_SMALXE_C",(QPS,PetscReal*),(qps,M1_update));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1375,7 +1375,7 @@ PetscErrorCode QPSSMALXEGetRhoUpdate(QPS qps,PetscReal *rho_update)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscValidPointer(rho_update,2);
+  PetscAssertPointer(rho_update,2);
   PetscUseMethod(qps,"QPSSMALXEGetRhoUpdate_SMALXE_C",(QPS,PetscReal*),(qps,rho_update));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1398,7 +1398,7 @@ PetscErrorCode QPSSMALXEGetRhoUpdateLate(QPS qps,PetscReal *rho_update_late)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscValidPointer(rho_update_late,2);
+  PetscAssertPointer(rho_update_late,2);
   PetscUseMethod(qps,"QPSSMALXEGetRhoUpdateLate_SMALXE_C",(QPS,PetscReal*),(qps,rho_update_late));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1421,7 +1421,7 @@ PetscErrorCode QPSSMALXEGetOperatorMaxEigenvalueIterations(QPS qps,PetscInt *num
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscValidPointer(numit,2);
+  PetscAssertPointer(numit,2);
   PetscUseMethod(qps,"QPSSMALXEGetOperatorMaxEigenvalueIterations_SMALXE_C",(QPS,PetscInt*),(qps,numit));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1455,7 +1455,7 @@ PetscErrorCode QPSSMALXEGetInjectOperatorMaxEigenvalue(QPS qps,PetscBool *flg)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscValidPointer(flg,2);
+  PetscAssertPointer(flg,2);
   PetscUseMethod(qps,"QPSSMALXEGetInjectOperatorMaxEigenvalue_SMALXE_C",(QPS,PetscBool*),(qps,flg));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1477,7 +1477,7 @@ PetscErrorCode QPSSMALXEGetOperatorMaxEigenvalueTolerance(QPS qps,PetscReal *tol
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscValidPointer(tol,2);
+  PetscAssertPointer(tol,2);
   PetscUseMethod(qps,"QPSSMALXEGetOperatorMaxEigenvalueTolerance_SMALXE_C",(QPS,PetscReal*),(qps,tol));
   PetscFunctionReturn(PETSC_SUCCESS);
 }

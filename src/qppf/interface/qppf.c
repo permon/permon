@@ -79,7 +79,7 @@ PetscErrorCode QPPFCreate(MPI_Comm comm, QPPF* qppf_new)
   QPPF cp;
 
   PetscFunctionBegin;
-  PetscValidPointer(qppf_new, 2);
+  PetscAssertPointer(qppf_new, 2);
   *qppf_new = 0;
   PetscCall(QPPFInitializePackage());
 
@@ -453,7 +453,7 @@ PetscErrorCode QPPFGetAlphaTilde(QPPF cp, Vec *alpha_tilde)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(cp,QPPF_CLASSID,1);
-  PetscValidPointer(alpha_tilde,2);
+  PetscAssertPointer(alpha_tilde,2);
   
   *alpha_tilde = cp->alpha_tilde;
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -665,7 +665,7 @@ PetscErrorCode QPPFCreateQ(QPPF cp, Mat *newQ)
   
   PetscFunctionBegin;
   PetscValidHeaderSpecific(cp,QPPF_CLASSID,1);
-  PetscValidPointer(newQ,2);
+  PetscAssertPointer(newQ,2);
   PetscCall(MatCreateShellPermon(((PetscObject) cp)->comm, cp->Gn, cp->Gn, cp->GN, cp->GN, cp, &Q));
   PetscCall(MatShellSetOperation(Q, MATOP_MULT, (void(*)()) QPPFMatMult_Q));
   PetscCall(PetscObjectCompose((PetscObject)Q,"qppf",(PetscObject)cp));
@@ -683,7 +683,7 @@ PetscErrorCode QPPFCreateHalfQ(QPPF cp, Mat *newHalfQ)
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(cp,QPPF_CLASSID,1);
-  PetscValidPointer(newHalfQ,2);
+  PetscAssertPointer(newHalfQ,2);
   PetscCall(MatCreateShellPermon(((PetscObject) cp)->comm, cp->Gm, cp->Gn, cp->GM, cp->GN, cp, &HalfQ));
   PetscCall(MatShellSetOperation(HalfQ, MATOP_MULT, (void(*)()) QPPFMatMult_HalfQ));
   PetscCall(MatShellSetOperation(HalfQ, MATOP_MULT_TRANSPOSE, (void(*)()) QPPFMatMultTranspose_HalfQ));
@@ -702,7 +702,7 @@ PetscErrorCode QPPFCreateP(QPPF cp, Mat *newP)
       
   PetscFunctionBegin;
   PetscValidHeaderSpecific(cp,QPPF_CLASSID,1);
-  PetscValidPointer(newP,2);
+  PetscAssertPointer(newP,2);
   PetscCall(MatCreateShellPermon(((PetscObject) cp)->comm, cp->Gn, cp->Gn, cp->GN, cp->GN, cp, &P));
   PetscCall(MatShellSetOperation(P, MATOP_MULT, (void(*)()) QPPFMatMult_P));
   PetscCall(PetscObjectCompose((PetscObject)P,"qppf",(PetscObject)cp));
@@ -720,7 +720,7 @@ PetscErrorCode QPPFCreateGtG(QPPF cp, Mat *newGtG)
   
   PetscFunctionBegin;
   PetscValidHeaderSpecific(cp,QPPF_CLASSID,1);
-  PetscValidPointer(newGtG,2);
+  PetscAssertPointer(newGtG,2);
   PetscCall(MatCreateShellPermon(((PetscObject) cp)->comm, cp->Gn, cp->Gn, cp->GN, cp->GN, cp, &GtG));
   PetscCall(MatShellSetOperation(GtG, MATOP_MULT, (void(*)()) QPPFMatMult_GtG));
   PetscCall(PetscObjectCompose((PetscObject)GtG,"qppf",(PetscObject)cp));
@@ -735,7 +735,7 @@ PetscErrorCode QPPFGetG(QPPF cp, Mat *G)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(cp,QPPF_CLASSID,1);
-  PetscValidPointer(G,2);
+  PetscAssertPointer(G,2);
   *G = cp->G;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -746,7 +746,7 @@ PetscErrorCode QPPFGetGHasOrthonormalRows(QPPF cp, PetscBool *flg)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(cp,QPPF_CLASSID,1);
-  PetscValidPointer(flg,2);
+  PetscAssertPointer(flg,2);
   *flg = (PetscBool) (cp->G_has_orthonormal_rows_explicitly || cp->G_has_orthonormal_rows_implicitly);
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -759,7 +759,7 @@ PetscErrorCode QPPFGetGGt(QPPF cp, Mat *GGt)
   
   PetscFunctionBegin;
   PetscValidHeaderSpecific(cp,QPPF_CLASSID,1);
-  PetscValidPointer(GGt,2);
+  PetscAssertPointer(GGt,2);
   PetscCall(QPPFGetGGtinv(cp,&GGtinv));
   *GGt = NULL;
   if ((GGtinv != NULL) & !cp->explicitInv) PetscCall(MatInvGetMat(GGtinv,GGt));
@@ -772,7 +772,7 @@ PetscErrorCode QPPFGetGGtinv(QPPF cp, Mat *GGtinv)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(cp,QPPF_CLASSID,1);
-  PetscValidPointer(GGtinv,2);
+  PetscAssertPointer(GGtinv,2);
   *GGtinv = cp->GGtinv;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -785,7 +785,7 @@ PetscErrorCode QPPFGetKSP(QPPF cp, KSP *ksp)
   
   PetscFunctionBegin;
   PetscValidHeaderSpecific(cp,QPPF_CLASSID,1);
-  PetscValidPointer(ksp,2);
+  PetscAssertPointer(ksp,2);
   PetscCall(QPPFGetGGtinv(cp,&GGtinv));
   *ksp = NULL;
   if (GGtinv) PetscCall(MatInvGetKSP(GGtinv,ksp));

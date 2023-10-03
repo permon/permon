@@ -73,7 +73,7 @@ PetscErrorCode QPSKSPGetKSP(QPS qps,KSP *ksp)
   
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscValidPointer(ksp,2);
+  PetscAssertPointer(ksp,2);
   PetscCall(PetscObjectTypeCompare((PetscObject)qps,QPSKSP,&flg));
   if (!flg) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"This is a QPSKSP specific routine!");
   qpsksp = (QPS_KSP*)qps->data;

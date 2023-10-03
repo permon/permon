@@ -524,8 +524,8 @@ PetscErrorCode QPCBoxGet(QPC qpc,Vec *lb, Vec *ub)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
-  if (lb) PetscValidPointer(lb,2);
-  if (ub) PetscValidPointer(ub,3);
+  if (lb) PetscAssertPointer(lb,2);
+  if (ub) PetscAssertPointer(ub,3);
 
   PetscUseMethod(qpc,"QPCBoxGet_Box_C",(QPC,Vec*,Vec*),(qpc,lb,ub));
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -537,8 +537,8 @@ PetscErrorCode QPCBoxGetMultipliers(QPC qpc,Vec *llb,Vec *lub)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
-  if (llb) PetscValidPointer(llb,2);
-  if (lub) PetscValidPointer(lub,3);
+  if (llb) PetscAssertPointer(llb,2);
+  if (lub) PetscAssertPointer(lub,3);
 
   PetscUseMethod(qpc,"QPCBoxGetMultipliers_Box_C",(QPC,Vec*,Vec*),(qpc,llb,lub));
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -567,7 +567,7 @@ PetscErrorCode QPCCreateBox(MPI_Comm comm,IS is,Vec lb,Vec ub,QPC *qpc_out)
   if (is) PetscValidHeaderSpecific(is,IS_CLASSID,2);
   if (lb) PetscValidHeaderSpecific(lb,VEC_CLASSID,3);
   if (ub) PetscValidHeaderSpecific(ub,VEC_CLASSID,4);
-  PetscValidPointer(qpc_out,5);
+  PetscAssertPointer(qpc_out,5);
 
   PetscCall(QPCCreate(comm,&qpc));
   PetscCall(QPCSetIS(qpc,is));

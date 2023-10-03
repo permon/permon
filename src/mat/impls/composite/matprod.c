@@ -184,7 +184,7 @@ PetscErrorCode  MatCreateProd(MPI_Comm comm,PetscInt nmat,const Mat *mats,Mat *m
   
   PetscFunctionBegin;
   if (nmat < 1) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_OUTOFRANGE,"Must pass in at least one matrix");
-  PetscValidPointer(mat,3);
+  PetscAssertPointer(mat,3);
 
   PetscCall(MatGetLocalSize(mats[0],PETSC_IGNORE,&n));
   PetscCall(MatGetLocalSize(mats[nmat-1],&m,PETSC_IGNORE));

@@ -27,7 +27,7 @@ PetscErrorCode MatExtensionGetColumnIS(Mat TA,IS *cis)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(TA,MAT_CLASSID,1);
-  PetscValidPointer(cis,2);
+  PetscAssertPointer(cis,2);
   PetscUseMethod(TA,"MatExtensionGetColumnIS_Extension_C",(Mat,IS*),(TA,cis));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -73,7 +73,7 @@ PetscErrorCode MatExtensionGetRowIS(Mat TA,IS *ris)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(TA,MAT_CLASSID,1);
-  PetscValidPointer(ris,2);
+  PetscAssertPointer(ris,2);
   PetscUseMethod(TA,"MatExtensionGetRowIS_Extension_C",(Mat,IS*),(TA,ris));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -95,7 +95,7 @@ PetscErrorCode MatExtensionGetRowISLocal(Mat TA,IS *ris)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(TA,MAT_CLASSID,1);
-  PetscValidPointer(ris,2);
+  PetscAssertPointer(ris,2);
   PetscUseMethod(TA,"MatExtensionGetRowISLocal_Extension_C",(Mat,IS*),(TA,ris));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -147,7 +147,7 @@ PetscErrorCode MatExtensionGetCondensed(Mat TA,Mat *A)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(TA,MAT_CLASSID,1);
-  PetscValidPointer(A,2);
+  PetscAssertPointer(A,2);
   PetscUseMethod(TA,"MatExtensionGetCondensed_Extension_C",(Mat,Mat*),(TA,A));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -171,7 +171,7 @@ PetscErrorCode MatExtensionCreateCondensedRows(Mat TA,Mat *A,IS *ris_local)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(TA,MAT_CLASSID,1);
-  PetscValidPointer(A,2);
+  PetscAssertPointer(A,2);
   PetscUseMethod(TA,"MatExtensionCreateCondensedRows_Extension_C",(Mat,Mat*,IS*),(TA,A,ris_local));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -197,7 +197,7 @@ PetscErrorCode MatExtensionCreateLocalMat(Mat TA,Mat *local)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(TA,MAT_CLASSID,1);
-  PetscValidPointer(local,2);
+  PetscAssertPointer(local,2);
   PetscUseMethod(TA,"MatExtensionCreateLocalMat_Extension_C",(Mat,Mat*),(TA,local));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1186,7 +1186,7 @@ PetscErrorCode MatCreateExtension(MPI_Comm comm, PetscInt m, PetscInt n, PetscIn
   PetscValidHeaderSpecific(A,MAT_CLASSID,2);
   if (ris) PetscValidHeaderSpecific(ris,IS_CLASSID,4);
   if (cis) PetscValidHeaderSpecific(cis,IS_CLASSID,6);
-  PetscValidPointer(TA_new,7);
+  PetscAssertPointer(TA_new,7);
   PetscCall(MatCreate(comm,&TA));
   PetscCall(MatSetType(TA,MATEXTENSION));
   PetscCall(MatSetSizes(TA,m,n,M,N));

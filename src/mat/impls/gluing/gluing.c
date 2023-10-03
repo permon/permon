@@ -248,7 +248,7 @@ PetscErrorCode MatCreateGluing(MPI_Comm comm, PetscInt n_x_localRow, PetscInt n_
   Mat B;
 
   PetscFunctionBegin;
-  PetscValidPointer(B_out,7);
+  PetscAssertPointer(B_out,7);
 
   /* Create matrix. */
   PetscCall(MatCreate(comm, &B));

@@ -914,8 +914,8 @@ PetscErrorCode QPSMPGPGetAlpha(QPS qps,PetscReal *alpha,QPSScalarArgType *argtyp
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  if (alpha) PetscValidPointer(alpha,2);
-  if (argtype) PetscValidPointer(argtype,3);
+  if (alpha) PetscAssertPointer(alpha,2);
+  if (argtype) PetscAssertPointer(argtype,3);
   PetscUseMethod(qps,"QPSMPGPGetAlpha_MPGP_C",(QPS,PetscReal*,QPSScalarArgType*),(qps,alpha,argtype));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -956,7 +956,7 @@ PetscErrorCode QPSMPGPGetGamma(QPS qps,PetscReal *gamma)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscValidPointer(gamma,2);
+  PetscAssertPointer(gamma,2);
   PetscUseMethod(qps,"QPSMPGPGetGamma_MPGP_C",(QPS,PetscReal*),(qps,gamma));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -987,7 +987,7 @@ PetscErrorCode QPSMPGPGetOperatorMaxEigenvalue(QPS qps,PetscReal *maxeig)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscValidPointer(maxeig,2);
+  PetscAssertPointer(maxeig,2);
   PetscUseMethod(qps,"QPSMPGPGetOperatorMaxEigenvalue_MPGP_C",(QPS,PetscReal*),(qps,maxeig));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1060,7 +1060,7 @@ PetscErrorCode QPSMPGPGetOperatorMaxEigenvalueTolerance(QPS qps,PetscReal *tol)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscValidPointer(tol,2);
+  PetscAssertPointer(tol,2);
   PetscTryMethod(qps,"QPSMPGPGetOperatorMaxEigenvalueTolerance_MPGP_C",(QPS,PetscReal*),(qps,tol));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1080,7 +1080,7 @@ PetscErrorCode QPSMPGPGetOperatorMaxEigenvalueIterations(QPS qps,PetscInt *numit
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscValidPointer(numit,2);
+  PetscAssertPointer(numit,2);
   PetscUseMethod(qps,"QPSMPGPGetOperatorMaxEigenvalueIterations_MPGP_C",(QPS,PetscInt*),(qps,numit));
   PetscFunctionReturn(PETSC_SUCCESS);
 }

@@ -51,7 +51,7 @@ PetscErrorCode QPAddChild(QP qp, QPDuplicateOption opt, QP *newchild)
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  PetscValidPointer(newchild,2);
+  PetscAssertPointer(newchild,2);
   PetscCall(QPDuplicate(qp,opt,&child));
   qp->child = child;
   child->parent = qp;
@@ -98,7 +98,7 @@ PetscErrorCode QPCreate(MPI_Comm comm, QP *qp_new)
   QP               qp;
 
   PetscFunctionBegin;
-  PetscValidPointer(qp_new,2);
+  PetscAssertPointer(qp_new,2);
   *qp_new = 0;
   PetscCall(QPInitializePackage());
 
@@ -173,7 +173,7 @@ PetscErrorCode QPDuplicate(QP qp1,QPDuplicateOption opt,QP *qp2)
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp1,QP_CLASSID,1);
-  PetscValidPointer(qp2,2);
+  PetscAssertPointer(qp2,2);
   PetscCall(QPCreate(PetscObjectComm((PetscObject)qp1),&qp2_));
 
   if (opt==QP_DUPLICATE_DO_NOT_COPY) {
@@ -1155,7 +1155,7 @@ PetscErrorCode QPGetOperator(QP qp,Mat *A)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  PetscValidPointer(A,2);
+  PetscAssertPointer(A,2);
   *A = qp->A;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1179,7 +1179,7 @@ PetscErrorCode QPGetPC(QP qp,PC *pc)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  PetscValidPointer(pc,2);
+  PetscAssertPointer(pc,2);
   if (!qp->pc) {
     PetscCall(PCCreate(PetscObjectComm((PetscObject)qp),&qp->pc));
     PetscCall(PetscObjectIncrementTabLevel((PetscObject)qp->pc,(PetscObject)qp,0));
@@ -1244,7 +1244,7 @@ PetscErrorCode QPGetOperatorNullSpace(QP qp,Mat *R)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  PetscValidPointer(R,2);
+  PetscAssertPointer(R,2);
   *R = qp->R;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1346,7 +1346,7 @@ PetscErrorCode QPGetRhs(QP qp,Vec *b)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  PetscValidPointer(b,2);
+  PetscAssertPointer(b,2);
   *b = qp->b;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1448,11 +1448,11 @@ PetscErrorCode QPGetIneq(QP qp, Mat *Bineq, Vec *cineq)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
   if (Bineq) {
-    PetscValidPointer(Bineq, 2);
+    PetscAssertPointer(Bineq, 2);
     *Bineq = qp->BI;
   }
   if (cineq) {
-    PetscValidPointer(cineq, 3);
+    PetscAssertPointer(cineq, 3);
     *cineq = qp->cI;
   }
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -1847,11 +1847,11 @@ PetscErrorCode QPGetEq(QP qp, Mat *Beq, Vec *ceq)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp, QP_CLASSID, 1);
   if (Beq) {
-    PetscValidPointer(Beq, 2);
+    PetscAssertPointer(Beq, 2);
     *Beq = qp->BE;
   }
   if (ceq) {
-    PetscValidPointer(ceq, 3);
+    PetscAssertPointer(ceq, 3);
     *ceq = qp->cE;
   }
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -2038,7 +2038,7 @@ PetscErrorCode QPGetSolutionVector(QP qp,Vec *x)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  PetscValidPointer(x,2);
+  PetscAssertPointer(x,2);
   PetscCall(QPInitializeInitialVector_Private(qp));
   *x = qp->x;
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -2142,7 +2142,7 @@ PetscErrorCode QPGetChangeListenerContext(QP qp,void *ctx)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  PetscValidPointer(ctx,2);
+  PetscAssertPointer(ctx,2);
   *(void**)ctx = qp->changeListenerCtx;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -2166,7 +2166,7 @@ PetscErrorCode QPGetChild(QP qp,QP *child)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  PetscValidPointer(child,2);
+  PetscAssertPointer(child,2);
   *child = qp->child;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -2190,7 +2190,7 @@ PetscErrorCode QPGetParent(QP qp,QP *parent)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  PetscValidPointer(parent,2);
+  PetscAssertPointer(parent,2);
   *parent = qp->parent;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -2262,7 +2262,7 @@ PetscErrorCode QPGetQPPF(QP qp, QPPF *pf)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  PetscValidPointer(pf,2);
+  PetscAssertPointer(pf,2);
   if (!qp->pf) {
     PetscCall(QPPFCreate(PetscObjectComm((PetscObject)qp),&qp->pf));
     PetscCall(PetscObjectIncrementTabLevel((PetscObject)qp->pf,(PetscObject)qp,1));
@@ -2369,7 +2369,7 @@ PetscErrorCode QPGetQPC(QP qp, QPC *qpc)
   PetscFunctionBegin;
 
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  PetscValidPointer(qpc,2);
+  PetscAssertPointer(qpc,2);
   *qpc = qp->qpc;
   PetscFunctionReturn(PETSC_SUCCESS);
 }

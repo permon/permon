@@ -64,7 +64,7 @@ PetscErrorCode MatGetColumnVectors(Mat A, PetscInt *ncols, Vec *cols_new[])
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
-  PetscValidPointer(cols_new,3);
+  PetscAssertPointer(cols_new,3);
   if (!registered) {
     PetscCall(PetscLogEventRegister("MatGetColVecs",MAT_CLASSID,&Mat_GetColumnVectors));
     registered = PETSC_TRUE;
@@ -93,7 +93,7 @@ PetscErrorCode MatRestoreColumnVectors(Mat A, PetscInt *ncols, Vec *cols_new[])
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
-  PetscValidPointer(cols_new,3);
+  PetscAssertPointer(cols_new,3);
   if (!registered) {
     PetscCall(PetscLogEventRegister("MatResColVecs",MAT_CLASSID,&Mat_RestoreColumnVectors));
     registered = PETSC_TRUE;
@@ -231,7 +231,7 @@ PetscErrorCode MatMatMultByColumns(Mat A, Mat B, PetscBool filter, Mat *C_new)
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
   PetscValidHeaderSpecific(B,MAT_CLASSID,2);
   PetscValidLogicalCollectiveBool(A,filter,3);
-  PetscValidPointer(C_new,4);
+  PetscAssertPointer(C_new,4);
   if (!registered) {
     PetscCall(PetscLogEventRegister("MatMatMultByCols",MAT_CLASSID,&Mat_MatMultByColumns));
     registered = PETSC_TRUE;
@@ -252,7 +252,7 @@ PetscErrorCode MatTransposeMatMultByColumns(Mat A, Mat B, PetscBool filter, Mat 
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
   PetscValidHeaderSpecific(B,MAT_CLASSID,2);
   PetscValidLogicalCollectiveBool(A,filter,3);
-  PetscValidPointer(C_new,4);
+  PetscAssertPointer(C_new,4);
   if (!registered) {
     PetscCall(PetscLogEventRegister("MatTrMatMultByCo",MAT_CLASSID,&Mat_TransposeMatMultByColumns));
     registered = PETSC_TRUE;

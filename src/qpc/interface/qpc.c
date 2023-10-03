@@ -17,7 +17,7 @@ PetscErrorCode QPCCreate(MPI_Comm comm,QPC *qpc_new)
   QPC              qpc;
 
   PetscFunctionBegin;
-  PetscValidPointer(qpc_new,2);
+  PetscAssertPointer(qpc_new,2);
   *qpc_new = 0;
   PetscCall(QPCInitializePackage());
 
@@ -234,7 +234,7 @@ PetscErrorCode QPCGetType(QPC qpc,const QPCType *type)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
-  PetscValidPointer(type,2);
+  PetscAssertPointer(type,2);
   *type = ((PetscObject)qpc)->type_name;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -261,7 +261,7 @@ PetscErrorCode QPCGetIS(QPC qpc,IS *is)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
-  PetscValidPointer(is,2);
+  PetscAssertPointer(is,2);
   *is = qpc->is;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -297,7 +297,7 @@ PetscErrorCode QPCIsLinear(QPC qpc,PetscBool *linear)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
-  PetscValidPointer(linear,2);
+  PetscAssertPointer(linear,2);
   if (!qpc->ops->islinear){
       /* default value */
       *linear = PETSC_FALSE;
@@ -320,7 +320,7 @@ PetscErrorCode QPCIsSubsymmetric(QPC qpc,PetscBool *subsym)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
-  PetscValidPointer(subsym,2);
+  PetscAssertPointer(subsym,2);
   if (!qpc->ops->issubsymmetric){
       /* default value */
       *subsym = PETSC_FALSE;
@@ -366,7 +366,7 @@ PetscErrorCode QPCGetConstraintFunction(QPC qpc, Vec x, Vec *hx)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
   PetscValidHeaderSpecific(x,VEC_CLASSID,2);
-  PetscValidPointer(hx,3);
+  PetscAssertPointer(hx,3);
 
   /* verify if there is a corresponding function of QPC type */
   if (!qpc->ops->getconstraintfunction) SETERRQ(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
@@ -403,7 +403,7 @@ PetscErrorCode QPCRestoreConstraintFunction(QPC qpc,Vec x, Vec *hx)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
   PetscValidHeaderSpecific(x,VEC_CLASSID,2);
-  PetscValidPointer(hx,3);
+  PetscAssertPointer(hx,3);
 
   /* get block size */
   PetscCall(QPCGetBlockSize(qpc,&bs));
@@ -421,7 +421,7 @@ PetscErrorCode QPCGetSubvector(QPC qpc,Vec x,Vec *xc)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
   PetscValidHeaderSpecific(x,VEC_CLASSID,2);
-  PetscValidPointer(xc,3);
+  PetscAssertPointer(xc,3);
   PetscCall(QPCSetUp(qpc));
 
   if (qpc->is) {
@@ -445,7 +445,7 @@ PetscErrorCode QPCRestoreSubvector(QPC qpc,Vec x,Vec *xc)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
   PetscValidHeaderSpecific(x,VEC_CLASSID,2);
-  PetscValidPointer(xc,3);
+  PetscAssertPointer(xc,3);
 
   if (qpc->is) {
     PetscCall(VecRestoreSubVector(x,qpc->is,xc));

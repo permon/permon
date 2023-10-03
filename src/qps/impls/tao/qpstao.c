@@ -81,7 +81,7 @@ PetscErrorCode QPSTaoGetTao(QPS qps,Tao *tao)
   
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscValidPointer(tao,2);
+  PetscAssertPointer(tao,2);
   PetscCall(PetscObjectTypeCompare((PetscObject)qps,QPSTAO,&flg));
   if (!flg) SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_SUP,"This is a QPSTAO specific routine!");
   qpstao = (QPS_Tao*)qps->data;
