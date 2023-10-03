@@ -229,40 +229,15 @@ PetscErrorCode FllopSetFromOptions()
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-/* based on EventRegLogGetEvent but does not throw an error if the event does not exist */
-#undef __FUNCT__
-#define __FUNCT__ "FllopEventRegLogGetEvent"
-PetscErrorCode FllopEventRegLogGetEvent(PetscEventRegLog eventLog, const char name[], PetscLogEvent *event, PetscBool *exists)
-{
-  PetscBool      match;
-  int            e;
-
-  PetscFunctionBegin;
-  PetscValidCharPointer(name,2);
-  PetscValidIntPointer(event,3);
-  *event = -1;
-  *exists = PETSC_FALSE;
-  for (e = 0; e < eventLog->numEvents; e++) {
-    PetscCall(PetscStrcasecmp(eventLog->eventInfo[e].name, name, &match));
-    if (match) {
-      *event = e;
-      *exists = PETSC_TRUE;
-      break;
-    }
-  }
-  PetscFunctionReturn(PETSC_SUCCESS);
-}
-
 /* based on PetscLogEventGetId but does not throw an error if the event does not exist */
 #undef __FUNCT__
 #define __FUNCT__ "FllopPetscLogEventGetId"
 PetscErrorCode  FllopPetscLogEventGetId(const char name[], PetscLogEvent *event, PetscBool *exists)
 {
-  PetscStageLog  stageLog;
-
   PetscFunctionBegin;
-  PetscCall(PetscLogGetStageLog(&stageLog));
-  PetscCall(FllopEventRegLogGetEvent(stageLog->eventLog, name, event, exists));
+  *exists = PETSC_FALSE;
+  PetscCall(PetscLogEventGetId(name,event));
+  if (event) *exists = PETSC_TRUE;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
