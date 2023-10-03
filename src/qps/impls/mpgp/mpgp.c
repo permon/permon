@@ -375,8 +375,8 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
 
   PetscCall(QPGetBox(qps->solQP,NULL,&lb,&ub));
   if (mpgp->bchop_tol) {
-    if (lb) PetscCall(VecChop(lb,mpgp->bchop_tol));
-    if (ub) PetscCall(VecChop(ub,mpgp->bchop_tol));
+    if (lb) PetscCall(VecFilter(lb,mpgp->bchop_tol));
+    if (ub) PetscCall(VecFilter(ub,mpgp->bchop_tol));
   }
 
   switch (mpgp->exptype) {
