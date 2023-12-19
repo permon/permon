@@ -24,17 +24,17 @@ PetscErrorCode QPSMonitorDefault_GP(QPS qps,PetscInt n,PetscViewer viewer)
 
    PetscFunctionBegin;
    if (n == 0 && ((PetscObject)qps)->prefix) {
-     TRY( PetscViewerASCIIPrintf(viewer,"  Projected gradient norms for %s solve.\n",((PetscObject)qps)->prefix) );
+     PetscCall(PetscViewerASCIIPrintf(viewer,"  Projected gradient norms for %s solve.\n",((PetscObject)qps)->prefix));
    }
-   TRY( VecNorm(qps->work[1],NORM_2,&gp->gfnorm) );
-   TRY( VecNorm(qps->work[2],NORM_2,&gp->gcnorm) );
+   PetscCall(VecNorm(qps->work[1],NORM_2,&gp->gfnorm));
+   PetscCall(VecNorm(qps->work[2],NORM_2,&gp->gcnorm));
 
-   TRY( PetscViewerASCIIPrintf(viewer,"%3D GP ||gp||=%.10e",n,(double)qps->rnorm) );
-   TRY( PetscViewerASCIIPrintf(viewer,",\t||gf||=%.10e",(double)gp->gfnorm) );
-   TRY( PetscViewerASCIIPrintf(viewer,",\t||gc||=%.10e",(double)gp->gcnorm) );
-   TRY( PetscViewerASCIIPrintf(viewer,",\tsl_alpha=%.10e",(double)gp->sl_alpha) );
-   TRY( PetscViewerASCIIPrintf(viewer,",\tls_alpha=%.10e",(double)gp->ls_alpha) );
-   TRY( PetscViewerASCIIPrintf(viewer,"\n") );
+   PetscCall(PetscViewerASCIIPrintf(viewer,"%3D GP ||gp||=%.10e",n,(double)qps->rnorm));
+   PetscCall(PetscViewerASCIIPrintf(viewer,",\t||gf||=%.10e",(double)gp->gfnorm));
+   PetscCall(PetscViewerASCIIPrintf(viewer,",\t||gc||=%.10e",(double)gp->gcnorm));
+   PetscCall(PetscViewerASCIIPrintf(viewer,",\tsl_alpha=%.10e",(double)gp->sl_alpha));
+   PetscCall(PetscViewerASCIIPrintf(viewer,",\tls_alpha=%.10e",(double)gp->ls_alpha));
+   PetscCall(PetscViewerASCIIPrintf(viewer,"\n"));
    PetscFunctionReturn(0);
 }
 
@@ -104,15 +104,15 @@ static PetscErrorCode GPGrads(QPS qps, Vec x, Vec g)
   Vec               gf;                 /* ... free gradient                    */
 
   PetscFunctionBegin;
-  TRY( QPSGetSolvedQP(qps,&qp) );
-  TRY( QPGetQPC(qp,&qpc) );
+  PetscCall(QPSGetSolvedQP(qps,&qp));
+  PetscCall(QPGetQPC(qp,&qpc));
 
   gProj             = qps->work[0];
   gf                = qps->work[1];
   gc                = qps->work[2];
 
-  TRY( QPCGrads(qpc,x,g,gf,gc) );
-  TRY( VecWAXPY(gProj,1.0,gf,gc) );
+  PetscCall(QPCGrads(qpc,x,g,gf,gc));
+  PetscCall(VecWAXPY(gProj,1.0,gf,gc));
   PetscFunctionReturn(0);
 }
 
@@ -144,16 +144,16 @@ static PetscErrorCode GPLineSearch_Default(QPS qps)
   QPS_GP            *gp = (QPS_GP*)qps->data;
 
   PetscFunctionBegin;
-  TRY( QPSGetSolvedQP(qps,&qp) );
-  TRY( QPGetSolutionVector(qp,&x) );
-  TRY( QPGetOperator(qp,&A) );
+  PetscCall(QPSGetSolvedQP(qps,&qp));
+  PetscCall(QPGetSolutionVector(qp,&x));
+  PetscCall(QPGetOperator(qp,&A));
   g  = qps->work[3];
   d  = qps->work[4];
   Ad = qps->work[5];
 
   /* find fmax */
   if (!qps->iteration) {
-    TRY( QPComputeObjectiveFromGradient(qp,x,g,&gp->ls_f[0]) );
+    PetscCall(QPComputeObjectiveFromGradient(qp,x,g,&gp->ls_f[0]));
   }
   M  = PetscMax(0,PetscMin(gp->ls_M-1,qps->iteration));
   fmax = gp->ls_f[M];
@@ -161,19 +161,19 @@ static PetscErrorCode GPLineSearch_Default(QPS qps)
     if (gp->ls_f[i] > fmax) fmax = gp->ls_f[i];
   } 
 
-  TRY( MatMult(A,d,Ad) );
+  PetscCall(MatMult(A,d,Ad));
   gp->nmv++;
-  TRY( VecAXPY(x,alpha,d) );               /* x = x-d      */
-  TRY( VecAXPY(g,alpha,Ad) );              /* g = x-Ad     */
-  TRY( QPComputeObjectiveFromGradient(qp,x,g,&f) );
-  TRY( VecDot(g,d,&delta) );
+  PetscCall(VecAXPY(x,alpha,d));               /* x = x-d      */
+  PetscCall(VecAXPY(g,alpha,Ad));              /* g = x-Ad     */
+  PetscCall(QPComputeObjectiveFromGradient(qp,x,g,&f));
+  PetscCall(VecDot(g,d,&delta));
   while (f > fmax + gp->ls_gamma*delta*alpha && i < gp->ls_maxit) {
 //printf("%e %e %e %e %e\n",fmax,f,gp->ls_gamma,alpha,delta);
     alpha_old = alpha;
     alpha *= gp->ls_beta;
-    TRY( VecAXPY(x,alpha-alpha_old,d) );               /* x = x-d      */
-    TRY( VecAXPY(g,alpha-alpha_old,Ad) );              /* g = x-Ad     */
-    TRY( QPComputeObjectiveFromGradient(qp,x,g,&f) );
+    PetscCall(VecAXPY(x,alpha-alpha_old,d));               /* x = x-d      */
+    PetscCall(VecAXPY(g,alpha-alpha_old,Ad));              /* g = x-Ad     */
+    PetscCall(QPComputeObjectiveFromGradient(qp,x,g,&f));
     i++;
   }
 
@@ -212,26 +212,26 @@ static PetscErrorCode GPStepLength_Default(QPS qps)
   QPS_GP            *gp = (QPS_GP*)qps->data;
 
   PetscFunctionBegin;
-  TRY( QPSGetSolvedQP(qps,&qp) );
-  TRY( QPGetSolutionVector(qp,&x) );
-  TRY( QPGetOperator(qp,&A) );
-  TRY( QPGetQPC(qp,&qpc) );
+  PetscCall(QPSGetSolvedQP(qps,&qp));
+  PetscCall(QPGetSolutionVector(qp,&x));
+  PetscCall(QPGetOperator(qp,&A));
+  PetscCall(QPGetQPC(qp,&qpc));
   Vec lb,ub;
-  TRY( QPGetBox(qps->solQP,NULL,&lb,&ub) );
+  PetscCall(QPGetBox(qps->solQP,NULL,&lb,&ub));
   g     = qps->work[3];
   s     = qps->work[4]; /* replace d by  s = x - x_old */
   y     = qps->work[5]; /* replace Ad by y = g - g_old */
   g_old = qps->work[6];
 
-  TRY( VecScale(s,gp->ls_alpha) ); /* s = ls_alpha*d = x - x_old */
-  TRY( VecWAXPY(y,-1.,g_old,g) );  /* y = g - g_old              */
-  TRY( VecDot(s,y,&dots[0]) );
-  TRY( VecDot(s,s,&dots[1]) );
+  PetscCall(VecScale(s,gp->ls_alpha)); /* s = ls_alpha*d = x - x_old */
+  PetscCall(VecWAXPY(y,-1.,g_old,g));  /* y = g - g_old              */
+  PetscCall(VecDot(s,y,&dots[0]));
+  PetscCall(VecDot(s,s,&dots[1]));
   //TODO Mdot dot, split reductiond
   if (qps->iteration) {
-    TRY( ISDestroy(&gp->isactive_old) );
-    TRY( ISDuplicate(gp->isactive,&gp->isactive_old) );
-    TRY( ISDestroy(&gp->isactive) );
+    PetscCall(ISDestroy(&gp->isactive_old));
+    PetscCall(ISDuplicate(gp->isactive,&gp->isactive_old));
+    PetscCall(ISDestroy(&gp->isactive));
   }
 
   //IS is2,is3;
@@ -240,24 +240,24 @@ static PetscErrorCode GPStepLength_Default(QPS qps)
   //PetscBool flg;
   //VecWhichBetween(lb,x,ub,&is2);
   //ISComplement(is2,ilo,ihi,&is3);
-  //TRY( QPCGetActiveSet(qpc,NULL,&gp->isactive) );
+  //PetscCall(QPCGetActiveSet(qpc,NULL,&gp->isactive));
   //ISEqual(is3,gp->isactive,&flg);
   //printf ("%d same\n",flg);
   if (!qps->iteration) {
-    TRY( VecCopy(g,g_old) );
+    PetscCall(VecCopy(g,g_old));
     PetscFunctionReturn(0);
   }
 
-    TRY( PetscLogEventBegin(QPS_GP_LineSearch,qps,0,0,0) );
-    TRY( ISSetInfo(gp->isactive,IS_SORTED,IS_LOCAL,PETSC_TRUE,PETSC_TRUE) );
-    TRY( ISSetInfo(gp->isactive_old,IS_SORTED,IS_LOCAL,PETSC_TRUE,PETSC_TRUE) );
-  TRY( ISIntersect(gp->isactive,gp->isactive_old,&is) );
-    TRY( PetscLogEventEnd(QPS_GP_LineSearch,qps,0,0,0) );
-  TRY( VecISSet(y,is,0.0) );
-   TRY( ISDestroy(&is) );
-  TRY( VecDot(y,y,&dots[2]) );
+    PetscCall(PetscLogEventBegin(QPS_GP_LineSearch,qps,0,0,0));
+    PetscCall(ISSetInfo(gp->isactive,IS_SORTED,IS_LOCAL,PETSC_TRUE,PETSC_TRUE));
+    PetscCall(ISSetInfo(gp->isactive_old,IS_SORTED,IS_LOCAL,PETSC_TRUE,PETSC_TRUE));
+  PetscCall(ISIntersect(gp->isactive,gp->isactive_old,&is));
+    PetscCall(PetscLogEventEnd(QPS_GP_LineSearch,qps,0,0,0));
+  PetscCall(VecISSet(y,is,0.0));
+   PetscCall(ISDestroy(&is));
+  PetscCall(VecDot(y,y,&dots[2]));
   //printf("sy %e ss %e yy %e\n",dots[0],dots[1],dots[2]);
-  TRY( VecCopy(g,g_old) );
+  PetscCall(VecCopy(g,g_old));
 
   bb1 = dots[1]/dots[0];
   bb1 = PetscMax(gp->sl_alphamin,PetscMin(gp->sl_alphamax,bb1));
@@ -299,22 +299,22 @@ PetscErrorCode QPSSetup_GP(QPS qps)
   PetscFunctionBegin;
   /* set the number of working vectors */
   //if (mpgp->explengthtype != QPS_GP_EXPANSION_LENGTH_BB) {
-    TRY( QPSSetWorkVecs(qps,7) );
+    PetscCall(QPSSetWorkVecs(qps,7));
   //} else {
-  //  TRY( QPSSetWorkVecs(qps,11) );
+  //  PetscCall(QPSSetWorkVecs(qps,11));
   //}
   
-  TRY( PetscMalloc1(gp->ls_M,&gp->ls_f) );
-  TRY( PetscMalloc1(gp->sl_M,&gp->sl_bb2) );
+  PetscCall(PetscMalloc1(gp->ls_M,&gp->ls_f));
+  PetscCall(PetscMalloc1(gp->sl_M,&gp->sl_bb2));
 
-  TRY( QPGetBox(qps->solQP,NULL,&lb,&ub) );
+  PetscCall(QPGetBox(qps->solQP,NULL,&lb,&ub));
   if (gp->bchop_tol) {
-    if (lb) TRY( VecChop(lb,gp->bchop_tol) );
-    if (ub) TRY( VecChop(ub,gp->bchop_tol) );
+    if (lb) PetscCall(VecChop(lb,gp->bchop_tol));
+    if (ub) PetscCall(VecChop(ub,gp->bchop_tol));
   }
 
-  TRY( QPGetQPC(qps->solQP,&qpc) );
-  //TRY( QPCGetStoreActiveSet(qpc,gp->qpcstore) );
+  PetscCall(QPGetQPC(qps->solQP,&qpc));
+  //PetscCall(QPCGetStoreActiveSet(qpc,gp->qpcstore));
 
   //switch (mpgp->exptype) {
   //  case QPS_GP_EXPANSION_STD:
@@ -352,18 +352,18 @@ PetscErrorCode QPSSetup_GP(QPS qps)
   /* initialize alpha */
   //if (mpgp->alpha_type == QPS_ARG_MULTIPLE) {
   //  if (mpgp->maxeig == PETSC_DECIDE) {
-  //    TRY( MatGetMaxEigenvalue(qps->solQP->A, NULL, &mpgp->maxeig, mpgp->maxeig_tol, mpgp->maxeig_iter) );
+  //    PetscCall(MatGetMaxEigenvalue(qps->solQP->A, NULL, &mpgp->maxeig, mpgp->maxeig_tol, mpgp->maxeig_iter));
   //  }
   //  if (mpgp->alpha_user == PETSC_DECIDE) {
   //    mpgp->alpha_user = 2.0;
   //  }
-  //  TRY( PetscInfo1(qps,"maxeig     = %.8e\n", mpgp->maxeig) );
-  //  TRY( PetscInfo1(qps,"alpha_user = %.8e\n", mpgp->alpha_user) );
+  //  PetscCall(PetscInfo1(qps,"maxeig     = %.8e\n", mpgp->maxeig));
+  //  PetscCall(PetscInfo1(qps,"alpha_user = %.8e\n", mpgp->alpha_user));
   //  mpgp->alpha = mpgp->alpha_user/mpgp->maxeig;
   //} else {
   //  mpgp->alpha = mpgp->alpha_user;
   //}
-  //TRY( PetscInfo1(qps,  "alpha      = %.8e\n", mpgp->alpha) );
+  //PetscCall(PetscInfo1(qps,  "alpha      = %.8e\n", mpgp->alpha));
   PetscFunctionReturn(0);
 }
 
@@ -413,43 +413,43 @@ PetscErrorCode QPSSolve_GP(QPS qps)
     //}
 
 
-  TRY( QPSGetSolvedQP(qps,&qp) );
-  TRY( QPGetQPC(qp,&qpc) );                       /* get constraints */
-  TRY( QPGetSolutionVector(qp, &x) );             /* get the solution vector */
-  TRY( QPGetOperator(qp, &A) );                   /* get hessian matrix */
-  TRY( QPGetRhs(qp, &b) );                        /* get right-hand side vector */
+  PetscCall(QPSGetSolvedQP(qps,&qp));
+  PetscCall(QPGetQPC(qp,&qpc));                       /* get constraints */
+  PetscCall(QPGetSolutionVector(qp, &x));             /* get the solution vector */
+  PetscCall(QPGetOperator(qp, &A));                   /* get hessian matrix */
+  PetscCall(QPGetRhs(qp, &b));                        /* get right-hand side vector */
 
-  TRY( QPCProject(qpc,x,x) );                     /* project x initial guess to feasible set */
+  PetscCall(QPCProject(qpc,x,x));                     /* project x initial guess to feasible set */
 
   /* compute gradient */
-  TRY( MatMult(A, x, g) );                        /* g=A*x */
+  PetscCall(MatMult(A, x, g));                        /* g=A*x */
   nmv++;                                          /* matrix multiplication counter */
-  TRY( VecAXPY(g, -1.0, b) );                     /* g=g-b */
+  PetscCall(VecAXPY(g, -1.0, b));                     /* g=g-b */
   qps->iteration = 0;                             /* main iteration counter */
   while (1)                                       /* main cycle */
   {
-    TRY( GPGrads(qps, x, g) );                   /* grad. splitting  gProj,gf,gc */
+    PetscCall(GPGrads(qps, x, g));                   /* grad. splitting  gProj,gf,gc */
     /* compute the norm of projected gradient - stopping criterion */
-    TRY( VecNorm(gProj, NORM_2, &qps->rnorm) );      /* qps->rnorm=norm(gProj)*/
+    PetscCall(VecNorm(gProj, NORM_2, &qps->rnorm));      /* qps->rnorm=norm(gProj)*/
     if (qps->numbermonitors) {
-      TRY( QPSMonitor(qps,qps->iteration,qps->rnorm)) ;
+      PetscCall(QPSMonitor(qps,qps->iteration,qps->rnorm)) ;
     }
 
     /* test the convergence of algorithm */
-    TRY( (*qps->convergencetest)(qps,&qps->reason) );
+    PetscCall((*qps->convergencetest)(qps,&qps->reason));
     if (qps->reason != KSP_CONVERGED_ITERATING) break;
 
     /* compute steplength for descent direction */
-    TRY( PetscLogEventBegin(QPS_GP_StepLength,qps,0,0,0) );
-    TRY( gp->steplength(qps) );
-    TRY( PetscLogEventEnd(QPS_GP_StepLength,qps,0,0,0) );
+    PetscCall(PetscLogEventBegin(QPS_GP_StepLength,qps,0,0,0));
+    PetscCall(gp->steplength(qps));
+    PetscCall(PetscLogEventEnd(QPS_GP_StepLength,qps,0,0,0));
 
     /* descent direction */
-    TRY( VecWAXPY(d,-gp->sl_alpha,g,x) );                /* d = x - alpha*g */
-    TRY( QPCProject(qpc,d,d) );                   /* project d to feasible set */
-    TRY( VecAXPY(d,-1.0,x) );                     /* d = d - x */
+    PetscCall(VecWAXPY(d,-gp->sl_alpha,g,x));                /* d = x - alpha*g */
+    PetscCall(QPCProject(qpc,d,d));                   /* project d to feasible set */
+    PetscCall(VecAXPY(d,-1.0,x));                     /* d = d - x */
 
-    TRY( gp->linesearch(qps) );
+    PetscCall(gp->linesearch(qps));
     qps->iteration++;
   };
 
@@ -481,12 +481,12 @@ Parameters:
 PetscErrorCode QPSDestroy_GP(QPS qps)
 {
   PetscFunctionBegin;
-  //TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetAlpha_GP_C",NULL) );
-  //TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetAlpha_GP_C",NULL) );
-  //TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetGamma_GP_C",NULL) );
-  //TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetGamma_GP_C",NULL) );
+  //PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetAlpha_GP_C",NULL));
+  //PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetAlpha_GP_C",NULL));
+  //PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetGamma_GP_C",NULL));
+  //PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetGamma_GP_C",NULL));
   //TODO restore active set computation
-  TRY( QPSDestroyDefault(qps) );
+  PetscCall(QPSDestroyDefault(qps));
   PetscFunctionReturn(0);
 }
 
@@ -499,20 +499,20 @@ PetscErrorCode QPSIsQPCompatible_GP(QPS qps,QP qp,PetscBool *flg)
   QPC qpc;
 
   PetscFunctionBegin;
-  TRY( QPGetEq(qp,&Beq,&ceq) );
-  TRY( QPGetIneq(qp,&Bineq,&cineq) );
-  TRY( QPGetQPC(qp,&qpc) );
+  PetscCall(QPGetEq(qp,&Beq,&ceq));
+  PetscCall(QPGetIneq(qp,&Bineq,&cineq));
+  PetscCall(QPGetQPC(qp,&qpc));
   if (Beq || ceq || Bineq || cineq) {
     *flg = PETSC_FALSE;
   } else {
-    TRY( PetscObjectTypeCompare((PetscObject)qpc,QPCBOX,flg) );
+    PetscCall(PetscObjectTypeCompare((PetscObject)qpc,QPCBOX,flg));
   }
   PetscFunctionReturn(0);
 }
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSSetFromOptions_GP"
-PetscErrorCode QPSSetFromOptions_GP(PetscOptionItems *PetscOptionsObject,QPS qps)
+PetscErrorCode QPSSetFromOptions_GP(QPS qps,PetscOptionItems *PetscOptionsObject)
 {
   QPS_GP    *gp = (QPS_GP*)qps->data;
   //PetscBool flg1,flg2,alpha_direct;
@@ -520,28 +520,28 @@ PetscErrorCode QPSSetFromOptions_GP(PetscOptionItems *PetscOptionsObject,QPS qps
   //PetscInt maxeig_iter;
 
   PetscFunctionBegin;
-  TRY( PetscOptionsHead(PetscOptionsObject,"QPS GP options") );
+  PetscOptionsHeadBegin(PetscOptionsObject,"QPS GP options");
 
-  //TRY( PetscOptionsBool("-qps_mpgp_alpha_direct","","QPSMPGPSetAlpha",(PetscBool) mpgp->alpha_type,&alpha_direct,&flg0) );
-  //TRY( PetscOptionsReal("-qps_mpgp_alpha","","QPSMPGPSetAlpha",mpgp->alpha_user,&alpha,&flg2) );
-  //if (flg1 || flg2) TRY( QPSMPGPSetAlpha(qps,alpha,(QPSScalarArgType) alpha_direct) );
-  //TRY( PetscOptionsReal("-qps_mpgp_gamma","","QPSMPGPSetGamma",mpgp->gamma,&gamma,&flg1) );
-  //if (flg1) TRY( QPSMPGPSetGamma(qps,gamma) );
-  //TRY( PetscOptionsReal("-qps_mpgp_maxeig","Approximate maximum eigenvalue of the Hessian, PETSC_DECIDE means this is automatically computed.","QPSMPGPSetOperatorMaxEigenvalue",mpgp->maxeig,&maxeig,&flg1) );
-  //if (flg1) TRY( QPSMPGPSetOperatorMaxEigenvalue(qps,maxeig) );
-  //TRY( PetscOptionsReal("-qps_mpgp_maxeig_tol","Relative tolerance to find approximate maximum eigenvalue of the Hessian, PETSC_DECIDE means QPS rtol","QPSMPGPSetOperatorMaxEigenvalueTolerance",mpgp->maxeig_tol,&maxeig_tol,&flg1) );
-  //if (flg1) TRY( QPSMPGPSetOperatorMaxEigenvalueTolerance(qps,maxeig_tol) );
-  //TRY( PetscOptionsInt("-qps_mpgp_maxeig_iter","Number of iterations to find an approximate maximum eigenvalue of the Hessian","QPSMPGPSetOperatorMaxEigenvalueIterations",mpgp->maxeig_iter,&maxeig_iter,&flg1) );
-  //if (flg1) TRY( QPSMPGPSetOperatorMaxEigenvalueIterations(qps,maxeig_iter) );
-  //TRY( PetscOptionsReal("-qps_mpgp_btol","Boundary overshoot tolerance; default: 10*PETSC_MACHINE_EPSILON","",mpgp->btol,&mpgp->btol,&flg1) );
-  //TRY( PetscOptionsReal("-qps_mpgp_bound_chop_tol","Sets boundary to 0 for |boundary|<tol ; default: 0","",mpgp->bchop_tol,&mpgp->bchop_tol,NULL) );
-  //TRY( PetscOptionsEnum("-qps_mpgp_expansion_type","Set expansion step type","",QPSMPGPExpansionTypes,(PetscEnum)mpgp->exptype,(PetscEnum*)&mpgp->exptype,NULL) );
-  //TRY( PetscOptionsEnum("-qps_mpgp_expansion_length_type","Set expansion step length type","",QPSMPGPExpansionLengthTypes,(PetscEnum)mpgp->explengthtype,(PetscEnum*)&mpgp->explengthtype,NULL) );
-  //TRY( PetscOptionsBool("-qps_mpgp_alpha_reset","If alpha=Nan reset to initial value, otherwise keep last alpaha","QPSMPGPSetAlpha",(PetscBool) mpgp->resetalpha,&mpgp->resetalpha,NULL) );
-  //TRY( PetscOptionsBool("-qps_mpgp_fallback","","",(PetscBool) mpgp->fallback,&mpgp->fallback,NULL) );
-  //TRY( PetscOptionsBool("-qps_mpgp_fallback2","","",(PetscBool) mpgp->fallback2,&mpgp->fallback2,NULL) );
+  //PetscCall(PetscOptionsBool("-qps_mpgp_alpha_direct","","QPSMPGPSetAlpha",(PetscBool) mpgp->alpha_type,&alpha_direct,&flg0));
+  //PetscCall(PetscOptionsReal("-qps_mpgp_alpha","","QPSMPGPSetAlpha",mpgp->alpha_user,&alpha,&flg2));
+  //if (flg1 || flg2) PetscCall(QPSMPGPSetAlpha(qps,alpha,(QPSScalarArgType) alpha_direct));
+  //PetscCall(PetscOptionsReal("-qps_mpgp_gamma","","QPSMPGPSetGamma",mpgp->gamma,&gamma,&flg1));
+  //if (flg1) PetscCall(QPSMPGPSetGamma(qps,gamma));
+  //PetscCall(PetscOptionsReal("-qps_mpgp_maxeig","Approximate maximum eigenvalue of the Hessian, PETSC_DECIDE means this is automatically computed.","QPSMPGPSetOperatorMaxEigenvalue",mpgp->maxeig,&maxeig,&flg1));
+  //if (flg1) PetscCall(QPSMPGPSetOperatorMaxEigenvalue(qps,maxeig));
+  //PetscCall(PetscOptionsReal("-qps_mpgp_maxeig_tol","Relative tolerance to find approximate maximum eigenvalue of the Hessian, PETSC_DECIDE means QPS rtol","QPSMPGPSetOperatorMaxEigenvalueTolerance",mpgp->maxeig_tol,&maxeig_tol,&flg1));
+  //if (flg1) PetscCall(QPSMPGPSetOperatorMaxEigenvalueTolerance(qps,maxeig_tol));
+  //PetscCall(PetscOptionsInt("-qps_mpgp_maxeig_iter","Number of iterations to find an approximate maximum eigenvalue of the Hessian","QPSMPGPSetOperatorMaxEigenvalueIterations",mpgp->maxeig_iter,&maxeig_iter,&flg1));
+  //if (flg1) PetscCall(QPSMPGPSetOperatorMaxEigenvalueIterations(qps,maxeig_iter));
+  //PetscCall(PetscOptionsReal("-qps_mpgp_btol","Boundary overshoot tolerance; default: 10*PETSC_MACHINE_EPSILON","",mpgp->btol,&mpgp->btol,&flg1));
+  //PetscCall(PetscOptionsReal("-qps_mpgp_bound_chop_tol","Sets boundary to 0 for |boundary|<tol ; default: 0","",mpgp->bchop_tol,&mpgp->bchop_tol,NULL));
+  //PetscCall(PetscOptionsEnum("-qps_mpgp_expansion_type","Set expansion step type","",QPSMPGPExpansionTypes,(PetscEnum)mpgp->exptype,(PetscEnum*)&mpgp->exptype,NULL));
+  //PetscCall(PetscOptionsEnum("-qps_mpgp_expansion_length_type","Set expansion step length type","",QPSMPGPExpansionLengthTypes,(PetscEnum)mpgp->explengthtype,(PetscEnum*)&mpgp->explengthtype,NULL));
+  //PetscCall(PetscOptionsBool("-qps_mpgp_alpha_reset","If alpha=Nan reset to initial value, otherwise keep last alpaha","QPSMPGPSetAlpha",(PetscBool) mpgp->resetalpha,&mpgp->resetalpha,NULL));
+  //PetscCall(PetscOptionsBool("-qps_mpgp_fallback","","",(PetscBool) mpgp->fallback,&mpgp->fallback,NULL));
+  //PetscCall(PetscOptionsBool("-qps_mpgp_fallback2","","",(PetscBool) mpgp->fallback2,&mpgp->fallback2,NULL));
   //if (mpgp->fallback2) mpgp->fallback = PETSC_FALSE;
-  TRY( PetscOptionsTail() );
+  PetscOptionsHeadEnd();
   PetscFunctionReturn(0);
 }
 
@@ -553,10 +553,10 @@ PetscErrorCode QPSViewConvergence_GP(QPS qps, PetscViewer v)
   PetscBool   iascii;
 
   PetscFunctionBegin;
-  TRY( PetscObjectTypeCompare((PetscObject)v,PETSCVIEWERASCII,&iascii) );
+  PetscCall(PetscObjectTypeCompare((PetscObject)v,PETSCVIEWERASCII,&iascii));
   if (iascii) {
-    TRY( PetscViewerASCIIPrintf(v,"from the last QPSReset:\n") );
-    TRY( PetscViewerASCIIPrintf(v,"number of Hessian multiplications %d\n",gp->nmv) );
+    PetscCall(PetscViewerASCIIPrintf(v,"from the last QPSReset:\n"));
+    PetscCall(PetscViewerASCIIPrintf(v,"number of Hessian multiplications %d\n",gp->nmv));
   }
   PetscFunctionReturn(0);
 }
@@ -568,7 +568,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_GP(QPS qps)
   static PetscBool registered = PETSC_FALSE;
 
   PetscFunctionBegin;
-  TRY( PetscNewLog(qps,&gp) );
+  PetscCall(PetscNewLog(qps,&gp));
   qps->data                  = (void*)gp;
 
   gp->btol                 = 10*PETSC_MACHINE_EPSILON; /* boundary tol */
@@ -599,15 +599,15 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_GP(QPS qps)
   qps->ops->monitor          = QPSMonitorDefault_GP;
   qps->ops->viewconvergence  = QPSViewConvergence_GP;
 
-  //TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetCurrentStepType_GP_C",QPSMPGPGetCurrentStepType_GP) );
-  //TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetAlpha_GP_C",QPSMPGPGetAlpha_GP) );
-  //TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetAlpha_GP_C",QPSMPGPSetAlpha_GP) );
-  //TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetGamma_GP_C",QPSMPGPGetGamma_GP) );
-  //TRY( PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetGamma_GP_C",QPSMPGPSetGamma_GP) );
+  //PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetCurrentStepType_GP_C",QPSMPGPGetCurrentStepType_GP));
+  //PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetAlpha_GP_C",QPSMPGPGetAlpha_GP));
+  //PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetAlpha_GP_C",QPSMPGPSetAlpha_GP));
+  //PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPGetGamma_GP_C",QPSMPGPGetGamma_GP));
+  //PetscCall(PetscObjectComposeFunction((PetscObject)qps,"QPSMPGPSetGamma_GP_C",QPSMPGPSetGamma_GP));
   
   if (!registered) {
-    TRY( PetscLogEventRegister("QPSGP:LineSearch", QPS_CLASSID, &QPS_GP_LineSearch) );
-    TRY( PetscLogEventRegister("QPSGP:StepLength", QPS_CLASSID, &QPS_GP_StepLength) );
+    PetscCall(PetscLogEventRegister("QPSGP:LineSearch", QPS_CLASSID, &QPS_GP_LineSearch));
+    PetscCall(PetscLogEventRegister("QPSGP:StepLength", QPS_CLASSID, &QPS_GP_StepLength));
     registered = PETSC_FALSE;
   }
   PetscFunctionReturn(0);
@@ -622,7 +622,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_GP(QPS qps)
 //  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
 //  if (stepType) PetscValidRealPointer(stepType,2);
 //  *stepType = ' ';
-//  TRY( PetscTryMethod(qps,"QPSMPGPGetCurrentStepType_GP_C",(QPS,char*),(qps,stepType)) );
+//  PetscCall(PetscTryMethod(qps,"QPSMPGPGetCurrentStepType_GP_C",(QPS,char*),(qps,stepType)));
 //  PetscFunctionReturn(0);
 //}
 //
@@ -644,7 +644,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_GP(QPS qps)
 //  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
 //  if (alpha) PetscValidPointer(alpha,2);
 //  if (argtype) PetscValidPointer(argtype,3);
-//  TRY( PetscUseMethod(qps,"QPSMPGPGetAlpha_GP_C",(QPS,PetscReal*,QPSScalarArgType*),(qps,alpha,argtype)) );
+//  PetscCall(PetscUseMethod(qps,"QPSMPGPGetAlpha_GP_C",(QPS,PetscReal*,QPSScalarArgType*),(qps,alpha,argtype)));
 //  PetscFunctionReturn(0);
 //}
 //
@@ -665,7 +665,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_GP(QPS qps)
 //  PetscFunctionBegin;
 //  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
 //  PetscValidLogicalCollectiveReal(qps,alpha,2);
-//  TRY( PetscTryMethod(qps,"QPSMPGPSetAlpha_GP_C",(QPS,PetscReal,QPSScalarArgType),(qps,alpha,argtype)) );
+//  PetscCall(PetscTryMethod(qps,"QPSMPGPSetAlpha_GP_C",(QPS,PetscReal,QPSScalarArgType),(qps,alpha,argtype)));
 //  PetscFunctionReturn(0);
 //}
 //
@@ -685,7 +685,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_GP(QPS qps)
 //  PetscFunctionBegin;
 //  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
 //  PetscValidPointer(gamma,2);
-//  TRY( PetscUseMethod(qps,"QPSMPGPGetGamma_GP_C",(QPS,PetscReal*),(qps,gamma)) );
+//  PetscCall(PetscUseMethod(qps,"QPSMPGPGetGamma_GP_C",(QPS,PetscReal*),(qps,gamma)));
 //  PetscFunctionReturn(0);
 //}
 //
@@ -705,7 +705,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_GP(QPS qps)
 //  PetscFunctionBegin;
 //  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
 //  PetscValidLogicalCollectiveReal(qps,gamma,2);
-//  TRY( PetscTryMethod(qps,"QPSMPGPSetGamma_GP_C",(QPS,PetscReal),(qps,gamma)) );
+//  PetscCall(PetscTryMethod(qps,"QPSMPGPSetGamma_GP_C",(QPS,PetscReal),(qps,gamma)));
 //  PetscFunctionReturn(0);
 //}
 
