@@ -52,7 +52,8 @@ static PetscErrorCode QPCGrads_Box(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
       gc_a[i]= PetscMax(g_a[i],0.0);
     } else {
       /* index of this component is in FREE SET */
-      gf_a[i] = g_a[i];
+      //gf_a[i] = g_a[i];
+      //gc_a[i] = 0.0;
     }
   }
 
@@ -126,8 +127,11 @@ static PetscErrorCode QPCFeas_Box(QPC qpc,Vec x, Vec d, PetscScalar *alpha)
 
   for(i=0;i < n_local;i++){
     if(d_a[i] > 0 && lb && lb_a[i] > PETSC_NINFINITY) {
+      //printf("la %.15f %.15f %.15f\n",(double)lb_a[i],(double)x_a[i],(double)d_a[i]);
       alpha_i = x_a[i]-lb_a[i];
+      //printf("lalpha_i %.15f\n",(double)alpha_i);
       alpha_i = alpha_i/d_a[i];
+      //printf("lalpha_i %.15f\n",(double)alpha_i);
       if (alpha_i < alpha_temp){
           alpha_temp = alpha_i;
       }
@@ -138,6 +142,60 @@ static PetscErrorCode QPCFeas_Box(QPC qpc,Vec x, Vec d, PetscScalar *alpha)
       alpha_i = alpha_i/d_a[i];
 
       if (alpha_i < alpha_temp){
+          alpha_temp = alpha_i;
+      }
+    }
+  }
+  *alpha = alpha_temp;
+
+  PetscCall(VecRestoreArray(x,&x_a));
+  PetscCall(VecRestoreArray(d,&d_a));
+  if (lb) PetscCall(VecRestoreArray(lb,&lb_a));
+  if (ub) PetscCall(VecRestoreArray(ub,&ub_a));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "QPCInfeas_Box"
+static PetscErrorCode QPCInfeas_Box(QPC qpc,Vec x, Vec d, PetscScalar *alpha)
+{
+  Vec                   lb,ub;
+  QPC_Box               *ctx = (QPC_Box*)qpc->data;
+  PetscScalar           alpha_temp, alpha_i;
+
+  PetscScalar           *x_a, *d_a, *lb_a, *ub_a;
+  PetscInt              n_local, i;
+
+  PetscFunctionBegin;
+  lb = ctx->lb;
+  ub = ctx->ub;
+
+  alpha_temp = 0.;
+
+  PetscCall(VecGetLocalSize(x,&n_local));
+  PetscCall(VecGetArray(x,&x_a));
+  PetscCall(VecGetArray(d,&d_a));
+  if (lb) PetscCall(VecGetArray(lb,&lb_a));
+  if (ub) PetscCall(VecGetArray(ub,&ub_a));
+
+  for(i=0;i < n_local;i++){
+    if(lb && lb_a[i] > x_a[i] +100*PETSC_MACHINE_EPSILON) {
+      //printf("la %.15f %.15f %.15f\n",(double)lb_a[i],(double)x_a[i],(double)d_a[i]);
+      alpha_i = lb_a[i] - x_a[i];
+      //printf("lalpha_i %.15f\n",(double)alpha_i);
+      alpha_i = alpha_i/d_a[i];
+      //printf("lalpha_i %.15f\n",(double)alpha_i);
+      if (alpha_i > alpha_temp){
+          alpha_temp = alpha_i;
+      }
+    }
+
+    if(ub && ub_a[i] < x_a[i]) {
+      alpha_i = ub_a[i] - x_a[i];
+      printf("ualpha_i %.15f\n",alpha_i);
+      alpha_i = alpha_i/d_a[i];
+      printf("ualpha_i %.15f\n",alpha_i);
+      if (alpha_i > alpha_temp){
           alpha_temp = alpha_i;
       }
     }
@@ -474,6 +532,7 @@ FLLOP_EXTERN PetscErrorCode QPCCreate_Box(QPC qpc)
   qpc->ops->islinear                    = QPCIsLinear_Box;
   qpc->ops->issubsymmetric              = QPCIsSubsymmetric_Box;
   qpc->ops->feas                        = QPCFeas_Box;
+  qpc->ops->infeas                      = QPCInfeas_Box;
   qpc->ops->grads                       = QPCGrads_Box;
   qpc->ops->gradreduced                 = QPCGradReduced_Box;
 

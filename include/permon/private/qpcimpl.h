@@ -20,6 +20,7 @@ struct _QPCOps {
   PetscErrorCode (*restoreconstraintfunction)(QPC,Vec,Vec *);
   PetscErrorCode (*project)(QPC,Vec,Vec);
   PetscErrorCode (*feas)(QPC,Vec,Vec,PetscScalar*);
+  PetscErrorCode (*infeas)(QPC,Vec,Vec,PetscScalar*);
   PetscErrorCode (*grads)(QPC,Vec,Vec,Vec,Vec);
   PetscErrorCode (*gradreduced)(QPC,Vec,Vec,PetscReal,Vec);
 };

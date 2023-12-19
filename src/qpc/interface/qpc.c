@@ -26,7 +26,7 @@ PetscErrorCode QPCCreate(MPI_Comm comm,QPC *qpc_new)
   qpc->lambdawork   = NULL;
   qpc->is           = NULL;
   /* TODO QPCSetFromOptions */
-  qpc->astol        = 10*PETSC_MACHINE_EPSILON;
+  qpc->astol        = 100*PETSC_MACHINE_EPSILON;
   qpc->setupcalled  = PETSC_FALSE; /* the setup was not called yet */
 
   *qpc_new = qpc;
@@ -530,6 +530,42 @@ PetscErrorCode QPCFeas(QPC qpc, Vec x, Vec d, PetscScalar *alpha)
 }
 
 #undef __FUNCT__
+#define __FUNCT__ "QPCInfeas"
+/*@
+QPCInfeas - TODO compute maximum step-size
+
+Parameters:
++ qpc - QPC instance
+. d - minus value of direction
+- alpha - pointer to return value
+@*/
+PetscErrorCode QPCInfeas(QPC qpc, Vec x, Vec d, PetscScalar *alpha)
+{
+  Vec x_sub, d_sub;
+  PetscScalar alpha_temp;
+
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
+  PetscValidHeaderSpecific(x,VEC_CLASSID,2);
+  PetscValidHeaderSpecific(d,VEC_CLASSID,3);
+  PetscAssertPointer(alpha,4);
+  if (!qpc->ops->infeas) SETERRQ(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
+
+  /* scatter the gradients */
+  PetscCall(QPCGetSubvector( qpc, x, &x_sub));
+  PetscCall(QPCGetSubvector( qpc, d, &d_sub));
+
+  /* compute largest step-size for the given QPC type */
+  PetscUseTypeMethod(qpc, infeas, x_sub, d_sub, &alpha_temp);
+  PetscCallMPI(MPI_Allreduce(&alpha_temp, alpha, 1, MPIU_SCALAR, MPIU_MAX, PetscObjectComm((PetscObject)qpc)));
+
+  /* restore the gradients */
+  PetscCall(QPCRestoreSubvector( qpc, x, &x_sub));
+  PetscCall(QPCRestoreSubvector( qpc, d, &d_sub));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ "QPCGrads"
 /*@
 QPCGrads - compute free and chopped gradient
@@ -575,11 +611,11 @@ PetscErrorCode QPCGrads(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
 #define __FUNCT__ "QPCGradReduced"
 /*@
   QPCGradReduced - compute reduced free gradient
-  
+
   Given the step size alpha, the reduce free gradient is defined component wise such that
   x + alpha*gr is a step in the direction of gf if it doesn't violate constraint, otherwise it is gf component shortened
   so that the component of x + alpha*gr will be in active set. E.g., with only lower bound constraint gr=min(gf,(x-lb)/alpha).
-  
+
   Input Parameters:
   + qpc   - QPC instance
   . x     - solution vector
