@@ -17,3 +17,7 @@ typedef enum {
 PERMON_EXTERN const char    *PCDualTypes[];
 PERMON_EXTERN PetscErrorCode PCDualSetType(PC pc, PCDualType type);
 PERMON_EXTERN PetscErrorCode PCDualGetType(PC pc, PCDualType *type);
+
+/* PCFREESET type-specific functions */
+FLLOP_EXTERN PetscErrorCode PCFreeSetSetIS(PC pc,IS is);
+FLLOP_EXTERN PetscErrorCode PCFreeSetGetIS(PC pc,IS *is);

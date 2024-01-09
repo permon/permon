@@ -2,7 +2,7 @@
 ALL: lib
 
 LIBBASE  = libpermon
-DIRS     = dual
+DIRS     = dual freeset
 LOCDIR   = src/pc/impls/
 MANSEC   = PC
 
