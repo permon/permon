@@ -6,4 +6,6 @@
 
 FLLOP_EXTERN PetscLogEvent PC_Dual_Apply, PC_Dual_MatMultSchur;
 
+FLLOP_EXTERN PetscLogEvent PC_FreeSet_Apply;
+
 #endif

@@ -523,6 +523,21 @@ PetscErrorCode QPSIsQPCompatible(QPS qps,QP qp,PetscBool *flg)
 }
 
 #undef __FUNCT__
+#define __FUNCT__ "QPS_PCApply"
+/*
+   QPS_PCApply - private function for QPS to apply PC
+
+*/
+PetscErrorCode QPS_PCApply(QPS qps,Vec x,Vec y)
+{
+  PC pc;
+
+  PetscFunctionBegin;
+  PetscCall(QPSGetPC(qps,&pc));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ "QPSSolve"
 /*@
    QPSSolve - solve the QP using QPS; initiate the solver
