@@ -14,7 +14,8 @@ const char *const QPSMPGPExpansionLengthTypes[] = {"fixed","opt","optapprox","bb
   g  = qps->work[3];
   p  = qps->work[4];
   Ap = qps->work[5];
-  gr = qps->work[6];
+  z  = qps->work[6]
+  gr = qps->work[7];
 */
 
 #undef __FUNCT__
@@ -215,7 +216,7 @@ static PetscErrorCode MPGPGrads(QPS qps, Vec x, Vec g)
   PetscCall(QPGetQPC(qp,&qpc));
 
   gP                = qps->work[0];
-  gr                = qps->work[6];
+  gr                = qps->work[7];
   gf                = qps->work[1];
   gc                = qps->work[2];
 
@@ -367,14 +368,14 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
   /* set the number of working vectors */
   if (mpgp->fallback || mpgp->fallback2) {
     if (mpgp->explengthtype != QPS_MPGP_EXPANSION_LENGTH_BB) {
-      PetscCall(QPSSetWorkVecs(qps,9));
-    } else {
       PetscCall(QPSSetWorkVecs(qps,10));
+    } else {
+      PetscCall(QPSSetWorkVecs(qps,11));
     }
   } else if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
-      PetscCall(QPSSetWorkVecs(qps,9));
+      PetscCall(QPSSetWorkVecs(qps,10));
   } else {
-    PetscCall(QPSSetWorkVecs(qps,7));
+    PetscCall(QPSSetWorkVecs(qps,8));
   }
 
   PetscCall(QPGetBox(qps->solQP,NULL,&lb,&ub));
@@ -385,8 +386,8 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
 
   switch (mpgp->exptype) {
     case QPS_MPGP_EXPANSION_STD:
-      mpgp->expdirection = qps->work[6];     /* gr */
-      mpgp->explengthvec = qps->work[6];
+      mpgp->expdirection = qps->work[7];     /* gr */
+      mpgp->explengthvec = qps->work[7];
       if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_FIXED) {
         mpgp->expproject   = PETSC_FALSE;
       }
@@ -401,11 +402,11 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
       break;
     case QPS_MPGP_EXPANSION_GFGR:
       mpgp->expdirection = qps->work[1];     /* gf */
-      mpgp->explengthvec = qps->work[6];
+      mpgp->explengthvec = qps->work[7];
       break;
     case QPS_MPGP_EXPANSION_GGR:
       mpgp->expdirection = qps->work[3];     /* g  */
-      mpgp->explengthvec = qps->work[6];
+      mpgp->explengthvec = qps->work[7];
       break;
     case QPS_MPGP_EXPANSION_PROJCG:
       mpgp->expansion = MPGPExpansion_ProjCG;
@@ -454,6 +455,7 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   Vec               gc;                 /* ... chopped gradient                 */
   Vec               gf;                 /* ... free gradient                    */
   Vec               g;                  /* ... gradient                         */
+  Vec               z;                  /* ... preconditioned (free) gradient   */
   Vec               p;                  /* ... conjugate gradient               */
   Vec               Ap;                 /* ... multiplicated vector             */
   Vec               gold;               /* ... old gradient for fallback        */
@@ -482,16 +484,17 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   g                 = qps->work[3];
   p                 = qps->work[4];
   Ap                = qps->work[5];
+  z                 = qps->work[6];
 
   if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
-    mpgp->explengthvecold = qps->work[7];
-    mpgp->xold            = qps->work[8];
+    mpgp->explengthvecold = qps->work[8];
+    mpgp->xold            = qps->work[9];
     if (mpgp->fallback || mpgp->fallback2) {
-      gold                = qps->work[9];
+      gold                = qps->work[10];
     }
   } else if (mpgp->fallback || mpgp->fallback2) {
-      mpgp->xold            = qps->work[7];
-      gold                  = qps->work[8];
+      mpgp->xold            = qps->work[8];
+      gold                  = qps->work[9];
   }
 
   /* set constants of algorithm */
@@ -507,13 +510,14 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
 
   /* compute gradient */
   PetscCall(MatMult(A, x, g));                        /* g=A*x */
-  nmv++;                                          /* matrix multiplication counter */
+  nmv++;                                              /* matrix multiplication counter */
   PetscCall(VecAXPY(g, -1.0, b));                     /* g=g-b */
 
   PetscCall(MPGPGrads(qps, x, g));                    /* grad. splitting  gP,gf,gc */
 
   /* initiate CG method */
-  PetscCall(VecCopy(gf, p));                          /* p=gf */
+  PetscCall(QPS_PCApply(qps, gf, z));                 /* apply preconditioner */
+  PetscCall(VecCopy(z, p));                           /* p=zf */
 
   mpgp->currentStepType = ' ';
   qps->iteration = 0;                             /* main iteration counter */
@@ -541,16 +545,16 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
     if (qps->reason != KSP_CONVERGED_ITERATING) break;
 
     /* proportional condition */
-    if (gcTgc <= gamma2*gfTgf)                    /* u is proportional */
+    if (gcTgc <= gamma2*gfTgf)                    /* x is proportional */
     {
-      PetscCall(MatMult(A, p, Ap));                   /* Ap=A*p */
+      PetscCall(MatMult(A, p, Ap));               /* Ap=A*p */
       nmv++;                                      /* matrix multiplication counter */
 
       /* compute step-sizes */
-      PetscCall(VecDot(p, Ap, &pAp));                 /* pAp=p'*Ap      */
-      PetscCall(VecDot(g,  p, &acg));                 /* acg=g'*p       */
+      PetscCall(VecDot(p, Ap, &pAp));             /* pAp=p'*Ap      */
+      PetscCall(VecDot(z,  p, &acg));             /* acg=z'*p       */
       acg  = acg/pAp;                             /* acg=acg/pAp    */
-      PetscCall(QPCFeas(qpc, x, p, &afeas));          /* finds max.feas.steplength */
+      PetscCall(QPCFeas(qpc, x, p, &afeas));      /* finds max.feas.steplength */
 
       /* decide if it is able to do full CG step */
       if (acg <= afeas)
@@ -560,14 +564,15 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
         mpgp->currentStepType = 'c';
 
         /* make CG step */
-        PetscCall(VecAXPY(x, -acg, p));               /* x=x-acg*p      */
-        PetscCall(VecAXPY(g, -acg, Ap));              /* g=g-acg*Ap      */
-        PetscCall(MPGPGrads(qps, x, g));              /* grad. splitting  gP,gf,gc */
+        PetscCall(VecAXPY(x, -acg, p));           /* x=x-acg*p      */
+        PetscCall(VecAXPY(g, -acg, Ap));          /* g=g-acg*Ap      */
+        PetscCall(MPGPGrads(qps, x, g));          /* grad. splitting  gP,gf,gc */
+        PetscCall(QPS_PCApply(qps, gf, z));       /* apply preconditioner */
 
         /* compute orthogonalization parameter and next orthogonal vector */
-        PetscCall(VecDot(Ap, gf, &bcg));              /* bcg=Ap'*gf     */
+        PetscCall(VecDot(Ap, z, &bcg));           /* bcg=Ap'*zf     */
         bcg  = bcg/pAp;                           /* bcg=bcg/pAp     */
-        PetscCall(VecAYPX(p, -bcg, gf));              /* p=gf-bcg*p     */
+        PetscCall(VecAYPX(p, -bcg, z));           /* p=z-bcg*p     */
       }
       else                                        /* expansion step  */
       {
@@ -631,7 +636,8 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
 
         PetscCall(MPGPGrads(qps, x, g));              /* grad. splitting  gP,gf,gc */
         /* restart CG method */
-        PetscCall(VecCopy(gf, p));                    /* p=gf           */
+        PetscCall(QPS_PCApply(qps, gf, z));           /* apply preconditioner */
+        PetscCall(VecCopy(z, p));                     /* p=zf */
       }
     }
     else                                          /* proportioning step  */
@@ -655,7 +661,8 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
       PetscCall(MPGPGrads(qps, x, g));                /* grad. splitting  gP,gf,gc */
 
       /* restart CG method */
-      PetscCall(VecCopy(gf, p));                      /* p=gf           */
+      PetscCall(QPS_PCApply(qps, gf, z));             /* apply preconditioner */
+      PetscCall(VecCopy(z, p));                       /* p=zf */
     }
     qps->iteration++;
   };
