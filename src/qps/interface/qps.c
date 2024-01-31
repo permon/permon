@@ -70,19 +70,20 @@ PetscErrorCode QPSCreate(MPI_Comm comm,QPS *qps_new)
 
   PetscCall(PetscHeaderCreate(qps,QPS_CLASSID,"QPS","Quadratic Programming Solver","QPS",comm,QPSDestroy,QPSView));
 
-  qps->rtol        = 1e-5;
-  qps->atol        = 1e-50;
-  qps->divtol      = 1e4;
-  qps->max_it      = 10000;
-  qps->autoPostSolve = PETSC_TRUE;
-  qps->topQP       = NULL;
-  qps->solQP       = NULL;
-  qps->setupcalled = PETSC_FALSE;
-  qps->postsolvecalled = PETSC_FALSE;
-  qps->user_type   = PETSC_FALSE;
-  qps->iteration   = 0;
+  qps->topQP                  = NULL;
+  qps->solQP                  = NULL;
+  qps->rtol                   = 1e-5;
+  qps->atol                   = 1e-50;
+  qps->divtol                 = 1e4;
+  qps->max_it                 = 10000;
+  qps->iteration              = 0;
   qps->iterations_accumulated = 0;
-  qps->nsolves     = 0;
+  qps->nsolves                = 0;
+  qps->setupcalled            = PETSC_FALSE;
+  qps->pcOperatorSet          = PETSC_TRUE;
+  qps->autoPostSolve          = PETSC_TRUE;
+  qps->postsolvecalled        = PETSC_FALSE;
+  qps->user_type              = PETSC_FALSE;
 
   /* monitor */
   qps->res_hist       = NULL;
@@ -198,6 +199,7 @@ PetscErrorCode QPSSetQP(QPS qps,QP qp)
 PetscErrorCode QPSSetUp(QPS qps)
 {
   QP  solqp;
+  PC  pc;
   PetscBool flg;
 
   FllopTracedFunctionBegin;
@@ -216,6 +218,17 @@ PetscErrorCode QPSSetUp(QPS qps)
 
   PetscTryTypeMethod(qps,setup);
   PetscCall(QPChainSetUp(solqp));
+
+  PetscCall(QPSGetPC(qps,&pc));
+  if (!qps->pcOperatorSet) {
+    Mat A;
+    PetscCall(QPGetOperator(solqp,&A));
+    PetscCall(PCSetOperators(pc,A,A));
+    qps->pcOperatorSet = PETSC_TRUE;
+  }
+  PetscCall(PCSetUp(pc));
+  /* TODO handle failed PC */
+
   qps->setupcalled = PETSC_TRUE;
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
@@ -301,6 +314,7 @@ PetscErrorCode QPSView(QPS qps,PetscViewer v)
     PetscCall(QPSGetType(qps, &type));
     PetscCall(PetscInfo(qps,"Warning: QPSView not implemented yet for type %s\n",type));
   }
+  if (qps->pc) PetscCall(PCView(qps->pc,v));
   PetscCall(PetscViewerASCIIPopTab(v));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -523,19 +537,71 @@ PetscErrorCode QPSIsQPCompatible(QPS qps,QP qp,PetscBool *flg)
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "QPS_PCApply"
-/*
-   QPS_PCApply - private function for QPS to apply PC
+#define __FUNCT__ "QPSSetPC"
+/*@
+   QPSSetPC - Sets preconditioner context.
 
-*/
-PetscErrorCode QPS_PCApply(QPS qps,Vec x,Vec y)
+   Collective on QPS
+
+   Input Parameters:
++  qps - the QPS
+-  pc - the preconditioner context
+
+   Level: advanced
+@*/
+PetscErrorCode QPSSetPC(QPS qps, PC pc)
 {
-  PC pc;
-
   PetscFunctionBegin;
-  PetscCall(QPSGetPC(qps,&pc));
+  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
+  PetscValidHeaderSpecific(pc,PC_CLASSID,2);
+  PetscCheckSameComm(qps,1,pc,2);
+  if (pc == qps->pc) PetscFunctionReturn(PETSC_SUCCESS);
+  PetscCall(PCDestroy(&qps->pc));
+  qps->pc = pc;
+  PetscCall(PetscObjectReference((PetscObject)pc));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
+
+#undef __FUNCT__
+#define __FUNCT__ "QPSGetPC"
+/*@
+   QPSGetPC - Get preconditioner context.
+
+   Not Collective
+
+   Input Parameter:
+.  qps - the QPS
+
+   Output Parameter:
+.  pc - the preconditioner context
+
+   Level: advanced
+@*/
+PetscErrorCode QPSGetPC(QPS qps,PC *pc)
+{
+  QP  qp;
+
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
+  PetscAssertPointer(pc,2);
+  if (!qps->pc) {
+    PetscCall(PCCreate(PetscObjectComm((PetscObject)qps),&qps->pc));
+    PetscCall(PetscObjectIncrementTabLevel((PetscObject)qps->pc,(PetscObject)qps,0));
+    PetscCall(PCSetType(qps->pc,PCNONE));
+
+    PetscCall(QPSGetSolvedQP(qps, &qp));
+    if (qp) {
+      Mat A;
+      PetscCall(QPGetOperator(qp,&A));
+      PetscCall(PCSetOperators(qps->pc,A,A));
+    } else {
+      qps->pcOperatorSet = PETSC_FALSE;
+    }
+  }
+  *pc = qps->pc;
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSSolve"
@@ -850,6 +916,8 @@ PetscErrorCode QPSSetOptionsPrefix(QPS qps,const char prefix[])
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
+  if (!qps->pc) PetscCall(QPSGetPC(qps, &qps->pc));
+  PetscCall(PCSetOptionsPrefix(qps->pc, prefix));
   PetscCall(PetscObjectSetOptionsPrefix((PetscObject)qps,prefix));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -860,6 +928,8 @@ PetscErrorCode QPSAppendOptionsPrefix(QPS qps,const char prefix[])
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
+  if (!qps->pc) PetscCall(QPSGetPC(qps, &qps->pc));
+  PetscCall(PCAppendOptionsPrefix(qps->pc, prefix));
   PetscCall(PetscObjectAppendOptionsPrefix((PetscObject)qps,prefix));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -885,6 +955,9 @@ PetscErrorCode QPSSetFromOptions(QPS qps)
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
+  if (!qps->pc) PetscCall(QPSGetPC(qps, &qps->pc));
+  PetscCall(PCSetFromOptions(qps->pc));
+
   PetscObjectOptionsBegin((PetscObject)qps);
   PetscCall(PetscOptionsFList("-qps_type","QP solution method","QPSSetType",QPSList,(char*)(((PetscObject)qps)->type_name),type,256,&flg));
   if (flg) PetscCall(QPSSetType(qps,type));

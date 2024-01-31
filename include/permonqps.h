@@ -2,7 +2,7 @@
 #define	__FLLOPQPS_H
 #include <petsctao.h>
 #include "permonqp.h"
-        
+
 typedef struct _p_QPS* QPS;
 
 FLLOP_EXTERN PetscClassId QPS_CLASSID;
@@ -37,6 +37,9 @@ FLLOP_EXTERN PetscErrorCode QPSResetStatistics(QPS qps);
 FLLOP_EXTERN PetscErrorCode QPSSolve(QPS qps);
 FLLOP_EXTERN PetscErrorCode QPSPostSolve(QPS qps);
 FLLOP_EXTERN PetscErrorCode QPSIsQPCompatible(QPS qps,QP qp,PetscBool *flg);
+
+FLLOP_EXTERN PetscErrorCode QPSSetPC(QPS qps,PC pc);
+FLLOP_EXTERN PetscErrorCode QPSGetPC(QPS qps,PC *pc);
 
 FLLOP_EXTERN PetscErrorCode QPSSetDefaultType(QPS qps);
 FLLOP_EXTERN PetscErrorCode QPSSetDefaultTypeIfNotSpecified(QPS qps);
