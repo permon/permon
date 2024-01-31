@@ -401,6 +401,8 @@ PetscErrorCode QPTEnforceEqByPenalty(QP qp, PetscReal rho_user, PetscBool rho_di
     PetscCall(VecAYPX(newb, rho, qp->b));
     PetscCall(QPSetRhs(child, newb));
   }
+  PetscCall(QPSetIneqMultiplier(       child,qp->lambda_I));
+  PetscCall(QPSetWorkVector(child,qp->xwork));
 
   PetscCall(QPSetIneqMultiplier(child, qp->lambda_I));
   PetscCall(QPSetWorkVector(child, qp->xwork));

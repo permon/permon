@@ -28,6 +28,7 @@ struct _p_QPS {
 
   /* properties */
   QP        topQP, solQP;
+  PC        pc;
   PetscReal rtol;
   PetscReal atol;
   PetscReal divtol;
@@ -55,6 +56,7 @@ struct _p_QPS {
   PetscInt           iterations_accumulated;
   PetscInt           nsolves;
   PetscBool          setupcalled;
+  PetscBool          pcOperatorSet;
   PetscBool          postsolvecalled;
   KSPConvergedReason reason;
 
@@ -81,3 +83,12 @@ PERMON_INTERN PetscErrorCode QPSWorkVecStateUpdate(QPS qps, PetscInt idx);
 PERMON_INTERN PetscErrorCode QPSWorkVecStateChanged(QPS qps, PetscInt idx, PetscBool *flg);
 PERMON_INTERN PetscErrorCode QPSSolutionVecStateUpdate(QPS qps);
 PERMON_INTERN PetscErrorCode QPSSolutionVecStateChanged(QPS qps, PetscBool *flg);
+
+#undef __FUNCT__
+#define __FUNCT__ "QPS_PCApply"
+static inline PetscErrorCode QPS_PCApply(QPS qps, Vec x, Vec y)
+{
+  PetscFunctionBegin;
+  PetscCall(PCApply(qps->pc, x, y));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}

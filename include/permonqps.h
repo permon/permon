@@ -41,6 +41,9 @@ PERMON_EXTERN PetscErrorCode QPSSolve(QPS qps);
 PERMON_EXTERN PetscErrorCode QPSPostSolve(QPS qps);
 PERMON_EXTERN PetscErrorCode QPSIsQPCompatible(QPS qps, QP qp, PetscBool *flg);
 
+PERMON_EXTERN PetscErrorCode QPSSetPC(QPS qps,PC pc);
+PERMON_EXTERN PetscErrorCode QPSGetPC(QPS qps,PC *pc);
+
 PERMON_EXTERN PetscErrorCode QPSSetDefaultType(QPS qps);
 PERMON_EXTERN PetscErrorCode QPSSetDefaultTypeIfNotSpecified(QPS qps);
 PERMON_EXTERN PetscErrorCode QPSSetType(QPS qps, const QPSType type);
