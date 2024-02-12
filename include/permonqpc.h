@@ -27,10 +27,13 @@ PERMON_EXTERN PetscErrorCode QPCSetUp(QPC qpc);
 PERMON_EXTERN PetscErrorCode QPCReset(QPC qpc);
 
 PERMON_EXTERN PetscErrorCode QPCSetType(QPC qpc, const QPCType type);
-PERMON_EXTERN PetscErrorCode QPCSetIS(QPC, IS is);
-
 PERMON_EXTERN PetscErrorCode QPCGetType(QPC qpc, const QPCType *type);
-PERMON_EXTERN PetscErrorCode QPCGetIS(QPC, IS *is);
+
+PERMON_EXTERN PetscErrorCode QPCSetIS(QPC qpc, IS is);
+PERMON_EXTERN PetscErrorCode QPCGetIS(QPC qpc, IS *is);
+
+PERMON_EXTERN PetscErrorCode QPCGetActiveSet(QPC qpc, PetscBool global, IS *is);
+PERMON_EXTERN PetscErrorCode QPCGetFreeSet(QPC qpc, PetscBool global, Vec x, IS *is);
 
 PERMON_EXTERN PetscErrorCode QPCGetSubvector(QPC, Vec x, Vec *xc);
 PERMON_EXTERN PetscErrorCode QPCRestoreSubvector(QPC, Vec x, Vec *xc);

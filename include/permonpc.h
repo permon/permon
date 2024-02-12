@@ -5,6 +5,7 @@
 
 /* subclasses */
 #define PCDUAL "dual"
+#define PCFREESET "freeset"
 
 PERMON_EXTERN PetscErrorCode PermonPCRegisterAll();
 PERMON_EXTERN PetscBool      PermonPCRegisterAllCalled;

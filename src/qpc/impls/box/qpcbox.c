@@ -17,6 +17,15 @@ PetscErrorCode QPCSetUp_Box(QPC qpc)
 }
 
 #undef __FUNCT__
+#define __FUNCT__ "QPCGetActiveSet_Box"
+PetscErrorCode QPCGetActiveSet_Box(QPC qpc,IS *is)
+{
+  PetscFunctionBegin;
+  *is = qpc->activeset;
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ "QPCGrads_Box"
 static PetscErrorCode QPCGrads_Box(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
 {
@@ -25,6 +34,7 @@ static PetscErrorCode QPCGrads_Box(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
 
   PetscScalar *x_a, *lb_a, *ub_a, *g_a, *gf_a, *gc_a;
   PetscInt     n_local, i;
+  IS           is1=NULL, is2=NULL;
 
   PetscFunctionBegin;
   lb = ctx->lb;
@@ -52,6 +62,20 @@ static PetscErrorCode QPCGrads_Box(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
       /* index of this component is in FREE SET */
       gf_a[i] = g_a[i];
     }
+  }
+
+  /* TODO fix */
+  PetscCall(ISDestroy(&qpc->activeset));
+  if (lb) PetscCall(VecWhichEqual(x,lb,&is1));
+  if (ub) PetscCall(VecWhichEqual(x,ub,&is2));
+  if (lb && ub) {
+    PetscCall(ISSum(is1,is2,&qpc->activeset));
+    PetscCall(ISDestroy(&is1));
+    PetscCall(ISDestroy(&is2));
+  } else if (lb) {
+    qpc->activeset = is1;
+  } else {
+    qpc->activeset = is2;
   }
 
   PetscCall(VecRestoreArray(x, &x_a));
@@ -470,6 +494,7 @@ PERMON_EXTERN PetscErrorCode QPCCreate_Box(QPC qpc)
   qpc->ops->feas                   = QPCFeas_Box;
   qpc->ops->grads                  = QPCGrads_Box;
   qpc->ops->gradreduced            = QPCGradReduced_Box;
+  qpc->ops->getactiveset           = QPCGetActiveSet_Box;
 
   /* set type-specific functions */
   PetscCall(PetscObjectComposeFunction((PetscObject)qpc, "QPCBoxSet_Box_C", QPCBoxSet_Box));
