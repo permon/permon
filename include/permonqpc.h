@@ -27,10 +27,13 @@ FLLOP_EXTERN PetscErrorCode QPCSetUp(QPC qpc);
 FLLOP_EXTERN PetscErrorCode QPCReset(QPC qpc);
 
 FLLOP_EXTERN PetscErrorCode QPCSetType(QPC qpc,const QPCType type);
-FLLOP_EXTERN PetscErrorCode QPCSetIS(QPC,IS is);
-
 FLLOP_EXTERN PetscErrorCode QPCGetType(QPC qpc,const QPCType *type);
-FLLOP_EXTERN PetscErrorCode QPCGetIS(QPC,IS *is);
+
+FLLOP_EXTERN PetscErrorCode QPCSetIS(QPC qpc,IS is);
+FLLOP_EXTERN PetscErrorCode QPCGetIS(QPC qpc,IS *is);
+
+FLLOP_EXTERN PetscErrorCode QPCGetActiveSet(QPC qpc,PetscBool global,IS *is);
+FLLOP_EXTERN PetscErrorCode QPCGetFreeSet(QPC qpc,PetscBool global,Vec x,IS *is);
 
 FLLOP_EXTERN PetscErrorCode QPCGetSubvector(QPC,Vec x,Vec *xc);
 FLLOP_EXTERN PetscErrorCode QPCRestoreSubvector(QPC,Vec x,Vec *xc);

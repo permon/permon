@@ -579,13 +579,17 @@ PetscErrorCode QPSSetPC(QPS qps, PC pc)
 @*/
 PetscErrorCode QPSGetPC(QPS qps,PC *pc)
 {
-  QP  qp;
+  QP         qp;
+  const char *prefix;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscAssertPointer(pc,2);
   if (!qps->pc) {
     PetscCall(PCCreate(PetscObjectComm((PetscObject)qps),&qps->pc));
+    PetscCall(QPSGetOptionsPrefix(qps,&prefix));
+    PetscCall(PCSetOptionsPrefix(qps->pc,prefix));
+    PetscCall(PCAppendOptionsPrefix(qps->pc,"qps_"));
     PetscCall(PetscObjectIncrementTabLevel((PetscObject)qps->pc,(PetscObject)qps,0));
     PetscCall(PCSetType(qps->pc,PCNONE));
 

@@ -303,7 +303,6 @@ PetscErrorCode QPTEnforceEqByProjector(QP qp)
     PC pc_parent,pc_child;
 
     PetscCall(QPGetPC(qp,&pc_parent));
-    PCView(pc_parent,NULL);
     PetscCall(PCCreate_QPTEnforceEqByProjector(pc_parent,P,pc_symmetric,&pc_child));
     PetscCall(QPSetPC(child,pc_child));
     PetscCall(PCDestroy(&pc_child));

@@ -25,6 +25,10 @@ PetscErrorCode QPCCreate(MPI_Comm comm,QPC *qpc_new)
 
   qpc->lambdawork   = NULL;
   qpc->is           = NULL;
+  qpc->activeset    = NULL;
+  qpc->activesetglobal = NULL;
+  qpc->freeset      = NULL;
+  qpc->setchanged   = PETSC_TRUE;
   /* TODO QPCSetFromOptions */
   qpc->astol        = 10*PETSC_MACHINE_EPSILON;
   qpc->setupcalled  = PETSC_FALSE; /* the setup was not called yet */
@@ -263,6 +267,94 @@ PetscErrorCode QPCGetIS(QPC qpc,IS *is)
   PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
   PetscAssertPointer(is,2);
   *is = qpc->is;
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "QPCGetActiveSet"
+/*@
+  QPCGetActiveSet - get set of free variables
+
+  Collective
+
+  Input Parameters:
++ qpc    - QPC instance
+- global - whether indices are with respect to the global vector or to the QPC IS
+
+  Output Parameter:
+. is - free set index set
+
+  Level: intermediate
+
+  Note:
+  Active variables are those where the constraint function g(x) <= 0 or h(x) = 0
+  does attain equality, i.e., g(x) = 0 or h(x) = 0.
+
+.seealso `QPC`, `QPCGetFreeSet`, `QPCSetIS`, `QPCGetSubVector`
+@*/
+PetscErrorCode QPCGetActiveSet(QPC qpc,PetscBool global,IS *is)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
+  PetscAssertPointer(is,3);
+  if (qpc->setchanged) {
+    //PetscCall(ISDestroy(&qpc->activeset));
+    PetscUseTypeMethod(qpc,getactiveset,&qpc->activeset);
+    //if (!qpc->is) {
+    //  PetscCall(ISDestroy(&qpc->activesetglobal));
+    //  qpc->activesetglobal = qpc->activeset;
+    //  PetscCall(PetscObjectReference((PetscObject)qpc->activeset));
+    //}
+  }
+  //if (global) {
+  //  if (qpc->is && qpc->) {
+  //    PetscCall(ISCreateSubIS(qpc->is,qpc->activeset,&qpc->activesetglobal));
+
+  *is = qpc->activeset;
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "QPCGetFreeSet"
+/*@
+  QPCGetFreeSet - get set of free variables
+
+  Collective
+
+  Input Parameters:
++ qpc      - QPC instance
+- global   - whether indices are with respect to the global vector or to the QPC IS
+
+  Output Parameter:
+. is - free set index set
+
+  Level: intermediate
+
+  Note:
+  When `global` is true, then `QPC` `IS` must not be set or the global `IS` must be set
+  using `QPCSetGlobalIS`.
+
+  Free variables are those where the constraint function g(x) <= 0 or h(x) = 0
+  does not attain equality, i.e., g(x) < 0 or h(x) != 0.
+
+.seealso `QPC`, `QPCGetActiveSet`, `QPCSetIS`, `QPCGetSubVector`
+@*/
+PetscErrorCode QPCGetFreeSet(QPC qpc,PetscBool global,Vec x,IS *is)
+{
+  PetscInt nmin,nmax;
+
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
+  PetscAssertPointer(is,2);
+  if (!x) x = qpc->lambdawork;
+  if (qpc->setchanged) {
+    PetscCall(QPCGetActiveSet(qpc,global,is));
+    //PetscCall(ISDestroy(is));
+    PetscCall(ISDestroy(&qpc->freeset));
+    PetscCall(VecGetOwnershipRange(x,&nmin,&nmax));
+    PetscCall(ISComplement(qpc->activeset,nmin,nmax,&qpc->freeset));
+  }
+  *is = qpc->freeset;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -575,11 +667,11 @@ PetscErrorCode QPCGrads(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
 #define __FUNCT__ "QPCGradReduced"
 /*@
   QPCGradReduced - compute reduced free gradient
-  
+
   Given the step size alpha, the reduce free gradient is defined component wise such that
   x + alpha*gr is a step in the direction of gf if it doesn't violate constraint, otherwise it is gf component shortened
   so that the component of x + alpha*gr will be in active set. E.g., with only lower bound constraint gr=min(gf,(x-lb)/alpha).
-  
+
   Input Parameters:
   + qpc   - QPC instance
   . x     - solution vector

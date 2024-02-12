@@ -5,6 +5,7 @@
 
 /* subclasses */
 #define PCDUAL "dual"
+#define PCFREESET "freeset"
 
 FLLOP_EXTERN PetscErrorCode FllopPCRegisterAll();
 FLLOP_EXTERN PetscBool FllopPCRegisterAllCalled;
