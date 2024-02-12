@@ -552,7 +552,7 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
 
       /* compute step-sizes */
       PetscCall(VecDot(p, Ap, &pAp));             /* pAp=p'*Ap      */
-      PetscCall(VecDot(z,  p, &acg));             /* acg=z'*p       */
+      PetscCall(VecDot(z,  g, &acg));             /* acg=z'*p       */
       acg  = acg/pAp;                             /* acg=acg/pAp    */
       PetscCall(QPCFeas(qpc, x, p, &afeas));      /* finds max.feas.steplength */
 

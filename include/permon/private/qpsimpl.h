@@ -86,10 +86,11 @@ FLLOP_INTERN PetscErrorCode QPSSolutionVecStateChanged(QPS qps,PetscBool *flg);
 
 #undef __FUNCT__
 #define __FUNCT__ "QPS_PCApply"
-static inline PetscErrorCode QPS_PCApply(QPS qps, Vec x, Vec y)
+static inline PetscErrorCode QPS_PCApply(QPS qps,Vec x,Vec y)
 {
   PetscFunctionBegin;
-  PetscCall(PCApply(qps->pc, x, y));
+  PetscTryMethod((PetscObject)qps->pc,"PCUpdateFromQPS_C",(PC,QPS),(qps->pc,qps));
+  PetscCall(PCApply(qps->pc,x,y));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
