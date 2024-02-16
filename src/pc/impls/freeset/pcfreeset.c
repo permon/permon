@@ -33,6 +33,22 @@ static PetscErrorCode PCFreeSetSetIS_FreeSet(PC pc,IS is)
 
 #undef __FUNCT__
 #define __FUNCT__ "PCFreeSetSetIS"
+/*@
+   PCFreeSetSetIS -  Set free/active set `IS` (see Notes)
+
+   Logically Collective
+
+   Input Parameters:
++  PC - instance of PC
+-  is - free/active set IS
+
+   Notes:
+   The `IS` corresponds either to free set (basic variant) or active set (cheap variant).
+
+   Level: advanced
+
+.seealso `PCFREESET`, `PCFreeSetGetIS()`, `PCFreeSetSetType()`, `PCFreeSetGetType()`
+@*/
 PetscErrorCode PCFreeSetSetType(PC pc,IS is)
 {
   PetscFunctionBegin;
@@ -55,6 +71,24 @@ static PetscErrorCode PCFreeSetGetIS_FreeSet(PC pc,IS *is)
 
 #undef __FUNCT__
 #define __FUNCT__ "PCFreeSetGetIS"
+/*@
+   PCFreeSetGetIS -  Get free/active set (see Notes)
+
+   Not Collective
+
+   Input Parameter:
+.  PC - instance of PC
+
+   Output Parameter:
+.  is - free/active set IS
+
+   Notes:
+   The `IS` corresponds either to free set (basic variant) or active set (cheap variant).
+
+   Level: advanced
+
+.seealso `PCFREESET`, `PCFreeSetSetIS()`, `PCFreeSetSetType()`, `PCFreeSetGetType()`
+@*/
 PetscErrorCode PCFreeSetGetIS(PC pc,IS *is)
 {
   PetscFunctionBegin;
@@ -220,39 +254,35 @@ PetscErrorCode PCSetFromOptions_FreeSet(PC pc,PetscOptionItems *PetscOptionsObje
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-/*
-   PCCreate_FreeSet - Creates a FreeSet preconditioner context, PC_FreeSet,
-   and sets this as the private data within the generic preconditioning
-   context, PC, that was created within PCCreate().
-
-   Input Parameter:
-.  pc - the preconditioner context
-
-   Application Interface Routine: PCCreate()
-*/
-
 /*MC
-     PCJACOBI - FreeSet (i.e. diagonal scaling preconditioning)
+  PCFREESET - preconditioner on the free set
 
-   Options Database Keys:
-+    -pc_jacobi_type <diagonal,rowmax,rowsum> - approach for forming the preconditioner
-.    -pc_jacobi_abs - use the absolute value of the diagonal entry
--    -pc_jacobi_fixdiag - fix for zero diagonal terms by placing 1.0 in those locations
+  Options Database Keys:
++ -pc_freeset_type <basic,cheap> - approach for forming the preconditioner
+- -pc_freeset_inner_pc - options for the inner preconditioner
 
-   Level: beginner
+  Level: intermediate
 
   Notes:
-    By using `KSPSetPCSide`(ksp,`PC_SYMMETRIC`) or -ksp_pc_side symmetric
-    can scale each side of the matrix by the square root of the diagonal entries.
+  The basic variant corresponds to the preconditioning in face (given
+  by the free set). It computes inner preconditioner on pmat restricted
+  to the free set. The inner preconditioner has to be recomputed whenever
+  the free set changes.
 
-    Zero entries along the diagonal are replaced with the value 1.0
+  The cheap variant approximates the basic variant by applying the inner
+  preconditioner (computed once with the whole pmat) and zeroing out
+  the active set components.
 
-    See `PCPBJACOBI` for fixed-size point block, `PCVPBJACOBI` for variable-sized point block, and `PCBJACOBI` for large size blocks
+  The inner preconditioner can be controlled with
+  `PCFreeSetGetInnerPC()` or -pc_freeset_inner_.
+
+  Developer Notes:
+  This is typically applied to the free gradient.
+
 
 .seealso:  `PCCreate()`, `PCSetType()`, `PCType`, `PC`,
-           `PCFreeSetSetType()`, `PCFreeSetSetUseAbs()`, `PCFreeSetGetUseAbs()`, `PCASM`,
-           `PCFreeSetSetFixDiagonal()`, `PCFreeSetGetFixDiagonal()`
-           `PCFreeSetSetType()`, `PCFreeSetSetUseAbs()`, `PCFreeSetGetUseAbs()`, `PCPBJACOBI`, `PCBJACOBI`, `PCVPBJACOBI`
+           `PCFreeSetSetType()`, `PCFreeSetGetType`,
+           `PCFreeSetSetIS()`, `PCFreeSetGetIS()`
 M*/
 #undef __FUNCT__
 #define __FUNCT__ "PCCreate_FreeSet"
