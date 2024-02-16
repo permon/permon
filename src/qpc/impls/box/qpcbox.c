@@ -71,7 +71,7 @@ static PetscErrorCode QPCGrads_Box(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
   if (lb) PetscCall(VecWhichEqual(x,lb,&is1));
   if (ub) PetscCall(VecWhichEqual(x,ub,&is2));
   if (lb && ub) {
-    PetscCall(ISSum(is1,is2,&qpc->activeset));
+    PetscCall(ISExpand(is1,is2,&qpc->activeset));
     PetscCall(ISDestroy(&is1));
     PetscCall(ISDestroy(&is2));
   } else if (lb) {
