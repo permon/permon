@@ -17,6 +17,8 @@ FLLOP_EXTERN PetscErrorCode PCDualSetType(PC pc,PCDualType type);
 FLLOP_EXTERN PetscErrorCode PCDualGetType(PC pc,PCDualType *type);
 
 /* PCFREESET type-specific functions */
+typedef enum {PC_FREESET_BASIC=0, PC_FREESET_CHEAP=1} PCFreeSetType;
+FLLOP_EXTERN const char *PCFreeSetTypes[];
 FLLOP_EXTERN PetscErrorCode PCFreeSetSetIS(PC pc,IS is);
 FLLOP_EXTERN PetscErrorCode PCFreeSetGetIS(PC pc,IS *is);
 
