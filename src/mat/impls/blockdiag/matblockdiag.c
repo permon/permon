@@ -86,7 +86,7 @@ static PetscErrorCode MatConvert_BlockDiag_SeqAIJ(Mat A, MatType newtype, MatReu
   MPI_Comm comm;
   PetscMPIInt size;
   Mat A_loc, B;
-  
+
   PetscFunctionBegin;
   PetscCall(PetscObjectGetComm((PetscObject) A, &comm));
   PetscCallMPI(MPI_Comm_size(comm, &size));
@@ -114,7 +114,7 @@ static PetscErrorCode MatConvert_BlockDiag_MPIAIJ(Mat A, MatType newtype, MatReu
   Mat A_loc, B;
   char *loctype;
   Mat_MPIAIJ *mpidata;
-  
+
   PetscFunctionBegin;
   PetscCallMPI(MPI_Comm_size(PetscObjectComm((PetscObject)A), &size));
   PetscCall(MatGetDiagonalBlock(A, &A_loc));
@@ -150,13 +150,13 @@ static PetscErrorCode MatConvert_BlockDiag_MPIAIJ(Mat A, MatType newtype, MatReu
 static PetscErrorCode MatConvert_BlockDiag_AIJ(Mat A, MatType newtype, MatReuse reuse, Mat *newB)
 {
   PetscMPIInt size;
-  
+
   PetscFunctionBegin;
   PetscCallMPI(MPI_Comm_size(PetscObjectComm((PetscObject)A),&size));
   if (size == 1) {
-    PetscCall(MatConvert_BlockDiag_SeqAIJ(A,newtype,reuse,newB));    
+    PetscCall(MatConvert_BlockDiag_SeqAIJ(A,newtype,reuse,newB));
   } else {
-    PetscCall(MatConvert_BlockDiag_MPIAIJ(A,newtype,reuse,newB));    
+    PetscCall(MatConvert_BlockDiag_MPIAIJ(A,newtype,reuse,newB));
   }
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -186,7 +186,7 @@ static PetscErrorCode PermonMatConvertBlocks_BlockDiag(Mat A, MatType newtype, M
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatMult_BlockDiag"
 PetscErrorCode MatMult_BlockDiag(Mat mat, Vec right, Vec left) {
   Mat_BlockDiag *data = (Mat_BlockDiag*) mat->data;
@@ -200,7 +200,7 @@ PetscErrorCode MatMult_BlockDiag(Mat mat, Vec right, Vec left) {
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatMultTranspose_BlockDiag"
 PetscErrorCode MatMultTranspose_BlockDiag(Mat mat, Vec right, Vec left) {
   Mat_BlockDiag *data = (Mat_BlockDiag*) mat->data;
@@ -419,7 +419,7 @@ static PetscErrorCode MatProductSetFromOptions_BlockDiag(Mat C)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatDestroy_BlockDiag"
 PetscErrorCode MatDestroy_BlockDiag(Mat mat) {
   Mat_BlockDiag *data;
@@ -443,7 +443,7 @@ PetscErrorCode MatDestroy_BlockDiag(Mat mat) {
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatDuplicate_BlockDiag"
 PetscErrorCode MatDuplicate_BlockDiag(Mat matin,MatDuplicateOption cpvalues,Mat *newmat)
 {
@@ -452,22 +452,22 @@ PetscErrorCode MatDuplicate_BlockDiag(Mat matin,MatDuplicateOption cpvalues,Mat 
 
   PetscFunctionBegin;
   datain = (Mat_BlockDiag*) matin->data;
-  
+
   PetscCall(MatCreate(((PetscObject)matin)->comm,&matout));
   PetscCall(MatSetSizes(matout,matin->rmap->n,matin->cmap->n,matin->rmap->N,matin->cmap->N));
   PetscCall(MatSetType(matout,((PetscObject)matin)->type_name));
   PetscCall(PetscMemcpy(matout->ops,matin->ops,sizeof(struct _MatOps)));
   dataout = (Mat_BlockDiag*) matout->data;
-  
+
   PetscCall(MatDuplicate(datain->localBlock,cpvalues,&dataout->localBlock));
   PetscCall(VecDuplicate(datain->yloc,&dataout->yloc));
   PetscCall(VecDuplicate(datain->yloc1,&dataout->yloc1));
   PetscCall(VecDuplicate(datain->xloc,&dataout->xloc));
   *newmat = matout;
-  PetscFunctionReturn(PETSC_SUCCESS);  
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatGetDiagonalBlock_BlockDiag"
 static PetscErrorCode MatGetDiagonalBlock_BlockDiag(Mat A, Mat *A_loc) {
   Mat_BlockDiag *data = (Mat_BlockDiag*) A->data;
@@ -477,7 +477,7 @@ static PetscErrorCode MatGetDiagonalBlock_BlockDiag(Mat A, Mat *A_loc) {
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatGetInfo_BlockDiag"
 PetscErrorCode MatGetInfo_BlockDiag(Mat matin,MatInfoType flag,MatInfo *info)
 {
@@ -524,7 +524,7 @@ PetscErrorCode MatGetInfo_BlockDiag(Mat matin,MatInfoType flag,MatInfo *info)
 PetscErrorCode MatSetOption_BlockDiag(Mat mat, MatOption op, PetscBool flg)
 {
   Mat_BlockDiag  *bd = (Mat_BlockDiag*) mat->data;
-  
+
   PetscFunctionBegin;
   PetscCall(MatSetOption(bd->localBlock, op, flg));
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -535,7 +535,7 @@ PetscErrorCode MatSetOption_BlockDiag(Mat mat, MatOption op, PetscBool flg)
 PetscErrorCode MatGetDiagonal_BlockDiag(Mat mat,Vec d)
 {
   Mat_BlockDiag  *bd = (Mat_BlockDiag*) mat->data;
-  
+
   PetscFunctionBegin;
   PetscCall(MatGetDiagonal(bd->localBlock, bd->yloc));
   PetscCall(VecCopy(bd->yloc, d));
@@ -551,7 +551,7 @@ PetscErrorCode MatView_BlockDiag(Mat mat,PetscViewer viewer)
   MPI_Comm comm;
   PetscBool iascii;
   PetscViewerFormat format;
-  
+
   PetscFunctionBegin;
   PetscCall(PetscObjectGetComm((PetscObject)mat,&comm));
   PetscCall(PetscObjectTypeCompare((PetscObject)viewer,PETSCVIEWERASCII,&iascii));
@@ -561,21 +561,23 @@ PetscErrorCode MatView_BlockDiag(Mat mat,PetscViewer viewer)
   if (format == PETSC_VIEWER_DEFAULT) {
     PetscCall(PetscObjectPrintClassNamePrefixType((PetscObject)mat,viewer));
     PetscCall(PetscViewerASCIIPushTab(viewer));
+    PetscCall(PetscViewerASCIIPrintf(viewer,"diagonal blocks:\n"));
+  } else {
+    PetscCall(PetscViewerASCIIPrintf(viewer,"diagonal block on rank 0:\n"));
   }
 
   PetscCall(PetscViewerGetSubViewer(viewer, PETSC_COMM_SELF, &sv));
   if (format != PETSC_VIEWER_DEFAULT) {
     PetscMPIInt rank;
     PetscCallMPI(MPI_Comm_rank(comm, &rank));
-    PetscCall(PetscViewerASCIIPrintf(viewer,"diagonal block on rank 0:\n"));
     if (!rank) PetscCall(MatView(bd->localBlock,sv));
   } else {
     PetscCall(PetscSequentialPhaseBegin(comm,1));
-    PetscCall(PetscViewerASCIIPrintf(viewer,"diagonal blocks:\n"));
     PetscCall(MatView(bd->localBlock,sv));
     PetscCall(PetscSequentialPhaseEnd(comm,1));
   }
   PetscCall(PetscViewerRestoreSubViewer(viewer, PETSC_COMM_SELF, &sv));
+  PetscCall(PetscViewerFlush(viewer));
 
   if (format == PETSC_VIEWER_DEFAULT) {
     PetscCall(PetscViewerASCIIPopTab(viewer));
@@ -588,7 +590,7 @@ PetscErrorCode MatView_BlockDiag(Mat mat,PetscViewer viewer)
 PetscErrorCode MatAssemblyBegin_BlockDiag(Mat mat, MatAssemblyType type)
 {
   Mat_BlockDiag  *bd = (Mat_BlockDiag*) mat->data;
-  
+
   PetscFunctionBegin;
   PetscCall(MatAssemblyBegin(bd->localBlock, type));
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -599,7 +601,7 @@ PetscErrorCode MatAssemblyBegin_BlockDiag(Mat mat, MatAssemblyType type)
 PetscErrorCode MatAssemblyEnd_BlockDiag(Mat mat, MatAssemblyType type)
 {
   Mat_BlockDiag  *bd = (Mat_BlockDiag*) mat->data;
-  
+
   PetscFunctionBegin;
   PetscCall(MatAssemblyEnd(bd->localBlock, type));
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -619,7 +621,7 @@ PetscErrorCode MatSetLocalToGlobalMapping_BlockDiag(Mat x,ISLocalToGlobalMapping
 PetscErrorCode MatSetValuesLocal_BlockDiag(Mat mat,PetscInt nrow,const PetscInt irow[],PetscInt ncol,const PetscInt icol[],const PetscScalar y[],InsertMode addv)
 {
   Mat_BlockDiag *data = (Mat_BlockDiag*) mat->data;
-  
+
   PetscFunctionBegin;
   PetscCall(MatSetValues(data->localBlock,nrow,irow,ncol,icol,y,addv));
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -675,7 +677,7 @@ static PetscErrorCode MatRestoreColumnVectors_BlockDiag(Mat mat, Vec *cols[])
 {
   Mat_BlockDiag *data = (Mat_BlockDiag*) mat->data;
   PetscInt n,N,j,jlo;
-  
+
   PetscFunctionBegin;
   n = mat->cmap->n;
   N = mat->cmap->N;
@@ -761,7 +763,7 @@ FLLOP_EXTERN PetscErrorCode MatCreate_BlockDiag(Mat B) {
 
 //TODO comment, collective
 //TODO MatBlockDiagSetDiagonalBlock
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatCreateBlockDiag"
 PetscErrorCode MatCreateBlockDiag(MPI_Comm comm, Mat block, Mat *B_new) {
   Mat_BlockDiag *data;
@@ -774,12 +776,12 @@ PetscErrorCode MatCreateBlockDiag(MPI_Comm comm, Mat block, Mat *B_new) {
   PetscAssertPointer(B_new,3);
   PetscCallMPI(MPI_Comm_size(PetscObjectComm((PetscObject)block),&size));
   if (size > 1) SETERRQ(comm,PETSC_ERR_ARG_WRONG,"block (arg #2) must be sequential");
-  
-  /* Create matrix. */  
+
+  /* Create matrix. */
   PetscCall(MatCreate(comm, &B));
   PetscCall(MatSetType(B, MATBLOCKDIAG));
   data = (Mat_BlockDiag*) B->data;
-  
+
   /* Matrix data. */
   if (!block) {
       PetscCall(MatCreateSeqDense(PETSC_COMM_SELF,0,0,NULL,&block));
@@ -793,13 +795,13 @@ PetscErrorCode MatCreateBlockDiag(MPI_Comm comm, Mat block, Mat *B_new) {
   PetscCall(PetscLayoutSetLocalSize(B->rmap,block->rmap->n));
   PetscCall(PetscLayoutSetUp(B->rmap));
   PetscCall(PetscLayoutGetRange(B->rmap,&rlo,&rhi));
-  
+
   /* Set up column layout */
   PetscCall(PetscLayoutSetBlockSize(B->cmap,block->cmap->bs));
   PetscCall(PetscLayoutSetLocalSize(B->cmap,block->cmap->n));
   PetscCall(PetscLayoutSetUp(B->cmap));
   PetscCall(PetscLayoutGetRange(B->cmap,&clo,&chi));
-  
+
   /* Intermediate vectors for MatMult. */
   PetscCall(MatCreateVecs(block, &data->xloc, &data->yloc));
   PetscCall(VecDuplicate(data->yloc, &data->yloc1));
