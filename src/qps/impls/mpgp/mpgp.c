@@ -523,6 +523,8 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   qps->iteration = 0;                             /* main iteration counter */
   while (1)                                       /* main cycle */
   {
+    PetscCall(QPCSetChangedActiveSet(qpc,PETSC_TRUE));
+
     /* compute the norm of projected gradient - stopping criterion */
     PetscCall(VecNorm(gP, NORM_2, &qps->rnorm));      /* qps->rnorm=norm(gP)*/
 
@@ -562,6 +564,10 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
         /* CONJUGATE GRADIENT STEP */
         ncg++;                                    /* increase CG step counter */
         mpgp->currentStepType = 'c';
+
+        if (acg < afeas) {
+          PetscCall(QPCSetChangedActiveSet(qpc,PETSC_FALSE));
+        }
 
         /* make CG step */
         PetscCall(VecAXPY(x, -acg, p));           /* x=x-acg*p      */

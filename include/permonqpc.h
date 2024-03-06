@@ -32,6 +32,7 @@ FLLOP_EXTERN PetscErrorCode QPCGetType(QPC qpc,const QPCType *type);
 FLLOP_EXTERN PetscErrorCode QPCSetIS(QPC qpc,IS is);
 FLLOP_EXTERN PetscErrorCode QPCGetIS(QPC qpc,IS *is);
 
+FLLOP_EXTERN PetscErrorCode QPCSetChangedActiveSet(QPC qpc,PetscBool changed);
 FLLOP_EXTERN PetscErrorCode QPCGetActiveSet(QPC qpc,PetscBool global,IS *is);
 FLLOP_EXTERN PetscErrorCode QPCGetFreeSet(QPC qpc,PetscBool global,Vec x,IS *is);
 
