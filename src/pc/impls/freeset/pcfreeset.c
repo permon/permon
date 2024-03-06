@@ -1,5 +1,6 @@
 
 #include <permon/private/permonpcimpl.h>
+#include <permon/private/qpcimpl.h>
 #include <petscmat.h>
 #include <permonqps.h>
 
@@ -161,9 +162,11 @@ static PetscErrorCode PCUpdateFromQPS_FreeSet(PC pc,QPS qps)
   PetscCall(QPGetQPC(qp,&qpc));
   /* TODO only if freeset changed */
   if (ctx->type == PC_FREESET_BASIC) {
-    PetscCall(QPCGetFreeSet(qpc,PETSC_TRUE,ctx->xlayout,&ctx->is));
-    PetscCall(PCReset_FreeSet(pc));
-    PetscCall(PCSetUpInnerPC_FreeSet(pc));
+    if (qpc->setchanged) {
+      PetscCall(QPCGetFreeSet(qpc,PETSC_TRUE,ctx->xlayout,&ctx->is));
+      PetscCall(PCReset_FreeSet(pc));
+      PetscCall(PCSetUpInnerPC_FreeSet(pc));
+    }
   } else { /* CHEAP variant */
     PetscCall(QPCGetActiveSet(qpc,PETSC_TRUE,&ctx->is));
   }

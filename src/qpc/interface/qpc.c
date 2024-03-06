@@ -271,6 +271,33 @@ PetscErrorCode QPCGetIS(QPC qpc,IS *is)
 }
 
 #undef __FUNCT__
+#define __FUNCT__ "QPCSetChangedActiveSet"
+/*@
+  QPCSetChangedActiveSet - indicate if the active/free set has been changed
+
+  Logically Collective
+
+  Input Parameters:
++ qpc     - QPC instance
+- changed - indicate if the active/free set has been changed
+
+  Level: developer
+
+  Note:
+  This is intended for manually controlling recomputation of active/free set.
+
+.seealso `QPC`, `QPCGetFreeSet`, `QPCGetActiveSet`
+@*/
+PetscErrorCode QPCSetChangedActiveSet(QPC qpc,PetscBool changed)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
+  PetscValidLogicalCollectiveBool(qpc,changed,2);
+  qpc->setchanged = changed;
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ "QPCGetActiveSet"
 /*@
   QPCGetActiveSet - get set of free variables
