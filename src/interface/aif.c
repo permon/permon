@@ -18,7 +18,7 @@ static PetscErrorCode FllopAIFApplyBase_Private(PetscBool coo, PetscInt nI,Petsc
   PetscInt i;
   PetscFunctionBegin;
   if(!coo) nI -= 1;
-  
+
   if (aif_base) {
       for (i=0;i<nI;i++) Iarr[i]-=aif_base;
       for (i=0;i<nJ;i++) Jarr[i]-=aif_base;
@@ -92,7 +92,7 @@ PetscErrorCode FllopAIFFinalize()
   PetscCall(QPSDestroy(&aif_qps));
   PetscCall(PetscLogStagePop());
   PetscCall(PermonFinalize());
-  aif_comm=0; aif_base=0; aif_feti=0; aif_stage=0; aif_setup_stage=0; aif_solve_stage=0; 
+  aif_comm=0; aif_base=0; aif_feti=0; aif_stage=0; aif_setup_stage=0; aif_solve_stage=0;
   FllopAIFInitializeCalled = PETSC_FALSE;
   aif_setup_called = PETSC_FALSE;
   PetscFunctionReturn(0);
@@ -121,7 +121,7 @@ PetscErrorCode FllopAIFGetQPS(QPS *qps)
 PetscErrorCode FllopAIFSetSolutionVector(PetscInt n,PetscReal *x,const char *name)
 {
   Vec x_g;
-  
+
   PetscFunctionBegin;
   PetscCall(VecCreateMPIWithArray(aif_comm,1,n,PETSC_DECIDE,x,&x_g));
   PetscCall(PetscObjectSetName((PetscObject)x_g,name));
@@ -137,11 +137,11 @@ PetscErrorCode FllopAIFSetFETIOperator(PetscInt n,PetscInt *i,PetscInt *j,PetscS
 {
   Mat A_l,A_g;
   PetscInt ni=n+1, nj=i[n];
-  
+
   PetscFunctionBegin;
   aif_feti=PETSC_TRUE;
   PetscCall(FllopAIFApplyBase_Private(PETSC_FALSE,ni,i,nj,j));
-  
+
   if (symflg == AIF_MAT_SYM_UPPER_TRIANGULAR) {
     PetscCall(MatCreateSeqSBAIJWithArrays(PETSC_COMM_SELF,1,n,n,i,j,A,&A_l));
   } else {
@@ -152,7 +152,7 @@ PetscErrorCode FllopAIFSetFETIOperator(PetscInt n,PetscInt *i,PetscInt *j,PetscS
   PetscCall(PetscObjectSetName((PetscObject)A_g,name));
   PetscCall(FllopPetscObjectInheritName((PetscObject)A_l,(PetscObject)A_g,"_loc"));
   PetscCall(MatDestroy(&A_l));
-  
+
   PetscCall(QPSetOperator(aif_qp,A_g));
   PetscCall(MatDestroy(&A_g));
   aif_setup_called = PETSC_FALSE;
@@ -168,7 +168,7 @@ PetscErrorCode FllopAIFSetFETIOperatorMATIS(PetscInt n,PetscInt N,PetscInt *i,Pe
   PetscInt ni=n+1,nj=i[n];
   PetscScalar zero=0.0;
   ISLocalToGlobalMapping l2gmap;
-  
+
   PetscFunctionBegin;
   PetscCall(QPGetRhs(aif_qp,&b));
   PetscCall(QPGetSolutionVector(aif_qp,&x));
@@ -176,7 +176,7 @@ PetscErrorCode FllopAIFSetFETIOperatorMATIS(PetscInt n,PetscInt N,PetscInt *i,Pe
 
   aif_feti=PETSC_TRUE;
   PetscCall(FllopAIFApplyBase_Private(PETSC_FALSE,ni,i,nj,j));
-  
+
   if (symflg == AIF_MAT_SYM_UPPER_TRIANGULAR) {
     PetscCall(MatCreateSeqSBAIJWithArrays(PETSC_COMM_SELF,1,n,n,i,j,A,&A_l));
   } else {
@@ -226,16 +226,16 @@ PetscErrorCode FllopAIFSetFETIOperatorMATIS(PetscInt n,PetscInt N,PetscInt *i,Pe
 PetscErrorCode FllopAIFSetFETIOperatorNullspace(PetscInt n,PetscInt d,PetscScalar *R,const char *name)
 {
   Mat R_l,R_g;
-  
+
   PetscFunctionBegin;
   aif_feti=PETSC_TRUE;
   PetscCall(MatCreateSeqDense(PETSC_COMM_SELF,n,d,R,&R_l));
-    
+
   PetscCall(MatCreateBlockDiag(aif_comm,R_l,&R_g));
   PetscCall(PetscObjectSetName((PetscObject)R_g,name));
   PetscCall(FllopPetscObjectInheritName((PetscObject)R_l,(PetscObject)R_g,"_loc"));
   PetscCall(MatDestroy(&R_l));
-  
+
   PetscCall(QPSetOperatorNullSpace(aif_qp,R_g));
   PetscCall(MatDestroy(&R_g));
   aif_setup_called = PETSC_FALSE;
@@ -248,7 +248,7 @@ PetscErrorCode FllopAIFSetOperatorByStripes(PetscInt m,PetscInt n,PetscInt N,Pet
 {
   Mat A_g;
   PetscInt ni=n+1, nj=i[n];
-  
+
   PetscFunctionBegin;
   PetscCall(FllopAIFApplyBase_Private(PETSC_FALSE, ni,i, nj, j));
   if (symflg == AIF_MAT_SYM_UPPER_TRIANGULAR) {
@@ -269,7 +269,7 @@ PetscErrorCode FllopAIFSetOperatorByStripes(PetscInt m,PetscInt n,PetscInt N,Pet
 PetscErrorCode FllopAIFSetRhs(PetscInt n,PetscScalar *b,const char *name)
 {
   Vec b_g;
-  
+
   PetscFunctionBegin;
   PetscCall(VecCreateMPIWithArray(aif_comm,1,n,PETSC_DECIDE,b,&b_g));
   PetscCall(PetscObjectSetName((PetscObject)b_g,name));
@@ -287,10 +287,10 @@ static PetscErrorCode FllopAIFCreateLinearConstraints_Private(PetscBool coo,Pets
   Mat B_l, B_g, tmat;
   PetscInt ni, nj;
   Vec column_layout;
-  
+
   PetscFunctionBegin;
   c_g=NULL;
-  
+
   if (coo) {
     ni=Bnnz+1;
     nj=Bnnz;
@@ -299,13 +299,13 @@ static PetscErrorCode FllopAIFCreateLinearConstraints_Private(PetscBool coo,Pets
     nj=Bi[m];
   }
   PetscCall(FllopAIFApplyBase_Private(coo, ni,Bi,nj,Bj));
-  
+
   if (cv) {
-    PetscValidPointer(cv,8);
+    PetscAssertPointer(cv,8);
     PetscCall(VecCreateMPIWithArray(aif_comm,1,m,PETSC_DECIDE,cv,&c_g));
     PetscCall(PetscObjectSetName((PetscObject)c_g,cname));
   }
-  
+
   if (coo && B_dist_horizontal) {
     /* no need for transpose, just swap the meaning of rows and columns */
     PetscInt t,*tp;
@@ -331,9 +331,9 @@ static PetscErrorCode FllopAIFCreateLinearConstraints_Private(PetscBool coo,Pets
     PetscCall(QPGetRhs(aif_qp, &column_layout));
     PERMON_ASSERT(column_layout,"RHS specified");
   }
-  
+
   PetscCall(MatMergeAndDestroy(aif_comm,&B_l,column_layout,&B_g));
-  
+
   if (B_dist_horizontal != B_trans) {
     tmat = B_g;
     PetscCall(PermonMatTranspose(tmat, MAT_TRANSPOSE_CHEAPEST, &B_g));
@@ -342,8 +342,8 @@ static PetscErrorCode FllopAIFCreateLinearConstraints_Private(PetscBool coo,Pets
     PetscCall(MatDestroy(&tmat));
   } else {
     PetscCall(PetscObjectSetName((PetscObject)B_g,Bname));
-  } 
-  
+  }
+
   *B_new = B_g;
   *c_new = c_g;
   PetscFunctionReturn(0);
@@ -360,9 +360,9 @@ PetscErrorCode FllopAIFSetIneq(PetscInt m,PetscInt N,PetscBool B_trans,PetscBool
   PetscValidLogicalCollectiveInt(aif_qp,N,2);
   PetscValidLogicalCollectiveBool(aif_qp,B_trans,3);
   PetscValidLogicalCollectiveBool(aif_qp,B_dist_horizontal,4);
-  PetscValidIntPointer(Bi,5);
-  PetscValidIntPointer(Bj,6);
-  PetscValidIntPointer(Bv,7);
+  PetscAssertPointer(Bi,5);
+  PetscAssertPointer(Bj,6);
+  PetscAssertPointer(Bv,7);
 
   PetscCall(FllopAIFCreateLinearConstraints_Private(PETSC_FALSE,m,N,B_trans,B_dist_horizontal,Bi,Bj,Bv,-1,Bname,cv,cname,&B,&c));
   PetscCall(QPSetIneq(aif_qp,B,c));
@@ -383,9 +383,9 @@ PetscErrorCode FllopAIFSetEq(PetscInt m,PetscInt N,PetscBool B_trans,PetscBool B
   PetscValidLogicalCollectiveInt(aif_qp,N,2);
   PetscValidLogicalCollectiveBool(aif_qp,B_trans,3);
   PetscValidLogicalCollectiveBool(aif_qp,B_dist_horizontal,4);
-  PetscValidIntPointer(Bi,5);
-  PetscValidIntPointer(Bj,6);
-  PetscValidIntPointer(Bv,7);
+  PetscAssertPointer(Bi,5);
+  PetscAssertPointer(Bj,6);
+  PetscAssertPointer(Bv,7);
 
   PetscCall(FllopAIFCreateLinearConstraints_Private(PETSC_FALSE,m,N,B_trans,B_dist_horizontal,Bi,Bj,Bv,-1,Bname,cv,cname,&B,&c));
   PetscCall(QPSetEq(aif_qp,B,c));
@@ -406,9 +406,9 @@ PetscErrorCode FllopAIFAddEq(PetscInt m,PetscInt N,PetscBool B_trans,PetscBool B
   PetscValidLogicalCollectiveInt(aif_qp,N,2);
   PetscValidLogicalCollectiveBool(aif_qp,B_trans,3);
   PetscValidLogicalCollectiveBool(aif_qp,B_dist_horizontal,4);
-  PetscValidIntPointer(Bi,5);
-  PetscValidIntPointer(Bj,6);
-  PetscValidIntPointer(Bv,7);
+  PetscAssertPointer(Bi,5);
+  PetscAssertPointer(Bj,6);
+  PetscAssertPointer(Bv,7);
 
   PetscCall(FllopAIFCreateLinearConstraints_Private(PETSC_FALSE,m,N,B_trans,B_dist_horizontal,Bi,Bj,Bv,-1,Bname,cv,cname,&B,&c));
   PetscCall(QPAddEq(aif_qp,B,c));
@@ -429,9 +429,9 @@ PetscErrorCode FllopAIFSetIneqCOO(PetscInt m,PetscInt N,PetscBool B_trans,PetscB
   PetscValidLogicalCollectiveInt(aif_qp,N,2);
   PetscValidLogicalCollectiveBool(aif_qp,B_trans,3);
   PetscValidLogicalCollectiveBool(aif_qp,B_dist_horizontal,4);
-  PetscValidIntPointer(Bi,5);
-  PetscValidIntPointer(Bj,6);
-  PetscValidIntPointer(Bv,7);
+  PetscAssertPointer(Bi,5);
+  PetscAssertPointer(Bj,6);
+  PetscAssertPointer(Bv,7);
 
   PetscCall(FllopAIFCreateLinearConstraints_Private(PETSC_TRUE,m,N,B_trans,B_dist_horizontal,Bi,Bj,Bv,Bnnz,Bname,cv,cname,&B,&c));
   PetscCall(QPSetIneq(aif_qp,B,c));
@@ -452,9 +452,9 @@ PetscErrorCode FllopAIFSetEqCOO(PetscInt m,PetscInt N,PetscBool B_trans,PetscBoo
   PetscValidLogicalCollectiveInt(aif_qp,N,2);
   PetscValidLogicalCollectiveBool(aif_qp,B_trans,3);
   PetscValidLogicalCollectiveBool(aif_qp,B_dist_horizontal,4);
-  PetscValidIntPointer(Bi,5);
-  PetscValidIntPointer(Bj,6);
-  PetscValidIntPointer(Bv,7);
+  PetscAssertPointer(Bi,5);
+  PetscAssertPointer(Bj,6);
+  PetscAssertPointer(Bv,7);
 
   PetscCall(FllopAIFCreateLinearConstraints_Private(PETSC_TRUE,m,N,B_trans,B_dist_horizontal,Bi,Bj,Bv,Bnnz,Bname,cv,cname,&B,&c));
   PetscCall(QPSetEq(aif_qp,B,c));
@@ -475,9 +475,9 @@ PetscErrorCode FllopAIFAddEqCOO(PetscInt m,PetscInt N,PetscBool B_trans,PetscBoo
   PetscValidLogicalCollectiveInt(aif_qp,N,2);
   PetscValidLogicalCollectiveBool(aif_qp,B_trans,3);
   PetscValidLogicalCollectiveBool(aif_qp,B_dist_horizontal,4);
-  PetscValidIntPointer(Bi,5);
-  PetscValidIntPointer(Bj,6);
-  PetscValidIntPointer(Bv,7);
+  PetscAssertPointer(Bi,5);
+  PetscAssertPointer(Bj,6);
+  PetscAssertPointer(Bv,7);
 
   PetscCall(FllopAIFCreateLinearConstraints_Private(PETSC_TRUE,m,N,B_trans,B_dist_horizontal,Bi,Bj,Bv,Bnnz,Bname,cv,cname,&B,&c));
   PetscCall(QPAddEq(aif_qp,B,c));
@@ -491,7 +491,7 @@ PetscErrorCode FllopAIFAddEqCOO(PetscInt m,PetscInt N,PetscBool B_trans,PetscBoo
 #define __FUNCT__ "FllopAIFSetType"
 PetscErrorCode FllopAIFSetType(const char type[])
 {
-  PetscFunctionBegin;  
+  PetscFunctionBegin;
   PetscCall(QPSSetType(aif_qps,type));
   aif_setup_called = PETSC_FALSE;
   PetscFunctionReturn(0);
@@ -504,7 +504,7 @@ PetscErrorCode FllopAIFSetDefaultType()
   PetscFunctionBegin;
   PetscCall(QPSSetDefaultType(aif_qps));
   aif_setup_called = PETSC_FALSE;
-  PetscFunctionReturn(0);   
+  PetscFunctionReturn(0);
 }
 
 
@@ -513,20 +513,20 @@ PetscErrorCode FllopAIFSetDefaultType()
 PetscErrorCode FllopAIFSetBox(PetscInt n,PetscScalar *lb,const char *lbname,PetscScalar *ub,const char *ubname)
 {
   Vec lb_g, ub_g;
-  
+
   PetscFunctionBegin;
   lb_g=NULL; ub_g=NULL;
-  
+
   if (lb) {
     PetscCall(VecCreateMPIWithArray(aif_comm,1,n,PETSC_DECIDE,lb,&lb_g));
     PetscCall(PetscObjectSetName((PetscObject)lb_g,lbname));
   }
-  
+
   if (ub) {
     PetscCall(VecCreateMPIWithArray(aif_comm,1,n,PETSC_DECIDE,ub,&ub_g));
     PetscCall(PetscObjectSetName((PetscObject)ub_g,ubname));
   }
-  
+
   PetscCall(QPSetBox(aif_qp,NULL,lb_g,ub_g));
   PetscCall(VecDestroy(&lb_g));
   PetscCall(VecDestroy(&ub_g));
@@ -640,7 +640,7 @@ PetscErrorCode FllopAIFKSPSolveMATIS(IS isDir,PetscInt n,PetscInt N,PetscInt *i,
   PetscInt ni=n+1,nj=i[n];
   PetscScalar zero=0.0;
   ISLocalToGlobalMapping l2gmap;
-  
+
   PetscFunctionBegin;
   PetscCall(QPGetRhs(aif_qp,&b));
   PetscCall(QPGetSolutionVector(aif_qp,&x));
@@ -648,7 +648,7 @@ PetscErrorCode FllopAIFKSPSolveMATIS(IS isDir,PetscInt n,PetscInt N,PetscInt *i,
 
   aif_feti=PETSC_TRUE;
   PetscCall(FllopAIFApplyBase_Private(PETSC_FALSE,ni,i,nj,j));
-  
+
   if (symflg == AIF_MAT_SYM_UPPER_TRIANGULAR) {
     PetscCall(MatCreateSeqSBAIJWithArrays(PETSC_COMM_SELF,1,n,n,i,j,A,&A_l));
   } else {
@@ -680,7 +680,7 @@ PetscErrorCode FllopAIFKSPSolveMATIS(IS isDir,PetscInt n,PetscInt N,PetscInt *i,
 
   PetscCall(PetscObjectCompose((PetscObject)b_new,"b_decomp",(PetscObject)b));
   PetscCall(PetscObjectCompose((PetscObject)x_new,"x_decomp",(PetscObject)x));
-  
+
   KSP ksp;
   PetscCall(KSPCreate(aif_comm,&ksp));
   PetscCall(KSPSetOperators(ksp,A_g,A_g));
