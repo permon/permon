@@ -6,8 +6,8 @@ TAO tolerances are gatol = 1.000000e-08, grtol =  1.000000e-50, gttol = 1.000000
 Setting PERMON rtol = gttol, atol = gatol
 QPS Object: 1 MPI process
   type: tao
-  last QPSSolve CONVERGED due to CONVERGED_RTOL, KSPReason=2, required 40 iterations
-  all 1 QPSSolves from last QPSReset/QPSResetStatistics have required 40 iterations
+  last QPSSolve CONVERGED due to CONVERGED_RTOL, KSPReason=2, required 35 iterations
+  all 1 QPSSolves from last QPSReset/QPSResetStatistics have required 35 iterations
   tolerances: rtol=1.0e-06, abstol=1.0e-08, dtol=1.0e+04, maxits=10000
   tao specific:
     TaoType: blmvm
@@ -26,7 +26,7 @@ QPS Object: 1 MPI process
             Convex factors: phi=0., theta=0.125
             Max. storage: 5
             Used storage: 5
-            Number of updates: 39
+            Number of updates: 34
             Number of rejects: 0
             Number of resets: 1
             Mat Object: (qps_tao_blmvm_J0_) 1 MPI process
@@ -37,7 +37,7 @@ QPS Object: 1 MPI process
                 Convex factor: theta=0.125
                 Max. storage: 1
                 Used storage: 1
-                Number of updates: 39
+                Number of updates: 34
                 Number of rejects: 0
                 Number of resets: 1
         TaoLineSearch Object: (qps_) 1 MPI process
@@ -51,9 +51,9 @@ QPS Object: 1 MPI process
           Termination reason: 1
         Active Set subset type: subvec
         convergence tolerances: gatol=1e-08,         steptol=0.,         gttol=0.
-        Residual in Function/Gradient:=7.7805e-07
+        Residual in Function/Gradient:=7.71966e-07
         Objective value=-0.183437
-        total number of iterations=40,                                (max: 2000)
-        total number of function/gradient evaluations=61,            (max: 4000)
+        total number of iterations=35,                                (max: 2000)
+        total number of function/gradient evaluations=51,            (max: 4000)
         Solution converged:          User Terminated
-Norm of difference of results from TAO and QP = 4.317448e-07 <= 7.892614e-06 = tolerance
+Norm of difference of results from TAO and QP = 6.603108e-07 <= 7.892614e-06 = tolerance
