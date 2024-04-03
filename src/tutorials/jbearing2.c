@@ -159,7 +159,7 @@ int main( int argc, char **argv )
 
   PetscCall(PetscOptionsHasName(NULL,NULL,"-testmonitor",&flg));
   if (flg) {
-    PetscCall(TaoSetMonitor(tao,Monitor,&user,NULL));
+    PetscCall(TaoMonitorSet(tao,Monitor,&user,NULL));
   }
   PetscCall(PetscOptionsHasName(NULL,NULL,"-testconvergence",&flg));
   if (flg) {
@@ -177,7 +177,7 @@ int main( int argc, char **argv )
   PetscCall(TaoSolve(tao));
   PetscCall(TaoGetConvergedReason(tao, &reason));
   if (reason < 0) SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_NOT_CONVERGED, "TAO diverged, reason %" PetscInt_FMT " (%s)", reason, TaoConvergedReasons[reason]);
-  
+
   /* Call PERMON solver and compare results */
   PetscCall(CallPermonAndCompareResults(tao, &user));
 
@@ -494,28 +494,28 @@ PetscErrorCode CallPermonAndCompareResults(Tao tao, void *ctx)
   PetscReal      rhs_norm;
   PetscReal      tao_diff_tol = 1e2*PETSC_SQRT_MACHINE_EPSILON;
   KSPConvergedReason reason;
-  
+
   PetscFunctionBeginI;
   /* Compute Hessian */
   PetscCall(FormHessian(tao, NULL, user->A, NULL, (void*) user));
-  
+
   /* Prescribe the QP problem. */
   PetscCall(QPCreate(PETSC_COMM_WORLD, &qp));
   PetscCall(QPSetOperator(qp, user->A));
   PetscCall(QPSetRhsPlus(qp, user->B));
   PetscCall(QPSetBox(qp, NULL, user->xl, user->xu));
   PetscCall(VecDuplicate(user->B,&x_diff));
-  
+
   /* Create the QP solver (QPS). */
   PetscCall(QPSCreate(PETSC_COMM_WORLD, &qps));
-  
+
   /* Set QPS type to TAO within QPS TAO wrapper. */
   PetscCall(QPSSetType(qps,QPSTAO));
   PetscCall(QPSTaoSetType(qps,TAOBLMVM));
 
   /* Insert the QP problem into the solver. */
   PetscCall(QPSSetQP(qps, qp));
-  
+
   /* Get Tao tolerances */
   PetscCall(TaoGetTolerances(tao, &gatol, &grtol, &gttol));
   PetscCall(PetscPrintf(PETSC_COMM_WORLD,"TAO tolerances are gatol = %e, grtol =  %e, gttol = %e\n",gatol, grtol, gttol));
@@ -526,23 +526,23 @@ PetscErrorCode CallPermonAndCompareResults(Tao tao, void *ctx)
   atol  = gatol;
   dtol  = PETSC_DEFAULT;
   maxit = PETSC_DEFAULT;
-  PetscCall(QPSSetTolerances(qps, rtol, atol, dtol, maxit));  
+  PetscCall(QPSSetTolerances(qps, rtol, atol, dtol, maxit));
 
   /* Set the QPS monitor */
   PetscCall(QPSMonitorSet(qps,QPSMonitorDefault,NULL,0));
-          
+
   /* Set QPS options from the options database (overriding the defaults). */
-  PetscCall(QPSSetFromOptions(qps));  
+  PetscCall(QPSSetFromOptions(qps));
 
   /* Solve the QP */
-  PetscCall(QPSSolve(qps));  
+  PetscCall(QPSSolve(qps));
   PetscCall(QPSGetConvergedReason(qps, &reason));
   if (reason < 0) SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_NOT_CONVERGED, "QPS diverged, reason %" PetscInt_FMT " (%s)", reason, KSPConvergedReasons[reason]);
 
   /* Get the solution vector */
   PetscCall(QPGetSolutionVector(qp, &x_qp));
   PetscCall(TaoGetSolution(tao,&x_tao));
-  
+
   /* Difference of results from TAO and QP */
   PetscCall(VecNorm(user->B, NORM_2, &rhs_norm));
   tao_diff_tol = 1e1 * PetscMax(rtol*rhs_norm,atol); /* 10 times the tolerance for the default convergence test */
@@ -556,7 +556,7 @@ PetscErrorCode CallPermonAndCompareResults(Tao tao, void *ctx)
   PetscCall(QPDestroy(&qp));
   PetscCall(VecDestroy(&x_diff));
   PetscFunctionReturnI(PETSC_SUCCESS);
-  
+
 }
 
 
@@ -567,7 +567,7 @@ PetscErrorCode CallPermonAndCompareResults(Tao tao, void *ctx)
   testset:
     args: -tao_gttol 1e-6 -qps_view_convergence
     test:
-      args: -mx 8 -my 12 
+      args: -mx 8 -my 12
     test:
       suffix: 2
       nsize: 2
@@ -576,12 +576,12 @@ PetscErrorCode CallPermonAndCompareResults(Tao tao, void *ctx)
       suffix: 3
       nsize: 3
       args: -mx 30 -my 30
-    
+
   testset:
     args: -tao_gttol 1e-6 -qps_view_convergence -qps_type mpgp
     test:
       suffix: 4
-      args: -mx 8 -my 12 
+      args: -mx 8 -my 12
     test:
       suffix: 5
       nsize: 2
