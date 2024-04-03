@@ -577,7 +577,6 @@ PetscErrorCode MatView_BlockDiag(Mat mat,PetscViewer viewer)
     PetscCall(PetscSequentialPhaseEnd(comm,1));
   }
   PetscCall(PetscViewerRestoreSubViewer(viewer, PETSC_COMM_SELF, &sv));
-  PetscCall(PetscViewerFlush(viewer));
 
   if (format == PETSC_VIEWER_DEFAULT) {
     PetscCall(PetscViewerASCIIPopTab(viewer));
