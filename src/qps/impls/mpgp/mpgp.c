@@ -262,8 +262,12 @@ static PetscErrorCode MPGPExpansionLength(QPS qps)
     case QPS_MPGP_EXPANSION_LENGTH_OPTAPPROX:
       vecs[0] = qps->work[3]; /* g */
       vecs[1] = mpgp->explengthvec;
-      PetscCall(VecMDot(mpgp->explengthvec,2,vecs,dots));
-      mpgp->alpha = mpgp->alpha_user*dots[0]/dots[1];
+      if (vecs[0] != vecs[1]) {
+        PetscCall(VecMDot(mpgp->explengthvec,2,vecs,dots));
+        mpgp->alpha = mpgp->alpha_user*dots[0]/dots[1];
+      } else {
+        mpgp->alpha = mpgp->alpha_user;
+      }
       mpgp->alpha = mpgp->alpha/mpgp->maxeig;
       break;
     case QPS_MPGP_EXPANSION_LENGTH_BB:

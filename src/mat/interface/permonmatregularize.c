@@ -3,7 +3,7 @@
 
 PetscLogEvent Mat_Regularize;
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatRegularize_GetPivots_Private"
 static PetscErrorCode MatRegularize_GetPivots_Private(Mat R, IS *pivots) {
 
@@ -117,7 +117,7 @@ static PetscErrorCode MatRegularize_GetPivots_Private(Mat R, IS *pivots) {
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatRegularize_GetRegularization_Private"
 static PetscErrorCode MatRegularize_GetRegularization_Private(Mat K_loc, Mat R_loc, IS pivots, Mat *newQ)
 {
@@ -138,14 +138,14 @@ static PetscErrorCode MatRegularize_GetRegularization_Private(Mat K_loc, Mat R_l
 
     /* R_all_cols = 0:1:defect_loc-1 */
     PetscCall(ISCreateStride(PETSC_COMM_SELF, defect_loc, 0, 1, &R_all_cols));
-    
+
     PetscCall(MatCreateSubMatrix(R_loc, pivots, R_all_cols, MAT_INITIAL_MATRIX, &RI));
     PetscCall(MatConvert(RI,MATDENSE,MAT_INPLACE_MATRIX,&RI));
     PetscCall(ISDestroy(&R_all_cols));
 
     PetscCall(MatTranspose(RI, MAT_INITIAL_MATRIX, &RIt));
     PetscCall(MatMatMult(RIt, RI, MAT_INITIAL_MATRIX, 1.0, &RItRI));
-  
+
     PetscCall(MatCreateInv(RItRI, MAT_INV_MONOLITHIC, &invRItRI));
     PetscCall(MatInvExplicitly(invRItRI, PETSC_FALSE, MAT_INITIAL_MATRIX, &iRItRI));
     PetscCall(MatDestroy(&invRItRI));
@@ -178,7 +178,7 @@ static PetscErrorCode MatRegularize_GetRegularization_Private(Mat K_loc, Mat R_l
   /* allocate Q_loc */
   PetscCall(MatCreate(PETSC_COMM_SELF, &Q_loc));
   PetscCall(MatSetSizes(Q_loc, prim_loc, prim_loc, prim_loc, prim_loc));
-  PetscCall(MatGetType(K_loc,&K_type));  
+  PetscCall(MatGetType(K_loc,&K_type));
   PetscCall(MatSetType(Q_loc, K_type));
   PetscCall(MatSeqAIJSetPreallocation(Q_loc, -1, Q_allocation));
   PetscCall(MatSeqSBAIJSetPreallocation(Q_loc, 1, -1, Q_allocation));
@@ -195,13 +195,13 @@ static PetscErrorCode MatRegularize_GetRegularization_Private(Mat K_loc, Mat R_l
   }
   PetscCall(MatAssemblyBegin(Q_loc, MAT_FINAL_ASSEMBLY));
   PetscCall(MatAssemblyEnd(  Q_loc, MAT_FINAL_ASSEMBLY));
-  PetscCall(MatInheritSymmetry(K_loc,Q_loc)); 
+  PetscCall(MatInheritSymmetry(K_loc,Q_loc));
   PetscCall(MatDestroy(&Q_loc_condensed));
   *newQ = Q_loc;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatRegularize"
 PetscErrorCode MatRegularize(Mat K, Mat R, MatRegularizationType type, Mat *newKreg) {
   static PetscBool      registered = PETSC_FALSE;
@@ -239,7 +239,7 @@ PetscErrorCode MatRegularize(Mat K, Mat R, MatRegularizationType type, Mat *newK
     PetscCall(PetscObjectReference((PetscObject)K));
     PetscFunctionReturn(PETSC_SUCCESS);
   }
-  
+
   PetscValidHeaderSpecific(R,MAT_CLASSID,2);
   PetscCheckSameComm(K,1,R,2);
   PetscCall(PetscObjectGetComm((PetscObject)K,&comm));
@@ -248,7 +248,7 @@ PetscErrorCode MatRegularize(Mat K, Mat R, MatRegularizationType type, Mat *newK
 
   FllopTraceBegin;
   PetscCall(PetscLogEventBegin(Mat_Regularize,K,R,0,0));
-  
+
   /* this should work at least for MATMPIAIJ and MATBLOCKDIAG */
   PetscCall(MatGetDiagonalBlock(K,&K_loc));
   PetscCall(MatGetDiagonalBlock(R,&R_loc));
@@ -263,10 +263,10 @@ PetscErrorCode MatRegularize(Mat K, Mat R, MatRegularizationType type, Mat *newK
   if (type == MAT_REG_EXPLICIT)
   {
     Mat Kreg_loc;
-    
+
     PetscCall(MatDuplicate(K, MAT_COPY_VALUES, &Kreg));
     PetscCall(MatGetDiagonalBlock(Kreg,&Kreg_loc));
-    
+
     //TODO avoid adding new nonzeros - do preallocation of Kreg
     PetscCall(MatSetOption(Kreg_loc, MAT_NEW_NONZERO_LOCATION_ERR, PETSC_FALSE));
     PetscCall(MatAXPY(Kreg_loc, rho, Q_loc, DIFFERENT_NONZERO_PATTERN));
@@ -276,16 +276,16 @@ PetscErrorCode MatRegularize(Mat K, Mat R, MatRegularizationType type, Mat *newK
   else  /* type == MAT_REG_IMPLICIT */
   {
     Mat Q, Kreg_arr[2];
-    
+
     PetscCall(MatCreateBlockDiag(comm,Q_loc,&Q));
     Kreg_arr[0]=Q; Kreg_arr[1]=K;
-    PetscCall(MatCreateSum(comm,2,Kreg_arr,&Kreg));
+    PetscCall(MatCreateComposite(comm,2,Kreg_arr,&Kreg));
     PetscCall(MatDestroy(&Q));
   }
   PetscCall(MatInheritSymmetry(K,Kreg));
   PetscCall(MatDestroy(&Q_loc));
   PetscCall(ISDestroy(&pivots));
-  
+
   /* mark the matrix as regularized */
   PetscCall(PetscObjectComposedDataSetInt((PetscObject)Kreg,regularized_id,PETSC_TRUE));
   *newKreg = Kreg;

@@ -77,6 +77,7 @@ int main(int argc,char **args)
   PetscCall(MatEqual(A,C,&flg));
   if (!flg) SETERRQ(comm, PETSC_ERR_PLIB, "C != A");
 
+  PetscCall(PetscOptionsRestoreViewer(&viewer));
   PetscCall(PetscRandomDestroy(&rand));
   PetscCall(ISDestroy(&rperm));
   PetscCall(MatDestroy(&A));

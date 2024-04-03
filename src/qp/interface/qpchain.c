@@ -178,18 +178,18 @@ PetscErrorCode QPChainSetFromOptions(QP qp)
 #undef __FUNCT__
 #define __FUNCT__ "QPChainPostSolve"
 /*@
-   QPChainPostSolve - Apply post solve functions and optionally view. 
+   QPChainPostSolve - Apply post solve functions and optionally view.
 
    Collective on QP
 
    Input Parameter:
 .  qp   - the QP
-  
+
    Options Database Keys:
 +  -qp_view            - view information about QP
 .  -qp_chain_view      - view information about all QPs in the chain
 .  -qp_chain_view_qppf - view information about all QPPFs in the chain
--  -qp_chain_view_kkt  - view how well are KKT conditions satisfied for each QP in the chain 
+-  -qp_chain_view_kkt  - view how well are KKT conditions satisfied for each QP in the chain
 
    Notes:
    This is called automatically by QPSPostSolve.
@@ -218,24 +218,24 @@ PetscErrorCode QPChainPostSolve(QP qp)
     PetscCall(PetscViewerPushFormat(v,format));
     PetscCall(QPView(qp,v));
     PetscCall(PetscViewerPopFormat(v));
-    PetscCall(PetscViewerDestroy(&v));
   }
+  PetscCall(PetscOptionsRestoreViewer(&v));
 
   PetscCall(PetscOptionsGetViewer(comm,NULL,prefix,"-qp_chain_view",&v,&format,&view));
   if (view & !PetscPreLoadingOn) {
     PetscCall(PetscViewerPushFormat(v,format));
     PetscCall(QPChainView(qp,v));
     PetscCall(PetscViewerPopFormat(v));
-    PetscCall(PetscViewerDestroy(&v));
   }
+  PetscCall(PetscOptionsRestoreViewer(&v));
 
   PetscCall(PetscOptionsGetViewer(comm,NULL,prefix,"-qp_chain_view_qppf",&v,&format,&view));
   if (view & !PetscPreLoadingOn) {
     PetscCall(PetscViewerPushFormat(v,format));
     PetscCall(QPChainViewQPPF(qp,v));
     PetscCall(PetscViewerPopFormat(v));
-    PetscCall(PetscViewerDestroy(&v));
   }
+  PetscCall(PetscOptionsRestoreViewer(&v));
 
   PetscCall(PetscOptionsGetViewer(comm,NULL,prefix,"-qp_chain_view_kkt",&v,&format,&view));
   view = (PetscBool)(view && !PetscPreLoadingOn);
@@ -272,8 +272,8 @@ PetscErrorCode QPChainPostSolve(QP qp)
 
   if (view) {
     PetscCall(PetscViewerASCIIPrintf(v,"=====================\n"));
-    PetscCall(PetscViewerDestroy(&v));
   }
+  PetscCall(PetscOptionsRestoreViewer(&v));
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 

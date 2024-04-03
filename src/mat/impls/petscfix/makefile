@@ -1,11 +1,11 @@
 
-ALL: lib 
+ALL: lib
 
 CFLAGS   =
 FFLAGS   =
-SOURCEC  = dense.c nest.c normm.c sbaij.c shell.c transm.c
+SOURCEC  = dense.c nest.c sbaij.c shell.c transm.c
 SOURCEF  =
-SOURCEH  = 
+SOURCEH  =
 OBJSC    = ${SOURCEC:.c=.o}
 OBJSF    =
 LIBBASE  = libpermon
