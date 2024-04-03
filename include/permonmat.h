@@ -8,8 +8,6 @@
 #define MATINV          "inv"
 #define MATBLOCKDIAG    "blockdiag"
 #define MATGLUING       "gluing"
-#define MATSUM          "sum"
-#define MATPROD         "prod"
 #define MATDENSEPERMON    "densepermon"
 #define MATSEQDENSEPERMON "seqdensepermon"
 #define MATMPIDENSEPERMON "mpidensepermon"
@@ -24,7 +22,6 @@ typedef enum {MAT_INV_MONOLITHIC=0, MAT_INV_BLOCKDIAG=1} MatInvType;
 /* Mat constructors */
 FLLOP_EXTERN PetscErrorCode MatCreateBlockDiag(MPI_Comm comm, Mat localBlock, Mat *BlockDiag);
 FLLOP_EXTERN PetscErrorCode MatCreateGluing(MPI_Comm comm, PetscInt n_localRow, PetscInt r,  PetscInt c, const PetscInt *leaves_lrow,	const PetscReal *leaves_sign, PetscSF SF, Mat *B_out); //Alik
-FLLOP_EXTERN PetscErrorCode MatCreateSum( MPI_Comm comm,PetscInt nmat,const Mat *mats,Mat *mat);
 FLLOP_EXTERN PetscErrorCode MatCreateProd(MPI_Comm comm,PetscInt nmat,const Mat *mats,Mat *mat);
 FLLOP_EXTERN PetscErrorCode MatCreateInv(Mat A, MatInvType invType, Mat *imat);
 FLLOP_EXTERN PetscErrorCode MatCreateTimer(Mat A, Mat *W);
@@ -108,9 +105,8 @@ FLLOP_EXTERN PetscErrorCode MatIsImplicitTranspose(Mat A,PetscBool *flg);
 FLLOP_EXTERN PetscErrorCode MatNestPermonGetVecs(Mat A,Vec *x,Vec *y);
 FLLOP_EXTERN PetscErrorCode MatNestPermonGetColumnISs(Mat A,IS **is_new);
 
-/* MATPROD,MATSUM specific methods */
+/* MATPROD specific methods */
 FLLOP_EXTERN PetscErrorCode MatProdGetMat(Mat A,PetscInt i,Mat *Ai);
-FLLOP_EXTERN PetscErrorCode MatSumGetMat(Mat A,PetscInt i,Mat *Ai);
 
 /*   GENERAL Mat   */
 FLLOP_EXTERN PetscInt MatGetMaxEigenvalue_composed_id;

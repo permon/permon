@@ -1,6 +1,6 @@
 #include <permonmat.h>
-#include <../src/mat/impls/composite/permoncompositeimpl.h>
 
+/* TODO remove MatProdGetMat? */
 #undef __FUNCT__
 #define __FUNCT__ "MatProdGetMat"
 PetscErrorCode MatProdGetMat(Mat A,PetscInt i,Mat *Ai)

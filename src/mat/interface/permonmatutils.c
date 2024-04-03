@@ -313,7 +313,7 @@ PetscErrorCode MatCreateOperatorFromUpperTriangular(Mat U, Mat *A)
   A_arr[0] = U;
   A_arr[1] = L;
   A_arr[2] = D;
-  PetscCall(MatCreateSum(PetscObjectComm((PetscObject)U), 3, A_arr, A));
+  PetscCall(MatCreateComposite(PetscObjectComm((PetscObject)U), 3, A_arr, A));
   PetscCall(MatSetOption(*A, MAT_SYMMETRIC, PETSC_TRUE));
   PetscCall(MatSetOption(*A, MAT_SYMMETRY_ETERNAL, PETSC_TRUE));
   PetscCall(MatDestroy(&L));

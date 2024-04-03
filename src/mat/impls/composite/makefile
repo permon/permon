@@ -1,11 +1,11 @@
 
-ALL: lib 
+ALL: lib
 
 CFLAGS   =
 FFLAGS   =
-SOURCEC  = matsum.c matprod.c
+SOURCEC  = matprod.c
 SOURCEF  =
-SOURCEH  = permoncompositeimpl.h
+SOURCEH  =
 OBJSC    = ${SOURCEC:.c=.o}
 OBJSF    =
 LIBBASE  = libpermon

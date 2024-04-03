@@ -17,7 +17,6 @@ PetscErrorCode  PermonMatRegisterAll()
   PetscFunctionBegin;
   PetscCall(MatRegister(MATINV,           MatCreate_Inv));
   PetscCall(MatRegister(MATBLOCKDIAG,     MatCreate_BlockDiag));
-  PetscCall(MatRegister(MATSUM,           MatCreate_Sum));
   PetscCall(MatRegister(MATSEQDENSEPERMON,MatCreate_SeqDensePermon));
   PetscCall(MatRegister(MATMPIDENSEPERMON,MatCreate_MPIDensePermon));
   PetscCall(MatRegister(MATEXTENSION,     MatCreate_Extension));
