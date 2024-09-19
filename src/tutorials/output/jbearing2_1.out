@@ -50,7 +50,7 @@ QPS Object: 1 MPI process
           using variable bounds
           Termination reason: 1
         Active Set subset type: subvec
-        convergence tolerances: gatol=1e-08,         steptol=0.,         gttol=0.
+        convergence tolerances: gatol=1e-08,         grtol=1e-06,         steptol=0.,         gttol=0.
         Residual in Function/Gradient:=7.71966e-07
         Objective value=-0.183437
         total number of iterations=35,                                (max: 2000)
