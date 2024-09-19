@@ -213,31 +213,31 @@ PetscErrorCode QPChainPostSolve(QP qp)
   PetscCall(PetscObjectGetComm((PetscObject)qp,&comm));
   PetscCall(PetscObjectGetOptionsPrefix((PetscObject)qp,&prefix));
 
-  PetscCall(PetscOptionsGetViewer(comm,NULL,prefix,"-qp_view",&v,&format,&view));
+  PetscCall(PetscOptionsCreateViewer(comm,NULL,prefix,"-qp_view",&v,&format,&view));
   if (view & !PetscPreLoadingOn) {
     PetscCall(PetscViewerPushFormat(v,format));
     PetscCall(QPView(qp,v));
     PetscCall(PetscViewerPopFormat(v));
   }
-  PetscCall(PetscOptionsRestoreViewer(&v));
+  PetscCall(PetscViewerDestroy(&v));
 
-  PetscCall(PetscOptionsGetViewer(comm,NULL,prefix,"-qp_chain_view",&v,&format,&view));
+  PetscCall(PetscOptionsCreateViewer(comm,NULL,prefix,"-qp_chain_view",&v,&format,&view));
   if (view & !PetscPreLoadingOn) {
     PetscCall(PetscViewerPushFormat(v,format));
     PetscCall(QPChainView(qp,v));
     PetscCall(PetscViewerPopFormat(v));
   }
-  PetscCall(PetscOptionsRestoreViewer(&v));
+  PetscCall(PetscViewerDestroy(&v));
 
-  PetscCall(PetscOptionsGetViewer(comm,NULL,prefix,"-qp_chain_view_qppf",&v,&format,&view));
+  PetscCall(PetscOptionsCreateViewer(comm,NULL,prefix,"-qp_chain_view_qppf",&v,&format,&view));
   if (view & !PetscPreLoadingOn) {
     PetscCall(PetscViewerPushFormat(v,format));
     PetscCall(QPChainViewQPPF(qp,v));
     PetscCall(PetscViewerPopFormat(v));
   }
-  PetscCall(PetscOptionsRestoreViewer(&v));
+  PetscCall(PetscViewerDestroy(&v));
 
-  PetscCall(PetscOptionsGetViewer(comm,NULL,prefix,"-qp_chain_view_kkt",&v,&format,&view));
+  PetscCall(PetscOptionsCreateViewer(comm,NULL,prefix,"-qp_chain_view_kkt",&v,&format,&view));
   view = (PetscBool)(view && !PetscPreLoadingOn);
   if (view) {
     PetscCall(PetscObjectTypeCompare((PetscObject)v,PETSCVIEWERASCII,&flg));
@@ -273,7 +273,7 @@ PetscErrorCode QPChainPostSolve(QP qp)
   if (view) {
     PetscCall(PetscViewerASCIIPrintf(v,"=====================\n"));
   }
-  PetscCall(PetscOptionsRestoreViewer(&v));
+  PetscCall(PetscViewerDestroy(&v));
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
