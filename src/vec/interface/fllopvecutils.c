@@ -113,11 +113,11 @@ PetscErrorCode ISCreateFromVec(Vec vec, IS *is)
   PetscAssertPointer(is,2);
   PetscCall(VecGetLocalSize(vec, &n));
   PetscCall(PetscMalloc(n*sizeof(PetscInt), &ia));
-    
+
   PetscCall(VecGetArray(    vec, &a));
   for (i=0; i<n; i++) ia[i] = (PetscInt) a[i];
   PetscCall(VecRestoreArray(vec, &a));
-    
+
   PetscCall(ISCreateGeneral(PetscObjectComm((PetscObject)vec), n, ia, PETSC_OWN_POINTER, is));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -130,7 +130,7 @@ PetscErrorCode VecCreateFromIS(IS is, Vec *vecout)
   PetscScalar *a;
   const PetscInt *ia;
   Vec         vec;
-    
+
   PetscFunctionBegin;
   PetscValidHeaderSpecific(is,IS_CLASSID,1);
   PetscAssertPointer(vecout,2);
@@ -157,12 +157,12 @@ ISGetVec - set the layout of vector subject to the layout defined by index set
 
 Parameters:
 + is - index set
-- vec - given vector 
+- vec - given vector
 */
 PetscErrorCode ISGetVec(IS is, Vec *vec)
 {
   PetscInt m,M,bs;
-  
+
   PetscFunctionBegin;
   PetscValidHeaderSpecific(is,IS_CLASSID,1);
   PetscAssertPointer(vec,2);
@@ -184,17 +184,17 @@ ISGetVecBlock - set the layout of vector subject to the layout defined by index 
 
 Parameters:
 + is - index set with
-. vec - given vector 
+. vec - given vector
 - bs - the size of block
 */
 PetscErrorCode ISGetVecBlock(IS is, Vec *vec, PetscInt bs)
 {
-  PetscInt M; /* global size of is = (global size of vec * block size) */ 
+  PetscInt M; /* global size of is = (global size of vec * block size) */
   PetscInt m; /* local size of is */
-  
+
   PetscInt M_vec; /* global size of vec */
   PetscInt m_vec; /* local size of vec */
-  
+
   PetscFunctionBegin;
 
   /* control the validity of given objects*/
@@ -210,8 +210,8 @@ PetscErrorCode ISGetVecBlock(IS is, Vec *vec, PetscInt bs)
 
   /* set size of vector */
   M_vec = M/bs; /* the dimension of each block is reduced to 1 */
-  m_vec = m/bs; 
-  
+  m_vec = m/bs;
+
   PetscCall(VecSetSizes(*vec,m_vec,M_vec));
   PetscCall(VecSetBlockSize(*vec,1)); /* the block size is 1 */
   PetscCall(VecSetType(*vec,VECSTANDARD));
@@ -225,7 +225,7 @@ PetscErrorCode ISGetVecBlock(IS is, Vec *vec, PetscInt bs)
 PetscErrorCode VecCheckSameLayoutIS(Vec vec, IS is)
 {
   PetscInt n,N,bs;
-  
+
   PetscFunctionBegin;
   PetscValidHeaderSpecific(vec,VEC_CLASSID,1);
   PetscValidHeaderSpecific(is,IS_CLASSID,2);
@@ -277,7 +277,7 @@ PetscErrorCode VecInvalidate(Vec vec)
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(vec,VEC_CLASSID,1);
-  PetscCall(VecSetInf(vec));
+  PetscCall(VecFlag(vec,PETSC_TRUE));
 
   PetscCall(PetscContainerCreate(PetscObjectComm((PetscObject)vec),&container));
   PetscCall(PetscObjectStateGet((PetscObject)vec,&vecstate));
@@ -365,45 +365,45 @@ typedef struct _n_VecNestGetMPICtx *VecNestGetMPICtx;
 #undef __FUNCT__
 #define __FUNCT__ "VecGetMPIVector"
 PetscErrorCode   VecGetMPIVector(MPI_Comm comm, PetscInt N,Vec vecs[], Vec *VecOut)
-{  
+{
   IS isl, isg;
   VecScatter sc;
   Vec locNest, *origVec, glVec;
   VecNestGetMPICtx ctx;
   PetscContainer container;
   PetscInt i;
-  
+
   PetscFunctionBegin;
   PERMON_ASSERT(N>0,"N>0");
-  
+
   *VecOut = NULL;
-      
+
   for (i = 0; i < N; i++) if(!vecs[i]) PetscFunctionReturn(PETSC_SUCCESS);
-  
-  PetscCall(VecCreateNest(PETSC_COMM_SELF, N, NULL, vecs, &locNest));  
-  
+
+  PetscCall(VecCreateNest(PETSC_COMM_SELF, N, NULL, vecs, &locNest));
+
   PetscCall(VecCreateMPI(comm,locNest->map->N,PETSC_DECIDE,&glVec));
   PetscCall(ISCreateStride(comm,locNest->map->N,0,1,&isl));
   PetscCall(ISCreateStride(comm,locNest->map->N,glVec->map->rstart,1,&isg));
   PetscCall(VecScatterCreate(locNest,isl,glVec,isg,&sc));
   PetscCall(ISDestroy(&isl)); PetscCall(ISDestroy(&isg));
-  
+
   PetscCall(VecScatterBegin(sc,locNest,glVec,INSERT_VALUES,SCATTER_FORWARD_LOCAL));
   PetscCall(VecScatterEnd(  sc,locNest,glVec,INSERT_VALUES,SCATTER_FORWARD_LOCAL));
-  
+
   PetscCall(PetscNew(&ctx));
-  PetscCall(PetscMalloc(sizeof(Vec), &origVec)); 
+  PetscCall(PetscMalloc(sizeof(Vec), &origVec));
   ctx->sc = sc;
   origVec[0]=locNest;
   ctx->origvecs = origVec;
-  
+
   PetscCall(PetscContainerCreate(comm, &container));
   PetscCall(PetscContainerSetPointer(container, ctx));
   PetscCall(PetscObjectCompose((PetscObject)glVec,"VecGetMPIVector_context",(PetscObject)container));
   PetscCall(PetscContainerDestroy(&container));
-    
+
   *VecOut = glVec;
-   
+
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -415,7 +415,7 @@ PetscErrorCode VecRestoreMPIVector(MPI_Comm comm, PetscInt N,Vec vecs[], Vec *Ve
   VecScatter sc;
   PetscContainer container;
   VecNestGetMPICtx ctx;
-  
+
   PetscFunctionBegin;
   vecs = NULL;
   PetscCall(PetscObjectQuery((PetscObject)(*VecIn),"VecGetMPIVector_context",(PetscObject*)&container));
@@ -426,14 +426,14 @@ PetscErrorCode VecRestoreMPIVector(MPI_Comm comm, PetscInt N,Vec vecs[], Vec *Ve
   locNest = ctx->origvecs[0];
   PetscCall(VecScatterBegin(sc,*VecIn,locNest,INSERT_VALUES,SCATTER_REVERSE_LOCAL));
   PetscCall(VecScatterEnd(  sc,*VecIn,locNest,INSERT_VALUES,SCATTER_REVERSE_LOCAL));
-  
-  PetscCall(PetscObjectCompose((PetscObject)(*VecIn),"VecGetMPIVector_context",NULL)); 
+
+  PetscCall(PetscObjectCompose((PetscObject)(*VecIn),"VecGetMPIVector_context",NULL));
   PetscCall(VecScatterDestroy(&sc));
   PetscCall(VecDestroy(&locNest));
   PetscCall(VecDestroy(VecIn));
   PetscCall(PetscFree(ctx->origvecs));
-  PetscCall(PetscFree(ctx)); 
-  
+  PetscCall(PetscFree(ctx));
+
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -466,7 +466,7 @@ PetscErrorCode VecNestGetMPI(PetscInt N,Vec *vecs[])
   PetscCall(VecDuplicateVecs(y,N,&mpiv));
   PetscCall(VecDestroy(&y));
   y=mpiv[0];
-  
+
   PetscCall(ISCreateStride(comm,x->map->n,x->map->rstart,1,&ix));
   PetscCall(VecScatterCreate(x,ix,y,ix,&sc));
   PetscCall(ISDestroy(&ix));
