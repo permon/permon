@@ -593,21 +593,21 @@ PetscErrorCode QPSPostSolve(QPS qps)
 
   FllopTraceBegin;
   PetscCall(PetscLogEventBegin(QPS_PostSolve,qps,0,0,0));
-  PetscCall(PetscOptionsGetViewer(((PetscObject)qps)->comm,NULL,((PetscObject)qps)->prefix,"-qps_view",&v,&format,&view));
+  PetscCall(PetscOptionsCreateViewer(((PetscObject)qps)->comm,NULL,((PetscObject)qps)->prefix,"-qps_view",&v,&format,&view));
   if (view && !PetscPreLoadingOn) {
     PetscCall(PetscViewerPushFormat(v,format));
     PetscCall(QPSView(qps,v));
     PetscCall(PetscViewerPopFormat(v));
   }
-  PetscCall(PetscOptionsRestoreViewer(&v));
+  PetscCall(PetscViewerDestroy(&v));
 
-  PetscCall(PetscOptionsGetViewer(((PetscObject)qps)->comm,NULL,((PetscObject)qps)->prefix,"-qps_view_convergence",&v,&format,&view));
+  PetscCall(PetscOptionsCreateViewer(((PetscObject)qps)->comm,NULL,((PetscObject)qps)->prefix,"-qps_view_convergence",&v,&format,&view));
   if (view && !PetscPreLoadingOn) {
     PetscCall(PetscViewerPushFormat(v,format));
     PetscCall(QPSViewConvergence(qps,v));
     PetscCall(PetscViewerPopFormat(v));
   }
-  PetscCall(PetscOptionsRestoreViewer(&v));
+  PetscCall(PetscViewerDestroy(&v));
 
   PetscCall(QPSGetQP(qps,&qp));
   PetscCall(QPChainPostSolve(qp));

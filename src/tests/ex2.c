@@ -19,7 +19,7 @@ int main(int argc,char **args)
   PetscCallMPI(MPI_Comm_rank(comm,&rank));
   PetscCallMPI(MPI_Comm_size(comm,&size));
   PetscCall(PetscOptionsGetInt(NULL,NULL,"-nloc",&n,NULL));
-  PetscCall(PetscOptionsGetViewer(comm,NULL,NULL,"-view",&viewer,&format,NULL));
+  PetscCall(PetscOptionsCreateViewer(comm,NULL,NULL,"-view",&viewer,&format,NULL));
 
   PetscCall(PetscRandomCreate(comm,&rand));
   PetscCall(PetscRandomSetInterval(rand,0.0,10.0));
@@ -77,7 +77,7 @@ int main(int argc,char **args)
   PetscCall(MatEqual(A,C,&flg));
   if (!flg) SETERRQ(comm, PETSC_ERR_PLIB, "C != A");
 
-  PetscCall(PetscOptionsRestoreViewer(&viewer));
+  PetscCall(PetscViewerDestroy(&viewer));
   PetscCall(PetscRandomDestroy(&rand));
   PetscCall(ISDestroy(&rperm));
   PetscCall(MatDestroy(&A));

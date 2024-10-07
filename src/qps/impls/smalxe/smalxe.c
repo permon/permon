@@ -8,7 +8,7 @@ FLLOP_EXTERN PetscErrorCode QPSReset_SMALXE(QPS qps);
 static PetscErrorCode QPSSMALXEGetOperatorMaxEigenvalue_SMALXE(QPS qps,PetscReal *maxeig)
 {
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps->data;
-  
+
   PetscFunctionBegin;
   *maxeig = smalxe->maxeig;
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -19,7 +19,7 @@ static PetscErrorCode QPSSMALXEGetOperatorMaxEigenvalue_SMALXE(QPS qps,PetscReal
 static PetscErrorCode QPSSMALXESetOperatorMaxEigenvalue_SMALXE(QPS qps,PetscReal maxeig)
 {
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps->data;
-  
+
   PetscFunctionBegin;
   smalxe->maxeig = maxeig;
   qps->setupcalled = PETSC_FALSE;
@@ -31,7 +31,7 @@ static PetscErrorCode QPSSMALXESetOperatorMaxEigenvalue_SMALXE(QPS qps,PetscReal
 static PetscErrorCode QPSSMALXEGetM1Initial_SMALXE(QPS qps,PetscReal *M1_initial,QPSScalarArgType *argtype)
 {
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps->data;
-  
+
   PetscFunctionBegin;
   if (M1_initial) *M1_initial = smalxe->M1_user;
   if (argtype) *argtype = smalxe->M1_type;
@@ -43,7 +43,7 @@ static PetscErrorCode QPSSMALXEGetM1Initial_SMALXE(QPS qps,PetscReal *M1_initial
 static PetscErrorCode QPSSMALXESetM1Initial_SMALXE(QPS qps,PetscReal M1_initial,QPSScalarArgType argtype)
 {
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps->data;
-  
+
   PetscFunctionBegin;
   smalxe->M1_user = M1_initial;
   smalxe->M1_type = argtype;
@@ -55,7 +55,7 @@ static PetscErrorCode QPSSMALXESetM1Initial_SMALXE(QPS qps,PetscReal M1_initial,
 static PetscErrorCode QPSSMALXEGetEta_SMALXE(QPS qps,PetscReal *eta,QPSScalarArgType *argtype)
 {
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps->data;
-  
+
   PetscFunctionBegin;
   if (eta) {
     *eta = smalxe->eta_user;
@@ -71,7 +71,7 @@ static PetscErrorCode QPSSMALXEGetEta_SMALXE(QPS qps,PetscReal *eta,QPSScalarArg
 static PetscErrorCode QPSSMALXESetEta_SMALXE(QPS qps,PetscReal eta,QPSScalarArgType argtype)
 {
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps->data;
-  
+
   PetscFunctionBegin;
   smalxe->eta_user = eta;
   smalxe->eta_type = argtype;
@@ -84,7 +84,7 @@ static PetscErrorCode QPSSMALXESetEta_SMALXE(QPS qps,PetscReal eta,QPSScalarArgT
 static PetscErrorCode QPSSMALXEGetRhoInitial_SMALXE(QPS qps,PetscReal *rho_initial,QPSScalarArgType *argtype)
 {
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps->data;
-  
+
   PetscFunctionBegin;
   if (rho_initial) {
     *rho_initial = smalxe->rho_user;
@@ -100,7 +100,7 @@ static PetscErrorCode QPSSMALXEGetRhoInitial_SMALXE(QPS qps,PetscReal *rho_initi
 static PetscErrorCode QPSSMALXESetRhoInitial_SMALXE(QPS qps,PetscReal rho_initial,QPSScalarArgType argtype)
 {
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps->data;
-  
+
   PetscFunctionBegin;
   smalxe->rho_user = rho_initial;
   smalxe->rho_type = argtype;
@@ -113,7 +113,7 @@ static PetscErrorCode QPSSMALXESetRhoInitial_SMALXE(QPS qps,PetscReal rho_initia
 static PetscErrorCode QPSSMALXEGetM1Update_SMALXE(QPS qps,PetscReal *M1_update)
 {
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps->data;
-  
+
   PetscFunctionBegin;
   *M1_update = smalxe->M1_update;
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -124,7 +124,7 @@ static PetscErrorCode QPSSMALXEGetM1Update_SMALXE(QPS qps,PetscReal *M1_update)
 static PetscErrorCode QPSSMALXESetM1Update_SMALXE(QPS qps,PetscReal M1_update)
 {
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps->data;
-  
+
   PetscFunctionBegin;
   smalxe->M1_update = M1_update;
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -135,7 +135,7 @@ static PetscErrorCode QPSSMALXESetM1Update_SMALXE(QPS qps,PetscReal M1_update)
 static PetscErrorCode QPSSMALXEGetRhoUpdate_SMALXE(QPS qps,PetscReal *rho_update)
 {
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps->data;
-  
+
   PetscFunctionBegin;
   *rho_update = smalxe->rho_update;
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -146,7 +146,7 @@ static PetscErrorCode QPSSMALXEGetRhoUpdate_SMALXE(QPS qps,PetscReal *rho_update
 static PetscErrorCode QPSSMALXESetRhoUpdate_SMALXE(QPS qps,PetscReal rho_update)
 {
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps->data;
-  
+
   PetscFunctionBegin;
   smalxe->rho_update = rho_update;
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -157,7 +157,7 @@ static PetscErrorCode QPSSMALXESetRhoUpdate_SMALXE(QPS qps,PetscReal rho_update)
 static PetscErrorCode QPSSMALXEGetRhoUpdateLate_SMALXE(QPS qps,PetscReal *rho_update_late)
 {
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps->data;
-  
+
   PetscFunctionBegin;
   *rho_update_late = smalxe->rho_update_late;
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -168,7 +168,7 @@ static PetscErrorCode QPSSMALXEGetRhoUpdateLate_SMALXE(QPS qps,PetscReal *rho_up
 static PetscErrorCode QPSSMALXESetRhoUpdateLate_SMALXE(QPS qps,PetscReal rho_update_late)
 {
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps->data;
-  
+
   PetscFunctionBegin;
   smalxe->rho_update_late = rho_update_late;
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -179,7 +179,7 @@ static PetscErrorCode QPSSMALXESetRhoUpdateLate_SMALXE(QPS qps,PetscReal rho_upd
 static PetscErrorCode QPSSMALXEGetOperatorMaxEigenvalueIterations_SMALXE(QPS qps,PetscInt *numit)
 {
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps->data;
-  
+
   PetscFunctionBegin;
   *numit = smalxe->maxeig_iter;
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -190,7 +190,7 @@ static PetscErrorCode QPSSMALXEGetOperatorMaxEigenvalueIterations_SMALXE(QPS qps
 static PetscErrorCode QPSSMALXESetOperatorMaxEigenvalueIterations_SMALXE(QPS qps,PetscInt numit)
 {
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps->data;
-  
+
   PetscFunctionBegin;
   smalxe->maxeig_iter = numit;
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -201,7 +201,7 @@ static PetscErrorCode QPSSMALXESetOperatorMaxEigenvalueIterations_SMALXE(QPS qps
 static PetscErrorCode QPSSMALXEGetOperatorMaxEigenvalueTolerance_SMALXE(QPS qps,PetscReal *tol)
 {
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps->data;
-  
+
   PetscFunctionBegin;
   *tol = smalxe->maxeig_tol;
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -212,7 +212,7 @@ static PetscErrorCode QPSSMALXEGetOperatorMaxEigenvalueTolerance_SMALXE(QPS qps,
 static PetscErrorCode QPSSMALXESetOperatorMaxEigenvalueTolerance_SMALXE(QPS qps,PetscReal tol)
 {
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps->data;
-  
+
   PetscFunctionBegin;
   smalxe->maxeig_tol = tol;
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -223,7 +223,7 @@ static PetscErrorCode QPSSMALXESetOperatorMaxEigenvalueTolerance_SMALXE(QPS qps,
 static PetscErrorCode QPSSMALXESetInjectOperatorMaxEigenvalue_SMALXE(QPS qps,PetscBool flg)
 {
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps->data;
-  
+
   PetscFunctionBegin;
   smalxe->inject_maxeig = flg;
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -234,7 +234,7 @@ static PetscErrorCode QPSSMALXESetInjectOperatorMaxEigenvalue_SMALXE(QPS qps,Pet
 static PetscErrorCode QPSSMALXEGetInjectOperatorMaxEigenvalue_SMALXE(QPS qps,PetscBool *flg)
 {
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps->data;
-  
+
   PetscFunctionBegin;
   *flg = smalxe->inject_maxeig;
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -245,7 +245,7 @@ static PetscErrorCode QPSSMALXEGetInjectOperatorMaxEigenvalue_SMALXE(QPS qps,Pet
 static PetscErrorCode QPSSMALXESetMonitor_SMALXE(QPS qps,PetscBool flg)
 {
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps->data;
-  
+
   PetscFunctionBegin;
   smalxe->monitor = flg;
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -361,7 +361,6 @@ static PetscErrorCode QPSSMALXEUpdateNormBu_Lag_SMALXEON(QPS qps,Vec u,PetscReal
       PetscCall(QPSSMALXEUpdateNormBu_SMALXEON(qps,u,&normBu_exact,&enorm_exact));
     }
     rdiff = PetscAbs(normBu_approx-normBu_exact)/normBu_exact;
-    sign = (PetscBool)((normBu_exact > normBu_approx) ? '>' : '<');
     if (normBu_exact > normBu_approx) {
       sign = '>';
     } else if (normBu_exact < normBu_approx) {
@@ -393,7 +392,7 @@ static PetscErrorCode QPSSMALXEUpdateRho_SMALXE(QPS qps, PetscBool Lagrangian_fl
     default: SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_WRONGSTATE,"invalid SMALXE state");
   }
   if (!Lagrangian_flag || rho_update == 1.0) PetscFunctionReturn(PETSC_SUCCESS);
-  
+
   PetscCall(PetscInfo(qps,"updating rho, multiply by rho_update%d = %.4e\n",smalxe->state,rho_update));
   PetscCall(MatPenalizedUpdatePenalty(A_inner, rho_update));
   PetscCall(QPSMPGPUpdateMaxEigenvalue(smalxe->inner, rho_update));
@@ -514,7 +513,7 @@ PetscErrorCode QPSSMALXEGetInnerQPS_SMALXE(QPS qps, QPS *inner)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSConvergedDestroy_Inner_SMALXE"
 PetscErrorCode QPSConvergedDestroy_Inner_SMALXE(void *ctx)
 {
@@ -525,7 +524,7 @@ PetscErrorCode QPSConvergedDestroy_Inner_SMALXE(void *ctx)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSConvergedCreate_Inner_SMALXE"
 PetscErrorCode QPSConvergedCreate_Inner_SMALXE(QPS qps_outer, void **ctx)
 {
@@ -567,7 +566,7 @@ PetscErrorCode QPSConvergedSetUp_Inner_SMALXE(QPS qps_inner)
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSConverged_Inner_SMALXE_Monitor_Outer"
-static inline PetscErrorCode QPSConverged_Inner_SMALXE_Monitor_Outer(QPS qps_inner,QP qp_inner,PetscInt i,PetscReal gnorm,QPSConvergedCtx_Inner_SMALXE *cctx,PetscBool header) 
+static inline PetscErrorCode QPSConverged_Inner_SMALXE_Monitor_Outer(QPS qps_inner,QP qp_inner,PetscInt i,PetscReal gnorm,QPSConvergedCtx_Inner_SMALXE *cctx,PetscBool header)
 {
   QPS qps_outer = cctx->qps_outer;
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps_outer->data;
@@ -592,7 +591,7 @@ static inline PetscErrorCode QPSConverged_Inner_SMALXE_Monitor_Outer(QPS qps_inn
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSConverged_Inner_SMALXE_Monitor_Inner"
-static inline PetscErrorCode QPSConverged_Inner_SMALXE_Monitor_Inner(QPS qps_inner,QP qp_inner,PetscInt i,PetscReal gnorm,QPSConvergedCtx_Inner_SMALXE *cctx)  
+static inline PetscErrorCode QPSConverged_Inner_SMALXE_Monitor_Inner(QPS qps_inner,QP qp_inner,PetscInt i,PetscReal gnorm,QPSConvergedCtx_Inner_SMALXE *cctx)
 {
   QPS qps_outer = cctx->qps_outer;
   QPS_SMALXE *smalxe = (QPS_SMALXE*)qps_outer->data;
@@ -626,7 +625,7 @@ PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,KSPConvergedReason *reaso
   PetscInt i = qps_inner->iteration;
   PetscReal gnorm = qps_inner->rnorm;
   MPI_Comm comm;
-  
+
   PetscFunctionBegin;
   PetscCall(PetscObjectGetComm((PetscObject)qps_inner,&comm));
   *reason = KSP_CONVERGED_ITERATING;
@@ -635,7 +634,7 @@ PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,KSPConvergedReason *reaso
   qps_outer->rnorm = PetscMax(smalxe->enorm,gnorm);
   cctx->MNormBu = smalxe->M1 * smalxe->normBu;
   qps_inner->atol = PetscMin(cctx->MNormBu, smalxe->eta);
-  
+
   PetscCall(QPSConverged_Inner_SMALXE_Monitor_Outer(qps_inner,qp_inner,i,gnorm,cctx,PETSC_TRUE));
   PetscCall(QPSConverged_Inner_SMALXE_Monitor_Inner(qps_inner,qp_inner,i,gnorm,cctx));
 
@@ -654,7 +653,7 @@ PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,KSPConvergedReason *reaso
     PetscFunctionReturn(PETSC_SUCCESS);
   }
 
-  
+
   PetscCall((*qps_outer->convergencetest)(qps_outer,&qps_outer->reason));
 
   if (qps_outer->reason) {
@@ -814,7 +813,7 @@ PetscErrorCode QPSSetUp_SMALXE(QPS qps)
   PetscCall(MatCreateVecs(B, NULL, &smalxe->Bu));
   PetscCall(VecZeroEntries(qp->lambda_E));
   PetscCall(VecZeroEntries(qp->Bt_lambda));
-  
+
   /* initialize parameter eta */
   smalxe->eta = smalxe->eta_user;
   if (smalxe->eta_type == QPS_ARG_MULTIPLE) {
@@ -822,7 +821,7 @@ PetscErrorCode QPSSetUp_SMALXE(QPS qps)
     PetscCall(VecNorm(qp->b, NORM_2, &normb));
     smalxe->eta *= normb;
   }
-  
+
   /* initialize parameter M1 */
   smalxe->M1_initial = smalxe->M1_user;
   if (smalxe->M1_type == QPS_ARG_MULTIPLE) {
@@ -877,7 +876,7 @@ PetscErrorCode QPSSetUp_SMALXE(QPS qps)
   } else {
     PetscCall(QPSSetDefaultTypeIfNotSpecified(smalxe->inner));
   }
-  
+
   /* if the inner solver is MPGP, it inherits maximum operator eigenvalue maxeig_inner */
   maxeig_inner = PetscMax(rho, smalxe->maxeig);
   if (!smalxe->inject_maxeig_set) {
@@ -885,10 +884,10 @@ PetscErrorCode QPSSetUp_SMALXE(QPS qps)
   }
   PetscCall(PetscInfo(qps,"maximum operator eigenvalue estimate %.8e is %sinjected to the inner solver\n",maxeig_inner,smalxe->inject_maxeig?"":"NOT "));
   if (smalxe->inject_maxeig) PetscCall(QPSMPGPSetOperatorMaxEigenvalue(smalxe->inner, maxeig_inner));
-  
+
   PetscCall(QPSSetAutoPostSolve(smalxe->inner, PETSC_FALSE));
   PetscCall(QPSSetUp(smalxe->inner));
-  
+
   /* inject the special stopping criterion to the inner loop solver */
   PetscCall(QPSConvergedCreate_Inner_SMALXE(qps, (void**)&smalxe->cctx_inner));
   PetscCall(QPSSetConvergenceTest(smalxe->inner, QPSConverged_Inner_SMALXE, smalxe->cctx_inner, QPSConvergedDestroy_Inner_SMALXE));
@@ -1044,7 +1043,7 @@ PetscErrorCode QPSViewConvergence_SMALXE(QPS qps, PetscViewer v)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSReset_SMALXE"
 PetscErrorCode QPSReset_SMALXE(QPS qps)
 {
@@ -1066,7 +1065,7 @@ PetscErrorCode QPSReset_SMALXE(QPS qps)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSDestroy_SMALXE"
 PetscErrorCode QPSDestroy_SMALXE(QPS qps)
 {
@@ -1101,13 +1100,13 @@ PetscErrorCode QPSDestroy_SMALXE(QPS qps)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSIsQPCompatible_SMALXE"
 PetscErrorCode QPSIsQPCompatible_SMALXE(QPS qps,QP qp,PetscBool *flg)
 {
   Mat Beq,Bineq;
   Vec ceq;
-  
+
   PetscFunctionBegin;
   *flg = PETSC_TRUE;
   PetscCall(QPGetEq(qp,&Beq,&ceq));
@@ -1118,20 +1117,20 @@ PetscErrorCode QPSIsQPCompatible_SMALXE(QPS qps,QP qp,PetscBool *flg)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSCreate_SMALXE"
 FLLOP_EXTERN PetscErrorCode QPSCreate_SMALXE(QPS qps)
 {
   QPS_SMALXE      *smalxe;
   MPI_Comm        comm;
-  
+
   PetscFunctionBegin;
   PetscCall(PetscObjectGetComm((PetscObject)qps,&comm));
   PetscCall(PetscNew(&smalxe));
   qps->data                  = (void*)smalxe;
-  
+
   /*
-       Sets the functions that are associated with this data structure 
+       Sets the functions that are associated with this data structure
        (in C++ this is the same as defining virtual functions)
   */
   qps->ops->reset            = QPSReset_SMALXE;
@@ -1182,7 +1181,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_SMALXE(QPS qps)
   smalxe->state                 = 1;
   smalxe->inner_iter_accu       = 0;
   smalxe->rho_updates           = 0;
-  
+
   /* set default values of parameters */
   smalxe->M1_user     = 1e2;
   smalxe->M1_type     = QPS_ARG_MULTIPLE;

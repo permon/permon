@@ -1,13 +1,13 @@
   last QPSSolve CONVERGED due to CONVERGED_RTOL, KSPReason=2, required 26 iterations
-r = ||A*x - b|| = 1.98e-04    rO/||b|| = 9.69e-07
+r = ||A*x - b|| = 2.00e-04    rO/||b|| = 9.79e-07
 r = ||A*x - b + (B'*lambda)|| = 0.00e+00    rO/||b|| = 0.00e+00
-r = ||BE*x||             = 3.68e-13    r/||b|| = 5.96e-16
-r = ||A*x - b + (B'*lambda)|| = 2.41e-11    rO/||b|| = 1.39e-12
-r = ||BE*x-cE||          = 1.02e-12    r/||b|| = 5.87e-14
-r = ||A*x - b + (B'*lambda)|| = 2.41e-11    rO/||b|| = 1.39e-12
-r = ||BE*x-cE||          = 1.02e-12    r/||b|| = 5.87e-14
-r = ||A*x - b + B'*lambda|| = 1.19e-11    rO/||b|| = 4.73e-13
-r = ||BE*x||             = 1.98e-04    r/||b|| = 7.88e-06
-r = ||A*x - b + B'*lambda|| = 1.19e-11    rO/||b|| = 4.73e-13
-r = ||BE*x||             = 1.98e-04    r/||b|| = 7.88e-06
-r = ||A*x - b|| = 6.19e-04    rO/||b|| = 2.01e-05
+r = ||BE*x||             = 3.09e-13    r/||b|| = 5.00e-16
+r = ||A*x - b + (B'*lambda)|| = 3.33e-11    rO/||b|| = 1.92e-12
+r = ||BE*x-cE||          = 8.40e-13    r/||b|| = 4.83e-14
+r = ||A*x - b + (B'*lambda)|| = 3.33e-11    rO/||b|| = 1.92e-12
+r = ||BE*x-cE||          = 8.40e-13    r/||b|| = 4.83e-14
+r = ||A*x - b + B'*lambda|| = 1.22e-11    rO/||b|| = 4.85e-13
+r = ||BE*x||             = 2.00e-04    r/||b|| = 7.96e-06
+r = ||A*x - b + B'*lambda|| = 1.22e-11    rO/||b|| = 4.85e-13
+r = ||BE*x||             = 2.00e-04    r/||b|| = 7.96e-06
+r = ||A*x - b|| = 6.28e-04    rO/||b|| = 2.04e-05
