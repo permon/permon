@@ -1660,16 +1660,18 @@ static PetscErrorCode QPTPostSolve_QPTScaleObjectiveByScalar(QP child,QP parent)
   }
   PetscCall(QPGetBox(parent,NULL,&lb,&ub));
   PetscCall(QPGetQPC(parent, &qpc));
-  PetscCall(QPGetQPC(child, &qpcc));
-  PetscCall(QPCBoxGetMultipliers(qpcc,&llb,&lub));
-  PetscCall(QPCBoxGetMultipliers(qpc,&llbnew,&lubnew));
-  if (lb) {
-    PetscCall(VecCopy(llb,llbnew));
-    PetscCall(VecScale(llbnew,1.0/scale_b));
-  }
-  if (ub) {
-    PetscCall(VecCopy(lub,lubnew));
-    PetscCall(VecScale(lubnew,1.0/scale_b));
+  if (qpc) {
+    PetscCall(QPGetQPC(child, &qpcc));
+    PetscCall(QPCBoxGetMultipliers(qpcc,&llb,&lub));
+    PetscCall(QPCBoxGetMultipliers(qpc,&llbnew,&lubnew));
+    if (lb) {
+      PetscCall(VecCopy(llb,llbnew));
+      PetscCall(VecScale(llbnew,1.0/scale_b));
+    }
+    if (ub) {
+      PetscCall(VecCopy(lub,lubnew));
+      PetscCall(VecScale(lubnew,1.0/scale_b));
+    }
   }
   if (parent->BI) {
     PetscCall(VecCopy(child->lambda_I,parent->lambda_I));
