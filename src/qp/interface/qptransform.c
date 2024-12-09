@@ -1564,6 +1564,23 @@ PetscErrorCode QPTScale(QP qp)
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
+/*@
+   QPTNormalizeObjective - Normalize the Hessian and the right-hand side
+
+   Logically Collective
+
+   Input Parameter:
+.  qp - the QP
+
+   Notes:
+   Uses QPTScaleObjectiveByScalar() with scale_A = 1/||Hessian|| and scale_b = 1/||RHS||.
+   The norm of Hessian is estimated by the power method.
+   If ||RHS|| = 0, scale_b is set to scale_A, i.e., effectively ignored.
+
+   Level: intermediate
+
+.seealso: QPTNormalizeHessian(), QPTScaleObjectiveByScalar()
+@*/
 #undef __FUNCT__
 #define __FUNCT__ "QPTNormalizeObjective"
 PetscErrorCode QPTNormalizeObjective(QP qp)
@@ -1576,11 +1593,32 @@ PetscErrorCode QPTNormalizeObjective(QP qp)
   PetscCall(MatGetMaxEigenvalue(qp->A, NULL, &norm_A, PETSC_DECIDE, PETSC_DECIDE));
   PetscCall(VecNorm(qp->b,NORM_2,&norm_b));
   PetscCall(PetscInfo(qp,"||A||=%.12e, scale A by 1/||A||=%.12e\n",norm_A,1.0/norm_A));
-  PetscCall(PetscInfo(qp,"||b||=%.12e, scale b by 1/||b||=%.12e\n",norm_b,1.0/norm_b));
+  if (norm_b) {
+    PetscCall(PetscInfo(qp,"||b||=%.12e, scale b by 1/||b||=%.12e\n",norm_b,1.0/norm_b));
+  } else {
+    norm_b = norm_A;
+    PetscCall(PetscInfo(qp,"||b||=0, scale b by 1/||A||=%.12e\n",1.0/norm_b));
+  }
   PetscCall(QPTScaleObjectiveByScalar(qp, 1.0/norm_A, 1.0/norm_b));
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
+/*@
+   QPTNormalizeHessian - Normalize the Hessian
+
+   Logically Collective
+
+   Input Parameter:
+.  qp - the QP
+
+   Notes:
+   Uses QPTScaleObjectiveByScalar() with scale_A = scale_b = 1/||Hessian||.
+   The norm of Hessian is estimated by the power method.
+
+   Level: intermediate
+
+.seealso: QPTNormalizeObjective(), QPTScaleObjectiveByScalar()
+@*/
 #undef __FUNCT__
 #define __FUNCT__ "QPTNormalizeHessian"
 PetscErrorCode QPTNormalizeHessian(QP qp)
@@ -1622,16 +1660,18 @@ static PetscErrorCode QPTPostSolve_QPTScaleObjectiveByScalar(QP child,QP parent)
   }
   PetscCall(QPGetBox(parent,NULL,&lb,&ub));
   PetscCall(QPGetQPC(parent, &qpc));
-  PetscCall(QPGetQPC(child, &qpcc));
-  PetscCall(QPCBoxGetMultipliers(qpcc,&llb,&lub));
-  PetscCall(QPCBoxGetMultipliers(qpc,&llbnew,&lubnew));
-  if (lb) {
-    PetscCall(VecCopy(llb,llbnew));
-    PetscCall(VecScale(llbnew,1.0/scale_b));
-  }
-  if (ub) {
-    PetscCall(VecCopy(lub,lubnew));
-    PetscCall(VecScale(lubnew,1.0/scale_b));
+  if (qpc) {
+    PetscCall(QPGetQPC(child, &qpcc));
+    PetscCall(QPCBoxGetMultipliers(qpcc,&llb,&lub));
+    PetscCall(QPCBoxGetMultipliers(qpc,&llbnew,&lubnew));
+    if (lb) {
+      PetscCall(VecCopy(llb,llbnew));
+      PetscCall(VecScale(llbnew,1.0/scale_b));
+    }
+    if (ub) {
+      PetscCall(VecCopy(lub,lubnew));
+      PetscCall(VecScale(lubnew,1.0/scale_b));
+    }
   }
   if (parent->BI) {
     PetscCall(VecCopy(child->lambda_I,parent->lambda_I));
@@ -1649,6 +1689,24 @@ static PetscErrorCode QPTPostSolveDestroy_QPTScaleObjectiveByScalar(void *ctx)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
+/*@
+   QPTScaleObjectiveByScalar - Scale the Hessian, right-hand side and potentially other constraints.
+
+   Logically Collective
+
+   Input Parameters:
++  qp      - the QP
+.  scale_A - scaling factor for the Hessian
+-  scale_b - scaling factor for the right-hand side
+
+   Notes:
+   Scales (multiplies) by scale_A the Hessian, by scale_b the right-hand side so that the solution is scaled by scale_A/scale_b.
+   Other constraints are adjusted to be valid for the scaled solution.
+
+   Level: intermediate
+
+.seealso: QPTNormalizeHessian(), QPTNormalizeObjective()
+@*/
 #undef __FUNCT__
 #define __FUNCT__ "QPTScaleObjectiveByScalar"
 PetscErrorCode QPTScaleObjectiveByScalar(QP qp,PetscScalar scale_A,PetscScalar scale_b)
@@ -1664,6 +1722,8 @@ PetscErrorCode QPTScaleObjectiveByScalar(QP qp,PetscScalar scale_A,PetscScalar s
 
   PetscFunctionBeginI;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
+  if (!PetscIsNormalScalar(scale_A)) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_OUTOFRANGE,"scale_A cannot be %g",(double)scale_A);
+  if (!PetscIsNormalScalar(scale_b)) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_OUTOFRANGE,"scale_b cannot be %g",(double)scale_b);
   PetscCall(QPTransformBegin(QPTScaleObjectiveByScalar,
       QPTPostSolve_QPTScaleObjectiveByScalar, QPTPostSolveDestroy_QPTScaleObjectiveByScalar,
       QP_DUPLICATE_COPY_POINTERS, &qp, &child, &comm));
