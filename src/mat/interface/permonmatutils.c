@@ -336,7 +336,7 @@ static PetscErrorCode MatMultEqualTol_Private(Mat A,PetscBool transpose,Mat B,Pe
   f = transpose ? MatMultTranspose : MatMult;
   PetscCall(MatGetLocalSize(A,&am,&an));
   PetscCall(MatGetLocalSize(B,&bm,&bn));
-  if (am != bm || an != bn) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_SIZ,"Mat A,Mat B: local dim %" PetscInt_FMT " %" PetscInt_FMT " %" PetscInt_FMT " %" PetscInt_FMT "",am,bm,an,bn);
+  if (am != bm || an != bn) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_SIZ,"Mat A,Mat B: local dim %" PetscInt_FMT " %" PetscInt_FMT " %" PetscInt_FMT " %" PetscInt_FMT,am,bm,an,bn);
   PetscCheckSameComm(A,1,B,2);
 
   if (n==PETSC_DECIDE || n==PETSC_DEFAULT) {
@@ -1008,7 +1008,7 @@ PetscErrorCode  MatTransposeMatMultWorks(Mat A,Mat B,PetscBool *flg)
   MatCheckPreallocated(B,2);
   if (!B->assembled) SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_WRONGSTATE,"Not for unassembled matrix");
   if (B->factortype) SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_WRONGSTATE,"Not for factored matrix");
-  if (B->rmap->N!=A->rmap->N) SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_SIZ,"Matrix dimensions are incompatible, %" PetscInt_FMT " != %" PetscInt_FMT "",B->rmap->N,A->rmap->N);
+  if (B->rmap->N!=A->rmap->N) SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_SIZ,"Matrix dimensions are incompatible, %" PetscInt_FMT " != %" PetscInt_FMT,B->rmap->N,A->rmap->N);
   MatCheckPreallocated(A,1);
 
   *flg = PETSC_TRUE;
@@ -1187,8 +1187,8 @@ PetscErrorCode MatCheckNullSpace(Mat K,Mat R,PetscReal tol)
   PetscValidHeaderSpecific(K,MAT_CLASSID,1);
   PetscValidHeaderSpecific(R,MAT_CLASSID,2);
   PetscValidLogicalCollectiveReal(K,tol,3);
-  if (K->cmap->N != R->rmap->N) SETERRQ(PetscObjectComm((PetscObject)K),PETSC_ERR_ARG_SIZ,"non-conforming global size of K and R: %" PetscInt_FMT " != %" PetscInt_FMT "",K->cmap->N,R->rmap->N);
-  if (K->cmap->n != R->rmap->n) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_SIZ,"non-conforming local size of K and R: %" PetscInt_FMT " != %" PetscInt_FMT "",K->cmap->n,R->rmap->n);
+  if (K->cmap->N != R->rmap->N) SETERRQ(PetscObjectComm((PetscObject)K),PETSC_ERR_ARG_SIZ,"non-conforming global size of K and R: %" PetscInt_FMT " != %" PetscInt_FMT,K->cmap->N,R->rmap->N);
+  if (K->cmap->n != R->rmap->n) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_SIZ,"non-conforming local size of K and R: %" PetscInt_FMT " != %" PetscInt_FMT,K->cmap->n,R->rmap->n);
 
   PetscCall(MatCreateVecs(K,&d,&y));
   PetscCall(MatCreateVecs(R,&x,NULL));
@@ -1222,8 +1222,8 @@ PetscErrorCode MatRedistributeRows(Mat mat_from,IS rowperm,PetscInt base,Mat mat
   PetscValidHeaderSpecific(mat_from,MAT_CLASSID,1);
   PetscValidHeaderSpecific(mat_to,MAT_CLASSID,4);
   PetscCheckSameComm(mat_from,1,mat_to,4);
-  if (mat_from->rmap->N != mat_to->rmap->N) SETERRQ(PetscObjectComm((PetscObject)mat_from),PETSC_ERR_ARG_SIZ,"Input matrices must have equal global number of rows, %" PetscInt_FMT " != %" PetscInt_FMT "",mat_from->rmap->N,mat_to->rmap->N);
-  if (mat_from->cmap->N != mat_to->cmap->N) SETERRQ(PetscObjectComm((PetscObject)mat_from),PETSC_ERR_ARG_SIZ,"Input matrices must have equal global number of columns, %" PetscInt_FMT " != %" PetscInt_FMT "",mat_from->cmap->N,mat_to->cmap->N);
+  if (mat_from->rmap->N != mat_to->rmap->N) SETERRQ(PetscObjectComm((PetscObject)mat_from),PETSC_ERR_ARG_SIZ,"Input matrices must have equal global number of rows, %" PetscInt_FMT " != %" PetscInt_FMT,mat_from->rmap->N,mat_to->rmap->N);
+  if (mat_from->cmap->N != mat_to->cmap->N) SETERRQ(PetscObjectComm((PetscObject)mat_from),PETSC_ERR_ARG_SIZ,"Input matrices must have equal global number of columns, %" PetscInt_FMT " != %" PetscInt_FMT,mat_from->cmap->N,mat_to->cmap->N);
   m_from = mat_from->rmap->n;
   m_to = mat_to->rmap->n;
   M_to = mat_to->rmap->N;

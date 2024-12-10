@@ -243,7 +243,7 @@ PetscErrorCode MatRegularize(Mat K, Mat R, MatRegularizationType type, Mat *newK
   PetscCheckSameComm(K,1,R,2);
   PetscCall(PetscObjectGetComm((PetscObject)K,&comm));
   if (K->rmap->n!=K->cmap->n) SETERRQ(comm,PETSC_ERR_ARG_SIZ,"Matrix #1 must be locally square");
-  if (K->rmap->n!=R->rmap->n) SETERRQ(comm,PETSC_ERR_ARG_SIZ,"Matrices #1 and #2 don't have the same row layout, %" PetscInt_FMT " != %" PetscInt_FMT "",K->rmap->n,R->rmap->n);
+  if (K->rmap->n!=R->rmap->n) SETERRQ(comm,PETSC_ERR_ARG_SIZ,"Matrices #1 and #2 don't have the same row layout, %" PetscInt_FMT " != %" PetscInt_FMT,K->rmap->n,R->rmap->n);
 
   FllopTraceBegin;
   PetscCall(PetscLogEventBegin(Mat_Regularize,K,R,0,0));
