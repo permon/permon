@@ -1,4 +1,3 @@
-
 #include <../src/qp/impls/feti/qpfetiimpl.h>
 
 #undef __FUNCT__

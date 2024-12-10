@@ -1,4 +1,3 @@
-
 #include <permon/private/qpcimpl.h>
 
 PetscClassId  QPC_CLASSID;
@@ -489,7 +488,6 @@ PetscErrorCode QPCProject(QPC qpc,Vec x, Vec Px)
   /* restore subvectors */
   PetscCall(QPCRestoreSubvector(qpc,Px,&Px_sub));
   PetscCall(QPCRestoreSubvector(qpc,x,&x_sub));
-
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 

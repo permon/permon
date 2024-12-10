@@ -1,4 +1,3 @@
-
 #include <permonpc.h>
 
 FLLOP_EXTERN PetscErrorCode PCCreate_Dual(PC);

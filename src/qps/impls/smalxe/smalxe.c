@@ -1,4 +1,3 @@
-
 #include <../src/qps/impls/smalxe/smalxeimpl.h>
 
 FLLOP_EXTERN PetscErrorCode QPSReset_SMALXE(QPS qps);

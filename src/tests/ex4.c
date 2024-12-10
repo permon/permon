@@ -1,4 +1,3 @@
-
 /* Test VecInvalidate */
 #include <permonvec.h>
 

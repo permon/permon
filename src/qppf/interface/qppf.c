@@ -1,4 +1,3 @@
-
 #include <permon/private/qppfimpl.h>
 #include <permonksp.h>
 PetscClassId QPPF_CLASSID;

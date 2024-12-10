@@ -1,4 +1,3 @@
-
 #include <permon/private/permonmatimpl.h>
 
 #undef __FUNCT__
@@ -62,6 +61,7 @@ PetscErrorCode MatDuplicate_Complete(Mat A,MatDuplicateOption op,Mat *M)
 PetscErrorCode MatCompleteCtxCreate(Mat A, MatCompleteCtx *ctxout)
 {
   MatCompleteCtx ctx;
+
   PetscFunctionBegin;
   PetscCall(PetscNew(&ctx));
   ctx->mult             = A->ops->mult;

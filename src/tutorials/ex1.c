@@ -1,4 +1,3 @@
-
 static char help[] = "Solves a tridiagonal system with lower bound.\n\
 Solves finite difference discretization of:\n\
 -u''(x) = -15,  x in [0,1]\n\
@@ -27,8 +26,8 @@ Input parameters include:\n\
 PetscErrorCode viewDraw(Vec x) {
   PetscViewer    v1;
   PetscDraw      draw;
-  PetscFunctionBeginUser;
 
+  PetscFunctionBeginUser;
   PetscCall(PetscViewerDrawOpen(PETSC_COMM_WORLD,0,"",80,380,400,160,&v1));
   PetscCall(PetscViewerDrawGetDraw(v1,0,&draw));
   PetscCall(PetscDrawSetDoubleBuffer(draw));

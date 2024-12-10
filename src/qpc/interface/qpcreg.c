@@ -1,4 +1,3 @@
-
 #include <permon/private/qpcimpl.h>
 
 FLLOP_EXTERN PetscErrorCode QPCCreate_Box(QPC);

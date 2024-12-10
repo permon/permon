@@ -1,4 +1,3 @@
-
 #include <permonksp.h>
 
 PETSC_EXTERN PetscErrorCode KSPCreate_FETI(KSP);

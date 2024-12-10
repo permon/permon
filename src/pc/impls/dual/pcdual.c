@@ -1,4 +1,3 @@
-
 #include <permon/private/permonpcimpl.h>
 #include <petscmat.h>
 

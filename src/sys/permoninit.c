@@ -1,4 +1,3 @@
-
 #include <permonqps.h>
 #include <permonmat.h>
 #include <permonpc.h>

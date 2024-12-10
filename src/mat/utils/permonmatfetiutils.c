@@ -1,4 +1,3 @@
-
 #include <permonmat.h>
 #include <petsc/private/matimpl.h>
 

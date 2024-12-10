@@ -1,4 +1,3 @@
-
 static char help[] = "Solves a tridiagonal system with lower bound on the first half of the components.\n\
 Solves finite difference discretization of:\n\
 -u''(x) = -15,  x in [0,1]\n\

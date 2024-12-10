@@ -1,4 +1,3 @@
-
 #include <permon/private/qpsimpl.h>
 
 FLLOP_EXTERN PetscErrorCode QPSCreate_KSP(QPS);

@@ -1,4 +1,3 @@
-
 #include <permon/private/qpimpl.h>
 
 #undef __FUNCT__

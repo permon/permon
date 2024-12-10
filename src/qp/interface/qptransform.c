@@ -2158,7 +2158,6 @@ PetscErrorCode QPTMatISToBlockDiag(QP qp)
   PetscCall(VecDestroy(&vec1_B));
   PetscCall(VecDestroy(&b));
   PetscCall(MatDestroy(&A));
-
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 

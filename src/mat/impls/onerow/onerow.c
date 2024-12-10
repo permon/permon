@@ -1,4 +1,3 @@
-
 #include <permon/private/permonmatimpl.h>
 
 #undef __FUNCT__

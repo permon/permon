@@ -1,4 +1,3 @@
-
 /* Test nullspace detection */
 #include <permonmat.h>
 

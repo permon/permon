@@ -1,4 +1,3 @@
-
 #include <permonsys.h>
 #include <permon/private/permonimpl.h>
 #include <petsc/private/logimpl.h>
@@ -104,7 +103,6 @@ PetscErrorCode FllopProcessInfoExclusions(PetscClassId classid, const char *clas
       PetscCall(PetscLogEventDeactivateClass(classid));
     }
   }
-
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 

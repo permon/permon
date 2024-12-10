@@ -196,7 +196,6 @@ PetscErrorCode ISGetVecBlock(IS is, Vec *vec, PetscInt bs)
   PetscInt m_vec; /* local size of vec */
 
   PetscFunctionBegin;
-
   /* control the validity of given objects*/
   PetscValidHeaderSpecific(is,IS_CLASSID,1);
   PetscAssertPointer(vec,2);
@@ -402,7 +401,6 @@ PetscErrorCode   VecGetMPIVector(MPI_Comm comm, PetscInt N,Vec vecs[], Vec *VecO
   PetscCall(PetscContainerDestroy(&container));
 
   *VecOut = glVec;
-
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -432,7 +430,6 @@ PetscErrorCode VecRestoreMPIVector(MPI_Comm comm, PetscInt N,Vec vecs[], Vec *Ve
   PetscCall(VecDestroy(VecIn));
   PetscCall(PetscFree(ctx->origvecs));
   PetscCall(PetscFree(ctx));
-
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 

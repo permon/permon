@@ -1,4 +1,3 @@
-
 #include <permon/private/qpimpl.h>
 
 PetscClassId  QP_CLASSID;
@@ -1638,7 +1637,6 @@ PetscErrorCode QPAddEq(QP qp, Mat Beq, Vec ceq)
   }
   PetscCall(PetscFree(subBE));
   if (qp->changeListener) PetscCall((*qp->changeListener)(qp));
-
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -2364,7 +2362,6 @@ PetscErrorCode QPSetQPC(QP qp, QPC qpc)
 PetscErrorCode QPGetQPC(QP qp, QPC *qpc)
 {
   PetscFunctionBegin;
-
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
   PetscAssertPointer(qpc,2);
   *qpc = qp->qpc;

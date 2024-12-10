@@ -1,4 +1,3 @@
-
 #include <permon/private/permonmatimpl.h>
 #include <permon/private/petscimpl.h>
 
@@ -236,6 +235,7 @@ PetscErrorCode MatMultAdd_BlockDiag(Mat mat,Vec v1,Vec v2,Vec v3)
 PetscErrorCode MatMultTransposeAdd_BlockDiag(Mat mat,Vec v1,Vec v2,Vec v3)
 {
   Mat_BlockDiag *data = (Mat_BlockDiag*) mat->data;
+
   PetscFunctionBegin;
   PetscCall(VecGetLocalVectorRead(v1,data->yloc));
   PetscCall(VecGetLocalVector(v2,data->xloc1)); /* v2 can be same as v3 */

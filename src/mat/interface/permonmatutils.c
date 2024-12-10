@@ -1,4 +1,3 @@
-
 #include <permon/private/permonmatimpl.h>
 
 PetscLogEvent Mat_GetMaxEigenvalue,Mat_FilterZeros,Mat_MergeAndDestroy,PermonMat_GetLocalMat;
@@ -100,7 +99,6 @@ PetscErrorCode MatPrintInfo(Mat mat)
       PetscCall(PetscObjectSetTabLevel((PetscObject)inmat,tablevel));
     }
   }
-
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -717,6 +715,7 @@ PetscErrorCode MatMergeAndDestroy(MPI_Comm comm, Mat *local_in, Vec column_layou
 PetscErrorCode MatInheritSymmetry(Mat A, Mat B)
 {
   PetscBool symset, symflg;
+
   PetscFunctionBegin;
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
   PetscValidHeaderSpecific(B,MAT_CLASSID,2);

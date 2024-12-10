@@ -8,13 +8,11 @@ PetscErrorCode QPCSetUp_Box(QPC qpc)
   Vec                   lb;
 
   PetscFunctionBegin;
-
   /* prepare lambdawork vector based on the layout of lb */
   lb = ctx->lb;
   PetscCall(VecDuplicate(lb,&qpc->lambdawork));
 
   // TODO: verify layout of ub somewhere in setup or in create function
-
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -236,7 +234,6 @@ PetscErrorCode QPCGetNumberOfConstraints_Box(QPC qpc, PetscInt *num)
   PetscInt          size,bs;
 
   PetscFunctionBegin;
-
   if(qpc->is){
         /* IS is present, return the size of IS */
         PetscCall(ISGetSize(qpc->is,&size));
@@ -247,7 +244,6 @@ PetscErrorCode QPCGetNumberOfConstraints_Box(QPC qpc, PetscInt *num)
         PetscCall(VecGetSize(ctx->lb,&size)); /* = size of ub */
         *num = size;
   }
-
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -561,7 +557,6 @@ PetscErrorCode QPCCreateBox(MPI_Comm comm,IS is,Vec lb,Vec ub,QPC *qpc_out)
   QPC qpc;
 
   PetscFunctionBegin;
-
   /* verify input data */
   if (is) PetscValidHeaderSpecific(is,IS_CLASSID,2);
   if (lb) PetscValidHeaderSpecific(lb,VEC_CLASSID,3);

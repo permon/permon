@@ -1,4 +1,3 @@
-
 #include <permon/private/qpsimpl.h>
 
 PetscClassId  QPS_CLASSID;
@@ -741,6 +740,7 @@ PetscErrorCode QPSConvergedDefaultSetUp(QPS qps)
 PetscErrorCode QPSConvergedDefaultSetRhsForDivergence(void *ctx, Vec b)
 {
   QPSConvergedDefaultCtx *cctx = (QPSConvergedDefaultCtx*) ctx;
+
   PetscFunctionBegin;
   PetscCall(VecNorm(b, NORM_2, &cctx->norm_rhs_div));
   PetscFunctionReturn(PETSC_SUCCESS);

@@ -1,4 +1,3 @@
-
 #include <../src/qps/impls/ksp/qpskspimpl.h>
 
 #undef __FUNCT__

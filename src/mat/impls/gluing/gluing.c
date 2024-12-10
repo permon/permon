@@ -1,4 +1,3 @@
-
 #include <permon/private/permonmatimpl.h>
 #include <permon/private/petscimpl.h>
 #include <petscsf.h>
@@ -17,7 +16,6 @@ static PetscErrorCode FllopMatGetLocalMat_Gluing(Mat A,Mat *Aloc)
   PetscLayout links;
 
   PetscFunctionBegin;
-
   PetscCall(MatGetSize(A, NULL, &N_col));
   PetscCall(MatGetLocalSize(A, &n_row, &n_col));
   PetscCall(MatGetOwnershipRangeColumn(A, &start_col, NULL));
@@ -44,7 +42,6 @@ static PetscErrorCode FllopMatGetLocalMat_Gluing(Mat A,Mat *Aloc)
   PetscCall(PetscFree(leafdata));
   PetscCall(PetscFree(rootdata));
   PetscCall(PetscLayoutDestroy(&links));
-
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -84,7 +81,6 @@ PetscErrorCode MatMult_Gluing(Mat mat, Vec right, Vec left)
   PetscCall(PetscFree(idxX));
   PetscCall(PetscFree(x_onleaves));
   PetscCall(PetscFree(lambda_onleaves));
-
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -125,7 +121,6 @@ PetscErrorCode MatMultAdd_Gluing(Mat mat, Vec right, Vec add, Vec left) {
   PetscCall(PetscFree(lambda_onleaves));
 
   PetscCall(VecAXPY(left, 1, add));
-
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -170,7 +165,6 @@ PetscErrorCode MatMultTranspose_Gluing(Mat mat, Vec right, Vec left)
   PetscCall(PetscFree(lambda_onroot));
   PetscCall(PetscFree(lambda_onleaves));
   PetscCall(PetscFree(idxL));
-
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -217,7 +211,6 @@ PetscErrorCode MatMultTransposeAdd_Gluing(Mat mat, Vec right, Vec add, Vec left)
   PetscCall(PetscFree(idxL));
 
   PetscCall(VecAXPY(left, 1, add));
-
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -307,6 +300,5 @@ FLLOP_EXTERN PetscErrorCode MatCreate_Gluing(Mat B) {
   B->ops->multadd            = MatMultAdd_Gluing;
   B->ops->multtransposeadd   = MatMultTransposeAdd_Gluing;
   PetscCall(PetscObjectComposeFunction((PetscObject)B,"FllopMatGetLocalMat_C",FllopMatGetLocalMat_Gluing));
-
   PetscFunctionReturn(PETSC_SUCCESS);
 }

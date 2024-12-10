@@ -1,4 +1,3 @@
-
 #include <../src/qps/impls/mpgp/mpgpimpl.h>
 
 const char *const QPSMPGPExpansionTypes[] = {"std","projcg","gf","g","gfgr","ggr","QPSMPGPExpansionType","QPS_MPGP_EXPANSION_",0};
@@ -674,6 +673,7 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
 PetscErrorCode QPSResetStatistics_MPGP(QPS qps)
 {
   QPS_MPGP *mpgp = (QPS_MPGP*)qps->data;
+
   PetscFunctionBegin;
   mpgp->ncg   = 0;
   mpgp->nexp  = 0;

@@ -1,4 +1,3 @@
-
 #include <permon/private/permonmatimpl.h>
 #include <petscblaslapack.h>
 
@@ -238,6 +237,7 @@ static PetscErrorCode MatOrthColumns_GS_Default(MPI_Comm comm, PetscInt N, Vec q
 static inline PetscErrorCode PetscScalarNormSquared(PetscInt n,const PetscScalar xx[],PetscReal *z)
 {
   PetscBLASInt      one = 1, bn;
+
   PetscFunctionBegin;
   PetscCall(PetscBLASIntCast(n,&bn));
   *z   = PetscRealPart(BLASdot_(&bn,xx,&one,xx,&one));

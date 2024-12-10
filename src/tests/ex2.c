@@ -1,4 +1,3 @@
-
 /* Test MatRedistributeRows() */
 #include <permonmat.h>
 

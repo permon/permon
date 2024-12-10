@@ -1,4 +1,3 @@
-
 #include <permonmat.h>
 
 FLLOP_EXTERN PetscErrorCode MatCreate_Inv(Mat);
