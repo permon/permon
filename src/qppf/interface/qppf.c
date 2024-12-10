@@ -414,9 +414,9 @@ PetscErrorCode QPPFSetUp(QPPF cp)
     }
   }
 
-  PetscCall(MatCreateVecs(cp->G, PETSC_IGNORE, &(cp->G_left)));
-  PetscCall(VecDuplicate(cp->G_left, &(cp->Gt_right)));
-  PetscCall(VecDuplicate(cp->G_left, &(cp->alpha_tilde)));
+  PetscCall(MatCreateVecs(cp->G, PETSC_IGNORE, &cp->G_left));
+  PetscCall(VecDuplicate(cp->G_left, &cp->Gt_right));
+  PetscCall(VecDuplicate(cp->G_left, &cp->alpha_tilde));
   PetscCall(VecZeroEntries(cp->alpha_tilde));
 
   if (cp->GGtinv && !cp->explicitInv) PetscCall(MatInvSetUp(cp->GGtinv));

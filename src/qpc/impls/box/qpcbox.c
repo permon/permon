@@ -11,7 +11,7 @@ PetscErrorCode QPCSetUp_Box(QPC qpc)
 
   /* prepare lambdawork vector based on the layout of lb */
   lb = ctx->lb;
-  PetscCall(VecDuplicate(lb,&(qpc->lambdawork)));
+  PetscCall(VecDuplicate(lb,&qpc->lambdawork));
 
   // TODO: verify layout of ub somewhere in setup or in create function
 

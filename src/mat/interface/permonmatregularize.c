@@ -104,7 +104,7 @@ static PetscErrorCode MatRegularize_GetPivots_Private(Mat R, IS *pivots) {
   }
 
   /* idx_arr points to last d entries of perm */
-  idx_arr = &(perm[p - npivots]);
+  idx_arr = &perm[p - npivots];
 
   PetscCall(ISCreateGeneral(PETSC_COMM_SELF, npivots, idx_arr, PETSC_COPY_VALUES, pivots));
   PetscCall(ISSort(*pivots));

@@ -13,8 +13,8 @@ PetscErrorCode MatMult_Complete(Mat A, Vec x, Vec y)
   PetscCall(PetscContainerGetPointer(container, (void**)&ctx));
   PetscCall(VecPointwiseMult(y,x,ctx->d));
   PetscCall(VecScale(y, -1.0));
-  PetscCall((ctx->multadd)(A,x,y,y));
-  PetscCall((ctx->multtransposeadd)(A,x,y,y));
+  PetscCall(ctx->multadd(A,x,y,y));
+  PetscCall(ctx->multtransposeadd(A,x,y,y));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -30,8 +30,8 @@ PetscErrorCode MatMultAdd_Complete(Mat A, Vec x, Vec x1, Vec y)
   PetscCall(PetscContainerGetPointer(container, (void**)&ctx));
   PetscCall(VecPointwiseMult(y,x,ctx->d));
   PetscCall(VecScale(y, -1.0));
-  PetscCall((ctx->multadd)(A,x,y,y));
-  PetscCall((ctx->multtransposeadd)(A,x,y,y));
+  PetscCall(ctx->multadd(A,x,y,y));
+  PetscCall(ctx->multtransposeadd(A,x,y,y));
   PetscCall(VecAXPY(y, 1.0, x1));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -47,7 +47,7 @@ PetscErrorCode MatDuplicate_Complete(Mat A,MatDuplicateOption op,Mat *M)
   PetscFunctionBegin;
   PetscCall(PetscObjectQuery((PetscObject)A, "fllop_mat_complete_ctx", (PetscObject*)&container));
   PetscCall(PetscContainerGetPointer(container, (void**)&ctx));
-  PetscCall((ctx->duplicate)(A,op,&_M));
+  PetscCall(ctx->duplicate(A,op,&_M));
   _M->ops->mult              = ctx->mult;
   _M->ops->multtranspose     = ctx->multtranspose;
   _M->ops->multadd           = ctx->multadd;
