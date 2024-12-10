@@ -14,7 +14,7 @@ static PetscErrorCode QPSKSPConverged_KSP(KSP ksp,PetscInt i,PetscReal rnorm,KSP
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSKSPSynchronize_KSP"
 /* synchronize operators and tolerances of the QPS and its underlying KSP */
 static PetscErrorCode QPSKSPSynchronize_KSP(QPS qps)
@@ -35,32 +35,32 @@ static PetscErrorCode QPSKSPSynchronize_KSP(QPS qps)
 
   PetscCall(KSPSetOperators(ksp,qp->A,qp->A));
   PetscCall(KSPSetConvergenceTest(ksp, QPSKSPConverged_KSP, qps, NULL));
-  PetscCall(KSPSetTolerances(ksp, qps->rtol, qps->atol, qps->divtol, qps->max_it));  
+  PetscCall(KSPSetTolerances(ksp, qps->rtol, qps->atol, qps->divtol, qps->max_it));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSKSPSetKSP"
 PetscErrorCode QPSKSPSetKSP(QPS qps,KSP ksp)
 {
   PetscBool flg;
   QPS_KSP *qpsksp;
   const char *prefix;
-  
+
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscValidHeaderSpecific(ksp,KSP_CLASSID,2);
   PetscCall(PetscObjectTypeCompare((PetscObject)qps,QPSKSP,&flg));
   if (!flg) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"This is a QPSKSP specific routine!");
   qpsksp = (QPS_KSP*)qps->data;
-  
+
   PetscCall(KSPDestroy(&qpsksp->ksp));
   qpsksp->ksp = ksp;
   PetscCall(PetscObjectReference((PetscObject)ksp));
-  
+
   PetscCall(QPSGetOptionsPrefix(qps,&prefix));
-  PetscCall(KSPSetOptionsPrefix(ksp,prefix)); 
-  PetscCall(KSPAppendOptionsPrefix(ksp,"qps_"));  
+  PetscCall(KSPSetOptionsPrefix(ksp,prefix));
+  PetscCall(KSPAppendOptionsPrefix(ksp,"qps_"));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -70,7 +70,7 @@ PetscErrorCode QPSKSPGetKSP(QPS qps,KSP *ksp)
 {
   PetscBool flg;
   QPS_KSP *qpsksp;
-  
+
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscAssertPointer(ksp,2);
@@ -87,7 +87,7 @@ PetscErrorCode QPSKSPSetType(QPS qps,KSPType type)
 {
   PetscBool flg;
   QPS_KSP *qpsksp;
-  
+
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscCall(PetscObjectTypeCompare((PetscObject)qps,QPSKSP,&flg));
@@ -103,7 +103,7 @@ PetscErrorCode QPSKSPGetType(QPS qps,KSPType *type)
 {
   PetscBool flg;
   QPS_KSP *qpsksp;
-  
+
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscCall(PetscObjectTypeCompare((PetscObject)qps,QPSKSP,&flg));
@@ -113,21 +113,21 @@ PetscErrorCode QPSKSPGetType(QPS qps,KSPType *type)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSSetUp_KSP"
 PetscErrorCode QPSSetUp_KSP(QPS qps)
 {
   QPS_KSP          *qpsksp = (QPS_KSP*)qps->data;
   KSP              ksp = qpsksp->ksp;
-  
+
   PetscFunctionBegin;
   PetscCall(QPSKSPSynchronize_KSP(qps));
   if (qpsksp->setfromoptionscalled) PetscCall(KSPSetFromOptions(ksp));
   PetscCall(KSPSetUp(ksp));
-  PetscFunctionReturn(PETSC_SUCCESS);  
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSSolve_KSP"
 PetscErrorCode QPSSolve_KSP(QPS qps)
 {
@@ -135,7 +135,7 @@ PetscErrorCode QPSSolve_KSP(QPS qps)
   KSP              ksp = qpsksp->ksp;
   Vec              b,x;
   QP               qp;
-  
+
   PetscFunctionBegin;
   PetscCall(QPSGetSolvedQP(qps,&qp));
   PetscCall(QPSKSPSynchronize_KSP(qps));
@@ -148,27 +148,27 @@ PetscErrorCode QPSSolve_KSP(QPS qps)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSSetFromOptions_KSP"
 PetscErrorCode QPSSetFromOptions_KSP(QPS qps,PetscOptionItems *PetscOptionsObject)
 {
   QPS_KSP          *qpsksp = (QPS_KSP*)qps->data;
-  
+
   PetscFunctionBegin;
   qpsksp->setfromoptionscalled = PETSC_TRUE;
-  PetscFunctionReturn(PETSC_SUCCESS);  
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSView_KSP"
 PetscErrorCode QPSView_KSP(QPS qps, PetscViewer v)
 {
   QPS_KSP          *qpsksp = (QPS_KSP*)qps->data;
   KSP              ksp = qpsksp->ksp;
-  
+
   PetscFunctionBegin;
   PetscCall(KSPView(ksp, v));
-  PetscFunctionReturn(PETSC_SUCCESS);  
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -188,7 +188,7 @@ PetscErrorCode QPSViewConvergence_KSP(QPS qps, PetscViewer v)
 }
 
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSDestroy_KSP"
 PetscErrorCode QPSDestroy_KSP(QPS qps)
 {
@@ -197,17 +197,17 @@ PetscErrorCode QPSDestroy_KSP(QPS qps)
   PetscFunctionBegin;
   PetscCall(KSPDestroy(&qpsksp->ksp));
   PetscCall(QPSDestroyDefault(qps));
-  PetscFunctionReturn(PETSC_SUCCESS);  
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSIsQPCompatible_KSP"
 PetscErrorCode QPSIsQPCompatible_KSP(QPS qps,QP qp,PetscBool *flg)
 {
   Mat Beq,Bineq;
   Vec ceq,cineq;
   QPC qpc;
-  
+
   PetscFunctionBegin;
   *flg = PETSC_TRUE;
   PetscCall(QPGetEq(qp,&Beq,&ceq));
@@ -217,24 +217,24 @@ PetscErrorCode QPSIsQPCompatible_KSP(QPS qps,QP qp,PetscBool *flg)
   {
     *flg = PETSC_FALSE;
   }
-  PetscFunctionReturn(PETSC_SUCCESS);   
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSCreate_KSP"
 FLLOP_EXTERN PetscErrorCode QPSCreate_KSP(QPS qps)
 {
   QPS_KSP         *qpsksp;
   MPI_Comm        comm;
-  
+
   PetscFunctionBegin;
   PetscCall(PetscObjectGetComm((PetscObject)qps,&comm));
   PetscCall(PetscNew(&qpsksp));
   qps->data                  = (void*)qpsksp;
   qpsksp->setfromoptionscalled = PETSC_FALSE;
-  
+
   /*
-       Sets the functions that are associated with this data structure 
+       Sets the functions that are associated with this data structure
        (in C++ this is the same as defining virtual functions)
   */
   qps->ops->setup            = QPSSetUp_KSP;
@@ -244,7 +244,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_KSP(QPS qps)
   qps->ops->setfromoptions   = QPSSetFromOptions_KSP;
   qps->ops->view             = QPSView_KSP;
   qps->ops->viewconvergence  = QPSViewConvergence_KSP;
-  
+
   PetscCall(KSPCreate(comm,&qpsksp->ksp));
   PetscCall(KSPSetOptionsPrefix(qpsksp->ksp,"qps_"));
   PetscCall(PetscObjectIncrementTabLevel((PetscObject)qpsksp->ksp,(PetscObject)qps,1));

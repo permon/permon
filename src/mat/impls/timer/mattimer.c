@@ -72,7 +72,7 @@ PetscErrorCode MatDestroy_Timer(Mat W) {
 .  A - original matrix
 
    Output Parameters:
-.  B - matrix A that logs MatMult operations 
+.  B - matrix A that logs MatMult operations
 
    Level: developer
 
@@ -81,12 +81,12 @@ PetscErrorCode MatDestroy_Timer(Mat W) {
 PetscErrorCode MatCreateTimer(Mat A, Mat *B) {
     Mat_Timer *ctx;
     Mat W;
-    
+
     PetscFunctionBegin;
     PetscCall(PetscMalloc(sizeof(Mat_Timer),&ctx));
     ctx->A = A;
     PetscCall(PetscObjectReference((PetscObject)A));
-    
+
     PetscCall(MatCreateShellPermon(PetscObjectComm((PetscObject)A), A->rmap->n,A->cmap->n,A->rmap->N,A->cmap->N, ctx,&W));
     PetscCall(FllopPetscObjectInheritName((PetscObject)W,(PetscObject)A,NULL));
 
@@ -95,7 +95,7 @@ PetscErrorCode MatCreateTimer(Mat A, Mat *B) {
     PetscCall(MatTimerSetOperation(W,MATOP_MULT_ADD,"MatMultAdd",(void(*)(void))MatMultAdd_Timer));
     PetscCall(MatTimerSetOperation(W,MATOP_MULT_TRANSPOSE,"MatMultTr",(void(*)(void))MatMultTranspose_Timer));
     PetscCall(MatTimerSetOperation(W,MATOP_MULT_TRANSPOSE_ADD,"MatMultTrAdd",(void(*)(void))MatMultTransposeAdd_Timer));
-    
+
     *B = W;
     PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -109,7 +109,7 @@ PetscErrorCode MatTimerSetOperation(Mat mat, MatOperation op, const char *opname
   char *eventName = FLLOP_ObjNameBuffer_Global;
   PetscLogEvent event;
   PetscBool exists;
-  
+
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(mat,(void*)&ctx));
   PetscCall(PetscObjectGetName((PetscObject)ctx->A,&name));

@@ -120,14 +120,14 @@ static inline PetscErrorCode MatMatMultByColumns_MatMult_Private(Mat A, PetscBoo
   PetscInt N,N1,j;
   Vec *B_cols,*C_cols;
   PetscErrorCode (*f)(Mat,Vec,Vec);
-  
+
   PetscFunctionBeginI;
   f = A_transpose ? MatMultTranspose : MatMult;
   N = B->cmap->N;
-  
+
   PetscCall(MatGetColumnVectors(B,&N1,&B_cols)); PERMON_ASSERT(N1==N,"N1==N (%d != %d)",N1,N);
   PetscCall(MatGetColumnVectors(C,&N1,&C_cols)); PERMON_ASSERT(N1==N,"N1==N (%d != %d)",N1,N);
-  
+
   for (j=0; j<N; j++) {
     PetscCall(f(A,B_cols[j],C_cols[j]));
   }
@@ -166,7 +166,7 @@ static PetscErrorCode MatMatBlockDiagMultByColumns_Private(Mat B, PetscBool B_tr
   Mat Gt_loc;
   Mat G_loc,G;
   Vec lambda;
-  
+
   PetscFunctionBeginI;
   /* get diagonal block */
   PetscCall(MatGetDiagonalBlock(R, &R_loc));
@@ -182,13 +182,13 @@ static PetscErrorCode MatMatBlockDiagMultByColumns_Private(Mat B, PetscBool B_tr
 
   /* get "local" part of matrix Bt */
   PetscCall(PermonMatGetLocalMat(Bt, &Bt_loc));
-  
+
   /* multiply Bt_loc' * R_loc = Gt_loc */
   PetscCall(MatMatMultByColumns_Private(Bt_loc, PETSC_TRUE, R_loc, PETSC_FALSE, &Gt_loc));
 
   PetscCall(MatDestroy(&Bt_loc));
   if (!B_transpose) PetscCall(MatDestroy(&Bt));
-  
+
   /* create global distributed G by vertical concatenating local sequential G_loc=Gt_loc' */
   PetscCall(PermonMatTranspose(Gt_loc, MAT_TRANSPOSE_EXPLICIT, &G_loc));
   PetscCall(MatMatMultByColumns_MatFilterZeros_Private(&G_loc,filter));
@@ -226,7 +226,7 @@ static inline PetscErrorCode MatMatMultByColumns_Private(Mat A, PetscBool A_tran
 PetscErrorCode MatMatMultByColumns(Mat A, Mat B, PetscBool filter, Mat *C_new)
 {
   static PetscBool registered = PETSC_FALSE;
-  
+
   PetscFunctionBeginI;
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
   PetscValidHeaderSpecific(B,MAT_CLASSID,2);
@@ -247,7 +247,7 @@ PetscErrorCode MatMatMultByColumns(Mat A, Mat B, PetscBool filter, Mat *C_new)
 PetscErrorCode MatTransposeMatMultByColumns(Mat A, Mat B, PetscBool filter, Mat *C_new)
 {
   static PetscBool registered = PETSC_FALSE;
-  
+
   PetscFunctionBeginI;
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
   PetscValidHeaderSpecific(B,MAT_CLASSID,2);

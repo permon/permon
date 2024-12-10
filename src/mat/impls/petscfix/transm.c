@@ -112,10 +112,10 @@ PetscErrorCode PermonMatTranspose(Mat A,MatTransposeType type,Mat *At_out)
     PetscCall(PetscObjectTypeCompare((PetscObject)A,MATTRANSPOSEVIRTUAL,&flg));
     if (flg) f = PermonMatTranspose_Transpose;
   }
-  
+
   /* if no type-specific implementation is found, use the default one */
   if (!f) f = PermonMatTranspose_Default;
-  
+
   /* call the implementation */
   PetscCall((*f)(A,type,At_out));
 

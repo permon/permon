@@ -4,7 +4,7 @@
 #include <petscsf.h>
 
 //#define TAG_firstElemGlobIdx 198533
- 
+
 #undef __FUNCT__
 #define __FUNCT__ "FllopMatGetLocalMat_Gluing"
 static PetscErrorCode FllopMatGetLocalMat_Gluing(Mat A,Mat *Aloc)
@@ -49,7 +49,7 @@ static PetscErrorCode FllopMatGetLocalMat_Gluing(Mat A,Mat *Aloc)
 }
 
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatMult_Gluing"
 PetscErrorCode MatMult_Gluing(Mat mat, Vec right, Vec left)
 {
@@ -89,7 +89,7 @@ PetscErrorCode MatMult_Gluing(Mat mat, Vec right, Vec left)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatMultAdd_Gluing"
 PetscErrorCode MatMultAdd_Gluing(Mat mat, Vec right, Vec add, Vec left) {
 
@@ -97,40 +97,40 @@ PetscErrorCode MatMultAdd_Gluing(Mat mat, Vec right, Vec add, Vec left) {
   PetscScalar      *x_onleaves, *lambda_root, *lambda_onleaves;
   PetscInt i, start, *idxX;
 
-  PetscFunctionBegin; 
+  PetscFunctionBegin;
    //right=lambda left=x
 
   PetscCall(VecGetArray(right, &lambda_root));
-  PetscCall(VecGetOwnershipRange(left, &start,NULL));    
+  PetscCall(VecGetOwnershipRange(left, &start,NULL));
   PetscCall(PetscMalloc(data->n_leaves*sizeof(PetscScalar), &lambda_onleaves));
-  
+
   PetscCall(PetscSFBcastBegin(data->SF, MPIU_SCALAR, lambda_root, lambda_onleaves, MPI_REPLACE));
   PetscCall(PetscMalloc(data->n_leaves*sizeof(PetscInt), &idxX));
   PetscCall(PetscMalloc(data->n_leaves*sizeof(PetscScalar), &x_onleaves));
   PetscCall(VecZeroEntries(left));
   PetscCall(PetscSFBcastEnd(data->SF, MPIU_SCALAR, lambda_root, lambda_onleaves, MPI_REPLACE));
   PetscCall(VecRestoreArray(right,  &lambda_root));
-  
+
   for (i=0; i<data->n_leaves; i++) {
     idxX[i]= start + data->leaves_row[i];
     x_onleaves[i ] = lambda_onleaves[i] *data->leaves_sign[i];
-  } 
-  
+  }
+
   PetscCall(VecZeroEntries( left ));
   PetscCall(VecSetValues(left, data->n_leaves, idxX, x_onleaves, ADD_VALUES););
   PetscCall(VecAssemblyBegin(left));
-  PetscCall(VecAssemblyEnd(left)); 
-  
-  PetscCall(PetscFree(idxX)); 
-  PetscCall(PetscFree(x_onleaves)); 
-  PetscCall(PetscFree(lambda_onleaves));  
-  
+  PetscCall(VecAssemblyEnd(left));
+
+  PetscCall(PetscFree(idxX));
+  PetscCall(PetscFree(x_onleaves));
+  PetscCall(PetscFree(lambda_onleaves));
+
   PetscCall(VecAXPY(left, 1, add));
-  
+
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatMultTranspose_Gluing"
 PetscErrorCode MatMultTranspose_Gluing(Mat mat, Vec right, Vec left)
 {
@@ -175,7 +175,7 @@ PetscErrorCode MatMultTranspose_Gluing(Mat mat, Vec right, Vec left)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatMultTransposeAdd_Gluing"
 PetscErrorCode MatMultTransposeAdd_Gluing(Mat mat, Vec right, Vec add, Vec left)
 {
@@ -223,13 +223,13 @@ PetscErrorCode MatMultTransposeAdd_Gluing(Mat mat, Vec right, Vec add, Vec left)
 }
 
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatDestroy_Gluing"
 PetscErrorCode MatDestroy_Gluing(Mat mat)
 {
   PetscFunctionBegin;
   Mat_Gluing *data = (Mat_Gluing*) mat->data;
-  PetscCall(PetscSFDestroy(&data->SF));  
+  PetscCall(PetscSFDestroy(&data->SF));
   PetscCall(PetscFree(data->leaves_row));
   PetscCall(PetscFree(data->leaves_sign));
   PetscCall(PetscFree(data));
@@ -237,7 +237,7 @@ PetscErrorCode MatDestroy_Gluing(Mat mat)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatCreateGluing"
 PetscErrorCode MatCreateGluing(MPI_Comm comm, PetscInt n_x_localRow, PetscInt n_nonzeroRow, PetscInt n_l_localcol,  const PetscInt *leaves_row,	const PetscReal *leaves_sign, PetscSF SF, Mat *B_out)
 {
@@ -254,21 +254,21 @@ PetscErrorCode MatCreateGluing(MPI_Comm comm, PetscInt n_x_localRow, PetscInt n_
   PetscCall(MatCreate(comm, &B));
   PetscCall(MatSetType(B, MATGLUING));
   data = (Mat_Gluing*) B->data;
-  
- PetscCall(PetscSFGetLeafRange(SF,NULL,&n_l));    
- 
+
+ PetscCall(PetscSFGetLeafRange(SF,NULL,&n_l));
+
   PetscCall(PetscMalloc1(n_l+1,&lr));
   PetscCall(PetscMemcpy(lr,leaves_row,(n_l+1)*sizeof(PetscInt)));
   PetscCall(PetscMalloc1(n_l+1,&ls));
-  PetscCall(PetscMemcpy(ls,leaves_sign,(n_l+1)*sizeof(PetscReal)));  
+  PetscCall(PetscMemcpy(ls,leaves_sign,(n_l+1)*sizeof(PetscReal)));
   PetscCall(PetscObjectReference((PetscObject)SF));
-  
+
   data->n_leaves=n_l+1;
   data->n_nonzeroRow=n_nonzeroRow;
   data->SF = SF;
   data->leaves_row = lr;
-  data->leaves_sign = ls;  
-   
+  data->leaves_sign = ls;
+
   /* Set up row layout */
   PetscCall(PetscLayoutSetLocalSize(B->rmap, n_x_localRow));
   PetscCall(PetscLayoutSetUp(B->rmap));
@@ -278,7 +278,7 @@ PetscErrorCode MatCreateGluing(MPI_Comm comm, PetscInt n_x_localRow, PetscInt n_
   PetscCall(PetscLayoutSetLocalSize(B->cmap,n_l_localcol));
   PetscCall(PetscLayoutSetUp(B->cmap));
   PetscCall(PetscLayoutGetRange(B->cmap,&clo,&chi));
-    
+
   *B_out = B;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -286,7 +286,7 @@ PetscErrorCode MatCreateGluing(MPI_Comm comm, PetscInt n_x_localRow, PetscInt n_
 #undef __FUNCT__
 #define __FUNCT__ "MatCreate_Gluing"
 FLLOP_EXTERN PetscErrorCode MatCreate_Gluing(Mat B) {
-  
+
   Mat_Gluing *data;
 
   PetscFunctionBegin;
@@ -295,20 +295,20 @@ FLLOP_EXTERN PetscErrorCode MatCreate_Gluing(Mat B) {
   B->data                = (void*) data;
   B->assembled           = PETSC_TRUE;
   B->preallocated        = PETSC_TRUE;
-  
-  data->SF               = NULL; 
+
+  data->SF               = NULL;
   data->leaves_row      = NULL;
-  data->leaves_sign      = NULL; 
-  data->n_leaves=0; 
+  data->leaves_sign      = NULL;
+  data->n_leaves=0;
   data->n_nonzeroRow=0;
-  
-  /* Set operations of matrix. */  
+
+  /* Set operations of matrix. */
   B->ops->destroy            = MatDestroy_Gluing;
   B->ops->mult               = MatMult_Gluing;
   B->ops->multtranspose      = MatMultTranspose_Gluing;
   B->ops->multadd            = MatMultAdd_Gluing;
   B->ops->multtransposeadd   = MatMultTransposeAdd_Gluing;
   PetscCall(PetscObjectComposeFunction((PetscObject)B,"FllopMatGetLocalMat_C",FllopMatGetLocalMat_Gluing));
- 
+
   PetscFunctionReturn(PETSC_SUCCESS);
-} 
+}

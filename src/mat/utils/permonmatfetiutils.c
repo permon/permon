@@ -108,10 +108,10 @@ PetscErrorCode MatRemoveGluingOfDirichletDofs(Mat Bgt, Vec cg, Mat Bdt, Mat *Bgt
     jlog = mg_arr[r];
     jhig = mg_arr[r+1];
     mg = jhig - jlog;
-    
+
     PetscCall(PetscMalloc(mg*sizeof(PetscBool),&remove));
     PetscCall(PetscMemzero(remove,mg*sizeof(PetscBool)));
-    
+
     for (i=lo; i<hi; i++) {
       PetscCall(MatGetRow(Bdt,i,&ncolsd,&colsd,&valsd));
       k=0;
@@ -131,7 +131,7 @@ PetscErrorCode MatRemoveGluingOfDirichletDofs(Mat Bgt, Vec cg, Mat Bdt, Mat *Bgt
         PetscCall(MatRestoreRow(Bgt,i,&ncolsg,&colsg,&valsg));
       }
     }
-    
+
     if (r == rank) {
       PetscCallMPI(MPI_Reduce(MPI_IN_PLACE,remove,mg,MPIU_BOOL,MPI_LOR,r,comm));
       PetscCall(PetscMalloc(mg*sizeof(PetscInt),&idx));
@@ -146,7 +146,7 @@ PetscErrorCode MatRemoveGluingOfDirichletDofs(Mat Bgt, Vec cg, Mat Bdt, Mat *Bgt
     } else {
       PetscCallMPI(MPI_Reduce(remove,NULL,mg,MPIU_BOOL,MPI_LOR,r,comm));
     }
-    
+
     PetscCall(PetscFree(remove));
   }
 

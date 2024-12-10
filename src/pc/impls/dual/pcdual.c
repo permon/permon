@@ -186,10 +186,10 @@ FLLOP_EXTERN PetscErrorCode PCCreate_Dual(PC pc)
      attach it to the PC object.  */
   PetscCall(PetscNew(&ctx));
   pc->data = (void*)ctx;
-  
+
   ctx->setfromoptionscalled = PETSC_FALSE;
   ctx->pcdualtype = PC_DUAL_NONE;
-  
+
   /* set general PC functions already implemented for this PC type */
   pc->ops->apply               = PCApply_Dual;
   pc->ops->destroy             = PCDestroy_Dual;

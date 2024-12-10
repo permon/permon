@@ -59,7 +59,7 @@ PetscErrorCode MatMultTranspose_OneRow(Mat A, Vec x, Vec z) {
 
 #undef __FUNCT__
 #define __FUNCT__ "MatMultTransposeAdd_OneRow"
-PetscErrorCode MatMultTransposeAdd_OneRow(Mat A, Vec x, Vec w, Vec z) { 
+PetscErrorCode MatMultTransposeAdd_OneRow(Mat A, Vec x, Vec w, Vec z) {
     PetscMPIInt rank;
     Vec a;
     PetscInt zero=0;

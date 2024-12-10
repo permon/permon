@@ -25,13 +25,13 @@ static PetscErrorCode QPSTaoConverged_Tao(Tao tao,void *ctx)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-/*  FormFunctionGradient - Evaluates f(x) and gradient g(x). 
- 
+/*  FormFunctionGradient - Evaluates f(x) and gradient g(x).
+
     Input Parameters:
 .   tao     - the TaoSolver context
 .   X       - input vector
 .   userCtx - optional user-defined context, as set by TaoSetObjectiveAndGradientRoutine()
-    
+
     Output Parameters:
 .   fcn     - the function value
 .   G       - vector containing the newly evaluated gradient
@@ -43,11 +43,11 @@ static PetscErrorCode FormFunctionGradientQPS(Tao tao, Vec X, PetscReal *fcn, Ve
   QP          qp;
   QPS         qps = (QPS) qps_void;
 
-  PetscFunctionBegin; 
+  PetscFunctionBegin;
   PetscCall(QPSGetSolvedQP(qps,&qp));
   PetscCall(QPComputeObjectiveAndGradient(qp,X,G,fcn));
   PetscFunctionReturn(PETSC_SUCCESS);
-  
+
 }
 
 /*
@@ -67,7 +67,7 @@ static PetscErrorCode FormFunctionGradientQPS(Tao tao, Vec X, PetscReal *fcn, Ve
 #define __FUNCT__ "FormHessianQPS"
 static PetscErrorCode FormHessianQPS(Tao tao,Vec X,Mat Hptr, Mat Hpc, void *qps_void)
 {
-  PetscFunctionBegin; 
+  PetscFunctionBegin;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -78,7 +78,7 @@ PetscErrorCode QPSTaoGetTao(QPS qps,Tao *tao)
   PetscBool flg;
   QPS_Tao *qpstao;
   const char* prefix;
-  
+
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscAssertPointer(tao,2);
@@ -103,7 +103,7 @@ PetscErrorCode QPSTaoSetType(QPS qps,TaoType type)
 {
   PetscBool flg;
   QPS_Tao *qpstao;
-  
+
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscCall(PetscObjectTypeCompare((PetscObject)qps,QPSTAO,&flg));
@@ -120,7 +120,7 @@ PetscErrorCode QPSTaoGetType(QPS qps,TaoType *type)
 {
   PetscBool flg;
   QPS_Tao *qpstao;
-  
+
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   PetscCall(PetscObjectTypeCompare((PetscObject)qps,QPSTAO,&flg));
@@ -131,7 +131,7 @@ PetscErrorCode QPSTaoGetType(QPS qps,TaoType *type)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSSetUp_Tao"
 PetscErrorCode QPSSetUp_Tao(QPS qps)
 {
@@ -142,13 +142,13 @@ PetscErrorCode QPSSetUp_Tao(QPS qps)
   IS               is;
   KSP              ksp;
   PC               pc;
-  
+
   PetscFunctionBegin;
   PetscCall(QPSGetSolvedQP(qps,&qp));
   PetscCall(QPGetRhs(qp,&b));
   PetscCall(QPGetSolutionVector(qp,&x));
   PetscCall(QPGetBox(qp,&is,&lb,&ub));
-  
+
   PetscCall(QPSTaoGetTao(qps,&tao));
   PetscCall(TaoSetSolution(tao,x));
 
@@ -204,17 +204,17 @@ PetscErrorCode QPSSetUp_Tao(QPS qps)
   }
 
   PetscCall(TaoSetUp(tao));
-  PetscFunctionReturn(PETSC_SUCCESS);  
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSSolve_Tao"
 PetscErrorCode QPSSolve_Tao(QPS qps)
 {
   QPS_Tao          *qpstao = (QPS_Tao*)qps->data;
   Tao              tao;
   PetscInt         its;
-  
+
   PetscFunctionBegin;
   PetscCall(QPSTaoGetTao(qps,&tao));
   PetscCall(TaoSolve(tao));
@@ -223,27 +223,27 @@ PetscErrorCode QPSSolve_Tao(QPS qps)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSSetFromOptions_Tao"
 PetscErrorCode QPSSetFromOptions_Tao(QPS qps,PetscOptionItems *PetscOptionsObject)
 {
   QPS_Tao          *qpstao = (QPS_Tao*)qps->data;
-  
+
   PetscFunctionBegin;
   qpstao->setfromoptionscalled = PETSC_TRUE;
-  PetscFunctionReturn(PETSC_SUCCESS);  
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSView_Tao"
 PetscErrorCode QPSView_Tao(QPS qps, PetscViewer v)
 {
   Tao              tao;
-  
+
   PetscFunctionBegin;
   PetscCall(QPSTaoGetTao(qps,&tao));
   PetscCall(TaoView(tao, v));
-  PetscFunctionReturn(PETSC_SUCCESS);  
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -282,24 +282,24 @@ PetscErrorCode QPSReset_Tao(QPS qps)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSDestroy_Tao"
 PetscErrorCode QPSDestroy_Tao(QPS qps)
 {
   PetscFunctionBegin;
   PetscCall(QPSReset_Tao(qps));
   PetscCall(QPSDestroyDefault(qps));
-  PetscFunctionReturn(PETSC_SUCCESS);  
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSIsQPCompatible_Tao"
 PetscErrorCode QPSIsQPCompatible_Tao(QPS qps,QP qp,PetscBool *flg)
 {
   Mat Beq,Bineq;
   Vec ceq,cineq;
   QPC qpc;
-  
+
   PetscFunctionBegin;
   PetscCall(QPGetEq(qp,&Beq,&ceq));
   PetscCall(QPGetIneq(qp,&Bineq,&cineq));
@@ -309,16 +309,16 @@ PetscErrorCode QPSIsQPCompatible_Tao(QPS qps,QP qp,PetscBool *flg)
   } else {
     PetscCall(PetscObjectTypeCompare((PetscObject)qpc,QPCBOX,flg));
   }
-  PetscFunctionReturn(PETSC_SUCCESS);   
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSCreate_Tao"
 FLLOP_EXTERN PetscErrorCode QPSCreate_Tao(QPS qps)
 {
   QPS_Tao         *qpstao;
   MPI_Comm        comm;
-  
+
   PetscFunctionBegin;
   PetscCall(PetscObjectGetComm((PetscObject)qps,&comm));
   PetscCall(PetscNew(&qpstao));
@@ -326,9 +326,9 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_Tao(QPS qps)
   qpstao->setfromoptionscalled = PETSC_FALSE;
   qpstao->ksp_its            = 0;
   qpstao->tao                = NULL;
-  
+
   /*
-       Sets the functions that are associated with this data structure 
+       Sets the functions that are associated with this data structure
        (in C++ this is the same as defining virtual functions)
   */
   qps->ops->setup            = QPSSetUp_Tao;

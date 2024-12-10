@@ -1,6 +1,6 @@
 #include <../src/qps/impls/pcpg/pcpgimpl.h>
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSIsQPCompatible_PCPG"
 /*
 QPSIsQPCompatible_PCPG - verify if the algorithm is able to solve given QP problem
@@ -23,7 +23,7 @@ PetscErrorCode QPSIsQPCompatible_PCPG(QPS qps,QP qp,PetscBool *flg){
 
 
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSSetup_PCPG"
 /*
  * QPSSetup_PCPG - the setup function of PCPG algorithm
@@ -41,10 +41,10 @@ PetscErrorCode QPSSetup_PCPG(QPS qps){
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSSolve_PCPG"
 /*
- * QPSSolve_PCPG - the solver; solve the problem using PCPG algorithm 
+ * QPSSolve_PCPG - the solver; solve the problem using PCPG algorithm
  *
  * Parameters:
  * . qps - QP solver
@@ -67,7 +67,7 @@ PetscErrorCode QPSSolve_PCPG(QPS qps){
 
   PetscFunctionBegin;
   PetscCall(QPSGetSolvedQP(qps,&qp));
- 
+
   PetscCall(QPGetOperator(qp, &Amat));
   PetscCall(QPGetQPPF(qp, &cp));
   PetscCall(QPGetPC(qp, &pc));
@@ -97,16 +97,16 @@ PetscErrorCode QPSSolve_PCPG(QPS qps){
 
   PetscCall(MatMult(Amat, lm, r));
   PetscCall(VecAYPX(r, -1.0, rhs));
-  
+
   qps->iteration = 0;
   do {
     PetscCall(QPPFApplyP(cp, r, w));
-    
+
     //convergence test
     PetscCall(VecNorm(w, NORM_2, &qps->rnorm));
     PetscCall((*qps->convergencetest)(qps,&qps->reason));
     if (qps->reason) break;
-    
+
     if (pcnone) {
       y = w;
     }else{
@@ -127,7 +127,7 @@ PetscErrorCode QPSSolve_PCPG(QPS qps){
     alpha = beta1/alpha1;
     PetscCall(VecAXPY(lm, alpha, p));
     PetscCall(VecAXPY(r, -alpha, Ap ));
-    
+
     qps->iteration++;
   } while (qps->iteration < qps->max_it);
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -136,10 +136,10 @@ PetscErrorCode QPSSolve_PCPG(QPS qps){
 #undef __FUNCT__
 #define __FUNCT__ "QPSCreate_PCPG"
 FLLOP_EXTERN PetscErrorCode QPSCreate_PCPG(QPS qps)
-{ 
-  PetscFunctionBegin;  
+{
+  PetscFunctionBegin;
   /*
-       Sets the functions that are associated with this data structure 
+       Sets the functions that are associated with this data structure
        (in C++ this is the same as defining virtual functions)
   */
   qps->ops->setup = QPSSetup_PCPG;

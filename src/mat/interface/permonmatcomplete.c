@@ -7,7 +7,7 @@ PetscErrorCode MatMult_Complete(Mat A, Vec x, Vec y)
 {
   MatCompleteCtx ctx;
   PetscContainer container;
-  
+
   PetscFunctionBegin;
   PetscCall(PetscObjectQuery((PetscObject)A, "fllop_mat_complete_ctx", (PetscObject*)&container));
   PetscCall(PetscContainerGetPointer(container, (void**)&ctx));
@@ -24,7 +24,7 @@ PetscErrorCode MatMultAdd_Complete(Mat A, Vec x, Vec x1, Vec y)
 {
   MatCompleteCtx ctx;
   PetscContainer container;
-  
+
   PetscFunctionBegin;
   PetscCall(PetscObjectQuery((PetscObject)A, "fllop_mat_complete_ctx", (PetscObject*)&container));
   PetscCall(PetscContainerGetPointer(container, (void**)&ctx));
@@ -43,7 +43,7 @@ PetscErrorCode MatDuplicate_Complete(Mat A,MatDuplicateOption op,Mat *M)
   MatCompleteCtx ctx;
   PetscContainer container;
   Mat _M;
-  
+
   PetscFunctionBegin;
   PetscCall(PetscObjectQuery((PetscObject)A, "fllop_mat_complete_ctx", (PetscObject*)&container));
   PetscCall(PetscContainerGetPointer(container, (void**)&ctx));
@@ -93,7 +93,7 @@ PetscErrorCode MatCompleteFromUpperTriangular(Mat A)
   MatCompleteCtx ctx;
   PetscContainer container;
   PetscBool flg;
-  
+
   PetscFunctionBegin;
   PetscCall(PetscObjectQuery((PetscObject)A, "fllop_mat_complete_ctx", (PetscObject*)&container));
   if (container) PetscFunctionReturn(PETSC_SUCCESS);

@@ -24,7 +24,7 @@ FLLOP   fllop;
    Input Parameters:
 +  argc - count of number of command line arguments
 .  args - the command line arguments
--  file - [optional] FLLOP database file, also checks in following order petsrc files from PetscInitialize, ~/.flloprc, ./flloprc, ./.flloprc and file;  use NULL to not check for code specific file 
+-  file - [optional] FLLOP database file, also checks in following order petsrc files from PetscInitialize, ~/.flloprc, ./flloprc, ./.flloprc and file;  use NULL to not check for code specific file
 
    Options Database Keys:
 +  -skip_flloprc  - skip reading flloprc file
@@ -53,7 +53,7 @@ PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], cons
     FllopBeganPetsc=PETSC_TRUE;
     PetscCall(PetscInfo(0,"FLLOP successfully started PETSc.\n"));
   }
-  
+
   if (!PetscInitializeCalled) {
     printf("Error initializing PETSc -- aborting.\n");
     exit(1);
@@ -89,7 +89,7 @@ PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], cons
   PetscCall(PermonMatRegisterAll());
   PetscCall(FllopPCRegisterAll());
   PetscCall(PermonKSPRegisterAll());
-  
+
   FllopInitializeCalled = PETSC_TRUE;
   PetscCall(PetscInfo(fllop,"FLLOP successfully initialized.\n"));
   return 0;
@@ -110,12 +110,12 @@ PetscErrorCode PermonFinalize()
   if (!FllopInitializeCalled) {
     PetscFunctionReturn(PETSC_SUCCESS);
   }
-  PetscCall(PetscInfo(fllop,"FllopFinalize() called\n"));  
+  PetscCall(PetscInfo(fllop,"FllopFinalize() called\n"));
   PetscCall(FllopDestroy(&fllop));
 
   if (FllopBeganPetsc) {
     PetscCall(PetscFinalize());
-  } 
+  }
   FllopInitializeCalled = PETSC_FALSE;
   PetscFunctionReturn(PETSC_SUCCESS);
 }

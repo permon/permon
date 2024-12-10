@@ -2,7 +2,7 @@ PERMON toolbox
 ================================
 PERMON (Parallel Efficient Robust Modular Object Numerical) is a software toolbox for the scalable (parallel) solution of  quadratic programming (QP) problems based on [PETSc](http://www.mcs.anl.gov/petsc/). It also includes domain decomposition methods (FETI and Total FETI) and Support Vector Machines (SVM) machine learning methods.
 
-Project homepage: <http://permon.vsb.cz>  
+Project homepage: <http://permon.vsb.cz>
 
 PERMON contains following modules:
 

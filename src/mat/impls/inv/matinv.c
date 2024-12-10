@@ -44,7 +44,7 @@ static PetscErrorCode MatInvSetRegularizationType_Inv(Mat imat,MatRegularization
 static PetscErrorCode MatInvGetRegularizationType_Inv(Mat imat,MatRegularizationType *type)
 {
   Mat_Inv        *inv = (Mat_Inv*)imat->data;
-  
+
   PetscFunctionBegin;
   *type = inv->regtype;
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -87,7 +87,7 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
       PERMON_ASSERT(commsize==1, "Kl should be serial");
     }
   }
-  
+
   PetscCall(MatIsSPDKnown(Kl,&isset,&isspd));
   if (isset && isspd) {
     defect = 0;
@@ -95,7 +95,7 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
   } else {
     /* MUMPS matrix type (sym) is set to 2 automatically (see MatGetFactor_aij_mumps). */
     PetscCall(PCFactorGetMatSolverType(pc,&type));
-    PetscCall(PetscStrcmp(type,MATSOLVERMUMPS,&flg)); 
+    PetscCall(PetscStrcmp(type,MATSOLVERMUMPS,&flg));
     if (flg) PetscCall(PetscObjectTypeCompare((PetscObject)pc,PCCHOLESKY,&flg));
     /* TODO We need to call PCSetUP() (which does the factorization) before being able to call PCFactorGetMatrix().
        Maybe we could do something on the PETSc side to overcome this. */
@@ -196,7 +196,7 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
 static PetscErrorCode MatInvSetNullSpace_Inv(Mat imat,Mat R)
 {
   Mat_Inv        *inv = (Mat_Inv*)imat->data;
-  
+
   PetscFunctionBegin;
   if (R != inv->R) {
     if (R) {
@@ -217,13 +217,13 @@ static PetscErrorCode MatInvSetNullSpace_Inv(Mat imat,Mat R)
 static PetscErrorCode MatInvGetNullSpace_Inv(Mat imat,Mat *R)
 {
   Mat_Inv        *inv = (Mat_Inv*)imat->data;
-  
+
   PetscFunctionBegin;
   *R = inv->R;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvSetTolerances_Inv"
 static PetscErrorCode MatInvSetTolerances_Inv(Mat imat, PetscReal rtol, PetscReal abstol,
     PetscReal dtol, PetscInt maxits)
@@ -236,7 +236,7 @@ static PetscErrorCode MatInvSetTolerances_Inv(Mat imat, PetscReal rtol, PetscRea
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvGetKSP_Inv"
 static PetscErrorCode MatInvGetKSP_Inv(Mat imat, KSP *ksp)
 {
@@ -250,7 +250,7 @@ static PetscErrorCode MatInvGetKSP_Inv(Mat imat, KSP *ksp)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvGetRegularizedMat_Inv"
 static PetscErrorCode MatInvGetRegularizedMat_Inv(Mat imat, Mat *A)
 {
@@ -264,7 +264,7 @@ static PetscErrorCode MatInvGetRegularizedMat_Inv(Mat imat, Mat *A)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvGetMat_Inv"
 static PetscErrorCode MatInvGetMat_Inv(Mat imat, Mat *A)
 {
@@ -275,7 +275,7 @@ static PetscErrorCode MatInvGetMat_Inv(Mat imat, Mat *A)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvGetPC_Inv"
 static PetscErrorCode MatInvGetPC_Inv(Mat imat, PC *pc)
 {
@@ -287,7 +287,7 @@ static PetscErrorCode MatInvGetPC_Inv(Mat imat, PC *pc)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvSetMat_Inv"
 static PetscErrorCode MatInvSetMat_Inv(Mat imat, Mat A)
 {
@@ -306,23 +306,23 @@ static PetscErrorCode MatInvSetMat_Inv(Mat imat, Mat A)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvGetRedundancy_Inv"
 static PetscErrorCode MatInvGetRedundancy_Inv(Mat imat, PetscInt *red)
 {
   Mat_Inv *inv = (Mat_Inv*) imat->data;
-  
+
   PetscFunctionBegin;
   *red = inv->redundancy;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvSetRedundancy_Inv"
 static PetscErrorCode MatInvSetRedundancy_Inv(Mat imat, PetscInt red)
 {
   Mat_Inv *inv = (Mat_Inv*) imat->data;
-  
+
   PetscFunctionBegin;
   if (inv->redundancy == red) PetscFunctionReturn(PETSC_SUCCESS);
   inv->redundancy = red;
@@ -330,23 +330,23 @@ static PetscErrorCode MatInvSetRedundancy_Inv(Mat imat, PetscInt red)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvGetPsubcommType_Inv"
 static PetscErrorCode MatInvGetPsubcommType_Inv(Mat imat, PetscSubcommType *type)
 {
   Mat_Inv *inv = (Mat_Inv*) imat->data;
-  
+
   PetscFunctionBegin;
   *type = inv->psubcommType;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvSetPsubcommType_Inv"
 static PetscErrorCode MatInvSetPsubcommType_Inv(Mat imat, PetscSubcommType type)
 {
   Mat_Inv *inv = (Mat_Inv*) imat->data;
-  
+
   PetscFunctionBegin;
   if (inv->psubcommType == type) PetscFunctionReturn(PETSC_SUCCESS);
   inv->psubcommType = type;
@@ -355,7 +355,7 @@ static PetscErrorCode MatInvSetPsubcommType_Inv(Mat imat, PetscSubcommType type)
 }
 
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvGetPsubcommColor_Inv"
 static PetscErrorCode MatInvGetPsubcommColor_Inv(Mat imat, PetscMPIInt *color)
 {
@@ -370,7 +370,7 @@ static PetscErrorCode MatInvGetPsubcommColor_Inv(Mat imat, PetscMPIInt *color)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvGetType_Inv"
 static PetscErrorCode MatInvGetType_Inv(Mat imat, MatInvType *type)
 {
@@ -381,12 +381,12 @@ static PetscErrorCode MatInvGetType_Inv(Mat imat, MatInvType *type)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvSetType_Inv"
 static PetscErrorCode MatInvSetType_Inv(Mat imat, MatInvType type)
 {
   Mat_Inv *inv = (Mat_Inv*) imat->data;
-  
+
   PetscFunctionBegin;
   if (inv->type == type) PetscFunctionReturn(PETSC_SUCCESS);
   inv->type = type;
@@ -394,7 +394,7 @@ static PetscErrorCode MatInvSetType_Inv(Mat imat, MatInvType type)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvReset_Inv"
 static PetscErrorCode MatInvReset_Inv(Mat imat)
 {
@@ -406,7 +406,7 @@ static PetscErrorCode MatInvReset_Inv(Mat imat)
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvSetUp_Inv"
 static PetscErrorCode MatInvSetUp_Inv(Mat imat)
 {
@@ -431,7 +431,7 @@ static PetscErrorCode MatInvSetUp_Inv(Mat imat)
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvCreateInnerObjects_Inv"
 static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
 {
@@ -631,7 +631,7 @@ static PetscErrorCode MatInvExplicitly_Private(KSP ksp, Mat imat_explicit)
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvExplicitlyTranspose_Private"
 static PetscErrorCode MatInvExplicitlyTranspose_Private(PetscInt ilo, PetscInt ihi, KSP ksp, Mat imat_explicit)
 {
@@ -645,7 +645,7 @@ static PetscErrorCode MatInvExplicitlyTranspose_Private(PetscInt ilo, PetscInt i
   PetscCall(KSPGetOperators(ksp, &A, NULL));
   PetscCall(MatGetOwnershipRange(A, &Ailo, &Aihi));
   localSize = Aihi-Ailo;
-  
+
   PetscCall(PetscMalloc(localSize * sizeof(PetscInt), &idxn));
   for (i = 0; i < localSize; i++) idxn[i] = i+Ailo;
 
@@ -668,7 +668,7 @@ static PetscErrorCode MatInvExplicitlyTranspose_Private(PetscInt ilo, PetscInt i
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvExplicitly_Inv"
 static PetscErrorCode MatInvExplicitly_Inv(Mat imat, PetscBool transpose, MatReuse scall, Mat *imat_explicit)
 {
@@ -683,7 +683,7 @@ static PetscErrorCode MatInvExplicitly_Inv(Mat imat, PetscBool transpose, MatReu
 
   PetscFunctionBeginI;
   PetscCall(MatInvSetUp_Inv(imat));
-  
+
   PetscCall(PetscLogEventBegin(Mat_Inv_Explicitly,imat,0,0,0));
   PetscCall(PetscObjectGetComm((PetscObject)imat, &comm));
   PetscCall(MatGetSize(     imat, &M, PETSC_IGNORE));
@@ -734,7 +734,7 @@ static PetscErrorCode MatInvExplicitly_Inv(Mat imat, PetscBool transpose, MatReu
 }
 
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatMult_Inv"
 PetscErrorCode MatMult_Inv(Mat imat, Vec right, Vec left)
 {
@@ -747,13 +747,13 @@ PetscErrorCode MatMult_Inv(Mat imat, Vec right, Vec left)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatGetInfo_Inv"
 PetscErrorCode MatGetInfo_Inv(Mat imat, MatInfoType type, MatInfo *info)
 {
   Mat mat;
   PC pc;
-  
+
   PetscFunctionBegin;
   info->assemblies            = -1.0;
   info->block_size            = -1.0;
@@ -766,9 +766,9 @@ PetscErrorCode MatGetInfo_Inv(Mat imat, MatInfoType type, MatInfo *info)
   info->nz_unneeded           = -1.0;
   info->nz_used               = -1.0;
 
-  PetscCall(MatInvGetRegularizedMat(imat, &mat));  
+  PetscCall(MatInvGetRegularizedMat(imat, &mat));
   PetscCall(MatInvGetPC(imat, &pc));
-  
+
   if (pc && mat->factortype && pc->ops->getfactoredmatrix) {
     PetscCall(PCFactorGetMatrix(pc, &mat));
     if (mat && mat->ops->getinfo) {
@@ -782,7 +782,7 @@ PetscErrorCode MatGetInfo_Inv(Mat imat, MatInfoType type, MatInfo *info)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatDestroy_Inv"
 PetscErrorCode MatDestroy_Inv(Mat imat)
 {
@@ -817,18 +817,18 @@ PetscErrorCode MatDestroy_Inv(Mat imat)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatSetFromOptions_Inv"
 PetscErrorCode MatSetFromOptions_Inv(Mat imat,PetscOptionItems *PetscOptionsObject)
 {
   PetscBool set;
   PetscSubcommType psubcommType;
   Mat_Inv *inv;
-  
+
   PetscFunctionBegin;
   inv = (Mat_Inv*) imat->data;
   PetscOptionsHeadBegin(PetscOptionsObject,"Mat Inv options");
-  
+
   PetscCall(PetscOptionsEnum("-mat_inv_psubcomm_type", "subcommunicator type", "", PetscSubcommTypes, (PetscEnum) inv->psubcommType, (PetscEnum*)&psubcommType, &set));
   if (set) PetscCall(MatInvSetPsubcommType(imat, psubcommType));
 
@@ -838,7 +838,7 @@ PetscErrorCode MatSetFromOptions_Inv(Mat imat,PetscOptionItems *PetscOptionsObje
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatView_Inv"
 PetscErrorCode MatView_Inv(Mat imat, PetscViewer viewer)
 {
@@ -899,7 +899,7 @@ PetscErrorCode MatView_Inv(Mat imat, PetscViewer viewer)
   } else {
     PetscCall(KSPView(inv->ksp, viewer));
   }
-  
+
   if (format == PETSC_VIEWER_DEFAULT) {
     PetscCall(PetscViewerASCIIPopTab(viewer));
   }
@@ -912,7 +912,7 @@ PetscErrorCode MatView_Inv(Mat imat, PetscViewer viewer)
 PetscErrorCode MatSetOption_Inv(Mat imat, MatOption op, PetscBool flg)
 {
   Mat A;
-  
+
   PetscFunctionBegin;
   PetscCall(MatInvGetRegularizedMat(imat, &A));
   PetscCall(MatSetOption(A, op, flg));
@@ -924,7 +924,7 @@ PetscErrorCode MatSetOption_Inv(Mat imat, MatOption op, PetscBool flg)
 PetscErrorCode MatAssemblyBegin_Inv(Mat imat, MatAssemblyType type)
 {
   Mat A;
-  
+
   PetscFunctionBegin;
   PetscCall(MatInvGetMat_Inv(imat, &A));
   PetscCall(MatAssemblyBegin(A, type));
@@ -936,7 +936,7 @@ PetscErrorCode MatAssemblyBegin_Inv(Mat imat, MatAssemblyType type)
 PetscErrorCode MatAssemblyEnd_Inv(Mat imat, MatAssemblyType type)
 {
   Mat A;
-  
+
   PetscFunctionBegin;
   PetscCall(MatInvGetMat_Inv(imat, &A));
   PetscCall(MatAssemblyEnd(A, type));
@@ -944,7 +944,7 @@ PetscErrorCode MatAssemblyEnd_Inv(Mat imat, MatAssemblyType type)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatCreate_Inv"
 FLLOP_EXTERN PetscErrorCode MatCreate_Inv(Mat imat)
 {
@@ -973,7 +973,7 @@ FLLOP_EXTERN PetscErrorCode MatCreate_Inv(Mat imat)
   imat->ops->setoption                = MatSetOption_Inv;
   imat->ops->assemblybegin            = MatAssemblyBegin_Inv;
   imat->ops->assemblyend              = MatAssemblyEnd_Inv;
-  
+
   /* Set type-specific operations of matrix. */
   PetscCall(PetscObjectComposeFunction((PetscObject)imat,"MatInvExplicitly_Inv_C",MatInvExplicitly_Inv));
   PetscCall(PetscObjectComposeFunction((PetscObject)imat,"MatInvReset_Inv_C",MatInvReset_Inv));
@@ -1012,7 +1012,7 @@ FLLOP_EXTERN PetscErrorCode MatCreate_Inv(Mat imat)
 }
 
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatCreateInv"
 PetscErrorCode MatCreateInv(Mat A, MatInvType invType, Mat *newimat)
 {
@@ -1034,7 +1034,7 @@ PetscErrorCode MatCreateInv(Mat A, MatInvType invType, Mat *newimat)
 }
 
 /* PetscBool transpose ... imat_explicit is tranposed - allows (imat_implicit is seq && imat_explicit is mpi) */
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvExplicitly"
 PetscErrorCode MatInvExplicitly(Mat imat, PetscBool transpose, MatReuse scall, Mat *imat_explicit)
 {
@@ -1047,7 +1047,7 @@ PetscErrorCode MatInvExplicitly(Mat imat, PetscBool transpose, MatReuse scall, M
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvReset"
 PetscErrorCode MatInvReset(Mat imat)
 {
@@ -1057,7 +1057,7 @@ PetscErrorCode MatInvReset(Mat imat)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvSetUp"
 PetscErrorCode MatInvSetUp(Mat imat)
 {
@@ -1067,7 +1067,7 @@ PetscErrorCode MatInvSetUp(Mat imat)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvCreateInnerObjects"
 PetscErrorCode MatInvCreateInnerObjects(Mat imat)
 {
@@ -1131,7 +1131,7 @@ PetscErrorCode MatInvGetNullSpace(Mat imat,Mat *R)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvSetTolerances"
 PetscErrorCode MatInvSetTolerances(Mat imat, PetscReal rtol, PetscReal abstol, PetscReal dtol, PetscInt maxits)
 {
@@ -1145,7 +1145,7 @@ PetscErrorCode MatInvSetTolerances(Mat imat, PetscReal rtol, PetscReal abstol, P
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvGetKSP"
 PetscErrorCode MatInvGetKSP(Mat imat, KSP *ksp)
 {
@@ -1156,7 +1156,7 @@ PetscErrorCode MatInvGetKSP(Mat imat, KSP *ksp)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvGetRegularizedMat"
 PetscErrorCode MatInvGetRegularizedMat(Mat imat, Mat *A)
 {
@@ -1167,7 +1167,7 @@ PetscErrorCode MatInvGetRegularizedMat(Mat imat, Mat *A)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvGetMat"
 PetscErrorCode MatInvGetMat(Mat imat, Mat *A)
 {
@@ -1178,7 +1178,7 @@ PetscErrorCode MatInvGetMat(Mat imat, Mat *A)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvGetPC"
 PetscErrorCode MatInvGetPC(Mat imat, PC *pc)
 {
@@ -1189,7 +1189,7 @@ PetscErrorCode MatInvGetPC(Mat imat, PC *pc)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvSetMat"
 PetscErrorCode MatInvSetMat(Mat imat, Mat A)
 {
@@ -1201,7 +1201,7 @@ PetscErrorCode MatInvSetMat(Mat imat, Mat A)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvGetRedundancy"
 PetscErrorCode MatInvGetRedundancy(Mat imat, PetscInt *red)
 {
@@ -1212,13 +1212,13 @@ PetscErrorCode MatInvGetRedundancy(Mat imat, PetscInt *red)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvSetRedundancy"
 PetscErrorCode MatInvSetRedundancy(Mat imat, PetscInt red)
 {
   MPI_Comm comm;
   PetscMPIInt comm_size;
-  
+
   PetscFunctionBegin;
   PetscValidHeaderSpecific(imat,MAT_CLASSID,1);
   PetscValidLogicalCollectiveInt(imat,red,2);
@@ -1231,7 +1231,7 @@ PetscErrorCode MatInvSetRedundancy(Mat imat, PetscInt red)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvGetPsubcommType"
 PetscErrorCode MatInvGetPsubcommType(Mat imat, PetscSubcommType *type)
 {
@@ -1242,7 +1242,7 @@ PetscErrorCode MatInvGetPsubcommType(Mat imat, PetscSubcommType *type)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvSetPsubcommType"
 PetscErrorCode MatInvSetPsubcommType(Mat imat, PetscSubcommType type)
 {
@@ -1252,7 +1252,7 @@ PetscErrorCode MatInvSetPsubcommType(Mat imat, PetscSubcommType type)
   PetscTryMethod(imat,"MatInvSetPsubcommType_Inv_C",(Mat,PetscSubcommType),(imat,type));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvGetType"
 PetscErrorCode MatInvGetType(Mat imat, MatInvType *type)
 {
@@ -1263,7 +1263,7 @@ PetscErrorCode MatInvGetType(Mat imat, MatInvType *type)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "MatInvSetType"
 PetscErrorCode MatInvSetType(Mat imat, MatInvType type)
 {

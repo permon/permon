@@ -575,11 +575,11 @@ PetscErrorCode QPCGrads(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
 #define __FUNCT__ "QPCGradReduced"
 /*@
   QPCGradReduced - compute reduced free gradient
-  
+
   Given the step size alpha, the reduce free gradient is defined component wise such that
   x + alpha*gr is a step in the direction of gf if it doesn't violate constraint, otherwise it is gf component shortened
   so that the component of x + alpha*gr will be in active set. E.g., with only lower bound constraint gr=min(gf,(x-lb)/alpha).
-  
+
   Input Parameters:
   + qpc   - QPC instance
   . x     - solution vector

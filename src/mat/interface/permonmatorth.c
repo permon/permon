@@ -84,7 +84,7 @@ static PetscErrorCode MatOrthColumns_Cholesky_Default(Mat A, MatOrthType type, M
   PetscCall(MatGetFactor(AtA, MATSOLVERPETSC, MAT_FACTOR_CHOLESKY, &L));
   PetscCall(MatCholeskyFactorSymbolic(L, AtA, rperm, &info));
   PetscCall(MatCholeskyFactorNumeric(L, AtA, &info));
-  
+
   PetscCall(MatDestroy(&AtA));
 
   if (form == MAT_ORTH_FORM_EXPLICIT) {
@@ -116,7 +116,7 @@ static PetscErrorCode MatOrthColumns_Cholesky_Default(Mat A, MatOrthType type, M
       PetscCall(MatAssemblyBegin(S, MAT_FINAL_ASSEMBLY));
       PetscCall(MatAssemblyEnd(S, MAT_FINAL_ASSEMBLY));
     }
-    PetscCall(VecDestroy(&Arowsol));    
+    PetscCall(VecDestroy(&Arowsol));
   } else {
     Mat mats[2];
     PetscCall(MatCreateShellPermon(comm, n, n, N, N, L, &S));
@@ -132,7 +132,7 @@ static PetscErrorCode MatOrthColumns_Cholesky_Default(Mat A, MatOrthType type, M
   } else {
     PetscCall(MatDestroy(&Q));
   }
-  
+
   if (S_new) {
     *S_new = S;
   } else {
@@ -344,7 +344,7 @@ static PetscErrorCode MatOrthColumns_GS(Mat A, MatOrthType type, MatOrthForm for
   /* copy column vectors back to the matrix Q */
   PetscCall(VecNestRestoreMPI(N,&q));
   PetscCall(MatRestoreColumnVectors(Q, NULL, &q));
-  PetscCall(PetscFree(dots));    
+  PetscCall(PetscFree(dots));
 
   if (Q_new) {
     if (form == MAT_ORTH_FORM_IMPLICIT) {
@@ -356,7 +356,7 @@ static PetscErrorCode MatOrthColumns_GS(Mat A, MatOrthType type, MatOrthForm for
   } else {
     PetscCall(MatDestroy(&Q));
   }
-  
+
   if (computeS) {
     PetscCall(VecNestRestoreMPI(N,&s));
     PetscCall(MatRestoreColumnVectors(S, NULL, &s));
@@ -382,11 +382,11 @@ static PetscErrorCode MatOrthColumns_GS(Mat A, MatOrthType type, MatOrthForm for
      (one of MAT_ORTH_NONE, MAT_ORTH_GS, MAT_ORTH_CHOLESKY, MAT_ORTH_CHOLESKY_EXPLICIT)
 -  form - specify whether Q is computed explicitly or as an implicit product of A and S
      (one of MAT_ORTH_FORM_IMPLICIT, MAT_ORTH_FORM_EXPLICIT)
- 
+
    Output Parameter:
-+  Q_new - (optional) the Q factor of the same size as A 
++  Q_new - (optional) the Q factor of the same size as A
 -  S_new - (optional) the inverse of the R factor
- 
+
    Notes:
    This routine computes Q and S so that A = Q*inv(S), Q = A*S.
 
@@ -434,7 +434,7 @@ PetscErrorCode MatOrthColumns(Mat A, MatOrthType type, MatOrthForm form, Mat *Q_
         PERMON_ASSERT(0,"this should never happen");
     }
   }
-  
+
   PetscCall(PetscLogEventBegin(Mat_OrthColumns,A,0,0,0));
   PetscCall((*f)(A,type,form,Q_new,S_new));
   PetscCall(PetscLogEventEnd(Mat_OrthColumns,A,0,0,0));
@@ -463,7 +463,7 @@ PetscErrorCode MatOrthColumns(Mat A, MatOrthType type, MatOrthForm form, Mat *Q_
 
   if (Q_new) {
     PetscCall(PetscObjectSetName((PetscObject)*Q_new,"Q"));
-  }  
+  }
   if (S_new) {
     PetscCall(PetscObjectSetName((PetscObject)*S_new,"S"));
   }
@@ -479,11 +479,11 @@ PetscErrorCode MatOrthColumns(Mat A, MatOrthType type, MatOrthForm form, Mat *Q_
 + A - the matrix whose rows will be orthonormalized
 - type - the algorithm used for orthonormalization
   (one of MAT_ORTH_NONE, MAT_ORTH_GS, MAT_ORTH_CHOLESKY, MAT_ORTH_CHOLESKY_EXPLICIT)
- 
+
   Output Parameter:
-+ Qt_new - (optional) the Qt factor of the same size as A 
++ Qt_new - (optional) the Qt factor of the same size as A
 - T_new - (optional) the inverse of the L factor
- 
+
   Notes:
   This routine computes Qt and T so that A = inv(T)*Qt, Qt = T*A.
 

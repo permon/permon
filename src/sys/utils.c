@@ -51,7 +51,7 @@ PetscErrorCode FllopMakePath(const char *dir, mode_t mode)
     char *p = NULL;
     size_t len;
     PetscBool flg;
-    
+
     PetscFunctionBegin;
     PetscCall(PetscSNPrintf(tmp, FLLOP_MAX_PATH_LEN, "%s", dir));
     PetscCall(PetscStrlen(tmp, &len));
@@ -67,8 +67,8 @@ PetscErrorCode FllopMakePath(const char *dir, mode_t mode)
         }
 
     mkdir(tmp, mode);
-    
-    PetscCall(PetscTestDirectory(dir, 'x', &flg));    
+
+    PetscCall(PetscTestDirectory(dir, 'x', &flg));
     if (!flg) SETERRQ(PETSC_COMM_SELF, PETSC_ERR_FILE_WRITE, "Directory %s was not created properly.", dir);
     PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -87,7 +87,7 @@ PetscErrorCode FllopProcessInfoExclusions(PetscClassId classid, const char *clas
   } else {
     PetscCall(PetscInfoDeactivateClass(classid));
   }
-  
+
   /* Process info exclusions */
   PetscCall(PetscOptionsGetString(NULL,NULL, "-info_exclude", logList, 256, &opt));
   if (opt) {
@@ -103,8 +103,8 @@ PetscErrorCode FllopProcessInfoExclusions(PetscClassId classid, const char *clas
     if (str) {
       PetscCall(PetscLogEventDeactivateClass(classid));
     }
-  }  
-  
+  }
+
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -113,8 +113,8 @@ PetscErrorCode FllopProcessInfoExclusions(PetscClassId classid, const char *clas
 PetscErrorCode FllopSetTrace(PetscBool flg)
 {
   PetscFunctionBegin;
-  FllopTraceEnabled = flg;  
-  PetscFunctionReturn(PETSC_SUCCESS);  
+  FllopTraceEnabled = flg;
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -131,8 +131,8 @@ PetscErrorCode FllopSetObjectInfo(PetscBool flg)
 PetscErrorCode FllopSetDebug(PetscBool flg)
 {
   PetscFunctionBegin;
-  FllopDebugEnabled = flg;  
-  PetscFunctionReturn(PETSC_SUCCESS);  
+  FllopDebugEnabled = flg;
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -158,7 +158,7 @@ PetscErrorCode FllopPetscInfoDeactivateAll()
 .  -fllop_trace       - trace crucial FLLOP functions
 .  -fllop_debug       - enable FLLOP debug messages
 -  -fllop_info        - enable info messages only from FLLOP
- 
+
    Level: beginner
 
 .seealso FllopInitialize()
@@ -170,7 +170,7 @@ PetscErrorCode FllopSetFromOptions()
   PetscBool      flg=PETSC_FALSE;
   PetscBool      info, excl, fllop_info;
   char           logname[PETSC_MAX_PATH_LEN];
-  
+
   PetscFunctionBegin;
   logname[0] = 0;
   PetscOptionsBegin(PETSC_COMM_WORLD, NULL, "FLLOP options", NULL);
@@ -183,11 +183,11 @@ PetscErrorCode FllopSetFromOptions()
     PetscCall(FllopSetTrace(flg));
     flg = PETSC_FALSE;
     PetscCall(PetscOptionsBool("-fllop_debug",       "enable FLLOP debug messages",                             NULL, PETSC_FALSE, &flg, NULL));
-    PetscCall(FllopSetDebug(flg));    
+    PetscCall(FllopSetDebug(flg));
     flg = PETSC_FALSE;
 #if defined (PETSC_USE_INFO)
     PetscCall(PetscOptionsString("-fllop_info",      "enable info messages only from FLLOP",                    NULL, NULL, logname, 256, &fllop_info));
-#endif     
+#endif
   }
   PetscOptionsEnd();
 
@@ -196,7 +196,7 @@ PetscErrorCode FllopSetFromOptions()
     info = PETSC_FALSE;
     PetscCall(PetscOptionsGetString(NULL,NULL, "-info", logname, 256, &info));
     PetscCall(PetscOptionsGetString(NULL,NULL, "-info_exclude", logList, 256, &excl));
-    
+
     if (fllop_info || info) {
       FllopInfoEnabled = PETSC_TRUE;
       PetscCall(PetscInfoAllow(PETSC_TRUE));
@@ -204,10 +204,10 @@ PetscErrorCode FllopSetFromOptions()
         PetscCall(PetscInfoSetFile(logname,"w"));
       }
     }
-    
+
     if (!info) {
       PetscCall(FllopPetscInfoDeactivateAll());
-    }    
+    }
 
     if (excl) {
       PetscCall(PetscStrstr(logList, "petsc", &className));

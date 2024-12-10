@@ -4,10 +4,10 @@ ALL: lib
 CFLAGS   =
 FFLAGS   =
 SOURCEC  = permonkspregis.c permonksputils.c
-SOURCEF  = 
-SOURCEH  = 
+SOURCEF  =
+SOURCEH  =
 OBJSC    = ${SOURCEC:.c=.o}
-OBJSF    = 
+OBJSF    =
 LIBBASE  = libpermon
 LOCDIR   = src/ksp/interface/
 

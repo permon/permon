@@ -349,7 +349,7 @@ PetscErrorCode QPFetiSetUp(QP qp)
   PetscCall(PetscOptionsGetBool(NULL,NULL,"-feti_gluing_exclude_dirichlet",&exclude_dir,NULL));
   PetscCall(PetscPrintf(comm, "============\n FETI gluing type: %s\n excluding Dirichlet DOFs? %d\n",FetiGluingTypes[type],exclude_dir));
   PetscCall(QPFetiAssembleDirichlet(qp));
-  
+
   if (!ctx->l2g) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_WRONGSTATE,"L2G mapping must be set first - call QPFetiSetLocalToGlobalMapping before QPFetiSetUp");
   if (!ctx->i2g) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_WRONGSTATE,"I2G mapping must be set first - call QPFetiSetInterfaceToGlobalMapping before QPFetiSetUp");
   PetscCall(QPFetiAssembleGluing(qp, type, exclude_dir, &Bg));
@@ -433,9 +433,9 @@ PetscErrorCode QPFetiAssembleGluing(QP qp, FetiGluingType type, PetscBool exclud
   PetscCall(QPFetiGetCtx(qp,&ctx));
   l2g = ctx->l2g;
   i2g = ctx->i2g;
-  PetscCallMPI(MPI_Comm_size(comm, &commsize));  
-  PetscCall(ISGetLocalSize(l2g, &nl)); 
-  
+  PetscCallMPI(MPI_Comm_size(comm, &commsize));
+  PetscCall(ISGetLocalSize(l2g, &nl));
+
   if (exclude_dir) {
     PetscCall(QPFetiGetGlobalDir( qp, ctx->dbc->is, ctx->dbc->numtype, &global_dir));
     PetscCall(ISAllGather(global_dir, &all_dir));
@@ -445,8 +445,8 @@ PetscErrorCode QPFetiAssembleGluing(QP qp, FetiGluingType type, PetscBool exclud
   } else {
     PetscCall(PetscObjectReference((PetscObject)i2g));
     i2g_less=i2g;
-  }     
-  
+  }
+
   /* get i2l from l2g and i2g */
   PetscCall(QPFetiGetI2Lmapping(comm, ctx->l2g, i2g_less, &i2l));
 
@@ -454,7 +454,7 @@ PetscErrorCode QPFetiAssembleGluing(QP qp, FetiGluingType type, PetscBool exclud
   PetscCall(ISGetMinMax(i2g_less,NULL,&Nu));
   PetscCallMPI(MPI_Allreduce(&Nu, &Nug, 1, MPIU_INT, MPIU_MAX, comm));
   Nu = Nug+1;
-   
+
   PetscCall(QPFetiGetBgtSF(comm, i2g_less, Nu, i2l, nl, type, &Bgt));
 
   PetscCall(PetscObjectSetName((PetscObject)Bgt,"Bgt"));
@@ -496,7 +496,7 @@ PetscErrorCode QPFetiGetBgtSF(MPI_Comm comm, IS i2g, PetscInt Nu, IS i2l, PetscI
     PetscCall(PetscLogEventRegister("QPFetiGetBgtSF",QP_CLASSID,&QP_Feti_GetBgtSF));
     registered = PETSC_TRUE;
   }
-  PetscCall(PetscLogEventBegin(QP_Feti_GetBgtSF,0,0,0,0)); 
+  PetscCall(PetscLogEventBegin(QP_Feti_GetBgtSF,0,0,0,0));
 
   PetscCallMPI(MPI_Comm_size(comm, &commsize));
   PetscCallMPI(MPI_Comm_rank(comm, &rank));
@@ -517,7 +517,7 @@ PetscErrorCode QPFetiGetBgtSF(MPI_Comm comm, IS i2g, PetscInt Nu, IS i2l, PetscI
 
   // find out root's degree and send to leaves /STEP 2/
   PetscCall(PetscSFComputeDegreeBegin(SF1, &root_degree_onroots_SF1));
-  // work between communication   
+  // work between communication
   PetscCall(PetscMalloc2( nleaves_SF1, &root_degree_onleaves_SF1, nleaves_SF1, &future_leavesSF2_onleaves));
   for (i=0; i<nleaves_SF1; i++) {
     root_degree_onleaves_SF1[i] = -1;
@@ -526,8 +526,8 @@ PetscErrorCode QPFetiGetBgtSF(MPI_Comm comm, IS i2g, PetscInt Nu, IS i2l, PetscI
   PetscCall(PetscSFComputeDegreeEnd(SF1, &root_degree_onroots_SF1));
 
   PetscCall(PetscSFBcastBegin(SF1, MPIU_INT, root_degree_onroots_SF1, root_degree_onleaves_SF1, MPI_REPLACE));
-  // work between communication  
-  // scatter - how much i will sent? 
+  // work between communication
+  // scatter - how much i will sent?
   for (i=0, data_scat_size=0; i<nroots_SF1; i++) {
     data_scat_size += root_degree_onroots_SF1[i];
   }
@@ -539,11 +539,11 @@ PetscErrorCode QPFetiGetBgtSF(MPI_Comm comm, IS i2g, PetscInt Nu, IS i2l, PetscI
     if (root_degree_onroots_SF1[i] == 1) { //leaves with degree==1 will be deleted (degree==0 dont exist)
       future_leavesSF2_onroots[idx] = 0;
       idx++;
-    } else if (root_degree_onroots_SF1[i]==2) { //leaves with degree==2, are not multiplied for all type 
+    } else if (root_degree_onroots_SF1[i]==2) { //leaves with degree==2, are not multiplied for all type
       future_leavesSF2_onroots[idx] = 1;
       future_leavesSF2_onroots[idx+1] = 1;
       idx=idx+2;
-    } else { //leaves with degree>2, are multiplied according type  /if (root_degree_onroots[i]>2) 
+    } else { //leaves with degree>2, are multiplied according type  /if (root_degree_onroots[i]>2)
       for (j=0; j<root_degree_onroots_SF1[i]; j++) {
         switch ( type ) {
           case FETI_GLUING_NONRED:
@@ -635,7 +635,7 @@ PetscErrorCode QPFetiGetBgtSF(MPI_Comm comm, IS i2g, PetscInt Nu, IS i2l, PetscI
   PetscCall(PetscSFSetRankOrder(SF2, PETSC_TRUE));
 
   // scatter links /STEP 6/
-  // how much i will sent? 
+  // how much i will sent?
   PetscCall(PetscSFComputeDegreeBegin(SF2, &root_degree_onroots_SF2));
   PetscCall(PetscSFComputeDegreeEnd(SF2, &root_degree_onroots_SF2));
 
@@ -646,11 +646,11 @@ PetscErrorCode QPFetiGetBgtSF(MPI_Comm comm, IS i2g, PetscInt Nu, IS i2l, PetscI
   PetscCall(PetscMalloc1(nleaves_SF2, &link_onleaves));
   for (i=0; i<nleaves_SF2; i++) link_onleaves[i] = -1;
 
-  // what I will sent?  
+  // what I will sent?
   idx2=rstart;
   idx=0;
-   
-  for (j=0; j<nroots_SF1; j++) { 
+
+  for (j=0; j<nroots_SF1; j++) {
 
     int end_it;
     switch ( type ) {
@@ -671,11 +671,11 @@ PetscErrorCode QPFetiGetBgtSF(MPI_Comm comm, IS i2g, PetscInt Nu, IS i2l, PetscI
         }
         break;
       case FETI_GLUING_ORTH:
-        for (i=0; i<=root_degree_onroots_SF1[j]-1; i++) { 
+        for (i=0; i<=root_degree_onroots_SF1[j]-1; i++) {
           end_it= root_degree_onroots_SF1[j]-1;
           if (i>1) end_it=end_it-i+1;
           for (k=0; k < end_it; k++) {
-            link_onroot[idx]=idx2+k; 
+            link_onroot[idx]=idx2+k;
             idx++;
           }
         }
@@ -696,23 +696,23 @@ PetscErrorCode QPFetiGetBgtSF(MPI_Comm comm, IS i2g, PetscInt Nu, IS i2l, PetscI
         default: SETERRQ(comm,PETSC_ERR_PLIB,"Unknown FETI gluing type");
       }
     }
-  } 
+  }
 
   PetscCall(PetscSFScatterBegin(SF2, MPIU_INT, link_onroot, link_onleaves));
-  // work between communication  
-  // new layout for links 
+  // work between communication
+  // new layout for links
   PetscCall(PetscLayoutGetSize(links, &n_link));
   PetscCall(PetscLayoutDestroy(&links));
   PetscCall(PetscLayoutCreate(comm, &links));
   PetscCall(PetscLayoutSetBlockSize(links, 1));
   PetscCall(PetscLayoutSetSize(links, n_link));
   PetscCall(PetscLayoutSetUp(links));
-  // compute divison - only orthonormal /STEP 6.5/  
+  // compute divison - only orthonormal /STEP 6.5/
   PetscCall(PetscMalloc1(nleaves_SF2, &division));
   if (type == FETI_GLUING_ORTH) {
     j=0;
     for (i=0; i<nleaves_SF2; i++) {
-      if (j==0) { 
+      if (j==0) {
         division[i] = root_degree_onleaves_fromSF1onSF2[i]-1;
         if (root_degree_onleaves_fromSF1onSF2[i]>2) {
           j=root_degree_onleaves_fromSF1onSF2[i]-2;
@@ -744,7 +744,7 @@ PetscErrorCode QPFetiGetBgtSF(MPI_Comm comm, IS i2g, PetscInt Nu, IS i2l, PetscI
   for (i=0; i<nleaves_SF2; i++) max_rank_onleaves_linkSF[i] = rank;
 
   PetscCall(PetscSFReduceBegin(link_SF, MPIU_INT, max_rank_onleaves_linkSF, max_rank_onroot_linkSF, MPIU_MAX));
-  // work between communication  
+  // work between communication
   PetscCall(PetscLayoutGetRange(links, &rstart, &rend));
   PetscCall(PetscLayoutGetLocalSize(links, &n_link));
   PetscCall(PetscMalloc3(nleaves_SF1, &prealloc_diag, nleaves_SF1, &prealloc_ofdiag, nleaves_SF1, &prealloc_seq));
@@ -756,8 +756,8 @@ PetscErrorCode QPFetiGetBgtSF(MPI_Comm comm, IS i2g, PetscInt Nu, IS i2l, PetscI
   PetscCall(PetscSFReduceEnd(link_SF, MPIU_INT, max_rank_onleaves_linkSF, max_rank_onroot_linkSF, MPIU_MAX));
 
   PetscCall(PetscSFBcastBegin(link_SF, MPIU_INT, max_rank_onroot_linkSF, max_rank_onleaves_linkSF, MPI_REPLACE));
-  // work between communication  
-  // get preallocation pattern 
+  // work between communication
+  // get preallocation pattern
   for (i=0; i<nleaves_SF2; i++) {
     if (link_onleaves[i]>=rstart && link_onleaves[i]<rend) {
       prealloc_diag[local_idx[i]]++;
@@ -927,7 +927,7 @@ PetscErrorCode QPFetiGetBgtSF(MPI_Comm comm, IS i2g, PetscInt Nu, IS i2l, PetscI
   PetscCall(PetscFree(link_onroot));
   PetscCall(PetscFree(division));
   PetscCall(PetscFree4(leaves_SF2, local_idx, condensed_local_idx, root_degree_onleaves_fromSF1onSF2));
-  PetscCall(PetscFree3(prealloc_diag, prealloc_ofdiag, prealloc_seq)); 
+  PetscCall(PetscFree3(prealloc_diag, prealloc_ofdiag, prealloc_seq));
   PetscCall(PetscFree(values));
   PetscCall(PetscFree2(max_rank_onroot_linkSF, max_rank_onleaves_linkSF));
   PetscCall(PetscSFDestroy(&SF1));
@@ -943,7 +943,7 @@ PetscErrorCode QPFetiGetBgtSF(MPI_Comm comm, IS i2g, PetscInt Nu, IS i2l, PetscI
 #undef __FUNCT__
 #define __FUNCT__ "QPFetiGetGlobalDir"
 PetscErrorCode QPFetiGetGlobalDir(QP qp, IS dbc, QPFetiNumberingType numtype, IS *dbc_g)
-{ 
+{
   PetscInt ndbc;
   const PetscInt *dbc_arr;
   const PetscInt *dbc_l_arr;
@@ -986,6 +986,6 @@ PetscErrorCode QPFetiGetGlobalDir(QP qp, IS dbc, QPFetiNumberingType numtype, IS
     PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qp), " FETI_GLOBAL_UNDECOMPOSED numbering of Dirichlet DOFs\n"));
     PetscCall(PetscObjectReference((PetscObject)dbc));
     *dbc_g =dbc;
-  } 
+  }
   PetscFunctionReturnI(PETSC_SUCCESS);
 }

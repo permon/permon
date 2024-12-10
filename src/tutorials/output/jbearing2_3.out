@@ -1,6 +1,6 @@
 
 ---- Journal Bearing Problem SHB-----
-mx: 30,  my: 30,  ecc: 0.1 
+mx: 30,  my: 30,  ecc: 0.1
 
 TAO tolerances are gatol = 1.000000e-08, grtol =  1.000000e-50, gttol = 1.000000e-06
 Setting PERMON rtol = gttol, atol = gatol

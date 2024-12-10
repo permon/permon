@@ -80,15 +80,15 @@ PetscErrorCode QPRemoveChild(QP qp)
 #define __FUNCT__ "QPCreate"
 /*@
    QPCreate - Creates a quadratic programming problem (QP) object.
-   
+
    Collective on MPI_Comm
-   
+
    Input Parameter:
-.  comm - MPI comm 
-   
+.  comm - MPI comm
+
    Output Parameter:
--  qp_new - the new QP 
-   
+-  qp_new - the new QP
+
    Level: beginner
 
 .seealso: QPDestroy()
@@ -131,7 +131,7 @@ PetscErrorCode QPCreate(MPI_Comm comm, QP *qp_new)
 
   /* set the initial constraints */
   qp->qpc                    = NULL;
-  
+
   qp->changeListener         = NULL;
   qp->changeListenerCtx      = NULL;
   qp->postSolve              = NULL;
@@ -285,7 +285,7 @@ PetscErrorCode QPViewKKT(QP qp,PetscViewer v)
   if (BE && !cE) PetscCall(PetscViewerASCIIPrintf(v, "||cE|| = 0.00e-00    max(cE) = 0.00e-00 = cE(0)    min(cE) = 0.00e-00 = cE(0)\n"));
   if (cI) QPView_Vec(v,cI,"cI");
   if (BI && !cI) PetscCall(PetscViewerASCIIPrintf(v, "||cI|| = 0.00e-00    max(cI) = 0.00e-00 = cI(0)    min(cI) = 0.00e-00 = cI(0)\n"));
-  
+
   PetscCall(VecDuplicate(b, &r));
   PetscCall(QPComputeLagrangianGradient(qp,x,r,&kkt_name));
   PetscCall(VecIsInvalidated(r,&notavail));
@@ -479,11 +479,11 @@ PetscErrorCode QPReset(QP qp)
   PetscCall(VecDestroy(&qp->lambda_I));
   PetscCall(VecDestroy(&qp->c));
   PetscCall(VecDestroy(&qp->lambda));
-  
+
   PetscCall(PCDestroy( &qp->pc));
 
   PetscCall(QPCDestroy(&qp->qpc));
-  
+
   PetscCall(QPPFDestroy(&qp->pf));
   qp->setupcalled = PETSC_FALSE;
   qp->solved = PETSC_FALSE;
@@ -555,7 +555,7 @@ PetscErrorCode QPSetUpInnerObjects(QP qp)
       PetscCall(MatCreateVecs(Bs[0],NULL,&cs[0]));
       PetscCall(VecSet(cs[0],0.0));
     }
-    
+
     PetscCall(PetscObjectReference((PetscObject)(Bs[1]       = qp->BI)));
     PetscCall(PetscObjectReference((PetscObject)(lambdas[1]  = qp->lambda_I)));
     if (qp->cI) {
@@ -564,12 +564,12 @@ PetscErrorCode QPSetUpInnerObjects(QP qp)
       PetscCall(MatCreateVecs(Bs[1],NULL,&cs[1]));
       PetscCall(VecSet(cs[1],0.0));
     }
-    
+
     PetscCall(MatCreateNestPermon(comm,2,NULL,1,NULL,Bs,&qp->B));
     PetscCall(MatCreateVecs(qp->B,NULL,&qp->c));
     PetscCall(PetscObjectSetName((PetscObject)qp->B,"B"));
     PetscCall(PetscObjectSetName((PetscObject)qp->c,"c"));
-    
+
     /* copy cE,cI to c */
     PetscCall(MatNestGetISs(qp->B,rows,NULL));
     for (i=0; i<2; i++) {
@@ -577,7 +577,7 @@ PetscErrorCode QPSetUpInnerObjects(QP qp)
       PetscCall(VecCopy(cs[i],c[i]));
       PetscCall(VecRestoreSubVector(qp->c,rows[i],&c[i]));
     }
-    
+
     for (i=0; i<2; i++) {
       PetscCall(MatDestroy(&Bs[i]));
       PetscCall(VecDestroy(&cs[i]));
@@ -913,7 +913,7 @@ PetscErrorCode QPComputeMissingBoxMultipliers(QP qp)
 
    Output Parameter:
 .  f    - the objective value
-   
+
    Notes:
    Computes f(x) as -x'(b - 1/2*A*x).
 
@@ -948,7 +948,7 @@ PetscErrorCode QPComputeObjective(QP qp, Vec x, PetscReal *f)
 
    Output Parameter:
 .  g    - the gradient value
-   
+
    Level: intermediate
 
 .seealso: QPComputeObjective(), QPComputeObjectiveFromGradient(), QPComputeObjectiveAndGradient()
@@ -979,10 +979,10 @@ PetscErrorCode QPComputeObjectiveGradient(QP qp, Vec x, Vec g)
 
    Output Parameter:
 .  f    - the objective value
-   
+
    Notes:
    Computes f(x) as x'*(g - b)/2
-   
+
    Level: intermediate
 
 .seealso: QPComputeObjective(), QPComputeObjectiveGradient(), QPComputeObjectiveAndGradient()
@@ -1017,7 +1017,7 @@ PetscErrorCode QPComputeObjectiveFromGradient(QP qp, Vec x, Vec g, PetscReal *f)
    Output Parameters:
 +  g    - the gradient
 -  f    - the objective value
-   
+
    Notes:
    Computes g(x) = A*x - b and f(x) = x'*(g - b)/2
 
@@ -1309,12 +1309,12 @@ PetscErrorCode QPSetRhsPlus(QP qp,Vec b)
   PetscValidHeaderSpecific(b,VEC_CLASSID,2);
   PetscCheckSameComm(qp,1,b,2);
   if (b == qp->b && qp->b_plus == PETSC_TRUE) PetscFunctionReturn(PETSC_SUCCESS);
-  
+
   PetscCall(VecDuplicate(b,&qp->b));
   PetscCall(VecCopy(b,qp->b));
   PetscCall(VecScale(qp->b,-1.0));
   qp->b_plus = PETSC_TRUE;
-  
+
   if (FllopDebugEnabled) {
     PetscReal norm;
     PetscCall(VecNorm(b,NORM_2,&norm));
@@ -1360,7 +1360,7 @@ PetscErrorCode QPGetRhs(QP qp,Vec *b)
 
    Input Parameters:
 +  qp - the QP
-.  Bineq - boolean matrix representing the inequality constraints placement 
+.  Bineq - boolean matrix representing the inequality constraints placement
 -  cineq - vector prescribing inequality constraints
 
    Level: beginner
@@ -1436,7 +1436,7 @@ PetscErrorCode QPSetIneq(QP qp, Mat Bineq, Vec cineq)
 .  qp - the QP
 
    Output Parameter:
-+  Bineq - boolean matrix representing the inequality constraints placement 
++  Bineq - boolean matrix representing the inequality constraints placement
 -  cineq - vector prescribing inequality constraints
 
    Level: intermediate
@@ -1467,7 +1467,7 @@ PetscErrorCode QPGetIneq(QP qp, Mat *Bineq, Vec *cineq)
 
    Input Parameter:
 +  qp - the QP
-.  Beq - boolean matrix representing the equality constraints placement 
+.  Beq - boolean matrix representing the equality constraints placement
 -  ceq - vector prescribing equality constraints
 
    Level: beginner
@@ -1537,7 +1537,7 @@ PetscErrorCode QPSetEq(QP qp, Mat Beq, Vec ceq)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPAddEq"
 /*@
    QPAddEq - Add the equality constraints.
@@ -1546,7 +1546,7 @@ PetscErrorCode QPSetEq(QP qp, Mat Beq, Vec ceq)
 
    Input Parameter:
 +  qp - the QP
-.  Beq - boolean matrix representing the equality constraints placement 
+.  Beq - boolean matrix representing the equality constraints placement
 -  ceq - vector prescribing equality constraints
 
    Level: beginner
@@ -1577,7 +1577,7 @@ PetscErrorCode QPAddEq(QP qp, Mat Beq, Vec ceq)
     PetscCall(VecDestroy(&cE_orig));
     PERMON_ASSERT(qp->BE_nest_count==1,"qp->BE_nest_count==1");
   }
-  
+
   M = qp->BE_nest_count++;
 
   PetscCall(PetscMalloc((M+1)*sizeof(Mat), &subBE));   //Mat subBE[M+1];
@@ -1657,7 +1657,7 @@ PetscErrorCode QPGetEqMultiplicityScaling(QP qp, Vec *dE_new, Vec *dI_new)
   Vec dof_multiplicities=NULL, edge_multiplicities_g=NULL, edge_multiplicities_d=NULL, edge_multiplicities_c=NULL;
   const PetscInt *cols;
   const PetscScalar *vals;
-  
+
   PetscFunctionBeginI;
   PetscCall(PetscObjectGetComm((PetscObject)qp,&comm));
   //TODO we now assume fully redundant case
@@ -1671,7 +1671,7 @@ PetscErrorCode QPGetEqMultiplicityScaling(QP qp, Vec *dE_new, Vec *dI_new)
   }
   Bc = qp->BI;
   PERMON_ASSERT(Bg,"Bg");
-  
+
   if (!Bc) { scale_Bc = PETSC_FALSE; count_Bc = PETSC_FALSE; }
   if (!Bd) { scale_Bd = PETSC_FALSE; count_Bd = PETSC_FALSE; }
   PetscCall(PetscOptionsGetBool(NULL,NULL,"-qp_E_scale_Bd",&scale_Bd,NULL));
@@ -1835,7 +1835,7 @@ PetscErrorCode QPGetEqMultiplicityScaling(QP qp, Vec *dE_new, Vec *dI_new)
 .  qp - the QP
 
    Output Parameter:
-+  Beq - boolean matrix representing the equality constraints placement 
++  Beq - boolean matrix representing the equality constraints placement
 -  ceq - vector prescribing equality constraints
 
    Level: intermediate
@@ -2311,7 +2311,7 @@ PetscErrorCode QPSetQPPF(QP qp, QPPF pf)
 
    Input Parameter:
 .  qp  - the QP
-   
+
    Output Parameter
 .  flg - true if solved
 
@@ -2335,7 +2335,7 @@ PetscErrorCode QPIsSolved(QP qp,PetscBool *flg)
 
    Parameters:
 +  qp - quadratic programming problem
--  qpc - constraints 
+-  qpc - constraints
 
    Level: intermediate
 */
@@ -2357,11 +2357,11 @@ PetscErrorCode QPSetQPC(QP qp, QPC qpc)
    QPGetQPC - return constraints from QP
 
    Not Collective
-   
+
    Parameters:
    + qp - quadratic programming problem
-   - qpc - pointer to constraints 
-   
+   - qpc - pointer to constraints
+
    Level: developer
 */
 PetscErrorCode QPGetQPC(QP qp, QPC *qpc)
@@ -2374,7 +2374,7 @@ PetscErrorCode QPGetQPC(QP qp, QPC *qpc)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSetOptionsPrefix"
 /*@
    QPSetOptionsPrefix - Sets the prefix used for searching for all
@@ -2407,7 +2407,7 @@ PetscErrorCode QPSetOptionsPrefix(QP qp,const char prefix[])
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPAppendOptionsPrefix"
 /*@
    QPAppendOptionsPrefix - Appends to the prefix used for searching for all
@@ -2439,7 +2439,7 @@ PetscErrorCode QPAppendOptionsPrefix(QP qp,const char prefix[])
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPGetOptionsPrefix"
 /*@
    QPGetOptionsPrefix - Gets the prefix used for searching for all
@@ -2502,7 +2502,7 @@ static PetscErrorCode QPSetFromOptions_Private(QP qp)
    Options Database Keys:
 .  -qp_view            - view information about QP
 .  -qp_chain_view      - view information about all QPs in the chain
-.  -qp_chain_view_kkt  - view how well are satisfied KKT conditions for each QP in the chain 
+.  -qp_chain_view_kkt  - view how well are satisfied KKT conditions for each QP in the chain
 -  -qp_chain_view_qppf - view information about all QPPFs in the chain
 
    Notes:

@@ -46,7 +46,7 @@ static PetscErrorCode MatGetColumnVectors_NestPermon(Mat A, Vec *cols_new[])
     /* IS is_glob_col[J] holds indices of columns of the J-th column block in the global numbering of global matrix A */
     PetscCall(ISAllGather(is_glob_col[J],&is_seq));
     PetscCall(ISGetIndices(is_seq,&is_arr));
-    
+
     for (j=0; j<N1; j++) {
       for (II=0; II<Mn; II++) { col_arr[II] = cols_for_each_row_block[II][j]; }
       PetscCall(VecCreateNest(comm,Mn,NULL,col_arr,&cols[is_arr[j]]));
@@ -115,10 +115,10 @@ static PetscErrorCode PermonMatCreateDenseProductMatrix_NestPermon(Mat A, PetscB
   PetscInt i,j,Mn,Nn,MnNn;
   Mat *mats_out,**A_mats,**B_mats,*B_p;
   PetscBool B_nest;
-  
+
   PetscFunctionBegin;
   PetscCall(PetscObjectTypeCompareAny((PetscObject)B,&B_nest,MATNEST,MATNESTPERMON,""));
-  
+
   if (A_transpose) {
     PetscCall(MatNestGetSubMats(A,NULL,&Mn,&A_mats));
   } else {
@@ -179,7 +179,7 @@ static PetscErrorCode PermonMatGetLocalMat_NestPermon(Mat A,Mat *Aloc)
 {
   PetscInt i,j,Mn,Nn,MnNn;
   Mat *mats_out,**mats_in;
-  
+
   PetscFunctionBegin;
   PetscCall(MatNestGetSubMats(A,&Mn,&Nn,&mats_in));
   MnNn = Mn*Nn;
@@ -203,10 +203,10 @@ static PetscErrorCode MatMergeAndDestroy_NestPermon(MPI_Comm comm, Mat *local_in
   PetscBool flg;
   Mat A = *local_in;
   Mat_Nest *data = (Mat_Nest*)A->data;
-  
+
   PetscFunctionBegin;
   PetscCall(MatNestGetSubMats(A,&Mn,&Nn,&mats_in));
-  
+
   if (x) {
     PetscInt Nn_cl;
     PetscCall(VecGetLocalSize(x,&n));
@@ -452,7 +452,7 @@ static PetscErrorCode MatMatMult_NestPermon_NestPermon(Mat A,Mat B,PetscReal fil
     }
   }
   PetscCall(PetscFree(mats_row));
-  
+
   if (MN==1) {
     /* handle 1x1 nest as normal matrix */
     AB = *mats_out;
@@ -735,7 +735,7 @@ static PetscErrorCode MatCreateNestPermonVerticalMerge_Extract_Private(PetscInt 
   }
 
   if (!mats_out) PetscFunctionReturn(PETSC_SUCCESS);
-  
+
   PetscCall(PetscMalloc1(*nmats_out,&mats_out_));
   mats_out_p = mats_out_;
   for (i=0; i<nmats_in; i++) {
