@@ -116,7 +116,6 @@ int main( int argc, char **argv )
   PetscCall(DMCreateGlobalVector(user.dm,&x)); /* Solution */
   PetscCall(VecDuplicate(x,&user.B)); /* Linear objective */
 
-
   /*  Create matrix user.A to store quadratic, Create a local ordering scheme. */
   PetscCall(VecGetLocalSize(x,&m));
   PetscCall(DMCreateMatrix(user.dm,&user.A));
@@ -194,7 +193,6 @@ int main( int argc, char **argv )
   return 0;
 }
 
-
 static PetscReal p(PetscReal xi, PetscReal ecc)
 {
   PetscReal t=1.0+ecc*PetscCosScalar(xi);
@@ -217,7 +215,6 @@ PetscErrorCode ComputeB(AppCtx* user)
   hx=two*pi/(nx+1.0);
   hy=two*user->b/(ny+1.0);
   ehxhy = ecc*hx*hy;
-
 
   /*
      Get local grid boundaries
@@ -338,12 +335,10 @@ PetscErrorCode FormFunctionGradient(Tao tao, Vec X, PetscReal *fcn,Vec G,void *p
   PetscCall(VecAXPY(G, one, user->B));
   *fcn = f1/2.0 + f2;
 
-
   PetscCall(PetscLogFlops((91 + 10*ym) * xm));
   return 0;
 
 }
-
 
 #undef __FUNCT__
 #define __FUNCT__ "FormHessian"
@@ -558,7 +553,6 @@ PetscErrorCode CallPermonAndCompareResults(Tao tao, void *ctx)
   PetscFunctionReturnI(PETSC_SUCCESS);
 
 }
-
 
 /*TEST
   build:

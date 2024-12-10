@@ -889,7 +889,6 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-
 #undef __FUNCT__
 #define __FUNCT__ "QPSMPGPGetCurrentStepType"
 PetscErrorCode QPSMPGPGetCurrentStepType(QPS qps,char *stepType)

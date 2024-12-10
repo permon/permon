@@ -325,7 +325,6 @@ PetscErrorCode QPSDestroyDefault(QPS qps)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-
 #undef __FUNCT__
 #define __FUNCT__ "QPSDestroy"
 /*@

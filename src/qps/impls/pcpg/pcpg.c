@@ -21,8 +21,6 @@ PetscErrorCode QPSIsQPCompatible_PCPG(QPS qps,QP qp,PetscBool *flg){
 
 }
 
-
-
 #undef __FUNCT__
 #define __FUNCT__ "QPSSetup_PCPG"
 /*

@@ -32,7 +32,6 @@ FLLOP_EXTERN PetscErrorCode MatCreateOperatorFromUpperTriangular(Mat U, Mat *A);
 FLLOP_EXTERN PetscErrorCode MatCreateExtension(MPI_Comm comm, PetscInt m, PetscInt n, PetscInt M, PetscInt N, Mat A, IS ris, PetscBool rows_use_global_numbering, IS cis, Mat *TA_new);
 FLLOP_EXTERN PetscErrorCode MatCreateOneRow(Vec a, Mat *A_new);
 
-
 /* PETSc fixes */
 FLLOP_EXTERN PetscErrorCode MatCreateShellPermon(MPI_Comm comm,PetscInt m,PetscInt n,PetscInt M,PetscInt N,void *ctx,Mat *A);
 FLLOP_EXTERN PetscErrorCode MatCreateDummy(MPI_Comm comm,PetscInt m,PetscInt n,PetscInt M,PetscInt N,void *ctx,Mat *A);

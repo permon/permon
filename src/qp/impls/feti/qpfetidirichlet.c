@@ -27,5 +27,3 @@ PetscErrorCode  QPFetiDirichletDestroy(QPFetiDirichlet *dbc)
   PetscCall(PetscFree(*dbc));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
-
-

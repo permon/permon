@@ -354,7 +354,6 @@ static PetscErrorCode MatInvSetPsubcommType_Inv(Mat imat, PetscSubcommType type)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-
 #undef __FUNCT__
 #define __FUNCT__ "MatInvGetPsubcommColor_Inv"
 static PetscErrorCode MatInvGetPsubcommColor_Inv(Mat imat, PetscMPIInt *color)
@@ -692,7 +691,6 @@ static PetscErrorCode MatInvExplicitly_Inv(Mat imat, PetscBool transpose, MatReu
   PetscCall(MatInvGetKSP(imat, &ksp));//innerksp
   PetscCall(MatInvGetRedundancy(imat, &redundancy));
 
-
   if (scall == MAT_INITIAL_MATRIX) {
     PetscCall(MatCreateDensePermon(comm, m, m, M, M, NULL, &B));
     *imat_explicit = B;
@@ -732,7 +730,6 @@ static PetscErrorCode MatInvExplicitly_Inv(Mat imat, PetscBool transpose, MatReu
   PetscCall(PetscLogEventEnd(Mat_Inv_Explicitly,imat,0,0,0));
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
-
 
 #undef __FUNCT__
 #define __FUNCT__ "MatMult_Inv"
@@ -1010,7 +1007,6 @@ FLLOP_EXTERN PetscErrorCode MatCreate_Inv(Mat imat)
   inv->ksp                          = NULL;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
-
 
 #undef __FUNCT__
 #define __FUNCT__ "MatCreateInv"

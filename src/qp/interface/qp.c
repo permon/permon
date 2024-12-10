@@ -75,7 +75,6 @@ PetscErrorCode QPRemoveChild(QP qp)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-
 #undef __FUNCT__
 #define __FUNCT__ "QPCreate"
 /*@
@@ -1001,7 +1000,6 @@ PetscErrorCode QPComputeObjectiveFromGradient(QP qp, Vec x, Vec g, PetscReal *f)
   *f /= 2.0;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
-
 
 #undef __FUNCT__
 #define __FUNCT__ "QPComputeObjectiveAndGradient"
@@ -2349,7 +2347,6 @@ PetscErrorCode QPSetQPC(QP qp, QPC qpc)
   PetscCall(PetscObjectReference((PetscObject)qpc));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
-
 
 #undef __FUNCT__
 #define __FUNCT__ "QPGetQPC"

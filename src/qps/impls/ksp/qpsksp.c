@@ -187,7 +187,6 @@ PetscErrorCode QPSViewConvergence_KSP(QPS qps, PetscViewer v)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-
 #undef __FUNCT__
 #define __FUNCT__ "QPSDestroy_KSP"
 PetscErrorCode QPSDestroy_KSP(QPS qps)

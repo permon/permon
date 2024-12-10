@@ -355,7 +355,6 @@ PetscErrorCode VecHasValidValues(Vec vec,PetscBool *flg)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-
 struct _n_VecNestGetMPICtx {
   VecScatter sc;
   Vec *origvecs;
@@ -485,7 +484,6 @@ PetscErrorCode VecNestGetMPI(PetscInt N,Vec *vecs[])
   *vecs = mpiv;
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
-
 
 #undef __FUNCT__
 #define __FUNCT__ "VecNestRestoreMPI"

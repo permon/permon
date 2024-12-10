@@ -48,7 +48,6 @@ static PetscErrorCode FllopMatGetLocalMat_Gluing(Mat A,Mat *Aloc)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-
 #undef __FUNCT__
 #define __FUNCT__ "MatMult_Gluing"
 PetscErrorCode MatMult_Gluing(Mat mat, Vec right, Vec left)
@@ -222,7 +221,6 @@ PetscErrorCode MatMultTransposeAdd_Gluing(Mat mat, Vec right, Vec add, Vec left)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-
 #undef __FUNCT__
 #define __FUNCT__ "MatDestroy_Gluing"
 PetscErrorCode MatDestroy_Gluing(Mat mat)
@@ -255,7 +253,7 @@ PetscErrorCode MatCreateGluing(MPI_Comm comm, PetscInt n_x_localRow, PetscInt n_
   PetscCall(MatSetType(B, MATGLUING));
   data = (Mat_Gluing*) B->data;
 
- PetscCall(PetscSFGetLeafRange(SF,NULL,&n_l));
+  PetscCall(PetscSFGetLeafRange(SF,NULL,&n_l));
 
   PetscCall(PetscMalloc1(n_l+1,&lr));
   PetscCall(PetscMemcpy(lr,leaves_row,(n_l+1)*sizeof(PetscInt)));

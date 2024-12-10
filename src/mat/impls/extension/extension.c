@@ -937,7 +937,6 @@ PetscErrorCode MatMatTransposeMult_Extension_Extension_same(Mat A, Mat B, MatReu
   }
   dataElem -= M_loc*nnzElem;
 
-
   /* compute local product */
   PetscCall(PetscMalloc1(M_loc,&iRow));
   PetscCall(PetscMalloc1(M_loc,&iCol));

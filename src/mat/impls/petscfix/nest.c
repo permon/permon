@@ -641,7 +641,6 @@ PETSC_EXTERN PetscErrorCode MatConvert_Nest_NestPermon(Mat A,MatType type,MatReu
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-
 #undef __FUNCT__
 #define __FUNCT__ "MatDestroy_NestPermon"
 PETSC_EXTERN PetscErrorCode MatDestroy_NestPermon(Mat mat)
@@ -754,7 +753,6 @@ PetscErrorCode MatCreateNestPermonVerticalMerge(MPI_Comm comm,PetscInt nmats,Mat
 {
   PetscInt i,nmats_out;
   Mat *mats_out;
-
 
   PetscFunctionBegin;
   PetscAssertPointer(mats,2);

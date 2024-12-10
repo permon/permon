@@ -152,7 +152,6 @@ static PetscErrorCode PCApply_QPTEnforceEqByProjector_None(PC pc,Vec x,Vec y)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-
 #undef __FUNCT__
 #define __FUNCT__ "PCSetUp_QPTEnforceEqByProjector"
 static PetscErrorCode PCSetUp_QPTEnforceEqByProjector(PC pc)
@@ -410,7 +409,6 @@ PetscErrorCode QPTEnforceEqByPenalty(QP qp, PetscReal rho_user, PetscBool rho_di
   PetscCall(PetscLogEventEnd(QPT_EnforceEqByPenalty,qp,0,0,0));
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
-
 
 #undef __FUNCT__
 #define __FUNCT__ "QPTHomogenizeEqPostSolve_Private"

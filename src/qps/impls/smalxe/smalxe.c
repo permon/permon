@@ -653,7 +653,6 @@ PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,KSPConvergedReason *reaso
     PetscFunctionReturn(PETSC_SUCCESS);
   }
 
-
   PetscCall((*qps_outer->convergencetest)(qps_outer,&qps_outer->reason));
 
   if (qps_outer->reason) {
@@ -700,8 +699,6 @@ PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,KSPConvergedReason *reaso
   }
   PetscFunctionReturn(PETSC_SUCCESS);
 }
-
-
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSSetFromOptions_SMALXE"
@@ -778,7 +775,6 @@ PetscErrorCode QPSSetFromOptions_SMALXE(QPS qps,PetscOptionItems *PetscOptionsOb
   PetscOptionsHeadEnd();
   PetscFunctionReturn(PETSC_SUCCESS);
 }
-
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSSetUp_SMALXE"
@@ -1234,7 +1230,6 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_SMALXE(QPS qps)
   smalxe->inner_no_gtol_stop  = PETSC_FALSE;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
-
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSSMALXEGetInnerQPS"

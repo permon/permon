@@ -11,7 +11,6 @@ const char *QPPFVariants[] = {"zero","all","dist", "QPPFVariant","QPPF_",0};
 #define RANK0 0
 #define G_RELATIVE_FILL 1.0
 
-
 #undef __FUNCT__
 #define __FUNCT__ "QPPFMatMult_P"
 static PetscErrorCode QPPFMatMult_P(Mat matP, Vec v, Vec Pv)

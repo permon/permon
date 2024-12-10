@@ -490,7 +490,6 @@ FLLOP_EXTERN PetscErrorCode QPCCreate_Box(QPC qpc)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-
 #undef __FUNCT__
 #define __FUNCT__ "QPCBoxSet"
 PetscErrorCode QPCBoxSet(QPC qpc,Vec lb, Vec ub)
