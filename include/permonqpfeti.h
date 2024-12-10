@@ -1,5 +1,5 @@
-#if !defined(__FLLOPQPFETI_H)
-#define	__FLLOPQPFETI_H
+#pragma once
+
 #include "permonqp.h"
 
 typedef enum {FETI_LOCAL, FETI_GLOBAL_DECOMPOSED, FETI_GLOBAL_UNDECOMPOSED} QPFetiNumberingType;
@@ -17,5 +17,3 @@ FLLOP_EXTERN PetscErrorCode QPFetiSetDirichlet(QP qp, IS dbcis, QPFetiNumberingT
 FLLOP_EXTERN PetscErrorCode QPFetiSetLocalToGlobalMapping(QP qp, IS l2g_dof_map);
 FLLOP_EXTERN PetscErrorCode QPFetiSetInterfaceToGlobalMapping(QP qp, IS i2g);
 FLLOP_EXTERN PetscErrorCode QPFetiSetUp(QP qp);
-
-#endif

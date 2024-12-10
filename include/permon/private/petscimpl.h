@@ -1,5 +1,4 @@
-#if !defined(__PETSCIMPL_H)
-#define	__PETSCIMPL_H
+#pragma once
 
 #include "petscpc.h"
 
@@ -16,6 +15,4 @@
 #include "permon/private/petsc/pc/redundant.h"
 #else
 #error "unsupported PETSc version"
-#endif
-
 #endif

@@ -1,5 +1,5 @@
-#if !defined(__FLLOPQPPF_H)
-#define __FLLOPQPPF_H
+#pragma once
+
 #include "permonmat.h"
 
 typedef struct _p_QPPF* QPPF;
@@ -38,5 +38,3 @@ FLLOP_EXTERN PetscErrorCode QPPFGetGHasOrthonormalRows(QPPF cp, PetscBool *flg);
 FLLOP_EXTERN PetscErrorCode QPPFGetGGt(QPPF cp, Mat *GGt);
 FLLOP_EXTERN PetscErrorCode QPPFGetGGtinv(QPPF cp, Mat *GGtinv);
 FLLOP_EXTERN PetscErrorCode QPPFGetKSP(QPPF cp, KSP *ksp);
-
-#endif

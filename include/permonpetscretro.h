@@ -1,5 +1,5 @@
-#if !defined(__FLLOPPETSCRETRO_H)
-#define	__FLLOPPETSCRETRO_H
+#pragma once
+
 #include <petscsys.h>
 
 #if PETSC_VERSION_MAJOR!=3 || (PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR<17)
@@ -32,6 +32,3 @@
 #	   endif
 #	 endif
 #endif
-
-#endif
-

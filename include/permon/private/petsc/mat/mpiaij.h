@@ -1,5 +1,4 @@
-#ifndef __MPIAIJ_H
-#define __MPIAIJ_H
+#pragma once
 
 #include "aij.h"
 
@@ -83,6 +82,3 @@ typedef struct {
 
   struct _MatOps cops;
 } Mat_MPIAIJ;
-
-
-#endif

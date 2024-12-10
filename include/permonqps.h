@@ -1,8 +1,8 @@
-#if !defined(__FLLOPQPS_H)
-#define	__FLLOPQPS_H
+#pragma once
+
 #include <petsctao.h>
 #include "permonqp.h"
-        
+
 typedef struct _p_QPS* QPS;
 
 FLLOP_EXTERN PetscClassId QPS_CLASSID;
@@ -148,6 +148,3 @@ FLLOP_EXTERN PetscErrorCode QPSSMALXESetRhoUpdateLate(QPS qps,PetscReal rho_upda
 FLLOP_EXTERN PetscErrorCode QPSSMALXEGetRhoUpdateLate(QPS qps,PetscReal *rho_update_late);
 //TODO temporary solution, monitors should be implemented more generally
 FLLOP_EXTERN PetscErrorCode QPSSMALXESetMonitor(QPS qps,PetscBool flg);
-
-#endif
-

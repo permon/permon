@@ -1,5 +1,5 @@
-#if !defined(__PERMONQPC_H)
-#define	__PERMONQPC_H
+#pragma once
+
 #include "permonqppf.h"
 
 typedef struct _p_QPC* QPC;
@@ -54,6 +54,3 @@ FLLOP_EXTERN PetscErrorCode QPCCreateBox(MPI_Comm comm,IS is,Vec lb,Vec ub,QPC *
 FLLOP_EXTERN PetscErrorCode QPCBoxSet(QPC qpc,Vec lb,Vec ub);
 FLLOP_EXTERN PetscErrorCode QPCBoxGet(QPC qpc,Vec *lb,Vec *ub);
 FLLOP_EXTERN PetscErrorCode QPCBoxGetMultipliers(QPC qpc,Vec *llb,Vec *lub);
-
-#endif
-

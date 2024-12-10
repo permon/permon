@@ -1,11 +1,11 @@
-#if !defined(__QPPFIMPL_H)
-#define	__QPPFIMPL_H
+#pragma once
+
 #include <permonqppf.h>
 #include <permon/private/permonimpl.h>
 
 struct _p_QPPF {
     PETSCHEADER(int);
-    
+
     Mat G, Gt, GGtinv;
     PetscInt Gm,Gn,GM,GN;
 
@@ -19,7 +19,7 @@ struct _p_QPPF {
     /* measurements */
     PetscInt it_GGtinvv;
     KSPConvergedReason conv_GGtinvv;
-    
+
     /* preallocated stuff */
     Vec Gt_right;
     Vec G_left;
@@ -34,5 +34,3 @@ struct _p_QPPF {
 FLLOP_EXTERN PetscLogEvent QPPF_SetUp, QPPF_SetUp_Gt, QPPF_SetUp_GGt, QPPF_SetUp_GGtinv;
 FLLOP_EXTERN PetscLogEvent QPPF_ApplyCP, QPPF_ApplyCP_gt, QPPF_ApplyCP_sc;
 FLLOP_EXTERN PetscLogEvent QPPF_ApplyP, QPPF_ApplyQ, QPPF_ApplyHalfQ, QPPF_ApplyG, QPPF_ApplyGt;
-
-#endif

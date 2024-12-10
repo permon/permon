@@ -1,5 +1,5 @@
-#if !defined(__FLLOPVEC_H)
-#define __FLLOPVEC_H
+#pragma once
+
 #include <petscvec.h>
 #include "permonsys.h"
 
@@ -21,5 +21,3 @@ FLLOP_EXTERN PetscErrorCode ISAdd(IS is,PetscInt value,IS *isnew);
 FLLOP_EXTERN PetscErrorCode ISCreateFromVec(Vec vec, IS *is);
 FLLOP_EXTERN PetscErrorCode ISGetVec(IS is, Vec *vec);
 FLLOP_EXTERN PetscErrorCode ISGetVecBlock(IS is, Vec *vec, PetscInt bs);
-
-#endif

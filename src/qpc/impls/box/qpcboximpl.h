@@ -1,5 +1,5 @@
-#if !defined(__BOXIMPL_H)
-#define __BOXIMPL_H
+#pragma once
+
 #include <permon/private/qpcimpl.h>
 
 typedef struct {
@@ -8,5 +8,3 @@ typedef struct {
   Vec llb;
   Vec lub;
 } QPC_Box;
-
-#endif

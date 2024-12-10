@@ -1,5 +1,5 @@
-#if !defined(__QPIMPL_H)
-#define	__QPIMPL_H
+#pragma once
+
 #include <permonqp.h>
 #include <permon/private/permonimpl.h>
 
@@ -33,13 +33,13 @@ struct _p_QP {
   Mat              B;
   Vec              c;
   Vec              lambda, Bt_lambda;
-  
+
   /* linear equality constraints */
   Mat              BE;
   PetscInt         BE_nest_count;
   Vec              cE;
   Vec              lambda_E;
-  
+
   /* linear inequality constraints */
   Mat              BI;
   Vec              cI;
@@ -80,4 +80,3 @@ FLLOP_INTERN PetscErrorCode QPDefaultPostSolve(QP child,QP parent);
 FLLOP_INTERN PetscErrorCode QPSetEqMultiplier(QP qp, Vec lambda_E);
 FLLOP_INTERN PetscErrorCode QPSetIneqMultiplier(QP qp, Vec lambda_I);
 FLLOP_INTERN PetscErrorCode QPSetWorkVector(QP qp,Vec xwork);
-#endif

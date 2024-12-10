@@ -1,5 +1,5 @@
-#if !defined(__PERMONQP_H)
-#define	__PERMONQP_H
+#pragma once
+
 #include "permonqpc.h"
 
 typedef struct _p_QP* QP;
@@ -114,5 +114,3 @@ FLLOP_EXTERN PetscErrorCode MatPenalizedSetPenalty(Mat Arho,PetscReal rho);
 FLLOP_EXTERN PetscErrorCode MatPenalizedUpdatePenalty(Mat Arho,PetscReal rho_update);
 FLLOP_EXTERN PetscErrorCode MatPenalizedGetPenalty(Mat Arho,PetscReal *rho);
 FLLOP_EXTERN PetscErrorCode MatPenalizedGetPenalizedTerm(Mat Arho,Mat *rhoBtB);
-
-#endif

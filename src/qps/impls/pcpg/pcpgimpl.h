@@ -1,6 +1,4 @@
-#if !defined(__PCGPIMPL_H)
-#define __PCGPIMPL_H
+#pragma once
+
 #include <permon/private/qpsimpl.h>
 #include <permonpc.h>
-
-#endif

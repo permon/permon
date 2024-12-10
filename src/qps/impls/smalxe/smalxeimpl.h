@@ -1,5 +1,5 @@
-#if !defined(__SMALXEIMPL_H)
-#define __SMALXEIMPL_H
+#pragma once
+
 #include <permon/private/qpsimpl.h>
 
 typedef struct {
@@ -75,5 +75,3 @@ FLLOP_INTERN PetscErrorCode QPSConvergedCreate_Inner_SMALXE(QPS qps_outer, void 
 FLLOP_INTERN PetscErrorCode QPSConvergedDestroy_Inner_SMALXE(void *ctx);
 FLLOP_INTERN PetscErrorCode QPSSMALXEUpdate_SMALXE(QPS qps, PetscReal Lag_old, PetscReal Lag, PetscReal rho);
 FLLOP_INTERN PetscErrorCode QPSSMALXEUpdateNormBu_SMALXE(QPS qps,Vec u,PetscReal *normBu,PetscReal *enorm);
-
-#endif

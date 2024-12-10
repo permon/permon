@@ -1,6 +1,4 @@
-
-#ifndef __REDUNDANT_H
-#define	__REDUNDANT_H
+#pragma once
 
 #include <petsc/private/pcimpl.h>
 #include <petscksp.h>
@@ -18,5 +16,3 @@ typedef struct {
   PetscBool          shifttypeset;
   MatFactorShiftType shifttype;
 } PC_Redundant;
-
-#endif

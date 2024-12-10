@@ -1,5 +1,5 @@
-#if !defined(__QPS_TAOIMPL_H)
-#define __QPS_TAOIMPL_H
+#pragma once
+
 #include <permon/private/qpsimpl.h>
 #include <petsctao.h>
 
@@ -8,5 +8,3 @@ typedef struct {
   PetscBool setfromoptionscalled;
   PetscInt ksp_its;
 } QPS_Tao;
-
-#endif

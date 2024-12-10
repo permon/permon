@@ -1,5 +1,4 @@
-#if !defined(__FLLOPSYS_H)
-#define	__FLLOPSYS_H
+#pragma once
 
 #include <petscksp.h>
 #include <petsctime.h>
@@ -15,7 +14,7 @@
 
 #include "permonpetscretro.h"
 
-/* 
+/*
   FLLOP is a dummy class, defined in FllopInitialize,
   used to distinguish between PETSc and FLLOP sys routines while using PetscInfo*,
 */
@@ -124,4 +123,3 @@ FLLOP_EXTERN PetscErrorCode FllopPetscInfoDeactivateAll();
 FLLOP_EXTERN PetscErrorCode FllopPetscObjectInheritName(PetscObject dest,PetscObject orig,const char *suffix);
 FLLOP_EXTERN PetscErrorCode FllopPetscObjectInheritPrefix(PetscObject obj,PetscObject orig,const char *suffix);
 FLLOP_EXTERN PetscErrorCode FllopPetscObjectInheritPrefixIfNotSet(PetscObject obj,PetscObject orig,const char *suffix);
-#endif

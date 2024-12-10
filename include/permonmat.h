@@ -1,5 +1,5 @@
-#if !defined(__FLLOPMAT_H)
-#define __FLLOPMAT_H
+#pragma once
+
 #include <petscmat.h>
 #include "permonvec.h"
 
@@ -152,5 +152,3 @@ typedef enum {MAT_ORTH_FORM_IMPLICIT=0, MAT_ORTH_FORM_EXPLICIT=1} MatOrthForm;
 FLLOP_EXTERN const char *MatOrthTypes[], *MatOrthForms[];
 FLLOP_EXTERN PetscErrorCode MatOrthColumns(Mat mat, MatOrthType type, MatOrthForm form, Mat *matOrth, Mat *T);
 FLLOP_EXTERN PetscErrorCode MatOrthRows(Mat mat, MatOrthType type, MatOrthForm form, Mat *matOrth, Mat *T);
-
-#endif
