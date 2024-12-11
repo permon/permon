@@ -175,7 +175,7 @@ int main( int argc, char **argv )
   /* Solve the bound constrained problem */
   PetscCall(TaoSolve(tao));
   PetscCall(TaoGetConvergedReason(tao, &reason));
-  if (reason < 0) SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_NOT_CONVERGED, "TAO diverged, reason %" PetscInt_FMT " (%s)", reason, TaoConvergedReasons[reason]);
+  PetscCheck(reason >= 0,PETSC_COMM_WORLD, PETSC_ERR_NOT_CONVERGED, "TAO diverged, reason %" PetscInt_FMT " (%s)", reason, TaoConvergedReasons[reason]);
 
   /* Call PERMON solver and compare results */
   PetscCall(CallPermonAndCompareResults(tao, &user));
@@ -532,7 +532,7 @@ PetscErrorCode CallPermonAndCompareResults(Tao tao, void *ctx)
   /* Solve the QP */
   PetscCall(QPSSolve(qps));
   PetscCall(QPSGetConvergedReason(qps, &reason));
-  if (reason < 0) SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_NOT_CONVERGED, "QPS diverged, reason %" PetscInt_FMT " (%s)", reason, KSPConvergedReasons[reason]);
+  PetscCheck(reason >= 0,PETSC_COMM_WORLD, PETSC_ERR_NOT_CONVERGED, "QPS diverged, reason %" PetscInt_FMT " (%s)", reason, KSPConvergedReasons[reason]);
 
   /* Get the solution vector */
   PetscCall(QPGetSolutionVector(qp, &x_qp));
@@ -546,7 +546,7 @@ PetscErrorCode CallPermonAndCompareResults(Tao tao, void *ctx)
   PetscCall(VecAXPY(x_diff, -1.0, x_qp));
   PetscCall(VecNorm(x_diff, NORM_2, &x_diff_norm));
   PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps),"Norm of difference of results from TAO and QP = %e %s %e = tolerance\n",x_diff_norm, (x_diff_norm <= tao_diff_tol) ? "<=" : ">", tao_diff_tol));
-  if (x_diff_norm > tao_diff_tol) SETERRQ(PetscObjectComm((PetscObject)qps), PETSC_ERR_PLIB, "PERMON and TAO yield different results!");
+  PetscCheck(x_diff_norm <= tao_diff_tol,PetscObjectComm((PetscObject)qps), PETSC_ERR_PLIB, "PERMON and TAO yield different results!");
   PetscCall(QPSDestroy(&qps));
   PetscCall(QPDestroy(&qp));
   PetscCall(VecDestroy(&x_diff));

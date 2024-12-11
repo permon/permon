@@ -104,7 +104,7 @@ PetscErrorCode KSPSetUp_FETI(KSP ksp)
   PetscFunctionBegin;
   PetscCall(KSPGetOperators(ksp,&A,NULL));
   PetscCall(PetscObjectTypeCompare((PetscObject)A,MATIS,&ismatis));
-  if (!ismatis) SETERRQ(PetscObjectComm((PetscObject)ksp),PETSC_ERR_USER,"Amat should be of type MATIS");
+  PetscCheck(ismatis,PetscObjectComm((PetscObject)ksp),PETSC_ERR_USER,"Amat should be of type MATIS");
 
   PetscCall(PetscOptionsInsertString(NULL,"-feti"));
 

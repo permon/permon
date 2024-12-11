@@ -211,7 +211,7 @@ PetscErrorCode QPSSetUp(QPS qps)
 
   PetscCall(QPSSetDefaultTypeIfNotSpecified(qps));
   PetscCall(QPSIsQPCompatible(qps,solqp,&flg));
-  if (!flg) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_INCOMP,"QPS solver %s is not compatible with its attached QP",((PetscObject)qps)->type_name);
+  PetscCheck(flg,((PetscObject)qps)->comm,PETSC_ERR_ARG_INCOMP,"QPS solver %s is not compatible with its attached QP",((PetscObject)qps)->type_name);
 
   PetscTryTypeMethod(qps,setup);
   PetscCall(QPChainSetUp(solqp));
@@ -390,7 +390,7 @@ PetscErrorCode QPSSetType(QPS qps, const QPSType type)
     if (issame) PetscFunctionReturn(PETSC_SUCCESS);
 
     PetscCall(PetscFunctionListFind(QPSList,type,(void(**)(void))&create_xxx));
-    if (!create_xxx) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_UNKNOWN_TYPE,"Unable to find requested QPS type %s",type);
+    PetscCheck(create_xxx,PETSC_COMM_SELF,PETSC_ERR_ARG_UNKNOWN_TYPE,"Unable to find requested QPS type %s",type);
 
     /* Destroy the pre-existing private QPS context */
     PetscTryTypeMethod(qps,destroy);
@@ -429,7 +429,7 @@ PetscErrorCode QPSSetDefaultType(QPS qps)
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  if (!qps->topQP) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ORDER,"QPS needs QP to be set in order to find a default type");
+  PetscCheck(qps->topQP,((PetscObject)qps)->comm,PETSC_ERR_ORDER,"QPS needs QP to be set in order to find a default type");
 
   PetscCall(QPChainGetLast(qps->topQP,&qp));
 
@@ -438,7 +438,7 @@ PetscErrorCode QPSSetDefaultType(QPS qps)
   PetscCall(QPGetQPC(qp,&qpc));
 
   /* general linear inequality constraints Bx <= c */
-  if (Bineq) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"There is currently no QPS type implemented that can solve QP s.t. linear inequality constraints without any preprocessing. Try to use QPDualize");
+  PetscCheck(!Bineq,((PetscObject)qps)->comm,PETSC_ERR_SUP,"There is currently no QPS type implemented that can solve QP s.t. linear inequality constraints without any preprocessing. Try to use QPDualize");
 
   /* problem with linear equality constraints Bx = c */
   if (Beq) {
@@ -686,7 +686,7 @@ PetscErrorCode QPSConvergedDefault(QPS qps,KSPConvergedReason *reason)
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   *reason = KSP_CONVERGED_ITERATING;
 
-  if (!cctx) SETERRQ(((PetscObject) qps)->comm, PETSC_ERR_ARG_NULL, "Convergence context must have been created with QPSConvergedDefaultCreate()");
+  PetscCheck(cctx,((PetscObject) qps)->comm, PETSC_ERR_ARG_NULL, "Convergence context must have been created with QPSConvergedDefaultCreate()");
   if (!cctx->setup_called) {
     PetscCall(QPSConvergedDefaultSetUp(qps));
   }
@@ -725,7 +725,7 @@ PetscErrorCode QPSConvergedDefaultSetUp(QPS qps)
 
   PetscFunctionBegin;
   if (cctx->setup_called) PetscFunctionReturn(PETSC_SUCCESS);
-  if (!qps->setupcalled) SETERRQ(((PetscObject) qps)->comm, PETSC_ERR_ARG_WRONGSTATE, "QPSSetUp() not yet called");
+  PetscCheck(qps->setupcalled,((PetscObject) qps)->comm, PETSC_ERR_ARG_WRONGSTATE, "QPSSetUp() not yet called");
   PetscCall(VecNorm(qps->solQP->b, NORM_2, &cctx->norm_rhs));
   cctx->ttol = PetscMax(qps->rtol*cctx->norm_rhs, qps->atol);
   cctx->norm_rhs_div = cctx->norm_rhs;
@@ -914,19 +914,19 @@ PetscErrorCode QPSSetTolerances(QPS qps,PetscReal rtol,PetscReal atol,PetscReal 
   PetscValidLogicalCollectiveInt(qps,max_it,5);
 
   if (rtol != PETSC_DEFAULT) {
-    if (rtol < 0.0 || 1.0 <= rtol) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Relative tolerance %g must be non-negative and less than 1.0",rtol);
+    PetscCheck(rtol >= 0.0 && 1.0 > rtol,((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Relative tolerance %g must be non-negative and less than 1.0",rtol);
     qps->rtol = rtol;
   }
   if (atol != PETSC_DEFAULT) {
-    if (atol < 0.0) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Absolute tolerance %g must be non-negative",atol);
+    PetscCheck(atol >= 0.0,((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Absolute tolerance %g must be non-negative",atol);
     qps->atol = atol;
   }
   if (divtol != PETSC_DEFAULT) {
-    if (divtol < 0.0) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Divergence tolerance %g must be larger than 1.0",divtol);
+    PetscCheck(divtol >= 0.0,((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Divergence tolerance %g must be larger than 1.0",divtol);
     qps->divtol = divtol;
   }
   if (max_it != PETSC_DEFAULT) {
-    if (max_it < 0) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Maximum number of iterations %" PetscInt_FMT " must be non-negative",max_it);
+    PetscCheck(max_it >= 0,((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Maximum number of iterations %" PetscInt_FMT " must be non-negative",max_it);
     qps->max_it = max_it;
   }
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -1030,13 +1030,13 @@ PetscErrorCode QPSGetVecs(QPS qps,PetscInt rightn, Vec **right,PetscInt leftn,Ve
 
   PetscFunctionBegin;
   if (rightn) {
-    if (!right) SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_INCOMP,"You asked for right vectors but did not pass a pointer to hold them");
+    PetscCheck(right,PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_INCOMP,"You asked for right vectors but did not pass a pointer to hold them");
     PetscCall(QPGetVecs(qps->solQP,&vecr,NULL));
     PetscCall(VecDuplicateVecs(vecr,rightn,right));
     PetscCall(VecDestroy(&vecr));
   }
   if (leftn) {
-    if (!left) SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_INCOMP,"You asked for left vectors but did not pass a pointer to hold them");
+    PetscCheck(left,PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_INCOMP,"You asked for left vectors but did not pass a pointer to hold them");
     PetscCall(QPGetVecs(qps->solQP,NULL,&vecl));
     PetscCall(VecDuplicateVecs(vecl,leftn,left));
     PetscCall(VecDestroy(&vecl));
@@ -1191,10 +1191,10 @@ PetscErrorCode  QPSMonitorSet(QPS qps,PetscErrorCode (*monitor)(QPS,PetscInt,Pet
   PetscInt i;
 
   PetscFunctionBegin;
-  if (!monitor) SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_NULL,"Monitor function must be specified");
+  PetscCheck(monitor,PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_NULL,"Monitor function must be specified");
 
   /* verify the number of monitors */
-  if (qps->numbermonitors >= MAXQPSMONITORS) SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_OUTOFRANGE,"Too many QPS monitors set");
+  PetscCheck(qps->numbermonitors < MAXQPSMONITORS,PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_OUTOFRANGE,"Too many QPS monitors set");
 
   /* don't add exactly the same monitor twice */
   //TODO we could use PetscMonitorCompare() once it gets fixed

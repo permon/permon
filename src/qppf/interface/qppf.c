@@ -437,7 +437,7 @@ PetscErrorCode QPPFSetUp(QPPF cp)
     PetscCall(QPPFCreateP(cp,&P));
     PetscCall(MatMatIsZero(P,cp->Gt,PETSC_SMALL,2,&flg));
     PetscCall(MatDestroy(&P));
-    if (!flg) SETERRQ(comm,PETSC_ERR_PLIB,"P*G' must give a zero matrix");
+    PetscCheck(flg,comm,PETSC_ERR_PLIB,"P*G' must give a zero matrix");
   }*/
 #endif
 
@@ -810,7 +810,7 @@ PetscErrorCode QPPFView(QPPF cp, PetscViewer viewer)
   }
 
   PetscCall(PetscObjectTypeCompare((PetscObject)viewer, PETSCVIEWERASCII, &iascii));
-  if (!iascii) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP,"Viewer type %s not supported by QPPF",((PetscObject)viewer)->type_name);
+  PetscCheck(iascii,PETSC_COMM_SELF,PETSC_ERR_SUP,"Viewer type %s not supported by QPPF",((PetscObject)viewer)->type_name);
 
   PetscCall(PetscObjectName((PetscObject)cp));
   PetscCall(PetscObjectPrintClassNamePrefixType((PetscObject)cp, viewer));

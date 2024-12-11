@@ -222,7 +222,7 @@ static PetscErrorCode MatOrthColumns_GS_Default(MPI_Comm comm, PetscInt N, Vec q
       PetscCall(VecMAXPY(qcur, i, dots, q));            if (s) { PetscCall(VecMAXPY(s[i], i, dots, s)); }
       PetscCall(VecNorm(qcur, NORM_2, &norm));
       o++;o_acc_++;
-      if (norm < 1e2*PETSC_MACHINE_EPSILON) SETERRQ(comm,PETSC_ERR_NOT_CONVERGED,"MatOrthColumns has not converged due to zero norm of the current column %d (i.e. columns 0 - %d are linearly dependent)",i,i);
+      PetscCheck(norm >= 1e2*PETSC_MACHINE_EPSILON,comm,PETSC_ERR_NOT_CONVERGED,"MatOrthColumns has not converged due to zero norm of the current column %d (i.e. columns 0 - %d are linearly dependent)",i,i);
     } while (norm <= alpha*norm_last);
     PetscCall(VecScale(qcur, 1.0/norm));               if (s) { PetscCall(VecScale(s[i], 1.0/norm)); }
     if (o_max_ < o) o_max_ = o;
@@ -268,7 +268,7 @@ static PetscErrorCode MatOrthColumns_GS_Lingen(MPI_Comm comm, PetscInt N, Vec q[
       beta = 1.0 - beta/PetscSqr(delta_last);
       gamma = PetscSqrtReal(PetscAbsReal(beta));
       delta = delta_last * gamma;
-      if (delta < 1e2*PETSC_MACHINE_EPSILON) SETERRQ(comm,PETSC_ERR_NOT_CONVERGED,"MatOrthColumns has not converged due to zero norm of the current column %d (i.e. columns 0 - %d are linearly dependent)",k,k);
+      PetscCheck(delta >= 1e2*PETSC_MACHINE_EPSILON,comm,PETSC_ERR_NOT_CONVERGED,"MatOrthColumns has not converged due to zero norm of the current column %d (i.e. columns 0 - %d are linearly dependent)",k,k);
       if (delta > alpha*delta_last) break;
 
       PetscCall(VecMDot(qk, k, q, p));
@@ -442,14 +442,14 @@ PetscErrorCode MatOrthColumns(Mat A, MatOrthType type, MatOrthForm form, Mat *Q_
   if (Q_new) {
     /* test whether Q has orthonormal columns */
     PetscCall(MatHasOrthonormalColumns(*Q_new,PETSC_SMALL,PETSC_DECIDE,&flg));
-    if (!flg) SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_PLIB,"Columns of the resulting matrix are not orthonormal");
+    PetscCheck(flg,PetscObjectComm((PetscObject)A),PETSC_ERR_PLIB,"Columns of the resulting matrix are not orthonormal");
 
     if (S_new) {
       Mat AS, AS_arr[2] = {*S_new,A};
       /* test whether Q = A*S */
       PetscCall(MatCreateProd(PetscObjectComm((PetscObject)A),2,AS_arr,&AS));
       PetscCall(MatMultEqualTol(AS,*Q_new,3,PETSC_SMALL,&flg));
-      if (!flg) SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_PLIB,"Resulting factors are wrong, A*S != Q (tolerance %e)",PETSC_SMALL);
+      PetscCheck(flg,PetscObjectComm((PetscObject)A),PETSC_ERR_PLIB,"Resulting factors are wrong, A*S != Q (tolerance %e)",PETSC_SMALL);
       PetscCall(MatDestroy(&AS));
     }
   } else if (S_new) {
@@ -457,7 +457,7 @@ PetscErrorCode MatOrthColumns(Mat A, MatOrthType type, MatOrthForm form, Mat *Q_
     /* test whether A*S has orthonormal rows */
     PetscCall(MatCreateProd(PetscObjectComm((PetscObject)A),2,AS_arr,&AS));
     PetscCall(MatHasOrthonormalColumns(AS,PETSC_SMALL,PETSC_DECIDE,&flg));
-    if (!flg) SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_PLIB,"Columns of A*S are not orthonormal (tolerance %e)",PETSC_SMALL);
+    PetscCheck(flg,PetscObjectComm((PetscObject)A),PETSC_ERR_PLIB,"Columns of A*S are not orthonormal (tolerance %e)",PETSC_SMALL);
     PetscCall(MatDestroy(&AS));
   }
 

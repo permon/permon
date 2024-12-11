@@ -374,9 +374,7 @@ PetscErrorCode QPTEnforceEqByPenalty(QP qp, PetscReal rho_user, PetscBool rho_di
     rho = rho_user;
   }
 
-  if (rho < 0) {
-    SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_WRONG,"rho must be nonnegative");
-  }
+  PetscCheck(rho >= 0,PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_WRONG,"rho must be nonnegative");
   PetscCall(PetscInfo(qp, "using penalty = real %.12e\n", rho));
 
   PetscCall(PetscLogEventBegin(QPT_EnforceEqByPenalty,qp,0,0,0));
@@ -931,7 +929,7 @@ PetscErrorCode QPTDualize(QP qp,MatInvType invType,MatRegularizationType regType
   tprim = qp->xwork;
   K = qp->A;
   f = qp->b;
-  if (!qp->B) SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_ARG_NULL,"lin. equality and/or inequality constraint matrix (BE/BI) is needed for dualization");
+  PetscCheck(qp->B,PETSC_COMM_WORLD,PETSC_ERR_ARG_NULL,"lin. equality and/or inequality constraint matrix (BE/BI) is needed for dualization");
 
   PetscCall(PetscOptionsGetBool(NULL,NULL,"-qpt_dualize_B_explicit",&B_explicit,NULL));
   PetscCall(PetscOptionsGetBool(NULL,NULL,"-qpt_dualize_B_extension",&B_extension,NULL));
@@ -1335,7 +1333,7 @@ PetscErrorCode QPTRemoveGluingOfDirichletDofs(QP qp)
 
   PetscFunctionBeginI;
   PetscCall(PetscObjectTypeCompareAny((PetscObject)qp->BE,&flg,MATNEST,MATNESTPERMON,""));
-  if (!flg) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_SUP,"only for eq. con. matrix qp->BE of type MATNEST or MATNESTPERMON");
+  PetscCheck(flg,PetscObjectComm((PetscObject)qp),PETSC_ERR_SUP,"only for eq. con. matrix qp->BE of type MATNEST or MATNESTPERMON");
 
   PetscCall(PetscLogEventBegin(QPT_RemoveGluingOfDirichletDofs,qp,0,0,0));
   PetscCall(MatNestGetSize(qp->BE,&Mn,&Nn));
@@ -1526,7 +1524,7 @@ PetscErrorCode QPTScale(QP qp)
   PetscCall(PetscOptionsEnum("-qp_I_scale_type", "", "QPSetIneqScaling", QPScaleTypes, (PetscEnum)ScalType, (PetscEnum*)&ScalType, &set));
   PetscCall(PetscInfo(qp, "-qp_I_scale_type %s\n",QPScaleTypes[ScalType]));
   if (ScalType || d) {
-    if (ScalType && d) SETERRQ(comm,PETSC_ERR_SUP,"-qp_I_scale_type %s not supported for given eq. con. scaling",QPScaleTypes[ScalType]);
+    PetscCheck(!ScalType || !d,comm,PETSC_ERR_SUP,"-qp_I_scale_type %s not supported for given eq. con. scaling",QPScaleTypes[ScalType]);
 
     if (ScalType == QP_SCALE_ROWS_NORM_2) {
       PetscCall(MatGetRowNormalization(A,&d));
@@ -1720,8 +1718,8 @@ PetscErrorCode QPTScaleObjectiveByScalar(QP qp,PetscScalar scale_A,PetscScalar s
 
   PetscFunctionBeginI;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  if (!PetscIsNormalScalar(scale_A)) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_OUTOFRANGE,"scale_A cannot be %g",(double)scale_A);
-  if (!PetscIsNormalScalar(scale_b)) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_OUTOFRANGE,"scale_b cannot be %g",(double)scale_b);
+  PetscCheck(PetscIsNormalScalar(scale_A),PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_OUTOFRANGE,"scale_A cannot be %g",(double)scale_A);
+  PetscCheck(PetscIsNormalScalar(scale_b),PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_OUTOFRANGE,"scale_b cannot be %g",(double)scale_b);
   PetscCall(QPTransformBegin(QPTScaleObjectiveByScalar,
       QPTPostSolve_QPTScaleObjectiveByScalar, QPTPostSolveDestroy_QPTScaleObjectiveByScalar,
       QP_DUPLICATE_COPY_POINTERS, &qp, &child, &comm));

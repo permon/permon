@@ -349,8 +349,8 @@ PetscErrorCode QPFetiSetUp(QP qp)
   PetscCall(PetscPrintf(comm, "============\n FETI gluing type: %s\n excluding Dirichlet DOFs? %d\n",FetiGluingTypes[type],exclude_dir));
   PetscCall(QPFetiAssembleDirichlet(qp));
 
-  if (!ctx->l2g) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_WRONGSTATE,"L2G mapping must be set first - call QPFetiSetLocalToGlobalMapping before QPFetiSetUp");
-  if (!ctx->i2g) SETERRQ(PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_WRONGSTATE,"I2G mapping must be set first - call QPFetiSetInterfaceToGlobalMapping before QPFetiSetUp");
+  PetscCheck(ctx->l2g,PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_WRONGSTATE,"L2G mapping must be set first - call QPFetiSetLocalToGlobalMapping before QPFetiSetUp");
+  PetscCheck(ctx->i2g,PetscObjectComm((PetscObject)qp),PETSC_ERR_ARG_WRONGSTATE,"I2G mapping must be set first - call QPFetiSetInterfaceToGlobalMapping before QPFetiSetUp");
   PetscCall(QPFetiAssembleGluing(qp, type, exclude_dir, &Bg));
   PetscCall(PetscPrintf(comm, "============\n"));
 

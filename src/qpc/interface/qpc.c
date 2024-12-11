@@ -205,7 +205,7 @@ PetscErrorCode QPCSetType(QPC qpc, const QPCType type)
     if (issame) PetscFunctionReturn(PETSC_SUCCESS);
 
     PetscCall(PetscFunctionListFind(QPCList,type,(void(**)(void))&create));
-    if (!create) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_UNKNOWN_TYPE,"Unable to find requested QPC type %s",type);
+    PetscCheck(create,PETSC_COMM_SELF,PETSC_ERR_ARG_UNKNOWN_TYPE,"Unable to find requested QPC type %s",type);
 
     /* Destroy the pre-existing private QPC context */
     PetscTryTypeMethod(qpc,destroy);
@@ -368,7 +368,7 @@ PetscErrorCode QPCGetConstraintFunction(QPC qpc, Vec x, Vec *hx)
   PetscAssertPointer(hx,3);
 
   /* verify if there is a corresponding function of QPC type */
-  if (!qpc->ops->getconstraintfunction) SETERRQ(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
+  PetscCheck(qpc->ops->getconstraintfunction,PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
 
   /* set up QPC (if not already set) */
   PetscCall(QPCSetUp(qpc));
@@ -472,7 +472,7 @@ PetscErrorCode QPCProject(QPC qpc,Vec x, Vec Px)
   PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
   PetscValidHeaderSpecific(x,VEC_CLASSID,2);
   PetscValidHeaderSpecific(Px,VEC_CLASSID,3);
-  if (!qpc->ops->project) SETERRQ(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
+  PetscCheck(qpc->ops->project,PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
   PetscCall(QPCSetUp(qpc));
 
   /* at first, copy the values of x to be sure that also unconstrained components will be set */
@@ -511,7 +511,7 @@ PetscErrorCode QPCFeas(QPC qpc, Vec x, Vec d, PetscScalar *alpha)
   PetscValidHeaderSpecific(x,VEC_CLASSID,2);
   PetscValidHeaderSpecific(d,VEC_CLASSID,3);
   PetscAssertPointer(alpha,4);
-  if (!qpc->ops->feas) SETERRQ(PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
+  PetscCheck(qpc->ops->feas,PetscObjectComm((PetscObject)qpc),PETSC_ERR_SUP,"QPC type %s",((PetscObject)qpc)->type_name);
 
   /* scatter the gradients */
   PetscCall(QPCGetSubvector( qpc, x, &x_sub));

@@ -38,7 +38,7 @@ static PetscErrorCode MatExtensionSetColumnIS_Extension(Mat TA,IS cis)
   Mat_Extension *data = (Mat_Extension*) TA->data;
 
   PetscFunctionBegin;
-  if (data->setupcalled) SETERRQ(PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONGSTATE,"cannot alter inner data after first MatMult* call");
+  PetscCheck(!data->setupcalled,PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONGSTATE,"cannot alter inner data after first MatMult* call");
   data->cis = cis;
   PetscCall(PetscObjectReference((PetscObject)cis));
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -106,7 +106,7 @@ static PetscErrorCode MatExtensionSetRowIS_Extension(Mat TA,IS ris,PetscBool row
   Mat_Extension *data = (Mat_Extension*) TA->data;
 
   PetscFunctionBegin;
-  if (data->setupcalled) SETERRQ(PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONGSTATE,"cannot alter inner data after first MatMult* call");
+  PetscCheck(!data->setupcalled,PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONGSTATE,"cannot alter inner data after first MatMult* call");
   if (rows_use_global_numbering) {
     data->ris = ris;
   } else {
@@ -209,9 +209,9 @@ static PetscErrorCode MatExtensionSetCondensed_Extension(Mat TA,Mat A)
   PetscMPIInt commsize;
 
   PetscFunctionBegin;
-  if (data->setupcalled) SETERRQ(PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONGSTATE,"cannot alter inner data after first MatMult* call");
+  PetscCheck(!data->setupcalled,PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONGSTATE,"cannot alter inner data after first MatMult* call");
   PetscCallMPI(MPI_Comm_size(PetscObjectComm((PetscObject)A),&commsize));
-  if (commsize > 1) SETERRQ(PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONG,"inner matrix must be sequential");
+  PetscCheck(commsize == 1,PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONG,"inner matrix must be sequential");
   data->A = A;
   PetscCall(PetscObjectReference((PetscObject)A));
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -774,9 +774,7 @@ PetscErrorCode MatMatTransposeMult_Extension_Extension_same(Mat A, Mat B, MatReu
 #if defined(PETSC_USE_DEBUG)
     int M_max;
     PetscCallMPI(MPI_Allreduce(&M_loc,&M_max,1,MPIU_INT,MPI_MAX,comm));
-    if (M_loc != M_max) {
-      SETERRQ(comm,PETSC_ERR_ARG_SIZ,"implemented only for matrices with same local row dimension");
-    }
+    PetscCheck(M_loc == M_max,comm,PETSC_ERR_ARG_SIZ,"implemented only for matrices with same local row dimension");
 #endif
     if (!mattype) {
       PetscCall(MatCreate(comm,&C_out));
@@ -1056,9 +1054,7 @@ static PetscErrorCode MatProductNumeric_Extension(Mat C)
   /* TODO add general mult, resulting mat MPIAIJ || extension */
   switch (product->type) {
   case MATPRODUCT_ABt:
-    if (A != B) {
-      SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_WRONG,"implemented only for A=B");
-    }
+    PetscCheck(A == B,PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_WRONG,"implemented only for A=B");
     PetscObjectOptionsBegin((PetscObject)C);
     PetscCall(PetscOptionsEList("-MatMatMultExt_mattype","MatMatMultExt_mattype","Set type of resulting matrix when assembling from extension type",allowedMats,3,MATAIJ,&mattype,NULL));
     PetscOptionsEnd();

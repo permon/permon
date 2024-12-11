@@ -89,7 +89,7 @@ static PetscErrorCode MatConvert_BlockDiag_SeqAIJ(Mat A, MatType newtype, MatReu
   PetscFunctionBegin;
   PetscCall(PetscObjectGetComm((PetscObject) A, &comm));
   PetscCallMPI(MPI_Comm_size(comm, &size));
-  if (size > 1) SETERRQ(comm,PETSC_ERR_SUP,"conversion from MPI BlockDiag matrix to sequential matrix not currently implemented");
+  PetscCheck(size == 1,comm,PETSC_ERR_SUP,"conversion from MPI BlockDiag matrix to sequential matrix not currently implemented");
 
   PetscCall(MatGetDiagonalBlock(A, &A_loc));
   PetscCall(MatConvert(A_loc,newtype,MAT_INITIAL_MATRIX,&B));
@@ -555,7 +555,7 @@ PetscErrorCode MatView_BlockDiag(Mat mat,PetscViewer viewer)
   PetscFunctionBegin;
   PetscCall(PetscObjectGetComm((PetscObject)mat,&comm));
   PetscCall(PetscObjectTypeCompare((PetscObject)viewer,PETSCVIEWERASCII,&iascii));
-  if (!iascii) SETERRQ(comm,PETSC_ERR_SUP,"Viewer type %s not supported for matrix type %s",((PetscObject)viewer)->type_name,((PetscObject)mat)->type_name);
+  PetscCheck(iascii,comm,PETSC_ERR_SUP,"Viewer type %s not supported for matrix type %s",((PetscObject)viewer)->type_name,((PetscObject)mat)->type_name);
   PetscCall(PetscViewerGetFormat(viewer,&format));
 
   if (format == PETSC_VIEWER_DEFAULT) {
@@ -774,7 +774,7 @@ PetscErrorCode MatCreateBlockDiag(MPI_Comm comm, Mat block, Mat *B_new) {
   PetscValidHeaderSpecific(block,MAT_CLASSID,2);
   PetscAssertPointer(B_new,3);
   PetscCallMPI(MPI_Comm_size(PetscObjectComm((PetscObject)block),&size));
-  if (size > 1) SETERRQ(comm,PETSC_ERR_ARG_WRONG,"block (arg #2) must be sequential");
+  PetscCheck(size == 1,comm,PETSC_ERR_ARG_WRONG,"block (arg #2) must be sequential");
 
   /* Create matrix. */
   PetscCall(MatCreate(comm, &B));

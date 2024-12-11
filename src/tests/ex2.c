@@ -74,7 +74,7 @@ int main(int argc,char **args)
   }
 
   PetscCall(MatEqual(A,C,&flg));
-  if (!flg) SETERRQ(comm, PETSC_ERR_PLIB, "C != A");
+  PetscCheck(flg,comm, PETSC_ERR_PLIB, "C != A");
 
   PetscCall(PetscViewerDestroy(&viewer));
   PetscCall(PetscRandomDestroy(&rand));

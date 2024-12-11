@@ -31,9 +31,9 @@ static PetscErrorCode MatGetColumnVectors_NestPermon(Mat A, Vec *cols_new[])
     N1_last = mats[0][J]->cmap->N;
     for (II=0; II<Mn; II++) {
       mat = mats[II][J];
-      if (!mat) SETERRQ(comm,PETSC_ERR_SUP,"block (%d, %d) is null but null blocks not currently supported",II,J);
+      PetscCheck(mat,comm,PETSC_ERR_SUP,"block (%d, %d) is null but null blocks not currently supported",II,J);
       PetscCall(MatGetColumnVectors(mat,&N1,&cols_for_each_row_block[II]));
-      if (N1 != N1_last) SETERRQ(comm,PETSC_ERR_ARG_SIZ,"block (%d, %d) has different number of columns than block (%d, %d)",II,J,II-1,J);
+      PetscCheck(N1 == N1_last,comm,PETSC_ERR_ARG_SIZ,"block (%d, %d) has different number of columns than block (%d, %d)",II,J,II-1,J);
       N1_last = N1;
 
       PetscCall(PetscContainerCreate(comm, &container));
@@ -210,11 +210,11 @@ static PetscErrorCode MatMergeAndDestroy_NestPermon(MPI_Comm comm, Mat *local_in
     PetscInt Nn_cl;
     PetscCall(VecGetLocalSize(x,&n));
     PetscCall(VecGetSize(x,&N));
-    if (A->cmap->N != N) SETERRQ(comm,PETSC_ERR_ARG_SIZ,"global length of Vec #3 must be equal to the global number of columns of Mat #2");
+    PetscCheck(A->cmap->N == N,comm,PETSC_ERR_ARG_SIZ,"global length of Vec #3 must be equal to the global number of columns of Mat #2");
     PetscCall(PetscObjectTypeCompare((PetscObject)x,VECNEST,&flg));
-    if (!flg) SETERRQ(comm,PETSC_ERR_ARG_WRONG,"Vec #3 has to be nest");
+    PetscCheck(flg,comm,PETSC_ERR_ARG_WRONG,"Vec #3 has to be nest");
     PetscCall(VecNestGetSubVecs(x,&Nn_cl,&vecs_x));
-    if (Nn != Nn_cl) SETERRQ(comm,PETSC_ERR_ARG_INCOMP,"number of nested vectors of Vec #3 must be equal to the number of nested columns of Mat #2");
+    PetscCheck(Nn == Nn_cl,comm,PETSC_ERR_ARG_INCOMP,"number of nested vectors of Vec #3 must be equal to the number of nested columns of Mat #2");
   }
 
   MnNn = Mn*Nn;
@@ -291,10 +291,8 @@ static PetscErrorCode MatNestPermonGetVecs_NestPermon(Mat A,Vec *right,Vec *left
           break;
         }
       }
-      if (i==bA->nr) {
-        /* have an empty column */
-        SETERRQ(PetscObjectComm((PetscObject)A), PETSC_ERR_ARG_WRONG, "Mat(Nest) contains a null column.");
-      }
+      /* have an empty column */
+      PetscAssert(i != bA->nr,PetscObjectComm((PetscObject)A), PETSC_ERR_ARG_WRONG, "Mat(Nest) contains a null column.");
     }
     PetscCall(VecCreateNest(comm,bA->nc,bA->isglobal.col,R,right));
     /* hand back control to the nest vector */
@@ -315,10 +313,8 @@ static PetscErrorCode MatNestPermonGetVecs_NestPermon(Mat A,Vec *right,Vec *left
           break;
         }
       }
-      if (j==bA->nc) {
-        /* have an empty row */
-        SETERRQ(PetscObjectComm((PetscObject)A), PETSC_ERR_ARG_WRONG, "Mat(Nest) contains a null row.");
-      }
+      /* have an empty row */
+      PetscAssert(j != bA->nc,PetscObjectComm((PetscObject)A), PETSC_ERR_ARG_WRONG, "Mat(Nest) contains a null row.");
     }
 
     PetscCall(VecCreateNest(comm,bA->nr,bA->isglobal.row,L,left));
@@ -573,7 +569,7 @@ static PetscErrorCode MatExtensionCreateCondensedRows_NestPermon(Mat TA,Mat *A,I
   for (j=0; j<Nn; j++) {
     block = mats_in[0][j];
     PetscCall(PetscObjectTypeCompare((PetscObject)block,MATEXTENSION,&flg));
-    if (!flg) SETERRQ(PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONG,"nested block %d,0 is not extension",j);
+    PetscCheck(flg,PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONG,"nested block %d,0 is not extension",j);
     PetscCall(MatExtensionGetRowISLocal(block,&ris_block_orig[j]));
   }
 
@@ -717,7 +713,7 @@ static PetscErrorCode MatCreateNestPermonVerticalMerge_Extract_Private(PetscInt 
       }
     } else {
       PetscCall(MatNestGetSubMats(A,&Mn,&Nn,&mats2d));
-      if (Nn > 1) SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_WRONG,"number of nested column blocks exceeds 1");
+      PetscCheck(Nn <= 1,PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_WRONG,"number of nested column blocks exceeds 1");
       PetscCall(PetscMalloc1(Mn,&mats));
       for (i=0; i<Mn; i++) mats[i] = mats2d[i][0];
       PetscCall(MatCreateNestPermonVerticalMerge_Extract_Private(Mn,mats,nmats_out,mats_out));
