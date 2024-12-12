@@ -243,11 +243,17 @@ permon_html: chk_c2html
 	-@${RM} /tmp/$$USER.htmlmap tmp
 
 
-# include PETSc rules at the end only if rules and petscrules files exist
+# Check that source code does not violate basic PETSc coding standards
+checkbadsource: checkbadSource
+
+checkbadSource: chk_permon_petsc_dir
+
+# include PETSc rules and rules_util at the end only if rules and petscrules files exist
 # - this is checked by the chk_permon_petsc_dir rule
 ifneq ("$(wildcard ${PETSC_DIR}/lib/petsc/conf/rules)","")
 ifneq ("$(wildcard ${PETSC_DIR}/${PETSC_ARCH}/lib/petsc/conf/petscrules)","")
 include ${PETSC_DIR}/lib/petsc/conf/rules
+include ${PETSC_DIR}/lib/petsc/conf/rules_util.mk
 endif
 endif
 
