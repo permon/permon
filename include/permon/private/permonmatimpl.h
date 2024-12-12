@@ -15,17 +15,17 @@ typedef struct {
 } Mat_Inv;
 
 typedef struct {
-	Mat localBlock;	                  /* local (sequential) blocks of BlockDiag */
-	Vec xloc, yloc, xloc1, yloc1;            /* local work vectors */
+  Mat localBlock;                   /* local (sequential) blocks of BlockDiag */
+  Vec xloc, yloc, xloc1, yloc1;            /* local work vectors */
   Vec *cols_loc;
 } Mat_BlockDiag;
 
 typedef struct {
-	PetscSF SF;              /* SF for communication (column index) */
-	const PetscReal *leaves_sign; /* +-1 */
-	const PetscInt *leaves_row; /* row index */
+  PetscSF SF;              /* SF for communication (column index) */
+  const PetscReal *leaves_sign; /* +-1 */
+  const PetscInt *leaves_row; /* row index */
   PetscInt n_nonzeroRow;
-	PetscInt n_leaves;
+  PetscInt n_leaves;
 } Mat_Gluing;
 
 typedef struct {

@@ -230,7 +230,7 @@ PetscErrorCode MatDestroy_Gluing(Mat mat)
 
 #undef __FUNCT__
 #define __FUNCT__ "MatCreateGluing"
-PetscErrorCode MatCreateGluing(MPI_Comm comm, PetscInt n_x_localRow, PetscInt n_nonzeroRow, PetscInt n_l_localcol,  const PetscInt *leaves_row,	const PetscReal *leaves_sign, PetscSF SF, Mat *B_out)
+PetscErrorCode MatCreateGluing(MPI_Comm comm, PetscInt n_x_localRow, PetscInt n_nonzeroRow, PetscInt n_l_localcol, const PetscInt *leaves_row, const PetscReal *leaves_sign, PetscSF SF, Mat *B_out)
 {
   Mat_Gluing *data;
   PetscInt rlo,rhi,clo,chi, n_l;
