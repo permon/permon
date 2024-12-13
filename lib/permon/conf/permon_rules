@@ -248,6 +248,19 @@ checkbadsource: checkbadSource
 
 checkbadSource: chk_permon_petsc_dir
 
+# clang-format rules
+# TODO use PETSc clanformat rules when new clang-format releases seem to make only minor formatting changes
+# Check the version of clang-format - this rule is here to freeze the clang-format version independent of PETSc
+# The variables are defined in ${PETSC_DIR}/lib/petsc/conf/rules_util.mk included below
+permon_checkclangformatversion:
+	@version=`${PETSCCLANGFORMAT} --version | cut -d" " -f3 | cut -d"." -f 1` ;\
+         if [ "$$version" = "version" ]; then version=`${PETSCCLANGFORMAT} --version | cut -d" " -f4 | cut -d"." -f 1`; fi;\
+         if [ $$version != 19 ]; then echo "Require clang-format version 19! Currently used ${PETSCCLANGFORMAT} version is $$version" ;false ; fi
+
+# Format all the source code in the given directory and down according to the file $PERMON_DIR/.clang_format
+permonclangformat: permon_checkclangformatversion chk_permon_petsc_dir
+	-@git --no-pager ls-files -z ${GITCFSRC} | xargs -0 -P $(MAKE_NP) -L 10 ${PETSCCLANGFORMAT} -i
+
 # include PETSc rules and rules_util at the end only if rules and petscrules files exist
 # - this is checked by the chk_permon_petsc_dir rule
 ifneq ("$(wildcard ${PETSC_DIR}/lib/petsc/conf/rules)","")

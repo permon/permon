@@ -1,0 +1,209 @@
+Language:        Cpp
+AccessModifierOffset: -2
+AlignAfterOpenBracket: Align
+AlignArrayOfStructures: Left
+AlignConsecutiveMacros: Consecutive
+AlignConsecutiveAssignments: Consecutive
+AlignConsecutiveBitFields: Consecutive
+AlignConsecutiveDeclarations: Consecutive
+AlignEscapedNewlines: DontAlign
+AlignOperands: AlignAfterOperator
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 0
+AllowAllArgumentsOnNextLine: true
+AllowAllConstructorInitializersOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortEnumsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Always
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortLambdasOnASingleLine: All
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
+AllowShortLoopsOnASingleLine: true
+AlwaysBreakAfterDefinitionReturnType: None
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: false
+AlwaysBreakTemplateDeclarations: Yes
+AttributeMacros:
+  - __capability
+  - PERMON_EXTERN
+  - PERMON_INTERN
+  - PETSC_EXTERN
+  - PETSC_INTERN
+  - PETSC_UNUSED
+  - PETSC_RESTRICT
+  - PETSC_SINGLE_LIBRARY_INTERN
+  - PETSC_ATTRIBUTE_FORMAT
+  - PETSC_ATTRIBUTE_MPI_TYPE_TAG
+  - PETSC_ATTRIBUTE_MPI_POINTER_WITH_TYPE
+  - PETSC_ATTRIBUTE_MPI_TYPE_TAG_LAYOUT_COMPATIBLE
+  - PETSC_ATTRIBUTE_COLD
+BinPackArguments: true
+BinPackParameters: true
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel:  false
+  AfterClass:      false
+  AfterControlStatement: Never
+  AfterEnum:       false
+  AfterFunction:   true
+  AfterNamespace:  true
+  AfterObjCDeclaration: false
+  AfterStruct:     false
+  AfterUnion:      true
+  AfterExternBlock: false
+  BeforeCatch:     false
+  BeforeElse:      false
+  BeforeLambdaBody: false
+  BeforeWhile:     false
+  IndentBraces:    false
+  SplitEmptyFunction: true
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: true
+BreakBeforeBinaryOperators: None
+# BreakBeforeConceptDeclarations: Allowed
+BreakBeforeInheritanceComma: false
+BreakInheritanceList: AfterColon
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializersBeforeComma: false
+BreakConstructorInitializers: AfterColon
+BreakAfterJavaFieldAnnotations: false
+BreakStringLiterals: true
+ColumnLimit: 250
+CompactNamespaces: false
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
+ConstructorInitializerIndentWidth: 2
+ContinuationIndentWidth: 2
+Cpp11BracedListStyle: true
+DeriveLineEnding: true
+DerivePointerAlignment: false
+DisableFormat: false
+EmptyLineAfterAccessModifier: Never
+EmptyLineBeforeAccessModifier: LogicalBlock
+ExperimentalAutoDetectBinPacking: false
+FixNamespaceComments: true
+ForEachMacros:
+#  - BOOST_FOREACH
+IfMacros:
+  #- PERMON_ASSERT
+  #- PetscCheck
+  #- PetscAssert
+IncludeBlocks: Preserve
+IncludeIsMainSourceRegex: ''
+IndentAccessModifiers: false
+IndentCaseLabels: false
+IndentCaseBlocks: false
+IndentGotoLabels: true
+IndentPPDirectives: BeforeHash
+IndentExternBlock: NoIndent
+IndentRequires: false
+IndentWidth: 2
+IndentWrappedFunctionNames: false
+InsertTrailingCommas: None
+KeepEmptyLinesAtTheStartOfBlocks: false
+KeepEmptyLinesAtEOF: false
+LambdaBodyIndentation: Signature
+MacroBlockBegin: ''
+MacroBlockEnd:   ''
+MaxEmptyLinesToKeep: 1
+NamespaceIndentation: None
+PackConstructorInitializers: NextLine
+PenaltyBreakAssignment: 1000000
+PenaltyBreakBeforeFirstCallParameter: 1000000
+PenaltyBreakComment: 300000
+PenaltyBreakFirstLessLess: 120
+PenaltyBreakString: 1000
+PenaltyBreakTemplateDeclaration: 10
+PenaltyExcessCharacter: 0
+PenaltyReturnTypeOnItsOwnLine: 1000000
+PenaltyIndentedWhitespace: 0
+PointerAlignment: Right
+PPIndentWidth: -1
+ReferenceAlignment: Pointer
+ReflowComments: false
+ShortNamespaceLines: 0
+SortIncludes: Never
+SortUsingDeclarations: false
+SpaceAfterCStyleCast: false
+SpaceAfterLogicalNot: false
+SpaceAfterTemplateKeyword: true
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCaseColon: false
+SpaceBeforeCpp11BracedList: false
+SpaceBeforeCtorInitializerColon: true
+SpaceBeforeInheritanceColon: true
+SpaceBeforeParens: ControlStatementsExceptControlMacros
+SpaceAroundPointerQualifiers: Default
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceInEmptyBlock: true
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 1
+SpacesInAngles: Never
+SpacesInConditionalStatement: false
+SpacesInContainerLiterals: true
+SpacesInCStyleCastParentheses: false
+SpacesInLineCommentPrefix:
+  Minimum: 1
+  Maximum: -1
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+SpaceBeforeSquareBrackets: false
+SeparateDefinitionBlocks: Leave
+BitFieldColonSpacing: Both
+Standard: Latest
+StatementAttributeLikeMacros:
+  - PERMON_EXTERN
+  - PERMON_INTERN
+  - PETSC_EXTERN
+  - PETSC_INTERN
+  - PETSC_NODISCARD
+  - PETSC_DEPRECATED_FUNCTION
+  - PETSC_DEPRECATED_ENUM
+  - PETSC_DEPRECATED_TYPEDEF
+  - PETSC_DEPRECATED_MACRO
+StatementMacros:
+  - PetscKernel_A_gets_transpose_A_DECLARE
+  - PETSC_RETURNS
+  - PETSC_DECLTYPE_AUTO_RETURNS
+  - PETSC_NOEXCEPT_AUTO_RETURNS
+  - PETSC_DECLTYPE_NOEXCEPT_AUTO_RETURNS
+  - PETSC_UNUSED
+  - PetscPragmaOMP
+  - PetscPragmaUseOMPKernels
+  - PetscPragmaSIMD
+  - PETSC_PRAGMA_DIAGNOSTIC_IGNORED_BEGIN
+  - PETSC_PRAGMA_DIAGNOSTIC_IGNORED_BEGIN_
+  - PETSC_PRAGMA_DIAGNOSTIC_IGNORED_END
+  - PETSC_PRAGMA_DIAGNOSTIC_IGNORED_END_
+  - _Pragma
+TypeNames:
+  - PetscScalar
+  - PetscComplex
+  - PetscReal
+  - PetscInt
+  - PetscMPIInt
+  - PetscBLASInt
+  - PetscErrorCode
+  - PetscBool
+  - PetscBool3
+TabWidth: 2
+UseCRLF: false
+UseTab: Never
+WhitespaceSensitiveMacros:
+  - PetscStringize
+  - PetscStringize_
+  - PETSC_PRAGMA_DIAGNOSTIC_IGNORED_BEGIN
+  - PETSC_PRAGMA_DIAGNOSTIC_IGNORED_BEGIN_
+  - PETSC_PRAGMA_DIAGNOSTIC_IGNORED_END
+  - PETSC_PRAGMA_DIAGNOSTIC_IGNORED_END_
+  - _Pragma
+  - PETSC_DEPRECATED_IDENTIFIER
+  - PETSC_DEPRECATED_IDENTIFIER_
+  - PETSC_VALID_POINTER_IMPL_SPECIALIZATION
+  - _Generic
+  - PETSC_GENERIC_CV
+  - PetscMacroReturnStandard
+TypenameMacros:
+  - khash_t
+InsertNewlineAtEOF: true
