@@ -276,7 +276,7 @@ PetscErrorCode MatCreateGluing(MPI_Comm comm, PetscInt n_x_localRow, PetscInt n_
 
 #undef __FUNCT__
 #define __FUNCT__ "MatCreate_Gluing"
-FLLOP_EXTERN PetscErrorCode MatCreate_Gluing(Mat B) {
+PERMON_EXTERN PetscErrorCode MatCreate_Gluing(Mat B) {
 
   Mat_Gluing *data;
 

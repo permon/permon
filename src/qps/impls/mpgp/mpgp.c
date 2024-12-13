@@ -835,7 +835,7 @@ PetscErrorCode QPSViewConvergence_MPGP(QPS qps, PetscViewer v)
 M*/
 #undef __FUNCT__
 #define __FUNCT__ "QPSCreate_MPGP"
-FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
+PERMON_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
 {
   QPS_MPGP         *mpgp;
 

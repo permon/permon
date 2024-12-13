@@ -11,19 +11,19 @@ static int    fllop_one=1;
 static char*  fllop_executable = (char*)"fllop";
 static char** fllop_executablePtr = &fllop_executable;
 
-PetscClassId  FLLOP_CLASSID;
-FLLOP   fllop;
+PetscClassId  PERMON_CLASSID;
+PERMON   fllop;
 
 #undef __FUNCT__
 #define __FUNCT__ "PermonInitialize"
 /*@
-   FllopInitialize - Initializes PETSc (if not already initialized), init FLLOP, register functions, etc.
-   This function must be called in order to use the FLLOP library!
+   FllopInitialize - Initializes PETSc (if not already initialized), init PERMON, register functions, etc.
+   This function must be called in order to use the PERMON library!
 
    Input Parameters:
 +  argc - count of number of command line arguments
 .  args - the command line arguments
--  file - [optional] FLLOP database file, also checks in following order petsrc files from PetscInitialize, ~/.flloprc, ./flloprc, ./.flloprc and file;  use NULL to not check for code specific file
+-  file - [optional] PERMON database file, also checks in following order petsrc files from PetscInitialize, ~/.flloprc, ./flloprc, ./.flloprc and file;  use NULL to not check for code specific file
 
    Options Database Keys:
 +  -skip_flloprc  - skip reading flloprc file
@@ -39,7 +39,7 @@ PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], cons
   char pfile[PETSC_MAX_PATH_LEN];
 
   if (FllopInitializeCalled) {
-    PetscCall(PetscInfo(0,"FLLOP already initialized, skipping initialization.\n"));
+    PetscCall(PetscInfo(0,"PERMON already initialized, skipping initialization.\n"));
     return(0);
   }
 
@@ -50,7 +50,7 @@ PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], cons
       PetscCall(PetscInitialize(&fllop_one,&fllop_executablePtr,file,help));
     }
     FllopBeganPetsc=PETSC_TRUE;
-    PetscCall(PetscInfo(0,"FLLOP successfully started PETSc.\n"));
+    PetscCall(PetscInfo(0,"PERMON successfully started PETSc.\n"));
   }
 
   if (!PetscInitializeCalled) {
@@ -58,7 +58,7 @@ PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], cons
     exit(1);
   }
 
-  PetscCall(PetscClassIdRegister("FLLOP",&FLLOP_CLASSID));
+  PetscCall(PetscClassIdRegister("PERMON",&PERMON_CLASSID));
   PetscCall(FllopCreate(PETSC_COMM_WORLD,&fllop));
 
   PetscCall(PetscOptionsGetBool(NULL,NULL,"-skip_flloprc",&flg,NULL));
@@ -90,14 +90,14 @@ PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], cons
   PetscCall(PermonKSPRegisterAll());
 
   FllopInitializeCalled = PETSC_TRUE;
-  PetscCall(PetscInfo(fllop,"FLLOP successfully initialized.\n"));
+  PetscCall(PetscInfo(fllop,"PERMON successfully initialized.\n"));
   return 0;
 }
 
 #undef __FUNCT__
 #define __FUNCT__ "PermonFinalize"
 /*@
-   FllopFinalize - Fllop cleanup, PetscFinalize() (if FLLOP started petsc), etc.
+   FllopFinalize - Fllop cleanup, PetscFinalize() (if PERMON started petsc), etc.
 
    Level: beginner
 

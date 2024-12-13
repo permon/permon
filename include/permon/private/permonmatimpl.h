@@ -43,6 +43,6 @@ struct _n_MatCompleteCtx {
 };
 typedef struct _n_MatCompleteCtx *MatCompleteCtx;
 
-FLLOP_EXTERN PetscLogEvent Mat_OrthColumns,Mat_Inv_Explicitly,Mat_Inv_SetUp;
-FLLOP_EXTERN PetscLogEvent Mat_Regularize,Mat_GetColumnVectors,Mat_RestoreColumnVectors,Mat_MatMultByColumns,Mat_TransposeMatMultByColumns;
-FLLOP_EXTERN PetscLogEvent Mat_GetMaxEigenvalue,Mat_FilterZeros,Mat_MergeAndDestroy,PermonMat_GetLocalMat;
+PERMON_EXTERN PetscLogEvent Mat_OrthColumns,Mat_Inv_Explicitly,Mat_Inv_SetUp;
+PERMON_EXTERN PetscLogEvent Mat_Regularize,Mat_GetColumnVectors,Mat_RestoreColumnVectors,Mat_MatMultByColumns,Mat_TransposeMatMultByColumns;
+PERMON_EXTERN PetscLogEvent Mat_GetMaxEigenvalue,Mat_FilterZeros,Mat_MergeAndDestroy,PermonMat_GetLocalMat;

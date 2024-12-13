@@ -133,7 +133,7 @@ PetscErrorCode QPSSolve_PCPG(QPS qps){
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSCreate_PCPG"
-FLLOP_EXTERN PetscErrorCode QPSCreate_PCPG(QPS qps)
+PERMON_EXTERN PetscErrorCode QPSCreate_PCPG(QPS qps)
 {
   PetscFunctionBegin;
   /*

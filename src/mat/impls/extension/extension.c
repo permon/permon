@@ -1118,7 +1118,7 @@ PetscErrorCode MatDestroy_Extension(Mat TA) {
 
 #undef __FUNCT__
 #define __FUNCT__ "MatCreate_Extension"
-FLLOP_EXTERN PetscErrorCode MatCreate_Extension(Mat TA)
+PERMON_EXTERN PetscErrorCode MatCreate_Extension(Mat TA)
 {
   Mat_Extension *data;
 

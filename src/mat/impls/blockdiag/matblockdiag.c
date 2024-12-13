@@ -710,7 +710,7 @@ static PetscErrorCode MatOrthColumns_BlockDiag(Mat A, MatOrthType type, MatOrthF
 
 #undef __FUNCT__
 #define __FUNCT__ "MatCreate_BlockDiag"
-FLLOP_EXTERN PetscErrorCode MatCreate_BlockDiag(Mat B) {
+PERMON_EXTERN PetscErrorCode MatCreate_BlockDiag(Mat B) {
   Mat_BlockDiag *data;
 
   PetscFunctionBegin;

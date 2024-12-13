@@ -155,7 +155,7 @@ PetscErrorCode KSPSolve_FETI(KSP ksp)
 /*MC
   KSPFETI - The FETI and Total FETI (TFETI) method.
 
-  Thin KSP wrapper for PermonFLLOP implementation of (T)FETI.
+  Thin KSP wrapper for PermonPERMON implementation of (T)FETI.
   The matrix for the KSP must be of type MATIS.
 
   Options Database Keys:
@@ -167,7 +167,7 @@ PetscErrorCode KSPSolve_FETI(KSP ksp)
 M*/
 #undef __FUNCT__
 #define __FUNCT__ "KSPCreate_FETI"
-FLLOP_EXTERN PetscErrorCode KSPCreate_FETI(KSP ksp)
+PERMON_EXTERN PetscErrorCode KSPCreate_FETI(KSP ksp)
 {
   KSP_FETI *feti;
 

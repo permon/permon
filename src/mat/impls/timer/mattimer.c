@@ -110,7 +110,7 @@ PetscErrorCode MatTimerSetOperation(Mat mat, MatOperation op, const char *opname
 {
   Mat_Timer *ctx;
   const char *name;
-  char *eventName = FLLOP_ObjNameBuffer_Global;
+  char *eventName = PERMON_ObjNameBuffer_Global;
   PetscLogEvent event;
   PetscBool exists;
 

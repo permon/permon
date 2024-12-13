@@ -313,7 +313,7 @@ PetscErrorCode QPSIsQPCompatible_Tao(QPS qps,QP qp,PetscBool *flg)
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSCreate_Tao"
-FLLOP_EXTERN PetscErrorCode QPSCreate_Tao(QPS qps)
+PERMON_EXTERN PetscErrorCode QPSCreate_Tao(QPS qps)
 {
   QPS_Tao         *qpstao;
   MPI_Comm        comm;

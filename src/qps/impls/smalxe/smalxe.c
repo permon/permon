@@ -1,6 +1,6 @@
 #include <../src/qps/impls/smalxe/smalxeimpl.h>
 
-FLLOP_EXTERN PetscErrorCode QPSReset_SMALXE(QPS qps);
+PERMON_EXTERN PetscErrorCode QPSReset_SMALXE(QPS qps);
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSSMALXEGetOperatorMaxEigenvalue_SMALXE"
@@ -1114,7 +1114,7 @@ PetscErrorCode QPSIsQPCompatible_SMALXE(QPS qps,QP qp,PetscBool *flg)
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSCreate_SMALXE"
-FLLOP_EXTERN PetscErrorCode QPSCreate_SMALXE(QPS qps)
+PERMON_EXTERN PetscErrorCode QPSCreate_SMALXE(QPS qps)
 {
   QPS_SMALXE      *smalxe;
   MPI_Comm        comm;

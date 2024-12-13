@@ -53,7 +53,7 @@ struct _p_QP {
   PetscErrorCode   (*postSolve)(QP,QP);
   PetscErrorCode   (*postSolveCtxDestroy)(void*);
   PetscErrorCode   (*transform)(QP);
-  char             transform_name[FLLOP_MAX_NAME_LEN];
+  char             transform_name[PERMON_MAX_NAME_LEN];
 };
 
 typedef struct {
@@ -72,11 +72,11 @@ typedef struct {
   IS isDir;
 } QPTMatISToBlockDiag_Ctx;
 
-FLLOP_EXTERN PetscLogEvent QPT_HomogenizeEq, QPT_OrthonormalizeEq, QPT_EnforceEqByProjector, QPT_EnforceEqByPenalty, QPT_Dualize, QPT_Dualize_AssembleG, QPT_Dualize_FactorK, QPT_Dualize_PrepareBt, QPT_FetiPrepare, QPT_AllInOne;
-FLLOP_EXTERN PetscLogEvent QPT_RemoveGluingOfDirichletDofs, QPT_SplitBE;
+PERMON_EXTERN PetscLogEvent QPT_HomogenizeEq, QPT_OrthonormalizeEq, QPT_EnforceEqByProjector, QPT_EnforceEqByPenalty, QPT_Dualize, QPT_Dualize_AssembleG, QPT_Dualize_FactorK, QPT_Dualize_PrepareBt, QPT_FetiPrepare, QPT_AllInOne;
+PERMON_EXTERN PetscLogEvent QPT_RemoveGluingOfDirichletDofs, QPT_SplitBE;
 
-FLLOP_INTERN PetscErrorCode QPCompute_BEt_lambda(QP qp,Vec *BEt_lambda);
-FLLOP_INTERN PetscErrorCode QPDefaultPostSolve(QP child,QP parent);
-FLLOP_INTERN PetscErrorCode QPSetEqMultiplier(QP qp, Vec lambda_E);
-FLLOP_INTERN PetscErrorCode QPSetIneqMultiplier(QP qp, Vec lambda_I);
-FLLOP_INTERN PetscErrorCode QPSetWorkVector(QP qp,Vec xwork);
+PERMON_INTERN PetscErrorCode QPCompute_BEt_lambda(QP qp,Vec *BEt_lambda);
+PERMON_INTERN PetscErrorCode QPDefaultPostSolve(QP child,QP parent);
+PERMON_INTERN PetscErrorCode QPSetEqMultiplier(QP qp, Vec lambda_E);
+PERMON_INTERN PetscErrorCode QPSetIneqMultiplier(QP qp, Vec lambda_I);
+PERMON_INTERN PetscErrorCode QPSetWorkVector(QP qp,Vec xwork);

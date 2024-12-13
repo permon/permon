@@ -8,32 +8,31 @@
 #include <sys/stat.h>
 #endif
 
-//TODO remove all these FLLOP_* macros
-#define FLLOP_EXTERN PETSC_EXTERN
-#define FLLOP_INTERN PETSC_INTERN
+#define PERMON_EXTERN PETSC_EXTERN
+#define PERMON_INTERN PETSC_INTERN
 
 #include "permonpetscretro.h"
 
 /*
-  FLLOP is a dummy class, defined in FllopInitialize,
-  used to distinguish between PETSc and FLLOP sys routines while using PetscInfo*,
+  PERMON is a dummy class, defined in FllopInitialize,
+  used to distinguish between PETSc and PERMON sys routines while using PetscInfo*,
 */
-typedef struct _p_FLLOP* FLLOP;
-FLLOP_EXTERN PetscClassId FLLOP_CLASSID;
-FLLOP_EXTERN FLLOP fllop;
-FLLOP_EXTERN PetscBool FllopInfoEnabled, FllopObjectInfoEnabled, FllopDebugEnabled;
+typedef struct _p_PERMON* PERMON;
+PERMON_EXTERN PetscClassId PERMON_CLASSID;
+PERMON_EXTERN PERMON fllop;
+PERMON_EXTERN PetscBool FllopInfoEnabled, FllopObjectInfoEnabled, FllopDebugEnabled;
 
 #ifdef NAME_MAX
-#define FLLOP_MAX_NAME_LEN NAME_MAX+1
+#define PERMON_MAX_NAME_LEN NAME_MAX+1
 #else
-#define FLLOP_MAX_NAME_LEN 256
+#define PERMON_MAX_NAME_LEN 256
 #endif
-#define FLLOP_MAX_PATH_LEN  PETSC_MAX_PATH_LEN
-FLLOP_EXTERN char FLLOP_PathBuffer_Global[FLLOP_MAX_PATH_LEN];
-FLLOP_EXTERN char FLLOP_ObjNameBuffer_Global[FLLOP_MAX_NAME_LEN];
+#define PERMON_MAX_PATH_LEN  PETSC_MAX_PATH_LEN
+PERMON_EXTERN char PERMON_PathBuffer_Global[PERMON_MAX_PATH_LEN];
+PERMON_EXTERN char PERMON_ObjNameBuffer_Global[PERMON_MAX_NAME_LEN];
 
 /* BEGIN Function-like Macros */
-FLLOP_EXTERN PetscErrorCode _fllop_ierr;
+PERMON_EXTERN PetscErrorCode _fllop_ierr;
 #define PERMON_ASSERT(c,...)                 if (PetscUnlikely(!(c))) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_PLIB,__VA_ARGS__);
 
 #define FllopDebug(msg)                       0; do { if (FllopDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg)); } while(0)
@@ -69,9 +68,9 @@ static inline void FLLTOC(PetscLogDouble *t) {
     *t = toc_time - *t;
 }
 
-FLLOP_EXTERN PetscBool FllopTraceEnabled;
-FLLOP_EXTERN PetscInt PeFuBe_i_;
-FLLOP_EXTERN char     PeFuBe_s_[128];
+PERMON_EXTERN PetscBool FllopTraceEnabled;
+PERMON_EXTERN PetscInt PeFuBe_i_;
+PERMON_EXTERN char     PeFuBe_s_[128];
 
 #define FllopTracedFunctionBegin \
 PetscLogDouble ttttt=0.0;\
@@ -102,24 +101,24 @@ if (FllopTraceEnabled) {\
 }\
 }
 
-FLLOP_EXTERN PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], const char help[]);
-FLLOP_EXTERN PetscErrorCode PermonFinalize();
-FLLOP_EXTERN PetscErrorCode FllopProcessInfoExclusions(PetscClassId id, const char *className);
-FLLOP_EXTERN PetscErrorCode FllopMakePath(const char *dir, mode_t mode);
+PERMON_EXTERN PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], const char help[]);
+PERMON_EXTERN PetscErrorCode PermonFinalize();
+PERMON_EXTERN PetscErrorCode FllopProcessInfoExclusions(PetscClassId id, const char *className);
+PERMON_EXTERN PetscErrorCode FllopMakePath(const char *dir, mode_t mode);
 
-FLLOP_EXTERN PetscErrorCode FllopCreate(MPI_Comm comm,FLLOP *fllop_new);
-FLLOP_EXTERN PetscErrorCode FllopDestroy(FLLOP *fllop);
+PERMON_EXTERN PetscErrorCode FllopCreate(MPI_Comm comm,PERMON *fllop_new);
+PERMON_EXTERN PetscErrorCode FllopDestroy(PERMON *fllop);
 
-FLLOP_EXTERN PetscErrorCode FllopSetObjectInfo(PetscBool flg);
-FLLOP_EXTERN PetscErrorCode FllopSetTrace(PetscBool flg);
-FLLOP_EXTERN PetscErrorCode FllopSetDebug(PetscBool flg);
-FLLOP_EXTERN PetscErrorCode FllopSetFromOptions();
+PERMON_EXTERN PetscErrorCode FllopSetObjectInfo(PetscBool flg);
+PERMON_EXTERN PetscErrorCode FllopSetTrace(PetscBool flg);
+PERMON_EXTERN PetscErrorCode FllopSetDebug(PetscBool flg);
+PERMON_EXTERN PetscErrorCode FllopSetFromOptions();
 
-FLLOP_EXTERN PetscErrorCode FllopEventRegLogGetEvent(PetscEventRegLog eventLog, const char name[], PetscLogEvent *event, PetscBool *exists);
-FLLOP_EXTERN PetscErrorCode FllopPetscLogEventGetId(const char name[], PetscLogEvent *event, PetscBool *exists);
+PERMON_EXTERN PetscErrorCode FllopEventRegLogGetEvent(PetscEventRegLog eventLog, const char name[], PetscLogEvent *event, PetscBool *exists);
+PERMON_EXTERN PetscErrorCode FllopPetscLogEventGetId(const char name[], PetscLogEvent *event, PetscBool *exists);
 
-FLLOP_EXTERN PetscErrorCode FllopPetscInfoDeactivateAll();
+PERMON_EXTERN PetscErrorCode FllopPetscInfoDeactivateAll();
 
-FLLOP_EXTERN PetscErrorCode FllopPetscObjectInheritName(PetscObject dest,PetscObject orig,const char *suffix);
-FLLOP_EXTERN PetscErrorCode FllopPetscObjectInheritPrefix(PetscObject obj,PetscObject orig,const char *suffix);
-FLLOP_EXTERN PetscErrorCode FllopPetscObjectInheritPrefixIfNotSet(PetscObject obj,PetscObject orig,const char *suffix);
+PERMON_EXTERN PetscErrorCode FllopPetscObjectInheritName(PetscObject dest,PetscObject orig,const char *suffix);
+PERMON_EXTERN PetscErrorCode FllopPetscObjectInheritPrefix(PetscObject obj,PetscObject orig,const char *suffix);
+PERMON_EXTERN PetscErrorCode FllopPetscObjectInheritPrefixIfNotSet(PetscObject obj,PetscObject orig,const char *suffix);

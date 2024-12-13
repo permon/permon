@@ -175,7 +175,7 @@ PetscErrorCode PCSetFromOptions_Dual(PC pc,PetscOptionItems *PetscOptionsObject)
 
 #undef __FUNCT__
 #define __FUNCT__ "PCCreate_Dual"
-FLLOP_EXTERN PetscErrorCode PCCreate_Dual(PC pc)
+PERMON_EXTERN PetscErrorCode PCCreate_Dual(PC pc)
 {
   PC_Dual      *ctx;
   static PetscBool registered = PETSC_FALSE;

@@ -942,7 +942,7 @@ PetscErrorCode MatAssemblyEnd_Inv(Mat imat, MatAssemblyType type)
 
 #undef __FUNCT__
 #define __FUNCT__ "MatCreate_Inv"
-FLLOP_EXTERN PetscErrorCode MatCreate_Inv(Mat imat)
+PERMON_EXTERN PetscErrorCode MatCreate_Inv(Mat imat)
 {
   Mat_Inv *inv;
   static PetscBool registered = PETSC_FALSE;

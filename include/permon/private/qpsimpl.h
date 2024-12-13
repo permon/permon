@@ -75,9 +75,9 @@ typedef struct {
   PetscBool setup_called;
 } QPSConvergedDefaultCtx;
 
-FLLOP_EXTERN PetscLogEvent QPS_Solve,QPS_Solve_solve,QPS_PostSolve;
+PERMON_EXTERN PetscLogEvent QPS_Solve,QPS_Solve_solve,QPS_PostSolve;
 
-FLLOP_INTERN PetscErrorCode QPSWorkVecStateUpdate(QPS qps,PetscInt idx);
-FLLOP_INTERN PetscErrorCode QPSWorkVecStateChanged(QPS qps,PetscInt idx,PetscBool *flg);
-FLLOP_INTERN PetscErrorCode QPSSolutionVecStateUpdate(QPS qps);
-FLLOP_INTERN PetscErrorCode QPSSolutionVecStateChanged(QPS qps,PetscBool *flg);
+PERMON_INTERN PetscErrorCode QPSWorkVecStateUpdate(QPS qps,PetscInt idx);
+PERMON_INTERN PetscErrorCode QPSWorkVecStateChanged(QPS qps,PetscInt idx,PetscBool *flg);
+PERMON_INTERN PetscErrorCode QPSSolutionVecStateUpdate(QPS qps);
+PERMON_INTERN PetscErrorCode QPSSolutionVecStateChanged(QPS qps,PetscBool *flg);
