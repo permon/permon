@@ -1,4 +1,3 @@
-
 #include <permon/private/permonmatimpl.h>
 #include <petscblaslapack.h>
 
@@ -39,7 +38,7 @@ static PetscErrorCode MatExtensionSetColumnIS_Extension(Mat TA,IS cis)
   Mat_Extension *data = (Mat_Extension*) TA->data;
 
   PetscFunctionBegin;
-  if (data->setupcalled) SETERRQ(PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONGSTATE,"cannot alter inner data after first MatMult* call");
+  PetscCheck(!data->setupcalled,PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONGSTATE,"cannot alter inner data after first MatMult* call");
   data->cis = cis;
   PetscCall(PetscObjectReference((PetscObject)cis));
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -107,7 +106,7 @@ static PetscErrorCode MatExtensionSetRowIS_Extension(Mat TA,IS ris,PetscBool row
   Mat_Extension *data = (Mat_Extension*) TA->data;
 
   PetscFunctionBegin;
-  if (data->setupcalled) SETERRQ(PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONGSTATE,"cannot alter inner data after first MatMult* call");
+  PetscCheck(!data->setupcalled,PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONGSTATE,"cannot alter inner data after first MatMult* call");
   if (rows_use_global_numbering) {
     data->ris = ris;
   } else {
@@ -210,9 +209,9 @@ static PetscErrorCode MatExtensionSetCondensed_Extension(Mat TA,Mat A)
   PetscMPIInt commsize;
 
   PetscFunctionBegin;
-  if (data->setupcalled) SETERRQ(PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONGSTATE,"cannot alter inner data after first MatMult* call");
+  PetscCheck(!data->setupcalled,PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONGSTATE,"cannot alter inner data after first MatMult* call");
   PetscCallMPI(MPI_Comm_size(PetscObjectComm((PetscObject)A),&commsize));
-  if (commsize > 1) SETERRQ(PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONG,"inner matrix must be sequential");
+  PetscCheck(commsize == 1,PetscObjectComm((PetscObject)TA),PETSC_ERR_ARG_WRONG,"inner matrix must be sequential");
   data->A = A;
   PetscCall(PetscObjectReference((PetscObject)A));
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -360,7 +359,7 @@ PETSC_EXTERN PetscErrorCode MatConvert_NestPermon_Extension(Mat A,MatType type,M
   PetscCall(PetscMalloc1(Mn,&ris_arr));
   PetscCall(PetscMalloc1(Nn,&cis_arr));
   PetscCall(PetscMalloc1(Mn*Nn,&mats_out));
-  
+
   PetscCall(PetscMalloc1(Mn,&rows));
   PetscCall(MatNestGetISs(A,rows,NULL));
   PetscCall(MatNestPermonGetColumnISs(A,&cols));
@@ -460,7 +459,7 @@ PETSC_EXTERN PetscErrorCode MatConvert_NestPermon_Extension(Mat A,MatType type,M
     PetscCall(ISDestroy(&cis_arr[j]));
   }
   PetscCall(PetscFree(cis_arr));
-  
+
   PetscCall(MatCreateNestPermon(PETSC_COMM_SELF,Mn,NULL,Nn,NULL,mats_out,&As));
   PetscCall(FllopPetscObjectInheritName((PetscObject)As,(PetscObject)A,"_cond"));
   PetscCall(MatCreateExtension(comm,A->rmap->n,A->cmap->n,A->rmap->N,A->cmap->N,As,ris,PETSC_TRUE,cis,&B));
@@ -583,9 +582,9 @@ PetscErrorCode MatTransposeMatMult_BlockDiag_Extension_2extension(Mat B, Mat TA,
   PetscCall(ISGetLocalSize(data->cis, &rnnz));
   PetscCall(ISOnComm(data->ris_local,PETSC_COMM_SELF,PETSC_USE_POINTER,&is_self));
   PetscCall(MatGetColumnVectors(B_loc,&n,&cols));
- 
+
   PetscCall(MatCreateDensePermon(PETSC_COMM_SELF, M_loc, rnnz, M_loc, rnnz, NULL, &C_loc));
-  
+
   PetscCall(ISCreateStride(PETSC_COMM_SELF, M_loc, 0, 1, &is_rows)); //all rows of B
   PetscCall(ISCreateStride(PETSC_COMM_SELF, rnnz, 0, 1, &is_cols)); //all cols of TA
   PetscCall(ISGetIndices(is_cols, &isCols));
@@ -604,7 +603,7 @@ PetscErrorCode MatTransposeMatMult_BlockDiag_Extension_2extension(Mat B, Mat TA,
   PetscCall(MatAssemblyBegin(C_loc, MAT_FINAL_ASSEMBLY));
   PetscCall(MatAssemblyEnd(C_loc, MAT_FINAL_ASSEMBLY));
   PetscCall(MatCreateExtension(PetscObjectComm((PetscObject)B),M_loc,N_loc,M,N,C_loc,is_rows,PETSC_FALSE,data->cis,&C_out));
-  
+
   PetscCall(ISDestroy(&is_self));
   PetscCall(ISDestroy(&is_rows));
   PetscCall(ISDestroy(&is_cols));
@@ -636,7 +635,7 @@ PetscErrorCode MatTransposeMatMult_BlockDiag_Extension_2MPIAIJ(Mat B, Mat TA, Ma
   PetscCall(MatGetLocalSize(TA, NULL, &N_loc));
   PetscCall(ISGetLocalSize(data->cis, &rnnz));
   PetscCall(ISGetIndices(data->cis, &isCols));
-  
+
   //compute number of nnz in DIAG part
   PetscCallMPI(MPI_Scan(&N_loc, &nHigh, 1, MPIU_INT, MPI_SUM, comm));
   rnnz_diag = 0;
@@ -658,7 +657,7 @@ PetscErrorCode MatTransposeMatMult_BlockDiag_Extension_2MPIAIJ(Mat B, Mat TA, Ma
   PetscCall(MatGetOwnershipRange(C_out, &ilo, NULL));
 
   PetscCall(ISOnComm(data->ris_local,PETSC_COMM_SELF,PETSC_USE_POINTER,&is_self));
-    
+
   PetscCall(MatGetColumnVectors(B_loc,&n, &cols));
   for (i = 0; i < n; i++){
     PetscCall(VecGetSubVector(cols[i], is_self, &colExt));
@@ -761,7 +760,7 @@ PetscErrorCode MatMatTransposeMult_Extension_Extension_same(Mat A, Mat B, MatReu
   PetscCall(MatGetLocalSize(A,&M_loc,NULL));
   PetscCall(ISGetLocalSize(dataA->cis,&nnz));
   PetscCall(ISGetIndices(dataA->cis,&iLocCol));
-  
+
   PetscCall(PetscObjectQuery((PetscObject)A,"myneighbors",(PetscObject*)&myneighbors));
   if (myneighbors) {
     PetscCall(ISGetLocalSize(myneighbors,&allNeighbors));
@@ -775,9 +774,7 @@ PetscErrorCode MatMatTransposeMult_Extension_Extension_same(Mat A, Mat B, MatReu
 #if defined(PETSC_USE_DEBUG)
     int M_max;
     PetscCallMPI(MPI_Allreduce(&M_loc,&M_max,1,MPIU_INT,MPI_MAX,comm));
-    if (M_loc != M_max) {
-      SETERRQ(comm,PETSC_ERR_ARG_SIZ,"implemented only for matrices with same local row dimension");
-    }
+    PetscCheck(M_loc == M_max,comm,PETSC_ERR_ARG_SIZ,"implemented only for matrices with same local row dimension");
 #endif
     if (!mattype) {
       PetscCall(MatCreate(comm,&C_out));
@@ -794,7 +791,7 @@ PetscErrorCode MatMatTransposeMult_Extension_Extension_same(Mat A, Mat B, MatReu
   } else {
     SETERRQ(comm,PETSC_ERR_ARG_WRONG,"scall must be MAT_INITIAL_MATRIX");
   }
-  
+
   /* get number of indices to recv from neigbours */
   PetscCall(PetscMalloc1(allNeighbors-1,&mpiRequests));
   PetscCall(PetscMalloc1(neighborsLt,&nnzNeighbors));
@@ -813,7 +810,7 @@ PetscErrorCode MatMatTransposeMult_Extension_Extension_same(Mat A, Mat B, MatReu
   }
   PetscCall(PetscMalloc1(nnzAllLtNeighbors, &iNeighbor));
   for (i = 0; i < neighborsLt; i++) {
-    PetscCallMPI(MPI_Irecv(iNeighbor,nnzNeighbors[i],MPIU_INT,iNeighbors[i],1,comm,&mpiRequests[i])); 
+    PetscCallMPI(MPI_Irecv(iNeighbor,nnzNeighbors[i],MPIU_INT,iNeighbors[i],1,comm,&mpiRequests[i]));
     iNeighbor += nnzNeighbors[i];
   }
   for (i = neighborsLt+1; i <allNeighbors; i++) {
@@ -835,7 +832,7 @@ PetscErrorCode MatMatTransposeMult_Extension_Extension_same(Mat A, Mat B, MatReu
     PetscCall(PetscMemcpy(iRemSort,iNeighbor,nnzNeighbors[i]*sizeof(PetscInt)));
     PetscCall(PetscSortInt(nnzNeighbors[i],iRemSort));
     PetscCall(PetscMalloc1(nnzNeighbors[i],&iNeighborInter));
-    j = 0; 
+    j = 0;
     k = 0;
     l = 0;
     while(j < nnzNeighbors[i] && k < nnz) {
@@ -888,7 +885,7 @@ PetscErrorCode MatMatTransposeMult_Extension_Extension_same(Mat A, Mat B, MatReu
 
   iNeighbor -= nnzAllLtNeighbors;
   PetscCall(PetscFree(iNeighbor));
-  
+
   /* get submats */
   PetscCall(ISCreateStride(PETSC_COMM_SELF,M_loc,0,1,&isrow));
   PetscCall(PetscMalloc1(neighborsLt,&submats));
@@ -900,7 +897,7 @@ PetscErrorCode MatMatTransposeMult_Extension_Extension_same(Mat A, Mat B, MatReu
   }
   PetscCall(PetscFree(iscol));
   PetscCallMPI(MPI_Waitall(allNeighbors-1,mpiRequests,MPI_STATUSES_IGNORE)); /* wait for number of elements/indices */
-  
+
   /* send remote ind */
   j = 0;
   for (i = neighborsLt+1; i <allNeighbors; i++) {
@@ -916,7 +913,7 @@ PetscErrorCode MatMatTransposeMult_Extension_Extension_same(Mat A, Mat B, MatReu
   PetscCall(PetscFree(nnzNeighbors));
   j = 0;
   for (i = neighborsLt+1; i <allNeighbors; i++) {
-    PetscCallMPI(MPI_Irecv(iElem,nElem[j],MPIU_INT,iNeighbors[i],3,comm,&mpiRequests[i-1])); 
+    PetscCallMPI(MPI_Irecv(iElem,nElem[j],MPIU_INT,iNeighbors[i],3,comm,&mpiRequests[i-1]));
     iElem += nElem[j];
     j += 1;
   }
@@ -931,12 +928,11 @@ PetscErrorCode MatMatTransposeMult_Extension_Extension_same(Mat A, Mat B, MatReu
   PetscCall(PetscFree(nElemR));
   j = 0;
   for (i = neighborsLt+1; i <allNeighbors; i++) {
-    PetscCallMPI(MPI_Irecv(dataElem,M_loc*nElem[j],MPIU_SCALAR,iNeighbors[i],4,comm,&mpiRequests2[i-1])); 
+    PetscCallMPI(MPI_Irecv(dataElem,M_loc*nElem[j],MPIU_SCALAR,iNeighbors[i],4,comm,&mpiRequests2[i-1]));
     dataElem += M_loc*nElem[j];
     j += 1;
   }
   dataElem -= M_loc*nnzElem;
-  
 
   /* compute local product */
   PetscCall(PetscMalloc1(M_loc,&iRow));
@@ -1058,9 +1054,7 @@ static PetscErrorCode MatProductNumeric_Extension(Mat C)
   /* TODO add general mult, resulting mat MPIAIJ || extension */
   switch (product->type) {
   case MATPRODUCT_ABt:
-    if (A != B) {
-      SETERRQ(PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_WRONG,"implemented only for A=B");
-    }
+    PetscCheck(A == B,PetscObjectComm((PetscObject)A),PETSC_ERR_ARG_WRONG,"implemented only for A=B");
     PetscObjectOptionsBegin((PetscObject)C);
     PetscCall(PetscOptionsEList("-MatMatMultExt_mattype","MatMatMultExt_mattype","Set type of resulting matrix when assembling from extension type",allowedMats,3,MATAIJ,&mattype,NULL));
     PetscOptionsEnd();
@@ -1124,7 +1118,7 @@ PetscErrorCode MatDestroy_Extension(Mat TA) {
 
 #undef __FUNCT__
 #define __FUNCT__ "MatCreate_Extension"
-FLLOP_EXTERN PetscErrorCode MatCreate_Extension(Mat TA)
+PERMON_EXTERN PetscErrorCode MatCreate_Extension(Mat TA)
 {
   Mat_Extension *data;
 

@@ -1,4 +1,4 @@
-#define FLLOPQP_DLL
+#define PERMONQP_DLL
 
 #include <permon/private/qpimpl.h>
 

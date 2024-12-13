@@ -8,13 +8,11 @@ PetscErrorCode QPCSetUp_Box(QPC qpc)
   Vec                   lb;
 
   PetscFunctionBegin;
-
   /* prepare lambdawork vector based on the layout of lb */
   lb = ctx->lb;
-  PetscCall(VecDuplicate(lb,&(qpc->lambdawork)));
+  PetscCall(VecDuplicate(lb,&qpc->lambdawork));
 
   // TODO: verify layout of ub somewhere in setup or in create function
-
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -236,7 +234,6 @@ PetscErrorCode QPCGetNumberOfConstraints_Box(QPC qpc, PetscInt *num)
   PetscInt          size,bs;
 
   PetscFunctionBegin;
-
   if(qpc->is){
         /* IS is present, return the size of IS */
         PetscCall(ISGetSize(qpc->is,&size));
@@ -247,7 +244,6 @@ PetscErrorCode QPCGetNumberOfConstraints_Box(QPC qpc, PetscInt *num)
         PetscCall(VecGetSize(ctx->lb,&size)); /* = size of ub */
         *num = size;
   }
-
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -454,7 +450,7 @@ PetscErrorCode QPCDestroy_Box(QPC qpc)
 
 #undef __FUNCT__
 #define __FUNCT__ "QPCCreate_Box"
-FLLOP_EXTERN PetscErrorCode QPCCreate_Box(QPC qpc)
+PERMON_EXTERN PetscErrorCode QPCCreate_Box(QPC qpc)
 {
   QPC_Box      *ctx;
 
@@ -490,7 +486,6 @@ FLLOP_EXTERN PetscErrorCode QPCCreate_Box(QPC qpc)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-
 #undef __FUNCT__
 #define __FUNCT__ "QPCBoxSet"
 PetscErrorCode QPCBoxSet(QPC qpc,Vec lb, Vec ub)
@@ -499,7 +494,7 @@ PetscErrorCode QPCBoxSet(QPC qpc,Vec lb, Vec ub)
   PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
   if (lb) PetscValidHeaderSpecific(lb,VEC_CLASSID,2);
   if (ub) PetscValidHeaderSpecific(ub,VEC_CLASSID,3);
-  if (!lb && !ub) SETERRQ(PetscObjectComm((PetscObject)qpc),PETSC_ERR_ARG_NULL,"lb and ub cannot be both NULL");
+  PetscCheck(lb || ub,PetscObjectComm((PetscObject)qpc),PETSC_ERR_ARG_NULL,"lb and ub cannot be both NULL");
 #if defined(PETSC_USE_DEBUG)
   if (lb && ub) {
     Vec diff;
@@ -509,7 +504,7 @@ PetscErrorCode QPCBoxSet(QPC qpc,Vec lb, Vec ub)
     PetscCall(VecWAXPY(diff,-1.0,lb,ub));
     PetscCall(VecMin(diff,NULL,&min));
     /* TODO verify that algorithms work with min = 0 */
-    if (min < 0.0) SETERRQ(PetscObjectComm((PetscObject)qpc),PETSC_ERR_ARG_INCOMP,"lb components must be smaller than ub components");
+    PetscCheck(min >= 0.0,PetscObjectComm((PetscObject)qpc),PETSC_ERR_ARG_INCOMP,"lb components must be smaller than ub components");
     PetscCall(VecDestroy(&diff));
   }
 #endif
@@ -562,7 +557,6 @@ PetscErrorCode QPCCreateBox(MPI_Comm comm,IS is,Vec lb,Vec ub,QPC *qpc_out)
   QPC qpc;
 
   PetscFunctionBegin;
-
   /* verify input data */
   if (is) PetscValidHeaderSpecific(is,IS_CLASSID,2);
   if (lb) PetscValidHeaderSpecific(lb,VEC_CLASSID,3);

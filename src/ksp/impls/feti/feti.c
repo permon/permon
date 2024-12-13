@@ -104,7 +104,7 @@ PetscErrorCode KSPSetUp_FETI(KSP ksp)
   PetscFunctionBegin;
   PetscCall(KSPGetOperators(ksp,&A,NULL));
   PetscCall(PetscObjectTypeCompare((PetscObject)A,MATIS,&ismatis));
-  if (!ismatis) SETERRQ(PetscObjectComm((PetscObject)ksp),PETSC_ERR_USER,"Amat should be of type MATIS");
+  PetscCheck(ismatis,PetscObjectComm((PetscObject)ksp),PETSC_ERR_USER,"Amat should be of type MATIS");
 
   PetscCall(PetscOptionsInsertString(NULL,"-feti"));
 
@@ -155,7 +155,7 @@ PetscErrorCode KSPSolve_FETI(KSP ksp)
 /*MC
   KSPFETI - The FETI and Total FETI (TFETI) method.
 
-  Thin KSP wrapper for PermonFLLOP implementation of (T)FETI.
+  Thin KSP wrapper for PermonPERMON implementation of (T)FETI.
   The matrix for the KSP must be of type MATIS.
 
   Options Database Keys:
@@ -167,7 +167,7 @@ PetscErrorCode KSPSolve_FETI(KSP ksp)
 M*/
 #undef __FUNCT__
 #define __FUNCT__ "KSPCreate_FETI"
-FLLOP_EXTERN PetscErrorCode KSPCreate_FETI(KSP ksp)
+PERMON_EXTERN PetscErrorCode KSPCreate_FETI(KSP ksp)
 {
   KSP_FETI *feti;
 

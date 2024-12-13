@@ -1,4 +1,3 @@
-
 #include <permon/private/permonpcimpl.h>
 #include <petscmat.h>
 
@@ -176,7 +175,7 @@ PetscErrorCode PCSetFromOptions_Dual(PC pc,PetscOptionItems *PetscOptionsObject)
 
 #undef __FUNCT__
 #define __FUNCT__ "PCCreate_Dual"
-FLLOP_EXTERN PetscErrorCode PCCreate_Dual(PC pc)
+PERMON_EXTERN PetscErrorCode PCCreate_Dual(PC pc)
 {
   PC_Dual      *ctx;
   static PetscBool registered = PETSC_FALSE;
@@ -186,10 +185,10 @@ FLLOP_EXTERN PetscErrorCode PCCreate_Dual(PC pc)
      attach it to the PC object.  */
   PetscCall(PetscNew(&ctx));
   pc->data = (void*)ctx;
-  
+
   ctx->setfromoptionscalled = PETSC_FALSE;
   ctx->pcdualtype = PC_DUAL_NONE;
-  
+
   /* set general PC functions already implemented for this PC type */
   pc->ops->apply               = PCApply_Dual;
   pc->ops->destroy             = PCDestroy_Dual;

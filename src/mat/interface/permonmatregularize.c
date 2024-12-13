@@ -1,4 +1,3 @@
-
 #include <permon/private/permonmatimpl.h>
 
 PetscLogEvent Mat_Regularize;
@@ -104,7 +103,7 @@ static PetscErrorCode MatRegularize_GetPivots_Private(Mat R, IS *pivots) {
   }
 
   /* idx_arr points to last d entries of perm */
-  idx_arr = &(perm[p - npivots]);
+  idx_arr = &perm[p - npivots];
 
   PetscCall(ISCreateGeneral(PETSC_COMM_SELF, npivots, idx_arr, PETSC_COPY_VALUES, pivots));
   PetscCall(ISSort(*pivots));
@@ -243,8 +242,8 @@ PetscErrorCode MatRegularize(Mat K, Mat R, MatRegularizationType type, Mat *newK
   PetscValidHeaderSpecific(R,MAT_CLASSID,2);
   PetscCheckSameComm(K,1,R,2);
   PetscCall(PetscObjectGetComm((PetscObject)K,&comm));
-  if (K->rmap->n!=K->cmap->n) SETERRQ(comm,PETSC_ERR_ARG_SIZ,"Matrix #1 must be locally square");
-  if (K->rmap->n!=R->rmap->n) SETERRQ(comm,PETSC_ERR_ARG_SIZ,"Matrices #1 and #2 don't have the same row layout, %" PetscInt_FMT " != %" PetscInt_FMT "",K->rmap->n,R->rmap->n);
+  PetscCheck(K->rmap->n == K->cmap->n,comm,PETSC_ERR_ARG_SIZ,"Matrix #1 must be locally square");
+  PetscCheck(K->rmap->n == R->rmap->n,comm,PETSC_ERR_ARG_SIZ,"Matrices #1 and #2 don't have the same row layout, %" PetscInt_FMT " != %" PetscInt_FMT,K->rmap->n,R->rmap->n);
 
   FllopTraceBegin;
   PetscCall(PetscLogEventBegin(Mat_Regularize,K,R,0,0));

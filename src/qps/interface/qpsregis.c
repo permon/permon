@@ -1,11 +1,10 @@
-
 #include <permon/private/qpsimpl.h>
 
-FLLOP_EXTERN PetscErrorCode QPSCreate_KSP(QPS);
-FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS);
-FLLOP_EXTERN PetscErrorCode QPSCreate_SMALXE(QPS);
-FLLOP_EXTERN PetscErrorCode QPSCreate_Tao(QPS);
-FLLOP_EXTERN PetscErrorCode QPSCreate_PCPG(QPS);
+PERMON_EXTERN PetscErrorCode QPSCreate_KSP(QPS);
+PERMON_EXTERN PetscErrorCode QPSCreate_MPGP(QPS);
+PERMON_EXTERN PetscErrorCode QPSCreate_SMALXE(QPS);
+PERMON_EXTERN PetscErrorCode QPSCreate_Tao(QPS);
+PERMON_EXTERN PetscErrorCode QPSCreate_PCPG(QPS);
 
 /*
    Contains the list of registered Create routines of all QPS types
@@ -13,7 +12,7 @@ FLLOP_EXTERN PetscErrorCode QPSCreate_PCPG(QPS);
 PetscFunctionList QPSList = 0;
 PetscBool  QPSRegisterAllCalled = PETSC_FALSE;
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSRegisterAll"
 PetscErrorCode  QPSRegisterAll(void)
 {
@@ -27,7 +26,7 @@ PetscErrorCode  QPSRegisterAll(void)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__  
+#undef __FUNCT__
 #define __FUNCT__ "QPSRegister"
 PetscErrorCode QPSRegister(const char sname[],PetscErrorCode (*function)(QPS))
 {

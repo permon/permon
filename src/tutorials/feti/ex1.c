@@ -54,8 +54,8 @@ int main(int argc,char **args)
 
   /* assemble global matrix */
   for (i=0; i<ne_l; i++) {
-    bloc[0] = sin((rank*ne_l +i+ 0.5)*h*3.14159) *.5*h; 
-    bloc[1] = bloc[1]; 
+    bloc[0] = sin((rank*ne_l +i+ 0.5)*h*3.14159) *.5*h;
+    bloc[1] = bloc[1];
     idx[0] = i;
     idx[1] = i+1;
     PetscCall(MatSetValuesLocal(A,2,idx,2,idx,Aloc,ADD_VALUES));
@@ -76,7 +76,7 @@ int main(int argc,char **args)
 
   /* Set Dirichlet BC */
   idx[0] = 0; idx[1]=ndofs-1;
-  if (!rank) { 
+  if (!rank) {
     PetscCall(ISCreateGeneral(PETSC_COMM_WORLD,1,idx,PETSC_COPY_VALUES,&dirichletIS));
     if (ns==1) {
       idx[1]=ndofs_l-1;
@@ -87,12 +87,12 @@ int main(int argc,char **args)
   } else {
     PetscCall(ISCreateGeneral(PETSC_COMM_WORLD,0,idx,PETSC_COPY_VALUES,&dirichletIS));
   }
-  PetscCall(PetscOptionsGetBool(NULL,NULL,"-dir_in_hess",&dirInHess,NULL)); 
+  PetscCall(PetscOptionsGetBool(NULL,NULL,"-dir_in_hess",&dirInHess,NULL));
   PetscCall(KSPFETISetDirichlet(ksp,dirichletIS,FETI_GLOBAL_UNDECOMPOSED,PetscNot(dirInHess)));
   /* Values of Dirichlet BC are passed in solution */
-  //PetscCall(VecSet(solution,1.0)); 
+  //PetscCall(VecSet(solution,1.0));
   //PetscCall(KSPSetInitialGuessNonzero));
-  
+
   /* Solve */
   PetscCall(KSPSolve(ksp,rhs,solution));
   PetscCall(KSPGetIterationNumber(ksp,&its));

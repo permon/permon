@@ -1,4 +1,3 @@
-
 /* Test VecInvalidate */
 #include <permonvec.h>
 
@@ -16,20 +15,19 @@ int main(int argc,char **args)
   PetscCall(VecSet(v,1.));
 
   PetscCall(VecIsInvalidated(v,&flg));
-  if (flg) SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_PLIB,"Vec is invalid");
+  PetscCheck(!flg,PETSC_COMM_WORLD,PETSC_ERR_PLIB,"Vec is invalid");
   PetscCall(VecInvalidate(v));
   PetscCall(VecIsInvalidated(v,&flg));
-  if (!flg) SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_PLIB,"Vec is valid");
+  PetscCheck(flg,PETSC_COMM_WORLD,PETSC_ERR_PLIB,"Vec is valid");
   PetscCall(VecView(v,NULL));
   PetscCall(VecSet(v,1.));
   PetscCall(VecIsInvalidated(v,&flg));
-  if (flg) SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_PLIB,"Vec is invalid");
+  PetscCheck(!flg,PETSC_COMM_WORLD,PETSC_ERR_PLIB,"Vec is invalid");
 
   PetscCall(VecDestroy(&v));
   PetscCall(PermonFinalize());
   return 0;
 }
-
 
 /*TEST
   test:

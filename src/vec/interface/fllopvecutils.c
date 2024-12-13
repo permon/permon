@@ -196,7 +196,6 @@ PetscErrorCode ISGetVecBlock(IS is, Vec *vec, PetscInt bs)
   PetscInt m_vec; /* local size of vec */
 
   PetscFunctionBegin;
-
   /* control the validity of given objects*/
   PetscValidHeaderSpecific(is,IS_CLASSID,1);
   PetscAssertPointer(vec,2);
@@ -233,9 +232,9 @@ PetscErrorCode VecCheckSameLayoutIS(Vec vec, IS is)
   PetscCall(ISGetLocalSize(is,&n));
   PetscCall(ISGetSize(is,&N));
   PetscCall(ISGetBlockSize(is,&bs));
-  if (vec->map->n   != n)  SETERRQ(PetscObjectComm((PetscObject)is),PETSC_ERR_ARG_INCOMP,"Vec local size %d != IS local size %d",  vec->map->n,  n);
-  if (vec->map->N   != N)  SETERRQ(PetscObjectComm((PetscObject)is),PETSC_ERR_ARG_INCOMP,"Vec global size %d != IS global size %d",vec->map->N,  N);
-  if (vec->map->bs  != bs) SETERRQ(PetscObjectComm((PetscObject)is),PETSC_ERR_ARG_INCOMP,"Vec block size %d != IS block size %d",  vec->map->bs, bs);
+  PetscCheck(vec->map->n == n,PetscObjectComm((PetscObject)is),PETSC_ERR_ARG_INCOMP,"Vec local size %d != IS local size %d",  vec->map->n,  n);
+  PetscCheck(vec->map->N == N,PetscObjectComm((PetscObject)is),PETSC_ERR_ARG_INCOMP,"Vec global size %d != IS global size %d",vec->map->N,  N);
+  PetscCheck(vec->map->bs == bs,PetscObjectComm((PetscObject)is),PETSC_ERR_ARG_INCOMP,"Vec block size %d != IS block size %d",  vec->map->bs, bs);
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -247,9 +246,9 @@ PetscErrorCode VecCheckSameLayoutVec(Vec v1, Vec v2)
   PetscValidHeaderSpecific(v1,VEC_CLASSID,1);
   PetscValidHeaderSpecific(v2,VEC_CLASSID,1);
   PetscCheckSameComm(v1,1,v2,2);
-  if (v1->map->n    != v2->map->n)  SETERRQ(PetscObjectComm((PetscObject)v1),PETSC_ERR_ARG_INCOMP,"Vec #1 local size %d != Vec #2 local size %d",  v1->map->n, v2->map->n);
-  if (v1->map->N    != v2->map->N)  SETERRQ(PetscObjectComm((PetscObject)v1),PETSC_ERR_ARG_INCOMP,"Vec #1 global size %d != Vec #2 global size %d",v1->map->N, v2->map->N);
-  if (v1->map->bs   != v2->map->bs) SETERRQ(PetscObjectComm((PetscObject)v1),PETSC_ERR_ARG_INCOMP,"Vec #1 block size %d != Vec #2 block size %d",  v1->map->bs,v2->map->bs);
+  PetscCheck(v1->map->n == v2->map->n,PetscObjectComm((PetscObject)v1),PETSC_ERR_ARG_INCOMP,"Vec #1 local size %d != Vec #2 local size %d",  v1->map->n, v2->map->n);
+  PetscCheck(v1->map->N == v2->map->N,PetscObjectComm((PetscObject)v1),PETSC_ERR_ARG_INCOMP,"Vec #1 global size %d != Vec #2 global size %d",v1->map->N, v2->map->N);
+  PetscCheck(v1->map->bs == v2->map->bs,PetscObjectComm((PetscObject)v1),PETSC_ERR_ARG_INCOMP,"Vec #1 block size %d != Vec #2 block size %d",  v1->map->bs,v2->map->bs);
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -355,7 +354,6 @@ PetscErrorCode VecHasValidValues(Vec vec,PetscBool *flg)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-
 struct _n_VecNestGetMPICtx {
   VecScatter sc;
   Vec *origvecs;
@@ -403,7 +401,6 @@ PetscErrorCode   VecGetMPIVector(MPI_Comm comm, PetscInt N,Vec vecs[], Vec *VecO
   PetscCall(PetscContainerDestroy(&container));
 
   *VecOut = glVec;
-
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -433,7 +430,6 @@ PetscErrorCode VecRestoreMPIVector(MPI_Comm comm, PetscInt N,Vec vecs[], Vec *Ve
   PetscCall(VecDestroy(VecIn));
   PetscCall(PetscFree(ctx->origvecs));
   PetscCall(PetscFree(ctx));
-
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -485,7 +481,6 @@ PetscErrorCode VecNestGetMPI(PetscInt N,Vec *vecs[])
   *vecs = mpiv;
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
-
 
 #undef __FUNCT__
 #define __FUNCT__ "VecNestRestoreMPI"

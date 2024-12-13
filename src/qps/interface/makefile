@@ -4,9 +4,9 @@ ALL: lib
 CFLAGS   =
 FFLAGS   =
 SOURCEC  = qps.c qpsregis.c dlregisqps.c
-SOURCEF  = 
-SOURCEH  = 
-OBJSC    = ${SOURCEC:.c=.o} 
+SOURCEF  =
+SOURCEH  =
+OBJSC    = ${SOURCEC:.c=.o}
 LIBBASE  = libpermon
 DIRS     =
 MANSEC   = QPS

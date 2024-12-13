@@ -135,7 +135,7 @@ static PetscErrorCode ProcessOptions(MPI_Comm comm, AppCtx *options)
     case 3:
       options->elemMat = elast_3D_emat;
       break;
-    default: SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Unsupported dimension %" PetscInt_FMT "",options->dim);
+    default: SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Unsupported dimension %" PetscInt_FMT,options->dim);
     }
     break;
   case PDE_POISSON:
@@ -150,10 +150,10 @@ static PetscErrorCode ProcessOptions(MPI_Comm comm, AppCtx *options)
     case 3:
       options->elemMat = poiss_3D_emat;
       break;
-    default: SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Unsupported dimension %" PetscInt_FMT "",options->dim);
+    default: SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Unsupported dimension %" PetscInt_FMT,options->dim);
     }
     break;
-  default: SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Unsupported PDE %" PetscInt_FMT "",options->pde);
+  default: SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Unsupported PDE %" PetscInt_FMT,options->pde);
   }
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -197,7 +197,7 @@ int main(int argc,char **args)
     ierr = DMDACreate1d(PETSC_COMM_WORLD,user.per[0] ? DM_BOUNDARY_PERIODIC : DM_BOUNDARY_NONE,
                                          user.cells[0]+1,user.dof,1,NULL,&da);PetscCall(ierr);
     break;
-  default: SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Unsupported dimension %" PetscInt_FMT "",user.dim);
+  default: SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Unsupported dimension %" PetscInt_FMT,user.dim);
   }
   PetscCall(DMSetMatType(da,MATIS));
   PetscCall(DMSetFromOptions(da));
@@ -214,7 +214,7 @@ int main(int argc,char **args)
     case 1:
       user.cells[0] = M-1;
       break;
-    default: SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Unsupported dimension %" PetscInt_FMT "",user.dim);
+    default: SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Unsupported dimension %" PetscInt_FMT,user.dim);
     }
   }
   PetscCall(DMDASetUniformCoordinates(da,0.0,1.0*user.cells[0],0.0,1.0*user.cells[1],0.0,1.0*user.cells[2]));
@@ -239,7 +239,7 @@ int main(int argc,char **args)
     PetscInt ord[8] = {0,1,3,2,4,5,7,6};
     PetscInt j,idxs[8];
 
-    if (nen > 8) SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Not coded");
+    PetscCheck(nen <= 8,PETSC_COMM_WORLD,PETSC_ERR_SUP,"Not coded");
     if (!e_glo) {
       for (j=0;j<nen;j++) idxs[j] = e_loc[i*nen+ord[j]];
       PetscCall(MatSetValuesBlockedLocal(A,nen,idxs,nen,idxs,user.elemMat,ADD_VALUES));

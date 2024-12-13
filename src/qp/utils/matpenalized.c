@@ -1,4 +1,3 @@
-
 #include <permonqp.h>
 #include <permon/private/permonmatimpl.h>
 
@@ -13,6 +12,7 @@ typedef struct {
 PetscErrorCode MatMult_Penalized(Mat Arho,Vec x,Vec y)
 {
   Mat_Penalized *ctx;
+
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(Arho,(void*)&ctx));
   PetscCall(MatMult(ctx->BtB,x,y));
@@ -26,6 +26,7 @@ PetscErrorCode MatMult_Penalized(Mat Arho,Vec x,Vec y)
 PetscErrorCode MatMultTranspose_Penalized(Mat Arho,Vec x,Vec y)
 {
   Mat_Penalized *ctx;
+
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(Arho,(void*)&ctx));
   PetscCall(MatMult(ctx->BtB,x,y));
@@ -39,6 +40,7 @@ PetscErrorCode MatMultTranspose_Penalized(Mat Arho,Vec x,Vec y)
 PetscErrorCode MatMultAdd_Penalized(Mat Arho,Vec x,Vec x2,Vec y)
 {
   Mat_Penalized *ctx;
+
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(Arho,(void*)&ctx));
   if (x2 != y) {
@@ -59,6 +61,7 @@ PetscErrorCode MatMultAdd_Penalized(Mat Arho,Vec x,Vec x2,Vec y)
 PetscErrorCode MatMultTransposeAdd_Penalized(Mat Arho,Vec x,Vec x2,Vec y)
 {
   Mat_Penalized *ctx;
+
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(Arho,(void*)&ctx));
   if (x2 != y) {
@@ -79,6 +82,7 @@ PetscErrorCode MatMultTransposeAdd_Penalized(Mat Arho,Vec x,Vec x2,Vec y)
 PetscErrorCode MatGetDiagonal_Penalized(Mat Arho,Vec d)
 {
   Mat_Penalized *ctx;
+
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(Arho,(void*)&ctx));
   PetscCall(MatGetDiagonal(ctx->A,d));
@@ -92,6 +96,7 @@ PetscErrorCode MatGetDiagonal_Penalized(Mat Arho,Vec d)
 #define __FUNCT__ "MatDestroy_Penalized"
 PetscErrorCode MatDestroy_Penalized(Mat Arho) {
   Mat_Penalized *ctx;
+
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(Arho,(void*)&ctx));
   PetscCall(MatDestroy(&ctx->A));
@@ -111,6 +116,7 @@ PetscErrorCode MatDestroy_Penalized(Mat Arho) {
 static PetscErrorCode MatPenalizedSetPenalty_Penalty(Mat Arho,PetscReal rho)
 {
   Mat_Penalized *ctx;
+
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(Arho,(void*)&ctx));
   ctx->rho = rho;
@@ -137,6 +143,7 @@ static PetscErrorCode MatPenalizedUpdatePenalty_Penalty(Mat Arho,PetscReal rho_u
 static PetscErrorCode MatPenalizedGetPenalty_Penalty(Mat Arho,PetscReal *rho)
 {
   Mat_Penalized *ctx;
+
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(Arho,(void*)&ctx));
   *rho = ctx->rho;
@@ -148,6 +155,7 @@ static PetscErrorCode MatPenalizedGetPenalty_Penalty(Mat Arho,PetscReal *rho)
 static PetscErrorCode MatPenalizedGetPenalizedTerm_Penalty(Mat Arho,Mat *BtB)
 {
   Mat_Penalized *ctx;
+
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(Arho,(void*)&ctx));
   *BtB = ctx->BtB;

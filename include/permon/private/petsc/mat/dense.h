@@ -1,5 +1,5 @@
-#ifndef __DENSE_H
-#define __DENSE_H
+#pragma once
+
 #include "aij.h" /* Mat_MatTransMatMult is defined here */
 
 /*
@@ -28,5 +28,3 @@ typedef struct {
   PetscInt           vecinuse; /* if cvec is in use (col = vecinuse-1) */
   PetscInt           matinuse; /* if cmat is in use (cbegin = matinuse-1) */
 } Mat_SeqDense;
-
-#endif

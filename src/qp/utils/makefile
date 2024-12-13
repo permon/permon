@@ -1,11 +1,11 @@
 
-ALL: lib 
+ALL: lib
 
 CFLAGS   =
 FFLAGS   =
 SOURCEC  = matpenalized.c
 SOURCEF  =
-SOURCEH  = 
+SOURCEH  =
 OBJSC    = ${SOURCEC:.c=.o}
 OBJSF    =
 LIBBASE  = libpermon

@@ -1,4 +1,3 @@
-
 #include <permonsys.h>
 #include <permon/private/permonimpl.h>
 #include <petsc/private/logimpl.h>
@@ -12,29 +11,29 @@ PetscBool FllopDebugEnabled = PETSC_FALSE;
 PetscErrorCode _fllop_ierr;
 PetscInt PeFuBe_i_ = 0;
 char     PeFuBe_s_[128];
-char     FLLOP_PathBuffer_Global[FLLOP_MAX_PATH_LEN];
-char     FLLOP_ObjNameBuffer_Global[FLLOP_MAX_NAME_LEN];
+char     PERMON_PathBuffer_Global[PERMON_MAX_PATH_LEN];
+char     PERMON_ObjNameBuffer_Global[PERMON_MAX_NAME_LEN];
 
 #undef __FUNCT__
 #define __FUNCT__ "FllopCreate"
-PetscErrorCode FllopCreate(MPI_Comm comm,FLLOP *fllop_new)
+PetscErrorCode FllopCreate(MPI_Comm comm,PERMON *fllop_new)
 {
-  FLLOP fllop;
+  PERMON fllop;
 
   PetscFunctionBegin;
   PetscAssertPointer(fllop_new,2);
-  PetscCall(PetscHeaderCreate(fllop,FLLOP_CLASSID,"FLLOP","FLLOP","FLLOP",comm,0,0));
+  PetscCall(PetscHeaderCreate(fllop,PERMON_CLASSID,"PERMON","PERMON","PERMON",comm,0,0));
   *fllop_new = fllop;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
 #define __FUNCT__ "FllopDestroy"
-PetscErrorCode FllopDestroy(FLLOP *fllop)
+PetscErrorCode FllopDestroy(PERMON *fllop)
 {
   PetscFunctionBegin;
   if (!*fllop) PetscFunctionReturn(PETSC_SUCCESS);
-  PetscValidHeaderSpecific(*fllop, FLLOP_CLASSID, 1);
+  PetscValidHeaderSpecific(*fllop, PERMON_CLASSID, 1);
   if (--((PetscObject) (*fllop))->refct > 0) {
     *fllop = 0;
     PetscFunctionReturn(PETSC_SUCCESS);
@@ -47,13 +46,13 @@ PetscErrorCode FllopDestroy(FLLOP *fllop)
 #define __FUNCT__ "FllopMakePath"
 PetscErrorCode FllopMakePath(const char *dir, mode_t mode)
 {
-    char *tmp = FLLOP_PathBuffer_Global;
+    char *tmp = PERMON_PathBuffer_Global;
     char *p = NULL;
     size_t len;
     PetscBool flg;
-    
+
     PetscFunctionBegin;
-    PetscCall(PetscSNPrintf(tmp, FLLOP_MAX_PATH_LEN, "%s", dir));
+    PetscCall(PetscSNPrintf(tmp, PERMON_MAX_PATH_LEN, "%s", dir));
     PetscCall(PetscStrlen(tmp, &len));
 
     if (tmp[len - 1] == '/')
@@ -67,9 +66,9 @@ PetscErrorCode FllopMakePath(const char *dir, mode_t mode)
         }
 
     mkdir(tmp, mode);
-    
-    PetscCall(PetscTestDirectory(dir, 'x', &flg));    
-    if (!flg) SETERRQ(PETSC_COMM_SELF, PETSC_ERR_FILE_WRITE, "Directory %s was not created properly.", dir);
+
+    PetscCall(PetscTestDirectory(dir, 'x', &flg));
+    PetscCheck(flg,PETSC_COMM_SELF, PETSC_ERR_FILE_WRITE, "Directory %s was not created properly.", dir);
     PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -87,7 +86,7 @@ PetscErrorCode FllopProcessInfoExclusions(PetscClassId classid, const char *clas
   } else {
     PetscCall(PetscInfoDeactivateClass(classid));
   }
-  
+
   /* Process info exclusions */
   PetscCall(PetscOptionsGetString(NULL,NULL, "-info_exclude", logList, 256, &opt));
   if (opt) {
@@ -103,8 +102,7 @@ PetscErrorCode FllopProcessInfoExclusions(PetscClassId classid, const char *clas
     if (str) {
       PetscCall(PetscLogEventDeactivateClass(classid));
     }
-  }  
-  
+  }
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -113,8 +111,8 @@ PetscErrorCode FllopProcessInfoExclusions(PetscClassId classid, const char *clas
 PetscErrorCode FllopSetTrace(PetscBool flg)
 {
   PetscFunctionBegin;
-  FllopTraceEnabled = flg;  
-  PetscFunctionReturn(PETSC_SUCCESS);  
+  FllopTraceEnabled = flg;
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -131,8 +129,8 @@ PetscErrorCode FllopSetObjectInfo(PetscBool flg)
 PetscErrorCode FllopSetDebug(PetscBool flg)
 {
   PetscFunctionBegin;
-  FllopDebugEnabled = flg;  
-  PetscFunctionReturn(PETSC_SUCCESS);  
+  FllopDebugEnabled = flg;
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -150,15 +148,15 @@ PetscErrorCode FllopPetscInfoDeactivateAll()
 #undef __FUNCT__
 #define __FUNCT__ "FllopSetFromOptions"
 /*@
-   FllopSetFromOptions - Sets FLLOP options.
+   FllopSetFromOptions - Sets PERMON options.
 
    Options Database Keys:
 +  -fllop_object_info - print one-line info messages about matrices and vectors
-.  -fllop_dump        - dump matrix data used by FLLOP
-.  -fllop_trace       - trace crucial FLLOP functions
-.  -fllop_debug       - enable FLLOP debug messages
--  -fllop_info        - enable info messages only from FLLOP
- 
+.  -fllop_dump        - dump matrix data used by PERMON
+.  -fllop_trace       - trace crucial PERMON functions
+.  -fllop_debug       - enable PERMON debug messages
+-  -fllop_info        - enable info messages only from PERMON
+
    Level: beginner
 
 .seealso FllopInitialize()
@@ -170,24 +168,24 @@ PetscErrorCode FllopSetFromOptions()
   PetscBool      flg=PETSC_FALSE;
   PetscBool      info, excl, fllop_info;
   char           logname[PETSC_MAX_PATH_LEN];
-  
+
   PetscFunctionBegin;
   logname[0] = 0;
-  PetscOptionsBegin(PETSC_COMM_WORLD, NULL, "FLLOP options", NULL);
+  PetscOptionsBegin(PETSC_COMM_WORLD, NULL, "PERMON options", NULL);
   {
     flg = PETSC_FALSE;
     PetscCall(PetscOptionsBool("-fllop_object_info", "print one-line info messages about matrices and vectors", NULL, PETSC_FALSE, &flg, NULL));
     PetscCall(FllopSetObjectInfo(flg));
     flg = PETSC_FALSE;
-    PetscCall(PetscOptionsBool("-fllop_trace",       "trace crucial FLLOP functions",                           NULL, PETSC_FALSE, &flg, NULL));
+    PetscCall(PetscOptionsBool("-fllop_trace",       "trace crucial PERMON functions",                           NULL, PETSC_FALSE, &flg, NULL));
     PetscCall(FllopSetTrace(flg));
     flg = PETSC_FALSE;
-    PetscCall(PetscOptionsBool("-fllop_debug",       "enable FLLOP debug messages",                             NULL, PETSC_FALSE, &flg, NULL));
-    PetscCall(FllopSetDebug(flg));    
+    PetscCall(PetscOptionsBool("-fllop_debug",       "enable PERMON debug messages",                             NULL, PETSC_FALSE, &flg, NULL));
+    PetscCall(FllopSetDebug(flg));
     flg = PETSC_FALSE;
 #if defined (PETSC_USE_INFO)
-    PetscCall(PetscOptionsString("-fllop_info",      "enable info messages only from FLLOP",                    NULL, NULL, logname, 256, &fllop_info));
-#endif     
+    PetscCall(PetscOptionsString("-fllop_info",      "enable info messages only from PERMON",                    NULL, NULL, logname, 256, &fllop_info));
+#endif
   }
   PetscOptionsEnd();
 
@@ -196,7 +194,7 @@ PetscErrorCode FllopSetFromOptions()
     info = PETSC_FALSE;
     PetscCall(PetscOptionsGetString(NULL,NULL, "-info", logname, 256, &info));
     PetscCall(PetscOptionsGetString(NULL,NULL, "-info_exclude", logList, 256, &excl));
-    
+
     if (fllop_info || info) {
       FllopInfoEnabled = PETSC_TRUE;
       PetscCall(PetscInfoAllow(PETSC_TRUE));
@@ -204,10 +202,10 @@ PetscErrorCode FllopSetFromOptions()
         PetscCall(PetscInfoSetFile(logname,"w"));
       }
     }
-    
+
     if (!info) {
       PetscCall(FllopPetscInfoDeactivateAll());
-    }    
+    }
 
     if (excl) {
       PetscCall(PetscStrstr(logList, "petsc", &className));
@@ -220,9 +218,9 @@ PetscErrorCode FllopSetFromOptions()
     }
 
     if (FllopInfoEnabled) {
-      PetscCall(PetscInfoActivateClass(FLLOP_CLASSID));
+      PetscCall(PetscInfoActivateClass(PERMON_CLASSID));
     } else {
-      PetscCall(PetscInfoDeactivateClass(FLLOP_CLASSID));
+      PetscCall(PetscInfoDeactivateClass(PERMON_CLASSID));
     }
   }
 #endif

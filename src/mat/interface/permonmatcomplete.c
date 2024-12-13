@@ -1,4 +1,3 @@
-
 #include <permon/private/permonmatimpl.h>
 
 #undef __FUNCT__
@@ -7,14 +6,14 @@ PetscErrorCode MatMult_Complete(Mat A, Vec x, Vec y)
 {
   MatCompleteCtx ctx;
   PetscContainer container;
-  
+
   PetscFunctionBegin;
   PetscCall(PetscObjectQuery((PetscObject)A, "fllop_mat_complete_ctx", (PetscObject*)&container));
   PetscCall(PetscContainerGetPointer(container, (void**)&ctx));
   PetscCall(VecPointwiseMult(y,x,ctx->d));
   PetscCall(VecScale(y, -1.0));
-  PetscCall((ctx->multadd)(A,x,y,y));
-  PetscCall((ctx->multtransposeadd)(A,x,y,y));
+  PetscCall(ctx->multadd(A,x,y,y));
+  PetscCall(ctx->multtransposeadd(A,x,y,y));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -24,14 +23,14 @@ PetscErrorCode MatMultAdd_Complete(Mat A, Vec x, Vec x1, Vec y)
 {
   MatCompleteCtx ctx;
   PetscContainer container;
-  
+
   PetscFunctionBegin;
   PetscCall(PetscObjectQuery((PetscObject)A, "fllop_mat_complete_ctx", (PetscObject*)&container));
   PetscCall(PetscContainerGetPointer(container, (void**)&ctx));
   PetscCall(VecPointwiseMult(y,x,ctx->d));
   PetscCall(VecScale(y, -1.0));
-  PetscCall((ctx->multadd)(A,x,y,y));
-  PetscCall((ctx->multtransposeadd)(A,x,y,y));
+  PetscCall(ctx->multadd(A,x,y,y));
+  PetscCall(ctx->multtransposeadd(A,x,y,y));
   PetscCall(VecAXPY(y, 1.0, x1));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -43,11 +42,11 @@ PetscErrorCode MatDuplicate_Complete(Mat A,MatDuplicateOption op,Mat *M)
   MatCompleteCtx ctx;
   PetscContainer container;
   Mat _M;
-  
+
   PetscFunctionBegin;
   PetscCall(PetscObjectQuery((PetscObject)A, "fllop_mat_complete_ctx", (PetscObject*)&container));
   PetscCall(PetscContainerGetPointer(container, (void**)&ctx));
-  PetscCall((ctx->duplicate)(A,op,&_M));
+  PetscCall(ctx->duplicate(A,op,&_M));
   _M->ops->mult              = ctx->mult;
   _M->ops->multtranspose     = ctx->multtranspose;
   _M->ops->multadd           = ctx->multadd;
@@ -62,6 +61,7 @@ PetscErrorCode MatDuplicate_Complete(Mat A,MatDuplicateOption op,Mat *M)
 PetscErrorCode MatCompleteCtxCreate(Mat A, MatCompleteCtx *ctxout)
 {
   MatCompleteCtx ctx;
+
   PetscFunctionBegin;
   PetscCall(PetscNew(&ctx));
   ctx->mult             = A->ops->mult;
@@ -93,7 +93,7 @@ PetscErrorCode MatCompleteFromUpperTriangular(Mat A)
   MatCompleteCtx ctx;
   PetscContainer container;
   PetscBool flg;
-  
+
   PetscFunctionBegin;
   PetscCall(PetscObjectQuery((PetscObject)A, "fllop_mat_complete_ctx", (PetscObject*)&container));
   if (container) PetscFunctionReturn(PETSC_SUCCESS);

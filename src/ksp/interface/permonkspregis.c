@@ -1,9 +1,8 @@
-
 #include <permonksp.h>
 
 PETSC_EXTERN PetscErrorCode KSPCreate_FETI(KSP);
-  
-#undef __FUNCT__  
+
+#undef __FUNCT__
 #define __FUNCT__ "PermonKSPRegisterAll"
 PetscErrorCode PermonKSPRegisterAll()
 {

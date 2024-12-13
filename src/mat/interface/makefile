@@ -4,10 +4,10 @@ ALL: lib
 CFLAGS   =
 FFLAGS   =
 SOURCEC  = permonmatregis.c permonmatutils.c permonmatregularize.c permonmatcomplete.c permonmatmatmult.c permonmatorth.c
-SOURCEF  = 
-SOURCEH  = 
+SOURCEF  =
+SOURCEH  =
 OBJSC    = ${SOURCEC:.c=.o}
-OBJSF    = 
+OBJSF    =
 LIBBASE  = libpermon
 MANSEC   = Mat
 LOCDIR   = src/mat/interface/

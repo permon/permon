@@ -1,4 +1,3 @@
-
 #include <permon/private/permonmatimpl.h>
 #include <permon/private/petscimpl.h>
 
@@ -30,7 +29,6 @@ PetscErrorCode MatCreateShellPermon(MPI_Comm comm,PetscInt m,PetscInt n,PetscInt
   PetscCall(MatShellSetOperation(*A,MATOP_MULT_ADD,(void(*)())MatMultAdd_ShellPermon));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
-
 
 #undef __FUNCT__
 #define __FUNCT__ "MatCreateDummy"

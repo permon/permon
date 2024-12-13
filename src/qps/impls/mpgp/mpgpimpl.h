@@ -1,5 +1,5 @@
-#if !defined(__MPGPIMPL_H)
-#define __MPGPIMPL_H
+#pragma once
+
 #include <permon/private/qpsimpl.h>
 
 typedef struct {
@@ -36,5 +36,3 @@ typedef struct {
   PetscBool                  fallback;
   PetscBool                  fallback2;
 } QPS_MPGP;
-
-#endif

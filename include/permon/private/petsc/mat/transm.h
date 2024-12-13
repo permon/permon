@@ -1,9 +1,5 @@
-
-#ifndef __TRANSM_H
-#define	__TRANSM_H
+#pragma once
 
 typedef struct {
   Mat A;
 } Mat_Transpose;
-
-#endif

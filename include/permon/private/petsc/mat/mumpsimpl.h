@@ -1,8 +1,7 @@
 /*
     Provides an interface to the MUMPS sparse solver
 */
-#ifndef __MUMPSIMPL_H
-#define __MUMPSIMPL_H
+#pragma once
 
 EXTERN_C_BEGIN
 #if defined(PETSC_USE_COMPLEX)
@@ -118,5 +117,3 @@ struct Mat_MUMPS {
   PetscBool    is_omp_master; /* is this rank the master of omp_comm */
   MPI_Request *reqs;
 };
-
-#endif

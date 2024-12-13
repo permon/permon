@@ -1,5 +1,5 @@
-#if !defined(__FLLOPMATIMPL_H)
-#define	__FLLOPMATIMPL_H
+#pragma once
+
 #include <permonmat.h>
 #include <petsc/private/matimpl.h>
 #include <permon/private/permonimpl.h>
@@ -15,17 +15,17 @@ typedef struct {
 } Mat_Inv;
 
 typedef struct {
-	Mat localBlock;	                  /* local (sequential) blocks of BlockDiag */
-	Vec xloc, yloc, xloc1, yloc1;            /* local work vectors */ 
+  Mat localBlock;                   /* local (sequential) blocks of BlockDiag */
+  Vec xloc, yloc, xloc1, yloc1;            /* local work vectors */
   Vec *cols_loc;
 } Mat_BlockDiag;
 
-typedef struct {         
-	PetscSF SF;              /* SF for communication (column index) */
-	const PetscReal *leaves_sign; /* +-1 */
-	const PetscInt *leaves_row; /* row index */
-  PetscInt n_nonzeroRow; 
-	PetscInt n_leaves;
+typedef struct {
+  PetscSF SF;              /* SF for communication (column index) */
+  const PetscReal *leaves_sign; /* +-1 */
+  const PetscInt *leaves_row; /* row index */
+  PetscInt n_nonzeroRow;
+  PetscInt n_leaves;
 } Mat_Gluing;
 
 typedef struct {
@@ -43,8 +43,6 @@ struct _n_MatCompleteCtx {
 };
 typedef struct _n_MatCompleteCtx *MatCompleteCtx;
 
-FLLOP_EXTERN PetscLogEvent Mat_OrthColumns,Mat_Inv_Explicitly,Mat_Inv_SetUp;
-FLLOP_EXTERN PetscLogEvent Mat_Regularize,Mat_GetColumnVectors,Mat_RestoreColumnVectors,Mat_MatMultByColumns,Mat_TransposeMatMultByColumns;
-FLLOP_EXTERN PetscLogEvent Mat_GetMaxEigenvalue,Mat_FilterZeros,Mat_MergeAndDestroy,PermonMat_GetLocalMat;
-
-#endif
+PERMON_EXTERN PetscLogEvent Mat_OrthColumns,Mat_Inv_Explicitly,Mat_Inv_SetUp;
+PERMON_EXTERN PetscLogEvent Mat_Regularize,Mat_GetColumnVectors,Mat_RestoreColumnVectors,Mat_MatMultByColumns,Mat_TransposeMatMultByColumns;
+PERMON_EXTERN PetscLogEvent Mat_GetMaxEigenvalue,Mat_FilterZeros,Mat_MergeAndDestroy,PermonMat_GetLocalMat;

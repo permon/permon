@@ -32,7 +32,7 @@ PetscErrorCode KSPViewBriefInfo(KSP ksp, PetscViewer viewer)
   PetscCall(PCFactorGetMatSolverType(pc, &pcpkg));
   PetscCall(PCGetOperators(pc, &mat, NULL));
   PetscCall(MatGetType(mat, &mattype));
-  
+
   PetscCall(PetscObjectPrintClassNamePrefixType((PetscObject)ksp, viewer));
   PetscCall(PetscViewerASCIIPushTab(viewer));
   PetscCall(PetscViewerASCIIPrintf(viewer,"KSPType:          %s\n",ksptype));

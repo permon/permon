@@ -1,10 +1,10 @@
-
 #include <permon/private/permonmatimpl.h>
 
 #undef __FUNCT__
 #define __FUNCT__ "MatMult_Timer"
 PetscErrorCode MatMult_Timer(Mat W, Vec x, Vec y) {
     Mat_Timer *ctx;
+
     PetscFunctionBegin;
     PetscCall(MatShellGetContext(W, (void*) &ctx));
     PetscCall(PetscLogEventBegin(ctx->events[MATOP_MULT],ctx->A,x,y,0));
@@ -17,6 +17,7 @@ PetscErrorCode MatMult_Timer(Mat W, Vec x, Vec y) {
 #define __FUNCT__ "MatMultAdd_Timer"
 PetscErrorCode MatMultAdd_Timer(Mat W, Vec x, Vec y, Vec z) {
     Mat_Timer *ctx;
+
     PetscFunctionBegin;
     PetscCall(MatShellGetContext(W, (void*) &ctx));
     PetscCall(PetscLogEventBegin(ctx->events[MATOP_MULT_ADD],ctx->A,x,y,0));
@@ -29,6 +30,7 @@ PetscErrorCode MatMultAdd_Timer(Mat W, Vec x, Vec y, Vec z) {
 #define __FUNCT__ "MatMultTranspose_Timer"
 PetscErrorCode MatMultTranspose_Timer(Mat W, Vec x, Vec y) {
     Mat_Timer *ctx;
+
     PetscFunctionBegin;
     PetscCall(MatShellGetContext(W, (void*) &ctx));
     PetscCall(PetscLogEventBegin(ctx->events[MATOP_MULT_TRANSPOSE],ctx->A,x,y,0));
@@ -41,6 +43,7 @@ PetscErrorCode MatMultTranspose_Timer(Mat W, Vec x, Vec y) {
 #define __FUNCT__ "MatMultTransposeAdd_Timer"
 PetscErrorCode MatMultTransposeAdd_Timer(Mat W, Vec x, Vec y, Vec z) {
     Mat_Timer *ctx;
+
     PetscFunctionBegin;
     PetscCall(MatShellGetContext(W, (void*) &ctx));
     PetscCall(PetscLogEventBegin(ctx->events[MATOP_MULT_TRANSPOSE_ADD],ctx->A,x,y,0));
@@ -53,6 +56,7 @@ PetscErrorCode MatMultTransposeAdd_Timer(Mat W, Vec x, Vec y, Vec z) {
 #define __FUNCT__ "MatDestroy_Timer"
 PetscErrorCode MatDestroy_Timer(Mat W) {
     Mat_Timer *ctx;
+
     PetscFunctionBegin;
     PetscCall(MatShellGetContext(W, (void*) &ctx));
     PetscCall(MatDestroy(&ctx->A));
@@ -72,7 +76,7 @@ PetscErrorCode MatDestroy_Timer(Mat W) {
 .  A - original matrix
 
    Output Parameters:
-.  B - matrix A that logs MatMult operations 
+.  B - matrix A that logs MatMult operations
 
    Level: developer
 
@@ -81,12 +85,12 @@ PetscErrorCode MatDestroy_Timer(Mat W) {
 PetscErrorCode MatCreateTimer(Mat A, Mat *B) {
     Mat_Timer *ctx;
     Mat W;
-    
+
     PetscFunctionBegin;
     PetscCall(PetscMalloc(sizeof(Mat_Timer),&ctx));
     ctx->A = A;
     PetscCall(PetscObjectReference((PetscObject)A));
-    
+
     PetscCall(MatCreateShellPermon(PetscObjectComm((PetscObject)A), A->rmap->n,A->cmap->n,A->rmap->N,A->cmap->N, ctx,&W));
     PetscCall(FllopPetscObjectInheritName((PetscObject)W,(PetscObject)A,NULL));
 
@@ -95,7 +99,7 @@ PetscErrorCode MatCreateTimer(Mat A, Mat *B) {
     PetscCall(MatTimerSetOperation(W,MATOP_MULT_ADD,"MatMultAdd",(void(*)(void))MatMultAdd_Timer));
     PetscCall(MatTimerSetOperation(W,MATOP_MULT_TRANSPOSE,"MatMultTr",(void(*)(void))MatMultTranspose_Timer));
     PetscCall(MatTimerSetOperation(W,MATOP_MULT_TRANSPOSE_ADD,"MatMultTrAdd",(void(*)(void))MatMultTransposeAdd_Timer));
-    
+
     *B = W;
     PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -106,10 +110,10 @@ PetscErrorCode MatTimerSetOperation(Mat mat, MatOperation op, const char *opname
 {
   Mat_Timer *ctx;
   const char *name;
-  char *eventName = FLLOP_ObjNameBuffer_Global;
+  char *eventName = PERMON_ObjNameBuffer_Global;
   PetscLogEvent event;
   PetscBool exists;
-  
+
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(mat,(void*)&ctx));
   PetscCall(PetscObjectGetName((PetscObject)ctx->A,&name));
@@ -130,6 +134,7 @@ PetscErrorCode MatTimerSetOperation(Mat mat, MatOperation op, const char *opname
 #define __FUNCT__ "MatTimerGetMat"
 PetscErrorCode MatTimerGetMat(Mat W, Mat *A) {
     Mat_Timer *ctx;
+
     PetscFunctionBegin;
     PetscCall(MatShellGetContext(W,(void*)&ctx));
     *A = ctx->A;

@@ -1,5 +1,5 @@
-#if !defined(__QPCIMPL_H)
-#define	__QPCIMPL_H
+#pragma once
+
 #include <permonqpc.h>
 #include <permon/private/permonimpl.h>
 
@@ -32,6 +32,3 @@ struct _p_QPC {
   void *data; /* holder for misc stuff associated with a particular constraints type */
   PetscBool setupcalled; /* current state */
 };
-
-#endif
-

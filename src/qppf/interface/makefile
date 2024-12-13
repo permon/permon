@@ -4,8 +4,8 @@ ALL: lib
 CFLAGS   =
 FFLAGS   =
 SOURCEC  = qppf.c dlregisqppf.c
-SOURCEF  = 
-SOURCEH  = 
+SOURCEF  =
+SOURCEH  =
 OBJSC    = ${SOURCEC:.c=.o}
 LIBBASE  = libpermon
 DIRS     =

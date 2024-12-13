@@ -1,4 +1,3 @@
-
 #include <permonqps.h>
 
 int main(int argc,char **args)

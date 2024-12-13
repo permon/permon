@@ -1,5 +1,4 @@
-#ifndef __SHELL_H
-#define __SHELL_H
+#pragma once
 
 #include <petsc/private/matimpl.h>
 
@@ -56,6 +55,3 @@ typedef struct {
   /* user defined context */
   PetscContainer ctxcontainer;
 } Mat_Shell;
-
-#endif
-

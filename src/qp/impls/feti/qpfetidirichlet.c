@@ -1,4 +1,3 @@
-
 #include <../src/qp/impls/feti/qpfetiimpl.h>
 
 #undef __FUNCT__
@@ -27,5 +26,3 @@ PetscErrorCode  QPFetiDirichletDestroy(QPFetiDirichlet *dbc)
   PetscCall(PetscFree(*dbc));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
-
-

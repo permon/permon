@@ -1,6 +1,4 @@
-
-#ifndef __NORMM_H
-#define	__NORMM_H
+#pragma once
 
 typedef struct {
   Mat         A;
@@ -8,5 +6,3 @@ typedef struct {
   Vec         w, left, right, leftwork, rightwork;
   PetscScalar scale;
 } Mat_Normal;
-
-#endif

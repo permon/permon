@@ -1,4 +1,3 @@
-
 /* Test nullspace detection */
 #include <permonmat.h>
 
@@ -41,7 +40,6 @@ int main(int argc,char **args)
   PetscCall(PermonFinalize());
   return 0;
 }
-
 
 /*TEST
   build:

@@ -1,4 +1,3 @@
-
 #include <permon/private/petscimpl.h>
 
 #if defined(MatCreateSeqSBAIJWithArrays)

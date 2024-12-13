@@ -1,6 +1,4 @@
-
-#ifndef __SBAIJ_H
-#define __SBAIJ_H
+#pragma once
 #include <petsc/private/matimpl.h>
 #include "baij.h"
 
@@ -25,5 +23,3 @@ typedef struct {
   unsigned short  *jshort;
   PetscBool        free_jshort;
 } Mat_SeqSBAIJ;
-
-#endif
