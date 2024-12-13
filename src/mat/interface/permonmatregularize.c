@@ -213,7 +213,7 @@ PetscErrorCode MatRegularize(Mat K, Mat R, MatRegularizationType type, Mat *newK
   PETSC_UNUSED PetscInt regularized_int;
   PetscBool             regularized = PETSC_FALSE;
 
-  FllopTracedFunctionBegin;
+  PermonTracedFunctionBegin;
   PetscValidHeaderSpecific(K,MAT_CLASSID,1);
   PetscValidLogicalCollectiveEnum(K,type,3);
   PetscAssertPointer(newKreg,4);
@@ -245,7 +245,7 @@ PetscErrorCode MatRegularize(Mat K, Mat R, MatRegularizationType type, Mat *newK
   PetscCheck(K->rmap->n == K->cmap->n,comm,PETSC_ERR_ARG_SIZ,"Matrix #1 must be locally square");
   PetscCheck(K->rmap->n == R->rmap->n,comm,PETSC_ERR_ARG_SIZ,"Matrices #1 and #2 don't have the same row layout, %" PetscInt_FMT " != %" PetscInt_FMT,K->rmap->n,R->rmap->n);
 
-  FllopTraceBegin;
+  PermonTraceBegin;
   PetscCall(PetscLogEventBegin(Mat_Regularize,K,R,0,0));
 
   /* this should work at least for MATMPIAIJ and MATBLOCKDIAG */

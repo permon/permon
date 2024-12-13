@@ -199,11 +199,11 @@ PetscErrorCode QPSSetUp(QPS qps)
   QP  solqp;
   PetscBool flg;
 
-  FllopTracedFunctionBegin;
+  PermonTracedFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   if (qps->setupcalled) PetscFunctionReturn(PETSC_SUCCESS);
 
-  FllopTraceBegin;
+  PermonTraceBegin;
   PetscCall(QPChainSetUp(qps->topQP));
   if (!qps->solQP) { PetscCall(QPChainGetLast(qps->topQP,&qps->solQP)); }
   solqp = qps->solQP;
@@ -585,11 +585,11 @@ PetscErrorCode QPSPostSolve(QPS qps)
   PetscViewer v;
   PetscViewerFormat format;
 
-  FllopTracedFunctionBegin;
+  PermonTracedFunctionBegin;
   PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
   if (qps->postsolvecalled) PetscFunctionReturn(PETSC_SUCCESS);
 
-  FllopTraceBegin;
+  PermonTraceBegin;
   PetscCall(PetscLogEventBegin(QPS_PostSolve,qps,0,0,0));
   PetscCall(PetscOptionsCreateViewer(((PetscObject)qps)->comm,NULL,((PetscObject)qps)->prefix,"-qps_view",&v,&format,&view));
   if (view && !PetscPreLoadingOn) {
@@ -697,7 +697,7 @@ PetscErrorCode QPSConvergedDefault(QPS qps,KSPConvergedReason *reason)
     PetscFunctionReturn(PETSC_SUCCESS);
   }
 
-  if (i != -1) PetscCall(FllopDebug2("iteration %5d  rnorm %.10e \n", i, rnorm));
+  if (i != -1) PetscCall(PermonDebug2("iteration %5d  rnorm %.10e \n", i, rnorm));
 
   if (PetscIsInfOrNanScalar(rnorm)) {
     PetscCall(PetscInfo(qps,"QP solver has created a not a number (NaN) as the residual norm, declaring divergence \n"));

@@ -92,7 +92,7 @@ PetscErrorCode MatCreateTimer(Mat A, Mat *B) {
     PetscCall(PetscObjectReference((PetscObject)A));
 
     PetscCall(MatCreateShellPermon(PetscObjectComm((PetscObject)A), A->rmap->n,A->cmap->n,A->rmap->N,A->cmap->N, ctx,&W));
-    PetscCall(FllopPetscObjectInheritName((PetscObject)W,(PetscObject)A,NULL));
+    PetscCall(PermonPetscObjectInheritName((PetscObject)W,(PetscObject)A,NULL));
 
     PetscCall(MatShellSetOperation(W,MATOP_DESTROY,(void(*)(void))MatDestroy_Timer));
     PetscCall(MatTimerSetOperation(W,MATOP_MULT,"MatMult",(void(*)(void))MatMult_Timer));
@@ -110,7 +110,7 @@ PetscErrorCode MatTimerSetOperation(Mat mat, MatOperation op, const char *opname
 {
   Mat_Timer *ctx;
   const char *name;
-  char *eventName = FLLOP_ObjNameBuffer_Global;
+  char *eventName = PERMON_ObjNameBuffer_Global;
   PetscLogEvent event;
   PetscBool exists;
 
@@ -122,7 +122,7 @@ PetscErrorCode MatTimerSetOperation(Mat mat, MatOperation op, const char *opname
   PetscCall(PetscStrlcat(eventName, "_", sizeof(eventName)));
   PetscCall(PetscStrlcat(eventName, name, sizeof(eventName)));
 
-  PetscCall(FllopPetscLogEventGetId(eventName,&event,&exists));
+  PetscCall(PermonPetscLogEventGetId(eventName,&event,&exists));
   if (!exists) PetscCall(PetscLogEventRegister(eventName, MAT_CLASSID, &event));
   ctx->events[op] = event;
 

@@ -8,7 +8,7 @@ PetscErrorCode MatMult_Complete(Mat A, Vec x, Vec y)
   PetscContainer container;
 
   PetscFunctionBegin;
-  PetscCall(PetscObjectQuery((PetscObject)A, "fllop_mat_complete_ctx", (PetscObject*)&container));
+  PetscCall(PetscObjectQuery((PetscObject)A, "permon_mat_complete_ctx", (PetscObject*)&container));
   PetscCall(PetscContainerGetPointer(container, (void**)&ctx));
   PetscCall(VecPointwiseMult(y,x,ctx->d));
   PetscCall(VecScale(y, -1.0));
@@ -25,7 +25,7 @@ PetscErrorCode MatMultAdd_Complete(Mat A, Vec x, Vec x1, Vec y)
   PetscContainer container;
 
   PetscFunctionBegin;
-  PetscCall(PetscObjectQuery((PetscObject)A, "fllop_mat_complete_ctx", (PetscObject*)&container));
+  PetscCall(PetscObjectQuery((PetscObject)A, "permon_mat_complete_ctx", (PetscObject*)&container));
   PetscCall(PetscContainerGetPointer(container, (void**)&ctx));
   PetscCall(VecPointwiseMult(y,x,ctx->d));
   PetscCall(VecScale(y, -1.0));
@@ -44,7 +44,7 @@ PetscErrorCode MatDuplicate_Complete(Mat A,MatDuplicateOption op,Mat *M)
   Mat _M;
 
   PetscFunctionBegin;
-  PetscCall(PetscObjectQuery((PetscObject)A, "fllop_mat_complete_ctx", (PetscObject*)&container));
+  PetscCall(PetscObjectQuery((PetscObject)A, "permon_mat_complete_ctx", (PetscObject*)&container));
   PetscCall(PetscContainerGetPointer(container, (void**)&ctx));
   PetscCall(ctx->duplicate(A,op,&_M));
   _M->ops->mult              = ctx->mult;
@@ -95,15 +95,15 @@ PetscErrorCode MatCompleteFromUpperTriangular(Mat A)
   PetscBool flg;
 
   PetscFunctionBegin;
-  PetscCall(PetscObjectQuery((PetscObject)A, "fllop_mat_complete_ctx", (PetscObject*)&container));
+  PetscCall(PetscObjectQuery((PetscObject)A, "permon_mat_complete_ctx", (PetscObject*)&container));
   if (container) PetscFunctionReturn(PETSC_SUCCESS);
 
   PetscCall(MatIsSymmetricByType(A, &flg));
   if (flg) {
-    PetscCall(PetscInfo(fllop, "A is symmetric by type\n"));
+    PetscCall(PetscInfo(permon, "A is symmetric by type\n"));
     PetscFunctionReturn(PETSC_SUCCESS);
   } else {
-    PetscCall(PetscInfo(fllop, "A is NOT symmetric by type\n"));
+    PetscCall(PetscInfo(permon, "A is NOT symmetric by type\n"));
   }
 
   PetscCall(PetscObjectGetComm((PetscObject)A, &comm));
@@ -111,7 +111,7 @@ PetscErrorCode MatCompleteFromUpperTriangular(Mat A)
   PetscCall(PetscContainerCreate(comm, &container));
   PetscCall(PetscContainerSetPointer(container, ctx));
   PetscCall(PetscContainerSetUserDestroy(container, (PetscErrorCode (*)(void*))MatCompleteCtxDestroy));
-  PetscCall(PetscObjectCompose((PetscObject)A, "fllop_mat_complete_ctx", (PetscObject)container));
+  PetscCall(PetscObjectCompose((PetscObject)A, "permon_mat_complete_ctx", (PetscObject)container));
   PetscCall(PetscContainerDestroy(&container));
   A->ops->mult              = MatMult_Complete;
   A->ops->multtranspose     = MatMult_Complete;

@@ -160,7 +160,7 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
   //TODO return just NULL if defect=0 ?
   if (blockdiag) {
     PetscCall(MatCreateBlockDiag(PETSC_COMM_WORLD,Rl,&R));
-    PetscCall(FllopPetscObjectInheritName((PetscObject)Rl,(PetscObject)R,"_loc"));
+    PetscCall(PermonPetscObjectInheritName((PetscObject)Rl,(PetscObject)R,"_loc"));
     PetscCall(MatDestroy(&Rl));
   } else if (defect && mumps->petsc_size > 1) {
     IS isol_is;
@@ -410,12 +410,12 @@ static PetscErrorCode MatInvSetUp_Inv(Mat imat)
 {
   Mat_Inv *inv = (Mat_Inv*) imat->data;
 
-  FllopTracedFunctionBegin;
+  PermonTracedFunctionBegin;
   if (inv->setupcalled) PetscFunctionReturn(PETSC_SUCCESS);
   PetscCheck(inv->type != MAT_INV_BLOCKDIAG || inv->redundancy <= 0,PetscObjectComm((PetscObject)imat),PETSC_ERR_SUP, "Cannot use MAT_INV_BLOCKDIAG and redundancy at the same time");
   PetscCheck(!inv->regtype || inv->R,PetscObjectComm((PetscObject)imat),PETSC_ERR_ARG_WRONGSTATE,"regularization is requested but nullspace is not set");
 
-  FllopTraceBegin;
+  PermonTraceBegin;
   PetscCall(PetscLogEventBegin(Mat_Inv_SetUp,imat,0,0,0));
   {
     PetscCall(MatInvCreateInnerObjects_Inv(imat));
@@ -442,13 +442,13 @@ static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
   MatSolverType default_pkg;
   PetscMPIInt size;
 
-  FllopTracedFunctionBegin;
+  PermonTracedFunctionBegin;
   if (inv->inner_objects_created) PetscFunctionReturn(PETSC_SUCCESS);
   PetscCheck(inv->type != MAT_INV_BLOCKDIAG || inv->redundancy <= 0,PetscObjectComm((PetscObject)imat),PETSC_ERR_SUP, "Cannot use MAT_INV_BLOCKDIAG and redundancy at the same time");
   PetscCheck(!inv->regtype || inv->R,PetscObjectComm((PetscObject)imat),PETSC_ERR_ARG_WRONGSTATE,"regularization is requested but nullspace is not set");
   PetscCallMPI(MPI_Comm_size(PetscObjectComm((PetscObject)imat),&size));
 
-  FllopTraceBegin;
+  PermonTraceBegin;
   if (!inv->ksp) {
     PetscCall(KSPCreate(PetscObjectComm((PetscObject)imat),&inv->ksp));
     PetscCall(PetscObjectIncrementTabLevel((PetscObject)inv->ksp,(PetscObject)imat,1));
@@ -458,7 +458,7 @@ static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
   PetscCall(MatRegularize(inv->A,inv->R,inv->regtype,&Areg));
   PetscCall(PetscOptionsHasName(NULL,((PetscObject)imat)->prefix,"-mat_inv_mat_type",&flg));
   if (inv->setfromoptionscalled && flg && inv->A == Areg && !own) {
-    PetscCall(PetscInfo(fllop,"duplicating inner matrix to allow to apply options only internally\n"));
+    PetscCall(PetscInfo(permon,"duplicating inner matrix to allow to apply options only internally\n"));
     PetscCall(PetscObjectDereference((PetscObject)Areg));
     PetscCall(MatDuplicate(Areg, MAT_COPY_VALUES, &Areg));
   }
@@ -470,10 +470,10 @@ static PetscErrorCode MatInvCreateInnerObjects_Inv(Mat imat)
     A_inner = Areg;
   }
 
-  PetscCall(FllopPetscObjectInheritPrefixIfNotSet((PetscObject)Areg,(PetscObject)imat,"mat_inv_"));
-  PetscCall(FllopPetscObjectInheritPrefixIfNotSet((PetscObject)A_inner,(PetscObject)imat,"mat_inv_"));
+  PetscCall(PermonPetscObjectInheritPrefixIfNotSet((PetscObject)Areg,(PetscObject)imat,"mat_inv_"));
+  PetscCall(PermonPetscObjectInheritPrefixIfNotSet((PetscObject)A_inner,(PetscObject)imat,"mat_inv_"));
   if (inv->setfromoptionscalled) {
-    PetscCall(PetscInfo(fllop,"setting inner matrix with prefix %s from options\n",((PetscObject)A_inner)->prefix));
+    PetscCall(PetscInfo(permon,"setting inner matrix with prefix %s from options\n",((PetscObject)A_inner)->prefix));
     PetscCall(PermonMatSetFromOptions(A_inner));
   }
 
@@ -721,11 +721,11 @@ static PetscErrorCode MatInvExplicitly_Inv(Mat imat, PetscBool transpose, MatReu
   } else {
     PetscCall(MatInvExplicitly_Private(         ksp, B));
   }
-  PetscCall(PetscInfo(fllop,"calling MatAssemblyBegin\n"));
+  PetscCall(PetscInfo(permon,"calling MatAssemblyBegin\n"));
   PetscCall(MatAssemblyBegin(B, MAT_FINAL_ASSEMBLY));
-  PetscCall(PetscInfo(fllop,"calling MatAssemblyEnd\n"));
+  PetscCall(PetscInfo(permon,"calling MatAssemblyEnd\n"));
   PetscCall(MatAssemblyEnd(  B, MAT_FINAL_ASSEMBLY));
-  PetscCall(PetscInfo(fllop,"MatAssemblyEnd done\n"));
+  PetscCall(PetscInfo(permon,"MatAssemblyEnd done\n"));
   PetscCall(PetscLogEventEnd(Mat_Inv_Explicitly,imat,0,0,0));
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
@@ -942,7 +942,7 @@ PetscErrorCode MatAssemblyEnd_Inv(Mat imat, MatAssemblyType type)
 
 #undef __FUNCT__
 #define __FUNCT__ "MatCreate_Inv"
-FLLOP_EXTERN PetscErrorCode MatCreate_Inv(Mat imat)
+PERMON_EXTERN PetscErrorCode MatCreate_Inv(Mat imat)
 {
   Mat_Inv *inv;
   static PetscBool registered = PETSC_FALSE;

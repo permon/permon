@@ -101,7 +101,7 @@ PetscErrorCode MatCreateOneRow(Vec a, Mat *A_new)
   PetscFunctionBeginUser;
   PetscCall(VecGetLocalSize(a,&n));
   PetscCall(MatCreateShellPermon(PetscObjectComm((PetscObject)a), PETSC_DECIDE, n, 1, PETSC_DECIDE, a, &A));
-  PetscCall(FllopPetscObjectInheritName((PetscObject)A,(PetscObject)a,NULL));
+  PetscCall(PermonPetscObjectInheritName((PetscObject)A,(PetscObject)a,NULL));
   PetscCall(PetscObjectReference((PetscObject)a));
 
   PetscCall(MatShellSetOperation(A,MATOP_DESTROY,(void(*)(void))MatDestroy_OneRow));

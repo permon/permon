@@ -499,14 +499,14 @@ PetscErrorCode QPSetUpInnerObjects(QP qp)
   Vec cs[2],c[2];
   Vec lambdas[2];
 
-  FllopTracedFunctionBegin;
+  PermonTracedFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
 
   PetscCall(PetscObjectGetComm((PetscObject)qp,&comm));
   PetscCheck(qp->A,comm,PETSC_ERR_ORDER,"Hessian must be set before " __FUNCT__);
   PetscCheck(qp->b,comm,PETSC_ERR_ORDER,"linear term must be set before " __FUNCT__);
 
-  FllopTraceBegin;
+  PermonTraceBegin;
   PetscCall(PetscInfo(qp,"setup inner objects for QP #%d\n",qp->id));
 
   if (!qp->pc) PetscCall(QPGetPC(qp,&qp->pc));
@@ -621,7 +621,7 @@ PetscErrorCode QPSetUp(QP qp)
 {
   MPI_Comm comm;
 
-  FllopTracedFunctionBegin;
+  PermonTracedFunctionBegin;
   PetscValidHeaderSpecific(qp,QP_CLASSID,1);
   if (qp->setupcalled) PetscFunctionReturn(PETSC_SUCCESS);
 
@@ -629,7 +629,7 @@ PetscErrorCode QPSetUp(QP qp)
   PetscCheck(qp->A,comm,PETSC_ERR_ORDER,"Hessian must be set before " __FUNCT__);
   PetscCheck(qp->b,comm,PETSC_ERR_ORDER,"linear term must be set before " __FUNCT__);
 
-  FllopTraceBegin;
+  PermonTraceBegin;
   PetscCall(PetscInfo(qp,"setup QP #%d\n",qp->id));
   PetscCall(QPSetUpInnerObjects(qp));
   PetscCall(QPSetFromOptions_Private(qp));
@@ -813,7 +813,7 @@ PetscErrorCode QPComputeMissingEqMultiplier(QP qp)
     PetscCall(VecScale(qp->lambda_E,-1.0));                                               /* lambda_E_LS = -(BE*BE')\\BE*r */
   }
 
-  if (FllopDebugEnabled) {
+  if (PermonDebugEnabled) {
     PetscReal norm;
     if (qp->BE->ops->multtranspose) {
       PetscCall(MatMultTransposeAdd(qp->BE,qp->lambda_E,r,r));
@@ -821,7 +821,7 @@ PetscErrorCode QPComputeMissingEqMultiplier(QP qp)
       PetscCall(VecAXPY(r,1.0,qp->Bt_lambda));
     }
     PetscCall(VecNorm(r,NORM_2,&norm));
-    PetscCall(FllopDebug1("||r||=%.2e\n",norm));
+    PetscCall(PermonDebug1("||r||=%.2e\n",norm));
   }
 
   PetscCall(PetscObjectGetName((PetscObject)qp,&name));
@@ -1274,10 +1274,10 @@ PetscErrorCode QPSetRhs(QP qp,Vec b)
   PetscCall(PetscObjectReference((PetscObject)b));
   qp->b_plus = PETSC_FALSE;
 
-  if (FllopDebugEnabled) {
+  if (PermonDebugEnabled) {
     PetscReal norm;
     PetscCall(VecNorm(b,NORM_2,&norm));
-    PetscCall(FllopDebug1("||b|| = %0.2e\n", norm));
+    PetscCall(PermonDebug1("||b|| = %0.2e\n", norm));
   }
 
   if (qp->changeListener) PetscCall((*qp->changeListener)(qp));
@@ -1312,10 +1312,10 @@ PetscErrorCode QPSetRhsPlus(QP qp,Vec b)
   PetscCall(VecScale(qp->b,-1.0));
   qp->b_plus = PETSC_TRUE;
 
-  if (FllopDebugEnabled) {
+  if (PermonDebugEnabled) {
     PetscReal norm;
     PetscCall(VecNorm(b,NORM_2,&norm));
-    PetscCall(FllopDebug1("||b|| = %0.2e\n", norm));
+    PetscCall(PermonDebug1("||b|| = %0.2e\n", norm));
   }
 
   if (qp->changeListener) PetscCall((*qp->changeListener)(qp));
@@ -1394,7 +1394,7 @@ PetscErrorCode QPSetIneq(QP qp, Mat Bineq, Vec cineq)
       PetscValidHeaderSpecific(cineq,VEC_CLASSID,3);
       PetscCheckSameComm(qp,1,cineq,3);
       PetscCall(VecNorm(cineq,NORM_2,&norm));
-      PetscCall(FllopDebug1("||cineq|| = %0.2e\n", norm));
+      PetscCall(PermonDebug1("||cineq|| = %0.2e\n", norm));
       if (norm < PETSC_MACHINE_EPSILON) {
         PetscCall(PetscInfo(qp, "zero inequality constraint RHS vector detected\n"));
         cineq = NULL;
@@ -1506,7 +1506,7 @@ PetscErrorCode QPSetEq(QP qp, Mat Beq, Vec ceq)
       PetscValidHeaderSpecific(ceq,VEC_CLASSID,3);
       PetscCheckSameComm(qp,1,ceq,3);
       PetscCall(VecNorm(ceq,NORM_2,&norm));
-      PetscCall(FllopDebug1("||ceq|| = %0.2e\n", norm));
+      PetscCall(PermonDebug1("||ceq|| = %0.2e\n", norm));
       if (norm < PETSC_MACHINE_EPSILON) {
         PetscCall(PetscInfo(qp, "zero equality constraint RHS vector detected\n"));
         ceq = NULL;
@@ -1595,7 +1595,7 @@ PetscErrorCode QPAddEq(QP qp, Mat Beq, Vec ceq)
     PetscValidHeaderSpecific(ceq, VEC_CLASSID, 3);
     PetscCheckSameComm(qp, 1, ceq, 3);
     PetscCall(VecNorm(ceq, NORM_2, &norm));
-    PetscCall(FllopDebug1("||ceq|| = %0.2e\n", norm));
+    PetscCall(PermonDebug1("||ceq|| = %0.2e\n", norm));
     if (norm < PETSC_MACHINE_EPSILON) {
       PetscCall(PetscInfo(qp, "zero equality constraint RHS vector detected\n"));
       ceq = NULL;
@@ -2004,10 +2004,10 @@ PetscErrorCode QPSetInitialVector(QP qp,Vec x)
 
   if (x) {
     PetscCall(PetscObjectReference((PetscObject)x));
-    if (FllopDebugEnabled) {
+    if (PermonDebugEnabled) {
       PetscReal norm;
       PetscCall(VecNorm(x,NORM_2,&norm));
-      PetscCall(FllopDebug1("||x|| = %0.2e\n", norm));
+      PetscCall(PermonDebug1("||x|| = %0.2e\n", norm));
     }
   }
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -2470,9 +2470,9 @@ static PetscErrorCode QPSetFromOptions_Private(QP qp)
   if (!qp->pc) PetscCall(QPGetPC(qp,&qp->pc));
 
   if (qp->pf) {
-    PetscCall(FllopPetscObjectInheritPrefixIfNotSet((PetscObject)qp->pf,(PetscObject)qp,NULL));
+    PetscCall(PermonPetscObjectInheritPrefixIfNotSet((PetscObject)qp->pf,(PetscObject)qp,NULL));
   }
-  PetscCall(FllopPetscObjectInheritPrefixIfNotSet((PetscObject)qp->pc,(PetscObject)qp,NULL));
+  PetscCall(PermonPetscObjectInheritPrefixIfNotSet((PetscObject)qp->pc,(PetscObject)qp,NULL));
 
   if (qp->pf) {
     PetscCall(QPPFSetFromOptions(qp->pf));

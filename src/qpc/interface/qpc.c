@@ -36,13 +36,13 @@ PetscErrorCode QPCCreate(MPI_Comm comm,QPC *qpc_new)
 #define __FUNCT__ "QPCSetUp"
 PetscErrorCode QPCSetUp(QPC qpc)
 {
-  FllopTracedFunctionBegin;
+  PermonTracedFunctionBegin;
   PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
 
   /* if the setup was already called, then ignore this calling */
   if (qpc->setupcalled) PetscFunctionReturn(PETSC_SUCCESS);
 
-  FllopTraceBegin;
+  PermonTraceBegin;
 
   /* prepare lambdawork vector based on the layout of given constraint data */
   /* this method is independent on layout of IS (so it is the same for IS=null) */

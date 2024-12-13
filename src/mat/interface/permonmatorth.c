@@ -339,7 +339,7 @@ static PetscErrorCode MatOrthColumns_GS(Mat A, MatOrthType type, MatOrthForm for
   PetscCall(PetscMalloc(N*sizeof(PetscScalar), &dots));
 
   PetscCall((*f)(comm,N, q, s, dots, &o_max, &o_acc));
-  PetscCall(PetscInfo(fllop,"number of columns %d,  orthogonalizations max, avg, total %d, %g, %d\n", N, o_max, ((PetscReal)o_acc)/N, o_acc));
+  PetscCall(PetscInfo(permon,"number of columns %d,  orthogonalizations max, avg, total %d, %g, %d\n", N, o_max, ((PetscReal)o_acc)/N, o_acc));
 
   /* copy column vectors back to the matrix Q */
   PetscCall(VecNestRestoreMPI(N,&q));
@@ -400,7 +400,7 @@ PetscErrorCode MatOrthColumns(Mat A, MatOrthType type, MatOrthForm form, Mat *Q_
   PetscErrorCode (*f)(Mat,MatOrthType,MatOrthForm,Mat*,Mat*);
   PetscBool flg;
 
-  FllopTracedFunctionBegin;
+  PermonTracedFunctionBegin;
   PetscValidHeaderSpecific(A,MAT_CLASSID,1);
   PetscValidLogicalCollectiveEnum(A,type,2);
   if (!registered) {
@@ -417,7 +417,7 @@ PetscErrorCode MatOrthColumns(Mat A, MatOrthType type, MatOrthForm form, Mat *Q_
     PetscFunctionReturn(PETSC_SUCCESS);
   }
 
-  FllopTraceBegin;
+  PermonTraceBegin;
   PetscCall(PetscObjectQueryFunction((PetscObject)A,"MatOrthColumns_C",&f));
 
   if (!f) {

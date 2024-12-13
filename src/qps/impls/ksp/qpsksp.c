@@ -220,7 +220,7 @@ PetscErrorCode QPSIsQPCompatible_KSP(QPS qps,QP qp,PetscBool *flg)
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSCreate_KSP"
-FLLOP_EXTERN PetscErrorCode QPSCreate_KSP(QPS qps)
+PERMON_EXTERN PetscErrorCode QPSCreate_KSP(QPS qps)
 {
   QPS_KSP         *qpsksp;
   MPI_Comm        comm;

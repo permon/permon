@@ -59,11 +59,11 @@ PetscErrorCode MatRemoveGluingOfDirichletDofs_old(Mat Bgt, Vec cg, Mat Bdt, Mat 
   PetscCall(ISCreateGeneral(comm,k,idx,PETSC_COPY_VALUES,&iscol));
   PetscCall(ISCreateStride(comm,n,lo,1,&isrow));     /* all rows */
   PetscCall(MatCreateSubMatrix(Bgt,isrow,iscol,MAT_INITIAL_MATRIX,Bgt_new));
-  PetscCall(FllopPetscObjectInheritName((PetscObject)*Bgt_new,(PetscObject)Bgt,NULL));
+  PetscCall(PermonPetscObjectInheritName((PetscObject)*Bgt_new,(PetscObject)Bgt,NULL));
   if (cg_new) {
     PERMON_ASSERT(cg,"cg vector specified");
     PetscCall(VecGetSubVector(cg,iscol,cg_new));
-    PetscCall(FllopPetscObjectInheritName((PetscObject)*cg_new,(PetscObject)cg,NULL));
+    PetscCall(PermonPetscObjectInheritName((PetscObject)*cg_new,(PetscObject)cg,NULL));
   }
 
   if (is_new) {
@@ -154,11 +154,11 @@ PetscErrorCode MatRemoveGluingOfDirichletDofs(Mat Bgt, Vec cg, Mat Bdt, Mat *Bgt
 
   PetscCall(MatGetOwnershipIS(Bgt,&isrow,NULL));
   PetscCall(MatCreateSubMatrix(Bgt,isrow,iscol,MAT_INITIAL_MATRIX,Bgt_new));
-  PetscCall(FllopPetscObjectInheritName((PetscObject)*Bgt_new,(PetscObject)Bgt,NULL));
+  PetscCall(PermonPetscObjectInheritName((PetscObject)*Bgt_new,(PetscObject)Bgt,NULL));
   if (cg_new) {
     PERMON_ASSERT(cg,"cg vector specified");
     PetscCall(VecGetSubVector(cg,iscol,cg_new));
-    PetscCall(FllopPetscObjectInheritName((PetscObject)*cg_new,(PetscObject)cg,NULL));
+    PetscCall(PermonPetscObjectInheritName((PetscObject)*cg_new,(PetscObject)cg,NULL));
   }
 
   if (is_new) {

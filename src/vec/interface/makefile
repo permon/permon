@@ -3,7 +3,7 @@ ALL: lib
 
 CFLAGS   =
 FFLAGS   =
-SOURCEC  = fllopvecutils.c
+SOURCEC  = permonvecutils.c
 SOURCEF  =
 SOURCEH  =
 OBJSC    = ${SOURCEC:.c=.o}

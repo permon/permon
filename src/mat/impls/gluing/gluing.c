@@ -5,8 +5,8 @@
 //#define TAG_firstElemGlobIdx 198533
 
 #undef __FUNCT__
-#define __FUNCT__ "FllopMatGetLocalMat_Gluing"
-static PetscErrorCode FllopMatGetLocalMat_Gluing(Mat A,Mat *Aloc)
+#define __FUNCT__ "PermonMatGetLocalMat_Gluing"
+static PetscErrorCode PermonMatGetLocalMat_Gluing(Mat A,Mat *Aloc)
 {
 
   Mat_Gluing *data = (Mat_Gluing*) A->data;
@@ -224,7 +224,7 @@ PetscErrorCode MatDestroy_Gluing(Mat mat)
   PetscCall(PetscFree(data->leaves_row));
   PetscCall(PetscFree(data->leaves_sign));
   PetscCall(PetscFree(data));
-  PetscCall(PetscObjectComposeFunction((PetscObject)mat,"FllopMatGetLocalMat_C",NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)mat,"PermonMatGetLocalMat_C",NULL));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -276,7 +276,7 @@ PetscErrorCode MatCreateGluing(MPI_Comm comm, PetscInt n_x_localRow, PetscInt n_
 
 #undef __FUNCT__
 #define __FUNCT__ "MatCreate_Gluing"
-FLLOP_EXTERN PetscErrorCode MatCreate_Gluing(Mat B) {
+PERMON_EXTERN PetscErrorCode MatCreate_Gluing(Mat B) {
 
   Mat_Gluing *data;
 
@@ -299,6 +299,6 @@ FLLOP_EXTERN PetscErrorCode MatCreate_Gluing(Mat B) {
   B->ops->multtranspose      = MatMultTranspose_Gluing;
   B->ops->multadd            = MatMultAdd_Gluing;
   B->ops->multtransposeadd   = MatMultTransposeAdd_Gluing;
-  PetscCall(PetscObjectComposeFunction((PetscObject)B,"FllopMatGetLocalMat_C",FllopMatGetLocalMat_Gluing));
+  PetscCall(PetscObjectComposeFunction((PetscObject)B,"PermonMatGetLocalMat_C",PermonMatGetLocalMat_Gluing));
   PetscFunctionReturn(PETSC_SUCCESS);
 }

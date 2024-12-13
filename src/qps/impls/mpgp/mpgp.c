@@ -136,10 +136,10 @@ static PetscErrorCode  QPSMPGPUpdateMaxEigenvalue_MPGP(QPS qps, PetscReal maxeig
   }
 
   //TODO temporary
-  if (FllopDebugEnabled) {
+  if (PermonDebugEnabled) {
     PetscReal lambda;
     PetscCall(MatGetMaxEigenvalue(qps->solQP->A,NULL,&lambda,mpgp->maxeig_tol,mpgp->maxeig_iter));
-    PetscCall(FllopDebug1("|maxeig_from_power_method - mpgp->maxeig| = %8e\n",PetscAbs(lambda-mpgp->maxeig)));
+    PetscCall(PermonDebug1("|maxeig_from_power_method - mpgp->maxeig| = %8e\n",PetscAbs(lambda-mpgp->maxeig)));
   }
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -835,7 +835,7 @@ PetscErrorCode QPSViewConvergence_MPGP(QPS qps, PetscViewer v)
 M*/
 #undef __FUNCT__
 #define __FUNCT__ "QPSCreate_MPGP"
-FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
+PERMON_EXTERN PetscErrorCode QPSCreate_MPGP(QPS qps)
 {
   QPS_MPGP         *mpgp;
 

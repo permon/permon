@@ -276,7 +276,7 @@ static PetscErrorCode QPPFSetUpGGt_Private(QPPF cp, Mat *newGGt)
     if (ierr != PETSC_ERR_SUP) {
       PetscCall(MatSetOption(GGt, MAT_SPD, PETSC_TRUE));
     }
-    PetscCall(FllopDebug("assert GGt always PSD (MAT_SYMMETRIC=1, MAT_SYMMETRIC_ETERNAL=1, MAT_SPD=1)\n"));
+    PetscCall(PermonDebug("assert GGt always PSD (MAT_SYMMETRIC=1, MAT_SYMMETRIC_ETERNAL=1, MAT_SPD=1)\n"));
   }
   *newGGt = GGt;
   PetscFunctionReturnI(PETSC_SUCCESS);
@@ -381,13 +381,13 @@ PetscErrorCode QPPFSetUp(QPPF cp)
   PetscMPIInt rank, size;
   const char *name;
 
-  FllopTracedFunctionBegin;
+  PermonTracedFunctionBegin;
   PetscValidHeaderSpecific(cp, QPPF_CLASSID, 1);
 
   //if (cp->setupcalled && !cp->explicitInv) PetscFunctionReturn(PETSC_SUCCESS); //TODO why the &&?
   if (cp->setupcalled) PetscFunctionReturn(PETSC_SUCCESS);
 
-  FllopTraceBegin;
+  PermonTraceBegin;
   PetscCall(PetscLogEventBegin(QPPF_SetUp, cp, cp->GGtinv, cp->G, cp->Gt));
 
   PetscCall(PetscObjectGetComm((PetscObject) cp, &comm));

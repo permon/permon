@@ -450,7 +450,7 @@ PetscErrorCode QPCDestroy_Box(QPC qpc)
 
 #undef __FUNCT__
 #define __FUNCT__ "QPCCreate_Box"
-FLLOP_EXTERN PetscErrorCode QPCCreate_Box(QPC qpc)
+PERMON_EXTERN PetscErrorCode QPCCreate_Box(QPC qpc)
 {
   QPC_Box      *ctx;
 

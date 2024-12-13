@@ -1,10 +1,10 @@
 #include <permon/private/qpsimpl.h>
 
-FLLOP_EXTERN PetscErrorCode QPSCreate_KSP(QPS);
-FLLOP_EXTERN PetscErrorCode QPSCreate_MPGP(QPS);
-FLLOP_EXTERN PetscErrorCode QPSCreate_SMALXE(QPS);
-FLLOP_EXTERN PetscErrorCode QPSCreate_Tao(QPS);
-FLLOP_EXTERN PetscErrorCode QPSCreate_PCPG(QPS);
+PERMON_EXTERN PetscErrorCode QPSCreate_KSP(QPS);
+PERMON_EXTERN PetscErrorCode QPSCreate_MPGP(QPS);
+PERMON_EXTERN PetscErrorCode QPSCreate_SMALXE(QPS);
+PERMON_EXTERN PetscErrorCode QPSCreate_Tao(QPS);
+PERMON_EXTERN PetscErrorCode QPSCreate_PCPG(QPS);
 
 /*
    Contains the list of registered Create routines of all QPS types

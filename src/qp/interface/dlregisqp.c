@@ -1,4 +1,4 @@
-#define FLLOPQP_DLL
+#define PERMONQP_DLL
 
 #include <permon/private/qpimpl.h>
 
@@ -27,6 +27,6 @@ PetscErrorCode QPInitializePackage()
   PetscCall(PetscLogEventRegister("QPTRemoveGluing",   QP_CLASSID, &QPT_RemoveGluingOfDirichletDofs));
   PetscCall(PetscLogEventRegister("QPTSplitBE",        QP_CLASSID, &QPT_SplitBE));
   /* Process info & summary exclusions */
-  PetscCall(FllopProcessInfoExclusions(QP_CLASSID, QP_CLASS_NAME));
+  PetscCall(PermonProcessInfoExclusions(QP_CLASSID, QP_CLASS_NAME));
   PetscFunctionReturn(PETSC_SUCCESS);
 }

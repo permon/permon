@@ -144,9 +144,9 @@ static inline PetscErrorCode MatMatMultByColumns_MatFilterZeros_Private(Mat *C,P
 {
   Mat C_new;
 
-  FllopTracedFunctionBegin;
+  PermonTracedFunctionBegin;
   if (filter) {
-    FllopTraceBegin;
+    PermonTraceBegin;
     PetscCall(MatFilterZeros(*C,PETSC_MACHINE_EPSILON,&C_new));
     PetscCall(MatDestroy(C));
     *C = C_new;

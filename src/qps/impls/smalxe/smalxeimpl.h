@@ -66,12 +66,12 @@ typedef struct {
   PetscErrorCode (*updateNormBu)(QPS qps,Vec u,PetscReal *normBu,PetscReal *enorm);
 } QPS_SMALXE;
 
-FLLOP_EXTERN PetscErrorCode QPSCreate_SMALXE(QPS qps);
-FLLOP_INTERN PetscErrorCode QPSSetFromOptions_SMALXE(QPS qps,PetscOptionItems *PetscOptionsObject);
-FLLOP_INTERN PetscErrorCode QPSSetUp_SMALXE(QPS qps);
-FLLOP_INTERN PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,KSPConvergedReason *reason);
-FLLOP_INTERN PetscErrorCode QPSConvergedSetUp_Inner_SMALXE(QPS qps_inner);
-FLLOP_INTERN PetscErrorCode QPSConvergedCreate_Inner_SMALXE(QPS qps_outer, void **ctx);
-FLLOP_INTERN PetscErrorCode QPSConvergedDestroy_Inner_SMALXE(void *ctx);
-FLLOP_INTERN PetscErrorCode QPSSMALXEUpdate_SMALXE(QPS qps, PetscReal Lag_old, PetscReal Lag, PetscReal rho);
-FLLOP_INTERN PetscErrorCode QPSSMALXEUpdateNormBu_SMALXE(QPS qps,Vec u,PetscReal *normBu,PetscReal *enorm);
+PERMON_EXTERN PetscErrorCode QPSCreate_SMALXE(QPS qps);
+PERMON_INTERN PetscErrorCode QPSSetFromOptions_SMALXE(QPS qps,PetscOptionItems *PetscOptionsObject);
+PERMON_INTERN PetscErrorCode QPSSetUp_SMALXE(QPS qps);
+PERMON_INTERN PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner,KSPConvergedReason *reason);
+PERMON_INTERN PetscErrorCode QPSConvergedSetUp_Inner_SMALXE(QPS qps_inner);
+PERMON_INTERN PetscErrorCode QPSConvergedCreate_Inner_SMALXE(QPS qps_outer, void **ctx);
+PERMON_INTERN PetscErrorCode QPSConvergedDestroy_Inner_SMALXE(void *ctx);
+PERMON_INTERN PetscErrorCode QPSSMALXEUpdate_SMALXE(QPS qps, PetscReal Lag_old, PetscReal Lag, PetscReal rho);
+PERMON_INTERN PetscErrorCode QPSSMALXEUpdateNormBu_SMALXE(QPS qps,Vec u,PetscReal *normBu,PetscReal *enorm);

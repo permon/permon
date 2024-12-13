@@ -1,4 +1,4 @@
-#define FLLOPQPS_DLL
+#define PERMONQPS_DLL
 
 #include <permon/private/qpsimpl.h>
 
@@ -19,7 +19,7 @@ PetscErrorCode QPSInitializePackage(void)
   PetscCall(PetscLogEventRegister("QPSSolve",QPS_CLASSID,&QPS_Solve));
   PetscCall(PetscLogEventRegister("QPSPostSolve",QPS_CLASSID,&QPS_PostSolve));
   /* Process info & summary exclusions */
-  PetscCall(FllopProcessInfoExclusions(QPS_CLASSID, QPS_CLASS_NAME));
+  PetscCall(PermonProcessInfoExclusions(QPS_CLASSID, QPS_CLASS_NAME));
   PetscCall(PetscRegisterFinalize(QPSFinalizePackage));
   PetscFunctionReturn(PETSC_SUCCESS);
 }

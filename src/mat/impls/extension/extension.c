@@ -313,7 +313,7 @@ PetscErrorCode MatConvertFrom_Extension(Mat A,MatType type,MatReuse reuse,Mat *n
   PetscCall(MatDestroy(&Ast));
 
   PetscCall(MatTranspose(Asts,MAT_INITIAL_MATRIX,&As));
-  PetscCall(FllopPetscObjectInheritName((PetscObject)As,(PetscObject)A,"_cond"));
+  PetscCall(PermonPetscObjectInheritName((PetscObject)As,(PetscObject)A,"_cond"));
   PetscCall(MatDestroy(&Asts));
 
   PetscCall(MatCreateExtension(PetscObjectComm((PetscObject)A),A->rmap->n,A->cmap->n,A->rmap->N,A->cmap->N,As,ris,PETSC_TRUE,cis,&B));
@@ -442,7 +442,7 @@ PETSC_EXTERN PetscErrorCode MatConvert_NestPermon_Extension(Mat A,MatType type,M
       PetscCall(MatTranspose(Asts,MAT_INITIAL_MATRIX,&As));
       PetscCall(MatDestroy(&Asts));
 
-      PetscCall(FllopPetscObjectInheritName((PetscObject)As,(PetscObject)mats_in[i][j],"_cond"));
+      PetscCall(PermonPetscObjectInheritName((PetscObject)As,(PetscObject)mats_in[i][j],"_cond"));
       mats_out[i*Nn+j] = As;
     }
 
@@ -461,7 +461,7 @@ PETSC_EXTERN PetscErrorCode MatConvert_NestPermon_Extension(Mat A,MatType type,M
   PetscCall(PetscFree(cis_arr));
 
   PetscCall(MatCreateNestPermon(PETSC_COMM_SELF,Mn,NULL,Nn,NULL,mats_out,&As));
-  PetscCall(FllopPetscObjectInheritName((PetscObject)As,(PetscObject)A,"_cond"));
+  PetscCall(PermonPetscObjectInheritName((PetscObject)As,(PetscObject)A,"_cond"));
   PetscCall(MatCreateExtension(comm,A->rmap->n,A->cmap->n,A->rmap->N,A->cmap->N,As,ris,PETSC_TRUE,cis,&B));
 
   for (i=0; i<Mn; i++) {
@@ -1118,7 +1118,7 @@ PetscErrorCode MatDestroy_Extension(Mat TA) {
 
 #undef __FUNCT__
 #define __FUNCT__ "MatCreate_Extension"
-FLLOP_EXTERN PetscErrorCode MatCreate_Extension(Mat TA)
+PERMON_EXTERN PetscErrorCode MatCreate_Extension(Mat TA)
 {
   Mat_Extension *data;
 

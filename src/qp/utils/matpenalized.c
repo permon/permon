@@ -133,7 +133,7 @@ static PetscErrorCode MatPenalizedUpdatePenalty_Penalty(Mat Arho,PetscReal rho_u
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(Arho,(void*)&ctx));
   rho_new = ctx->rho * rho_update;
-  PetscCall(PetscInfo(fllop,"updating rho := %.4e*%.4e = %.4e\n",ctx->rho,rho_update,rho_new));
+  PetscCall(PetscInfo(permon,"updating rho := %.4e*%.4e = %.4e\n",ctx->rho,rho_update,rho_new));
   ctx->rho = rho_new;
   PetscFunctionReturn(PETSC_SUCCESS);
 }

@@ -1,4 +1,4 @@
-#define FLLOPQPPF_DLL
+#define PERMONQPPF_DLL
 
 #include <permon/private/qppfimpl.h>
 
@@ -27,6 +27,6 @@ PetscErrorCode QPPFInitializePackage()
   PetscCall(PetscLogEventRegister("QPPFApplyG",      QPPF_CLASSID, &QPPF_ApplyG));
   PetscCall(PetscLogEventRegister("QPPFApplyGt",     QPPF_CLASSID, &QPPF_ApplyGt));
   /* Process info & summary exclusions */
-  PetscCall(FllopProcessInfoExclusions(QPPF_CLASSID, QPPF_CLASS_NAME));
+  PetscCall(PermonProcessInfoExclusions(QPPF_CLASSID, QPPF_CLASS_NAME));
   PetscFunctionReturn(PETSC_SUCCESS);
 }

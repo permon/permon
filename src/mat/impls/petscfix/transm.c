@@ -74,7 +74,7 @@ PetscErrorCode MatDuplicate_TransposePermon(Mat mat,MatDuplicateOption op,Mat *M
 
   PetscFunctionBegin;
   PetscCall(MatDuplicate(A,op,&A1));
-  PetscCall(FllopPetscObjectInheritName((PetscObject)A1,(PetscObject)A,NULL));
+  PetscCall(PermonPetscObjectInheritName((PetscObject)A1,(PetscObject)A,NULL));
   PetscCall(MatCreateTransposePermon(A1,M));
   PetscCall(MatDestroy(&A1));
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -119,7 +119,7 @@ PetscErrorCode PermonMatTranspose(Mat A,MatTransposeType type,Mat *At_out)
   PetscCall((*f)(A,type,At_out));
 
   if (!((PetscObject)(*At_out))->name) {
-    PetscCall(FllopPetscObjectInheritName((PetscObject)*At_out,(PetscObject)A,"_T"));
+    PetscCall(PermonPetscObjectInheritName((PetscObject)*At_out,(PetscObject)A,"_T"));
   }
   PetscFunctionReturn(PETSC_SUCCESS);
 }

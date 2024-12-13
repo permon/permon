@@ -328,7 +328,7 @@ PetscErrorCode QPFetiSetUp(QP qp)
   FetiGluingType type = FETI_GLUING_FULL;
   PetscBool exclude_dir = PETSC_FALSE;
 
-  FllopTracedFunctionBegin;
+  PermonTracedFunctionBegin;
   PetscCall(QPFetiGetCtx(qp,&ctx));
   if (ctx->setupcalled) PetscFunctionReturn(PETSC_SUCCESS);
 
@@ -337,7 +337,7 @@ PetscErrorCode QPFetiSetUp(QP qp)
     registered = PETSC_TRUE;
   }
 
-  FllopTraceBegin;
+  PermonTraceBegin;
   PetscCall(PetscObjectGetComm((PetscObject)qp,&comm));
   PetscCall(PetscLogEventBegin(QP_Feti_SetUp,qp,0,0,0));
 

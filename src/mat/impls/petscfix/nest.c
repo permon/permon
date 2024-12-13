@@ -514,7 +514,7 @@ static PetscErrorCode MatDuplicate_NestPermon(Mat A,MatDuplicateOption op,Mat *B
     for (j=0; j<nc; j++) {
       if (bA->m[i][j]) {
         PetscCall(MatDuplicate(bA->m[i][j],op,&b[i*nc+j]));
-        PetscCall(FllopPetscObjectInheritName((PetscObject)b[i*nc+j],(PetscObject)bA->m[i][j],NULL));
+        PetscCall(PermonPetscObjectInheritName((PetscObject)b[i*nc+j],(PetscObject)bA->m[i][j],NULL));
       } else {
         b[i*nc+j] = NULL;
       }

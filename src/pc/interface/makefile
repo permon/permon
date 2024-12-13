@@ -3,7 +3,7 @@ ALL: lib
 
 CFLAGS   =
 FFLAGS   =
-SOURCEC  = flloppcregis.c
+SOURCEC  = permonpcregis.c
 SOURCEF  =
 SOURCEH  =
 OBJSC    = ${SOURCEC:.c=.o}

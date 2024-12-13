@@ -24,7 +24,7 @@ PetscErrorCode MatPrintInfo(Mat mat)
   Mat inmat;
 
   PetscFunctionBegin;
-  if (!FllopObjectInfoEnabled) PetscFunctionReturn(PETSC_SUCCESS);
+  if (!PermonObjectInfoEnabled) PetscFunctionReturn(PETSC_SUCCESS);
 
   PetscValidHeaderSpecific(mat,MAT_CLASSID,1);
   PetscCall(PetscObjectGetTabLevel((PetscObject)mat, &tablevel));
@@ -374,7 +374,7 @@ static PetscErrorCode MatMultEqualTol_Private(Mat A,PetscBool transpose,Mat B,Pe
       PetscCall(VecNorm(s2,NORM_INFINITY,&r1));
       r1 /= r2;
     }
-    PetscCall(PetscInfo(fllop,"relative error of %" PetscInt_FMT "-th MatMult() %g\n",k,r1));
+    PetscCall(PetscInfo(permon,"relative error of %" PetscInt_FMT "-th MatMult() %g\n",k,r1));
     if (r1 > tol) {
       *flg = PETSC_FALSE;
       break;
@@ -465,7 +465,7 @@ PetscErrorCode MatGetMaxEigenvalue(Mat A, Vec v, PetscScalar *lambda_out, PetscR
   if (lambda_out && !v) {
     PetscCall(PetscObjectComposedDataGetScalar((PetscObject)A,MatGetMaxEigenvalue_composed_id,lambda,flg));
     if (flg) {
-      PetscCall(PetscInfo(fllop,"returning stashed estimate ||A|| = %.12e\n",lambda));
+      PetscCall(PetscInfo(permon,"returning stashed estimate ||A|| = %.12e\n",lambda));
       *lambda_out = lambda;
       PetscFunctionReturnI(PETSC_SUCCESS);
     }
@@ -493,7 +493,7 @@ PetscErrorCode MatGetMaxEigenvalue(Mat A, Vec v, PetscScalar *lambda_out, PetscR
     PetscCall(VecMDot(v,2,y_v,vAv_vv));
     lambda = vAv_vv[0]/vAv_vv[1];
     if (lambda < PETSC_MACHINE_EPSILON) {
-      PetscCall(PetscInfo(fllop,"hit nullspace of A and setting A*v to random vector in iteration %d\n",i));
+      PetscCall(PetscInfo(permon,"hit nullspace of A and setting A*v to random vector in iteration %d\n",i));
 
       if (!rand) {
         PetscCall(PetscRandomCreate(PetscObjectComm((PetscObject)A),&rand));
@@ -512,7 +512,7 @@ PetscErrorCode MatGetMaxEigenvalue(Mat A, Vec v, PetscScalar *lambda_out, PetscR
     PetscCall(VecScale(v, 1.0/PetscSqrtReal(vAv_vv[1])));
   }
 
-  PetscCall(PetscInfo(fllop,"%s  lambda = %.12e  [err relerr reltol] = [%.12e %.12e %.12e]  actual/max iterations = %d/%d\n", (i<=maxits)?"CONVERGED":"NOT CONVERGED", lambda,err,relerr,tol,i,maxits));
+  PetscCall(PetscInfo(permon,"%s  lambda = %.12e  [err relerr reltol] = [%.12e %.12e %.12e]  actual/max iterations = %d/%d\n", (i<=maxits)?"CONVERGED":"NOT CONVERGED", lambda,err,relerr,tol,i,maxits));
 
   if (lambda_out) *lambda_out = lambda;
 
@@ -1160,7 +1160,7 @@ PetscErrorCode PermonMatConvertInplace(Mat A, MatType type)
   ierr = MatConvert(A,type,MAT_INPLACE_MATRIX,&A);
   PetscCall(PetscPopErrorHandler());
   if (ierr == PETSC_ERR_SUP) {
-    PetscCall(PetscInfo(fllop,"matrix type not supported, trying to convert to MATAIJ first\n"));
+    PetscCall(PetscInfo(permon,"matrix type not supported, trying to convert to MATAIJ first\n"));
     PetscCall(MatConvert(A,MATAIJ,MAT_INPLACE_MATRIX,&A));
     PetscCall(MatConvert(A,type,MAT_INPLACE_MATRIX,&A));
   } else if (ierr) {
@@ -1198,7 +1198,7 @@ PetscErrorCode MatCheckNullSpace(Mat K,Mat R,PetscReal tol)
   PetscCall(MatMult(R,x,d));
   PetscCall(MatMult(K,d,y));
   PetscCall(VecNorm(y,NORM_2,&normy));
-  PetscCall(PetscInfo(fllop,"||K*R*x|| = %.3e   ||diag(K)|| = %.3e    ||K*R*x|| / ||diag(K)|| = %.3e\n",normy,normd,normy/normd));
+  PetscCall(PetscInfo(permon,"||K*R*x|| = %.3e   ||diag(K)|| = %.3e    ||K*R*x|| / ||diag(K)|| = %.3e\n",normy,normd,normy/normd));
   PERMON_ASSERT(normy / normd < tol, "||K*R*x|| / ||diag(K)|| < %.1e", tol);
   PetscCall(VecDestroy(&d));
   PetscCall(VecDestroy(&x));

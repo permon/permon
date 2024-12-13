@@ -78,7 +78,7 @@ PetscErrorCode VecPrintInfo(Vec vec)
   MPI_Comm comm = PETSC_COMM_WORLD;
 
   PetscFunctionBegin;
-  if (!FllopObjectInfoEnabled) PetscFunctionReturn(PETSC_SUCCESS);
+  if (!PermonObjectInfoEnabled) PetscFunctionReturn(PETSC_SUCCESS);
 
   PetscValidHeaderSpecific(vec,VEC_CLASSID,1);
   PetscCall(PetscObjectGetTabLevel((PetscObject)vec, &tablevel));
@@ -447,14 +447,14 @@ PetscErrorCode VecNestGetMPI(PetscInt N,Vec *vecs[])
   MPI_Comm comm;
   PetscBool flg;
 
-  FllopTracedFunctionBegin;
+  PermonTracedFunctionBegin;
   if (!N) PetscFunctionReturn(PETSC_SUCCESS);
 
   x=nestv[0];
   PetscCall(PetscObjectTypeCompare((PetscObject)x,VECMPI,&flg));
   if (flg) PetscFunctionReturn(PETSC_SUCCESS);
 
-  FllopTraceBegin;
+  PermonTraceBegin;
   PetscCall(PetscObjectGetComm((PetscObject)x,&comm));
   PetscCall(PetscNew(&ctx));
 
@@ -494,14 +494,14 @@ PetscErrorCode VecNestRestoreMPI(PetscInt N,Vec *vecs[])
   PetscContainer container;
   VecNestGetMPICtx ctx;
 
-  FllopTracedFunctionBegin;
+  PermonTracedFunctionBegin;
   if (!N) PetscFunctionReturn(PETSC_SUCCESS);
 
   y=mpiv[0];
   PetscCall(PetscObjectQuery((PetscObject)y,"VecNestGetMPI_context",(PetscObject*)&container));
   if (!container) PetscFunctionReturn(PETSC_SUCCESS);
 
-  FllopTraceBegin;
+  PermonTraceBegin;
   PetscCall(PetscContainerGetPointer(container,(void**)&ctx));
   sc = ctx->sc;
   nestv = ctx->origvecs;
