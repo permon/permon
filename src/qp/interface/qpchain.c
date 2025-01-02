@@ -19,10 +19,10 @@ PetscErrorCode QPChainAdd(QP qp, QPDuplicateOption opt, QP *newchild)
   QP last;
 
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  PetscAssertPointer(newchild,2);
+  PetscValidHeaderSpecific(qp, QP_CLASSID, 1);
+  PetscAssertPointer(newchild, 2);
   PetscCall(QPChainGetLast(qp, &last));
-  PetscCall(QPAddChild(last,opt,newchild));
+  PetscCall(QPAddChild(last, opt, newchild));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -41,7 +41,7 @@ PetscErrorCode QPChainPop(QP qp)
   QP last;
 
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qp,QP_CLASSID,1);
+  PetscValidHeaderSpecific(qp, QP_CLASSID, 1);
   PetscCall(QPChainGetLast(qp, &last));
   if (last->parent) PetscCall(QPRemoveChild(last->parent));
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -63,7 +63,7 @@ PetscErrorCode QPChainPop(QP qp)
 
    Level: advanced
 @*/
-PetscErrorCode QPChainFind(QP qp,PetscErrorCode(*transform)(QP),QP *child)
+PetscErrorCode QPChainFind(QP qp, PetscErrorCode (*transform)(QP), QP *child)
 {
   QP cchild;
   PetscErrorCode (*ctransform)(QP);
@@ -72,7 +72,7 @@ PetscErrorCode QPChainFind(QP qp,PetscErrorCode(*transform)(QP),QP *child)
   PetscValidHeaderSpecific(qp, QP_CLASSID, 1);
   PetscAssertPointer(child, 3);
 
-  *child = NULL;
+  *child     = NULL;
   ctransform = NULL;
 
   PetscCall(QPGetChild(qp, &cchild));
@@ -102,18 +102,18 @@ PetscErrorCode QPChainFind(QP qp,PetscErrorCode(*transform)(QP),QP *child)
 
    Level: advanced
 @*/
-PetscErrorCode QPChainGetLast(QP qp,QP *last)
+PetscErrorCode QPChainGetLast(QP qp, QP *last)
 {
   QP tchild;
 
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  PetscAssertPointer(last,2);
+  PetscValidHeaderSpecific(qp, QP_CLASSID, 1);
+  PetscAssertPointer(last, 2);
 
   tchild = qp;
   do {
     qp = tchild;
-    PetscCall(QPGetChild(qp,&tchild));
+    PetscCall(QPGetChild(qp, &tchild));
   } while (tchild);
 
   *last = qp;
@@ -135,10 +135,10 @@ PetscErrorCode QPChainGetLast(QP qp,QP *last)
 PetscErrorCode QPChainSetUp(QP qp)
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qp,QP_CLASSID,1);
+  PetscValidHeaderSpecific(qp, QP_CLASSID, 1);
   do {
     PetscCall(QPSetUp(qp));
-    PetscCall(QPGetChild(qp,&qp));
+    PetscCall(QPGetChild(qp, &qp));
   } while (qp);
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -160,15 +160,15 @@ PetscErrorCode QPChainSetFromOptions(QP qp)
   PetscBool flg;
 
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  PetscOptionsBegin(PetscObjectComm((PetscObject)qp),NULL,"QP chain options","QP");  /* options processed elsewhere */
-  PetscCall(PetscOptionsName("-qp_chain_view","print the info about all QPs in the chain at the end of a QPSSolve call","QPChainView",&flg));
-  PetscCall(PetscOptionsName("-qp_chain_view_kkt","print detailed post-solve KKT satisfaction information","QPChainViewKKT",&flg));
-  PetscCall(PetscOptionsName("-qp_chain_view_qppf","print info about QPPF instances in the QP chain","QPChainViewQPPF",&flg));
+  PetscValidHeaderSpecific(qp, QP_CLASSID, 1);
+  PetscOptionsBegin(PetscObjectComm((PetscObject)qp), NULL, "QP chain options", "QP"); /* options processed elsewhere */
+  PetscCall(PetscOptionsName("-qp_chain_view", "print the info about all QPs in the chain at the end of a QPSSolve call", "QPChainView", &flg));
+  PetscCall(PetscOptionsName("-qp_chain_view_kkt", "print detailed post-solve KKT satisfaction information", "QPChainViewKKT", &flg));
+  PetscCall(PetscOptionsName("-qp_chain_view_qppf", "print info about QPPF instances in the QP chain", "QPChainViewQPPF", &flg));
 
   do {
     PetscCall(QPSetFromOptions(qp));
-    PetscCall(QPGetChild(qp,&qp));
+    PetscCall(QPGetChild(qp, &qp));
   } while (qp);
   PetscOptionsEnd();
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -199,60 +199,60 @@ PetscErrorCode QPChainSetFromOptions(QP qp)
 @*/
 PetscErrorCode QPChainPostSolve(QP qp)
 {
-  PetscErrorCode (*postSolve)(QP,QP);
-  QP parent, cqp;
-  PetscBool flg, solved, view, first;
-  PetscViewer v=NULL;
+  PetscErrorCode (*postSolve)(QP, QP);
+  QP                parent, cqp;
+  PetscBool         flg, solved, view, first;
+  PetscViewer       v = NULL;
   PetscViewerFormat format;
-  MPI_Comm comm;
-  const char *prefix;
+  MPI_Comm          comm;
+  const char       *prefix;
 
   PetscFunctionBeginI;
-  PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  PetscCall(PetscObjectGetComm((PetscObject)qp,&comm));
-  PetscCall(PetscObjectGetOptionsPrefix((PetscObject)qp,&prefix));
+  PetscValidHeaderSpecific(qp, QP_CLASSID, 1);
+  PetscCall(PetscObjectGetComm((PetscObject)qp, &comm));
+  PetscCall(PetscObjectGetOptionsPrefix((PetscObject)qp, &prefix));
 
-  PetscCall(PetscOptionsCreateViewer(comm,NULL,prefix,"-qp_view",&v,&format,&view));
+  PetscCall(PetscOptionsCreateViewer(comm, NULL, prefix, "-qp_view", &v, &format, &view));
   if (view & !PetscPreLoadingOn) {
-    PetscCall(PetscViewerPushFormat(v,format));
-    PetscCall(QPView(qp,v));
+    PetscCall(PetscViewerPushFormat(v, format));
+    PetscCall(QPView(qp, v));
     PetscCall(PetscViewerPopFormat(v));
   }
   PetscCall(PetscViewerDestroy(&v));
 
-  PetscCall(PetscOptionsCreateViewer(comm,NULL,prefix,"-qp_chain_view",&v,&format,&view));
+  PetscCall(PetscOptionsCreateViewer(comm, NULL, prefix, "-qp_chain_view", &v, &format, &view));
   if (view & !PetscPreLoadingOn) {
-    PetscCall(PetscViewerPushFormat(v,format));
-    PetscCall(QPChainView(qp,v));
+    PetscCall(PetscViewerPushFormat(v, format));
+    PetscCall(QPChainView(qp, v));
     PetscCall(PetscViewerPopFormat(v));
   }
   PetscCall(PetscViewerDestroy(&v));
 
-  PetscCall(PetscOptionsCreateViewer(comm,NULL,prefix,"-qp_chain_view_qppf",&v,&format,&view));
+  PetscCall(PetscOptionsCreateViewer(comm, NULL, prefix, "-qp_chain_view_qppf", &v, &format, &view));
   if (view & !PetscPreLoadingOn) {
-    PetscCall(PetscViewerPushFormat(v,format));
-    PetscCall(QPChainViewQPPF(qp,v));
+    PetscCall(PetscViewerPushFormat(v, format));
+    PetscCall(QPChainViewQPPF(qp, v));
     PetscCall(PetscViewerPopFormat(v));
   }
   PetscCall(PetscViewerDestroy(&v));
 
-  PetscCall(PetscOptionsCreateViewer(comm,NULL,prefix,"-qp_chain_view_kkt",&v,&format,&view));
+  PetscCall(PetscOptionsCreateViewer(comm, NULL, prefix, "-qp_chain_view_kkt", &v, &format, &view));
   view = (PetscBool)(view && !PetscPreLoadingOn);
   if (view) {
-    PetscCall(PetscObjectTypeCompare((PetscObject)v,PETSCVIEWERASCII,&flg));
-    PetscCheck(flg,comm,PETSC_ERR_SUP,"Viewer type %s not supported",((PetscObject)v)->type_name);
-    PetscCall(PetscViewerASCIIPrintf(v,"=====================\n"));
+    PetscCall(PetscObjectTypeCompare((PetscObject)v, PETSCVIEWERASCII, &flg));
+    PetscCheck(flg, comm, PETSC_ERR_SUP, "Viewer type %s not supported", ((PetscObject)v)->type_name);
+    PetscCall(PetscViewerASCIIPrintf(v, "=====================\n"));
   }
 
-  PetscCall(QPChainGetLast(qp,&cqp));
+  PetscCall(QPChainGetLast(qp, &cqp));
   solved = cqp->solved;
-  first = PETSC_TRUE;
+  first  = PETSC_TRUE;
   while (1) {
     PetscCall(QPComputeMissingBoxMultipliers(cqp));
     PetscCall(QPComputeMissingEqMultiplier(cqp));
-    parent = cqp->parent;
+    parent    = cqp->parent;
     postSolve = cqp->postSolve;
-    if (postSolve) PetscCall((*postSolve)(cqp,parent));
+    if (postSolve) PetscCall((*postSolve)(cqp, parent));
 
     if (view) {
       if (first) {
@@ -260,7 +260,7 @@ PetscErrorCode QPChainPostSolve(QP qp)
       } else {
         PetscCall(PetscViewerASCIIPrintf(v, "-------------------\n"));
       }
-      PetscCall(QPViewKKT(cqp,v));
+      PetscCall(QPViewKKT(cqp, v));
     }
 
     if (!parent) break;
@@ -269,9 +269,7 @@ PetscErrorCode QPChainPostSolve(QP qp)
     cqp = parent;
   }
 
-  if (view) {
-    PetscCall(PetscViewerASCIIPrintf(v,"=====================\n"));
-  }
+  if (view) { PetscCall(PetscViewerASCIIPrintf(v, "=====================\n")); }
   PetscCall(PetscViewerDestroy(&v));
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
@@ -292,32 +290,32 @@ PetscErrorCode QPChainPostSolve(QP qp)
 PetscErrorCode QPChainViewKKT(QP qp, PetscViewer v)
 {
   MPI_Comm  comm;
-  PetscBool iascii, first=PETSC_TRUE;
-  QP cqp;
+  PetscBool iascii, first = PETSC_TRUE;
+  QP        cqp;
 
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  PetscCall(PetscObjectGetComm((PetscObject)qp,&comm));
+  PetscValidHeaderSpecific(qp, QP_CLASSID, 1);
+  PetscCall(PetscObjectGetComm((PetscObject)qp, &comm));
   if (!v) v = PETSC_VIEWER_STDOUT_(comm);
-  PetscValidHeaderSpecific(v,PETSC_VIEWER_CLASSID,2);
-  PetscCheckSameComm(qp,1,v,2);
+  PetscValidHeaderSpecific(v, PETSC_VIEWER_CLASSID, 2);
+  PetscCheckSameComm(qp, 1, v, 2);
 
-  PetscCall(PetscObjectTypeCompare((PetscObject)v,PETSCVIEWERASCII,&iascii));
-  PetscCheck(iascii,comm,PETSC_ERR_SUP,"Viewer type %s not supported",((PetscObject)v)->type_name);
+  PetscCall(PetscObjectTypeCompare((PetscObject)v, PETSCVIEWERASCII, &iascii));
+  PetscCheck(iascii, comm, PETSC_ERR_SUP, "Viewer type %s not supported", ((PetscObject)v)->type_name);
 
-  PetscCall(PetscViewerASCIIPrintf(v,"=====================\n"));
-  PetscCall(QPChainGetLast(qp,&cqp));
+  PetscCall(PetscViewerASCIIPrintf(v, "=====================\n"));
+  PetscCall(QPChainGetLast(qp, &cqp));
   while (1) {
     if (first) {
       first = PETSC_FALSE;
     } else {
       PetscCall(PetscViewerASCIIPrintf(v, "-------------------\n"));
     }
-    PetscCall(QPViewKKT(cqp,v));
+    PetscCall(QPViewKKT(cqp, v));
     cqp = cqp->parent;
     if (cqp == qp) break;
   }
-  PetscCall(PetscViewerASCIIPrintf(v,"=====================\n"));
+  PetscCall(PetscViewerASCIIPrintf(v, "=====================\n"));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -340,17 +338,17 @@ PetscErrorCode QPChainView(QP qp, PetscViewer v)
   PetscBool iascii;
 
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  PetscCall(PetscObjectGetComm((PetscObject)qp,&comm));
+  PetscValidHeaderSpecific(qp, QP_CLASSID, 1);
+  PetscCall(PetscObjectGetComm((PetscObject)qp, &comm));
   if (!v) v = PETSC_VIEWER_STDOUT_(comm);
-  PetscValidHeaderSpecific(v,PETSC_VIEWER_CLASSID,2);
-  PetscCheckSameComm(qp,1,v,2);
+  PetscValidHeaderSpecific(v, PETSC_VIEWER_CLASSID, 2);
+  PetscCheckSameComm(qp, 1, v, 2);
 
-  PetscCall(PetscObjectTypeCompare((PetscObject)v,PETSCVIEWERASCII,&iascii));
-  PetscCheck(iascii,comm,PETSC_ERR_SUP,"Viewer type %s not supported",((PetscObject)v)->type_name);
+  PetscCall(PetscObjectTypeCompare((PetscObject)v, PETSCVIEWERASCII, &iascii));
+  PetscCheck(iascii, comm, PETSC_ERR_SUP, "Viewer type %s not supported", ((PetscObject)v)->type_name);
 
-  PetscCall(PetscViewerASCIIPrintf(v,"=====================\n"));
-  PetscCall(PetscViewerASCIIPrintf(v,__FUNCT__" output follows\n"));
+  PetscCall(PetscViewerASCIIPrintf(v, "=====================\n"));
+  PetscCall(PetscViewerASCIIPrintf(v, __FUNCT__ " output follows\n"));
   PetscCall(QPView(qp, v));
   PetscCall(QPGetChild(qp, &qp));
   while (qp) {
@@ -358,7 +356,7 @@ PetscErrorCode QPChainView(QP qp, PetscViewer v)
     PetscCall(QPView(qp, v));
     PetscCall(QPGetChild(qp, &qp));
   }
-  PetscCall(PetscViewerASCIIPrintf(v,"=====================\n"));
+  PetscCall(PetscViewerASCIIPrintf(v, "=====================\n"));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -375,39 +373,39 @@ PetscErrorCode QPChainView(QP qp, PetscViewer v)
 
    Level: advanced
 @*/
-PetscErrorCode QPChainViewQPPF(QP qp,PetscViewer v)
+PetscErrorCode QPChainViewQPPF(QP qp, PetscViewer v)
 {
   MPI_Comm  comm;
   PetscBool iascii;
   QPPF      pf;
 
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qp,QP_CLASSID,1);
-  PetscCall(PetscObjectGetComm((PetscObject)qp,&comm));
+  PetscValidHeaderSpecific(qp, QP_CLASSID, 1);
+  PetscCall(PetscObjectGetComm((PetscObject)qp, &comm));
   if (!v) v = PETSC_VIEWER_STDOUT_(comm);
-  PetscValidHeaderSpecific(v,PETSC_VIEWER_CLASSID,2);
-  PetscCheckSameComm(qp,1,v,2);
+  PetscValidHeaderSpecific(v, PETSC_VIEWER_CLASSID, 2);
+  PetscCheckSameComm(qp, 1, v, 2);
 
-  PetscCall(PetscObjectTypeCompare((PetscObject)v,PETSCVIEWERASCII,&iascii));
-  PetscCheck(iascii,comm,PETSC_ERR_SUP,"Viewer type %s not supported",((PetscObject)v)->type_name);
+  PetscCall(PetscObjectTypeCompare((PetscObject)v, PETSCVIEWERASCII, &iascii));
+  PetscCheck(iascii, comm, PETSC_ERR_SUP, "Viewer type %s not supported", ((PetscObject)v)->type_name);
 
-  PetscCall(PetscViewerASCIIPrintf(v,"=====================\n"));
-  PetscCall(PetscViewerASCIIPrintf(v,__FUNCT__" output follows\n"));
+  PetscCall(PetscViewerASCIIPrintf(v, "=====================\n"));
+  PetscCall(PetscViewerASCIIPrintf(v, __FUNCT__ " output follows\n"));
   PetscCall(QPGetChild(qp, &qp));
   PetscCall(PetscViewerASCIIPushTab(v));
   while (qp) {
-    PetscCall(QPGetQPPF(qp,&pf));
+    PetscCall(QPGetQPPF(qp, &pf));
     if (pf) {
       PetscCall(PetscViewerASCIIPrintf(v, "-------------------\n"));
-      PetscCall(PetscObjectPrintClassNamePrefixType((PetscObject)qp,v));
-      PetscCall(PetscViewerASCIIPrintf(v, "  #%d in chain, derived by %s\n",qp->id,qp->transform_name));
+      PetscCall(PetscObjectPrintClassNamePrefixType((PetscObject)qp, v));
+      PetscCall(PetscViewerASCIIPrintf(v, "  #%d in chain, derived by %s\n", qp->id, qp->transform_name));
       PetscCall(PetscViewerASCIIPushTab(v));
-      PetscCall(QPPFView(pf,v));
+      PetscCall(QPPFView(pf, v));
       PetscCall(PetscViewerASCIIPopTab(v));
     }
     PetscCall(QPGetChild(qp, &qp));
   }
   PetscCall(PetscViewerASCIIPopTab(v));
-  PetscCall(PetscViewerASCIIPrintf(v,"=====================\n"));
+  PetscCall(PetscViewerASCIIPrintf(v, "=====================\n"));
   PetscFunctionReturn(PETSC_SUCCESS);
 }

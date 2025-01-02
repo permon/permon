@@ -5,14 +5,14 @@
 #include <permon/private/permonimpl.h>
 
 PetscBool PermonInitializeCalled = PETSC_FALSE;
-PetscBool PermonBeganPetsc = PETSC_FALSE;
+PetscBool PermonBeganPetsc       = PETSC_FALSE;
 
-static int    permon_one=1;
-static char*  permon_executable = (char*)"permon";
-static char** permon_executablePtr = &permon_executable;
+static int    permon_one           = 1;
+static char  *permon_executable    = (char *)"permon";
+static char **permon_executablePtr = &permon_executable;
 
-PetscClassId  PERMON_CLASSID;
-PERMON   permon;
+PetscClassId PERMON_CLASSID;
+PERMON       permon;
 
 #undef __FUNCT__
 #define __FUNCT__ "PermonInitialize"
@@ -35,22 +35,22 @@ PERMON   permon;
 @*/
 PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], const char help[])
 {
-  PetscBool flg=PETSC_FALSE;
-  char pfile[PETSC_MAX_PATH_LEN];
+  PetscBool flg = PETSC_FALSE;
+  char      pfile[PETSC_MAX_PATH_LEN];
 
   if (PermonInitializeCalled) {
-    PetscCall(PetscInfo(0,"PERMON already initialized, skipping initialization.\n"));
-    return(0);
+    PetscCall(PetscInfo(0, "PERMON already initialized, skipping initialization.\n"));
+    return (0);
   }
 
   if (!PetscInitializeCalled) {
-    if (argc&&args) {
-      PetscCall(PetscInitialize(argc,args,file,help));
+    if (argc && args) {
+      PetscCall(PetscInitialize(argc, args, file, help));
     } else {
-      PetscCall(PetscInitialize(&permon_one,&permon_executablePtr,file,help));
+      PetscCall(PetscInitialize(&permon_one, &permon_executablePtr, file, help));
     }
-    PermonBeganPetsc=PETSC_TRUE;
-    PetscCall(PetscInfo(0,"PERMON successfully started PETSc.\n"));
+    PermonBeganPetsc = PETSC_TRUE;
+    PetscCall(PetscInfo(0, "PERMON successfully started PETSc.\n"));
   }
 
   if (!PetscInitializeCalled) {
@@ -58,31 +58,31 @@ PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], cons
     exit(1);
   }
 
-  PetscCall(PetscClassIdRegister("PERMON",&PERMON_CLASSID));
-  PetscCall(PermonCreate(PETSC_COMM_WORLD,&permon));
+  PetscCall(PetscClassIdRegister("PERMON", &PERMON_CLASSID));
+  PetscCall(PermonCreate(PETSC_COMM_WORLD, &permon));
 
-  PetscCall(PetscOptionsGetBool(NULL,NULL,"-skip_permonrc",&flg,NULL));
+  PetscCall(PetscOptionsGetBool(NULL, NULL, "-skip_permonrc", &flg, NULL));
   if (!flg) {
-    PetscCall(PetscGetHomeDirectory(pfile,PETSC_MAX_PATH_LEN-16));
+    PetscCall(PetscGetHomeDirectory(pfile, PETSC_MAX_PATH_LEN - 16));
     /* warning: assumes all processes have a home directory or none, but nothing in between */
     if (pfile[0]) {
-      PetscCall(PetscStrlcat(pfile,"/.permonrc",sizeof(pfile)));
-      PetscCall(PetscOptionsInsertFile(PETSC_COMM_WORLD,NULL,pfile,PETSC_FALSE));
+      PetscCall(PetscStrlcat(pfile, "/.permonrc", sizeof(pfile)));
+      PetscCall(PetscOptionsInsertFile(PETSC_COMM_WORLD, NULL, pfile, PETSC_FALSE));
     }
-    PetscCall(PetscOptionsInsertFile(PETSC_COMM_WORLD,NULL, "permonrc", PETSC_FALSE));
-    PetscCall(PetscOptionsInsertFile(PETSC_COMM_WORLD,NULL, ".permonrc", PETSC_FALSE));
+    PetscCall(PetscOptionsInsertFile(PETSC_COMM_WORLD, NULL, "permonrc", PETSC_FALSE));
+    PetscCall(PetscOptionsInsertFile(PETSC_COMM_WORLD, NULL, ".permonrc", PETSC_FALSE));
     /* override by petsc options - permonrc currently takes the lowest precedence */
-    PetscCall(PetscOptionsInsert(NULL,argc,args,file));
+    PetscCall(PetscOptionsInsert(NULL, argc, args, file));
   } else {
-    PetscCall(PetscInfo(permon,"skipping permonrc due to -skip_permonrc\n"));
+    PetscCall(PetscInfo(permon, "skipping permonrc due to -skip_permonrc\n"));
   }
 
   PetscCall(PermonSetFromOptions());
 
   flg = PETSC_FALSE;
-  PetscCall(PetscOptionsGetBool(NULL,NULL,"-options_view",&flg,NULL));
-  if (!flg)PetscCall(PetscOptionsGetBool(NULL,NULL,"-options_table",&flg,NULL));
-  if (flg) PetscCall(PetscOptionsView(NULL,PETSC_VIEWER_STDOUT_WORLD));
+  PetscCall(PetscOptionsGetBool(NULL, NULL, "-options_view", &flg, NULL));
+  if (!flg) PetscCall(PetscOptionsGetBool(NULL, NULL, "-options_table", &flg, NULL));
+  if (flg) PetscCall(PetscOptionsView(NULL, PETSC_VIEWER_STDOUT_WORLD));
 
   /* register all PERMON implementations of PETSc classes */
   PetscCall(PermonMatRegisterAll());
@@ -90,7 +90,7 @@ PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], cons
   PetscCall(PermonKSPRegisterAll());
 
   PermonInitializeCalled = PETSC_TRUE;
-  PetscCall(PetscInfo(permon,"PERMON successfully initialized.\n"));
+  PetscCall(PetscInfo(permon, "PERMON successfully initialized.\n"));
   return 0;
 }
 
@@ -106,28 +106,24 @@ PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], cons
 PetscErrorCode PermonFinalize()
 {
   PetscFunctionBegin;
-  if (!PermonInitializeCalled) {
-    PetscFunctionReturn(PETSC_SUCCESS);
-  }
-  PetscCall(PetscInfo(permon,"PermonFinalize() called\n"));
+  if (!PermonInitializeCalled) { PetscFunctionReturn(PETSC_SUCCESS); }
+  PetscCall(PetscInfo(permon, "PermonFinalize() called\n"));
   PetscCall(PermonDestroy(&permon));
 
-  if (PermonBeganPetsc) {
-    PetscCall(PetscFinalize());
-  }
+  if (PermonBeganPetsc) { PetscCall(PetscFinalize()); }
   PermonInitializeCalled = PETSC_FALSE;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #if defined(PETSC_HAVE_DYNAMIC_LIBRARIES)
-/*
+  /*
   PetscDLLibraryRegister_permon - This function is called when the dynamic library
   it is in is opened.
 
   This one registers all the QP methods in the libpermon.a library.
  */
-#undef __FUNCT__
-#define __FUNCT__ "PetscDLLibraryRegister_permon"
+  #undef __FUNCT__
+  #define __FUNCT__ "PetscDLLibraryRegister_permon"
 PetscErrorCode PetscDLLibraryRegister_permon()
 {
   PetscFunctionBegin;

@@ -12,12 +12,12 @@ PetscErrorCode QPSInitializePackage(void)
   if (QPSPackageInitialized) PetscFunctionReturn(PETSC_SUCCESS);
   QPSPackageInitialized = PETSC_TRUE;
   /* Register Classes */
-  PetscCall(PetscClassIdRegister("QP Solver",&QPS_CLASSID));
+  PetscCall(PetscClassIdRegister("QP Solver", &QPS_CLASSID));
   /* Register Constructors */
   PetscCall(QPSRegisterAll());
   /* Register Events */
-  PetscCall(PetscLogEventRegister("QPSSolve",QPS_CLASSID,&QPS_Solve));
-  PetscCall(PetscLogEventRegister("QPSPostSolve",QPS_CLASSID,&QPS_PostSolve));
+  PetscCall(PetscLogEventRegister("QPSSolve", QPS_CLASSID, &QPS_Solve));
+  PetscCall(PetscLogEventRegister("QPSPostSolve", QPS_CLASSID, &QPS_PostSolve));
   /* Process info & summary exclusions */
   PetscCall(PermonProcessInfoExclusions(QPS_CLASSID, QPS_CLASS_NAME));
   PetscCall(PetscRegisterFinalize(QPSFinalizePackage));

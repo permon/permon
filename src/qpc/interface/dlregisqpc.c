@@ -12,7 +12,7 @@ PetscErrorCode QPCInitializePackage(void)
   if (QPCPackageInitialized) PetscFunctionReturn(PETSC_SUCCESS);
   QPCPackageInitialized = PETSC_TRUE;
   /* Register Classes */
-  PetscCall(PetscClassIdRegister("QP Constraints",&QPC_CLASSID));
+  PetscCall(PetscClassIdRegister("QP Constraints", &QPC_CLASSID));
   /* Register Constructors */
   PetscCall(QPCRegisterAll());
   /* Process info & summary exclusions */

@@ -3,10 +3,10 @@
 /* TODO remove MatProdGetMat? */
 #undef __FUNCT__
 #define __FUNCT__ "MatProdGetMat"
-PetscErrorCode MatProdGetMat(Mat A,PetscInt i,Mat *Ai)
+PetscErrorCode MatProdGetMat(Mat A, PetscInt i, Mat *Ai)
 {
   PetscFunctionBegin;
-  PetscCall(MatCompositeGetMat(A,i,Ai));
+  PetscCall(MatCompositeGetMat(A, i, Ai));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -39,10 +39,10 @@ $       MatCompositeSetType(*mat,MAT_COMPOSITE_MULTIPLICATIVE);
           MatCompositeMerge(), MatCompositeSetType(), MatCompositeType
 
 @*/
-PetscErrorCode  MatCreateProd(MPI_Comm comm,PetscInt nmat,const Mat *mats,Mat *mat)
+PetscErrorCode MatCreateProd(MPI_Comm comm, PetscInt nmat, const Mat *mats, Mat *mat)
 {
   PetscFunctionBegin;
-  PetscCall(MatCreateComposite(comm,nmat,mats,mat));
-  PetscCall(MatCompositeSetType(*mat,MAT_COMPOSITE_MULTIPLICATIVE));
+  PetscCall(MatCreateComposite(comm, nmat, mats, mat));
+  PetscCall(MatCompositeSetType(*mat, MAT_COMPOSITE_MULTIPLICATIVE));
   PetscFunctionReturn(PETSC_SUCCESS);
 }

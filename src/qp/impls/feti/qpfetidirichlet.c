@@ -10,15 +10,15 @@ PetscErrorCode QPFetiDirichletCreate(IS dbcis, QPFetiNumberingType numtype, Pets
   PetscCall(PetscNew(&dbc));
   dbc->is = dbcis;
   PetscCall(PetscObjectReference((PetscObject)dbcis));
-  dbc->numtype = numtype;
+  dbc->numtype      = numtype;
   dbc->enforce_by_B = enforce_by_B;
-  *dbc_new = dbc;
+  *dbc_new          = dbc;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
 #define __FUNCT__ "QPFetiDirichletDestroy"
-PetscErrorCode  QPFetiDirichletDestroy(QPFetiDirichlet *dbc)
+PetscErrorCode QPFetiDirichletDestroy(QPFetiDirichlet *dbc)
 {
   PetscFunctionBegin;
   if (!*dbc) PetscFunctionReturn(PETSC_SUCCESS);

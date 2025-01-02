@@ -1,8 +1,8 @@
 #include <permonqps.h>
 
-int main(int argc,char **args)
+int main(int argc, char **args)
 {
-  PetscCall(PermonInitialize(&argc,&args,(char *)0,(char *)0));
+  PetscCall(PermonInitialize(&argc, &args, (char *)0, (char *)0));
   PetscCall(PermonFinalize());
   return 0;
 }
@@ -11,4 +11,3 @@ int main(int argc,char **args)
   test:
     nsize: {{1 2}}
 TEST*/
-

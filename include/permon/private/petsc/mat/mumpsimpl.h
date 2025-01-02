@@ -5,17 +5,17 @@
 
 EXTERN_C_BEGIN
 #if defined(PETSC_USE_COMPLEX)
-#if defined(PETSC_USE_REAL_SINGLE)
-#include <cmumps_c.h>
+  #if defined(PETSC_USE_REAL_SINGLE)
+    #include <cmumps_c.h>
+  #else
+    #include <zmumps_c.h>
+  #endif
 #else
-#include <zmumps_c.h>
-#endif
-#else
-#if defined(PETSC_USE_REAL_SINGLE)
-#include <smumps_c.h>
-#else
-#include <dmumps_c.h>
-#endif
+  #if defined(PETSC_USE_REAL_SINGLE)
+    #include <smumps_c.h>
+  #else
+    #include <dmumps_c.h>
+  #endif
 #endif
 EXTERN_C_END
 #define JOB_INIT         -1
@@ -27,17 +27,17 @@ EXTERN_C_END
 
 /* calls to MUMPS */
 #if defined(PETSC_USE_COMPLEX)
-#if defined(PETSC_USE_REAL_SINGLE)
-#define PetscMUMPS_c cmumps_c
+  #if defined(PETSC_USE_REAL_SINGLE)
+    #define PetscMUMPS_c cmumps_c
+  #else
+    #define PetscMUMPS_c zmumps_c
+  #endif
 #else
-#define PetscMUMPS_c zmumps_c
-#endif
-#else
-#if defined(PETSC_USE_REAL_SINGLE)
-#define PetscMUMPS_c smumps_c
-#else
-#define PetscMUMPS_c dmumps_c
-#endif
+  #if defined(PETSC_USE_REAL_SINGLE)
+    #define PetscMUMPS_c smumps_c
+  #else
+    #define PetscMUMPS_c dmumps_c
+  #endif
 #endif
 
 /* MUMPS uses MUMPS_INT for nonzero indices such as irn/jcn, irn_loc/jcn_loc and uses int64_t for
@@ -48,37 +48,37 @@ typedef MUMPS_INT PetscMUMPSInt;
 
 /* declare MumpsScalar */
 #if defined(PETSC_USE_COMPLEX)
-#if defined(PETSC_USE_REAL_SINGLE)
-#define MumpsScalar mumps_complex
+  #if defined(PETSC_USE_REAL_SINGLE)
+    #define MumpsScalar mumps_complex
+  #else
+    #define MumpsScalar mumps_double_complex
+  #endif
 #else
-#define MumpsScalar mumps_double_complex
-#endif
-#else
-#define MumpsScalar PetscScalar
+  #define MumpsScalar PetscScalar
 #endif
 
 /* macros s.t. indices match MUMPS documentation */
-#define ICNTL(I)  icntl[(I)-1]
-#define CNTL(I)   cntl[(I)-1]
-#define INFOG(I)  infog[(I)-1]
-#define INFO(I)   info[(I)-1]
-#define RINFOG(I) rinfog[(I)-1]
-#define RINFO(I)  rinfo[(I)-1]
+#define ICNTL(I)  icntl[(I) - 1]
+#define CNTL(I)   cntl[(I) - 1]
+#define INFOG(I)  infog[(I) - 1]
+#define INFO(I)   info[(I) - 1]
+#define RINFOG(I) rinfog[(I) - 1]
+#define RINFO(I)  rinfo[(I) - 1]
 
 typedef struct Mat_MUMPS Mat_MUMPS;
 struct Mat_MUMPS {
 #if defined(PETSC_USE_COMPLEX)
-#if defined(PETSC_USE_REAL_SINGLE)
+  #if defined(PETSC_USE_REAL_SINGLE)
   CMUMPS_STRUC_C id;
-#else
+  #else
   ZMUMPS_STRUC_C id;
-#endif
+  #endif
 #else
-#if defined(PETSC_USE_REAL_SINGLE)
+  #if defined(PETSC_USE_REAL_SINGLE)
   SMUMPS_STRUC_C id;
-#else
+  #else
   DMUMPS_STRUC_C id;
-#endif
+  #endif
 #endif
 
   MatStructure   matstruc;

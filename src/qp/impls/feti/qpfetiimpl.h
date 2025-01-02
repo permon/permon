@@ -5,15 +5,15 @@
 
 typedef struct _n_QPFetiDirichlet *QPFetiDirichlet;
 struct _n_QPFetiDirichlet {
-  IS is;
+  IS                  is;
   QPFetiNumberingType numtype;
-  PetscBool enforce_by_B;
+  PetscBool           enforce_by_B;
 };
 
 typedef struct _n_QPFetiCtx *QPFetiCtx;
 struct _n_QPFetiCtx {
   /* gluing data */
-  IS i2g, l2g;
+  IS                     i2g, l2g;
   ISLocalToGlobalMapping i2g_map, l2g_map;
 
   /* Dirichlet B.C. */
@@ -28,7 +28,7 @@ PERMON_INTERN PetscErrorCode QPFetiGetGlobalDir(QP qp, IS dbc, QPFetiNumberingTy
 
 PERMON_INTERN PetscErrorCode QPFetiCtxCreate(QPFetiCtx *ctxout);
 PERMON_INTERN PetscErrorCode QPFetiCtxDestroy(QPFetiCtx ctx);
-PERMON_INTERN PetscErrorCode QPFetiGetCtx(QP qp,QPFetiCtx *ctxout);
+PERMON_INTERN PetscErrorCode QPFetiGetCtx(QP qp, QPFetiCtx *ctxout);
 
 PERMON_INTERN PetscErrorCode QPFetiDirichletCreate(IS dbcis, QPFetiNumberingType numtype, PetscBool enforce_by_B, QPFetiDirichlet *dbc);
 PERMON_INTERN PetscErrorCode QPFetiDirichletDestroy(QPFetiDirichlet *dbc);

@@ -4,7 +4,7 @@
 #include <petsctao.h>
 
 typedef struct {
-  Tao tao;
+  Tao       tao;
   PetscBool setfromoptionscalled;
-  PetscInt ksp_its;
+  PetscInt  ksp_its;
 } QPS_Tao;
