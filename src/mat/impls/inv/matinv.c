@@ -1206,7 +1206,7 @@ PetscErrorCode MatInvSetRedundancy(Mat imat, PetscInt red)
   PetscValidLogicalCollectiveInt(imat, red, 2);
   PetscCall(PetscObjectGetComm((PetscObject)imat, &comm));
   PetscCallMPI(MPI_Comm_size(comm, &comm_size));
-  if ((red < 0 && red != PETSC_DECIDE && red != PETSC_DEFAULT) || (red > comm_size)) { SETERRQ(PetscObjectComm((PetscObject)imat), PETSC_ERR_ARG_WRONG, "invalid redundancy parameter: must be an intteger in closed interval [0, comm size]"); }
+  PetscCheck((red >= 0 || red == PETSC_DECIDE || red == PETSC_DEFAULT) && red <= comm_size, PetscObjectComm((PetscObject)imat), PETSC_ERR_ARG_WRONG, "invalid redundancy parameter: must be an integer in closed interval [0, comm size]");
   PetscTryMethod(imat, "MatInvSetRedundancy_Inv_C", (Mat, PetscInt), (imat, red));
   PetscFunctionReturn(PETSC_SUCCESS);
 }

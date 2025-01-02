@@ -106,6 +106,7 @@ PERMON_EXTERN char      PeFuBe_s_[128];
 #define PermonTracedFunctionBegin \
   PetscLogDouble ttttt = 0.0; \
   PetscFunctionBegin;
+// avoid warning by make checkbadsource
 
 #define PermonTraceBegin \
   if (PermonTraceEnabled) { \

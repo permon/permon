@@ -465,8 +465,8 @@ PetscErrorCode MatDuplicate_BlockDiag(Mat matin, MatDuplicateOption cpvalues, Ma
   PetscCall(MatCreate(((PetscObject)matin)->comm, &matout));
   PetscCall(MatSetSizes(matout, matin->rmap->n, matin->cmap->n, matin->rmap->N, matin->cmap->N));
   PetscCall(MatSetType(matout, ((PetscObject)matin)->type_name));
-  PetscCall(PetscMemcpy(matout->ops, matin->ops, sizeof(struct _MatOps)));
-  dataout = (Mat_BlockDiag *)matout->data;
+  matout->ops[0] = matin->ops[0];
+  dataout        = (Mat_BlockDiag *)matout->data;
 
   PetscCall(MatDuplicate(datain->localBlock, cpvalues, &dataout->localBlock));
   PetscCall(VecDuplicate(datain->yloc, &dataout->yloc));

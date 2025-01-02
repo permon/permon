@@ -805,7 +805,7 @@ PetscErrorCode QPSViewConvergence_MPGP(QPS qps, PetscViewer v)
    Level: intermediate
 
    Reference:
-   . J. Kružík, D. Horák, M. Čermák, L. Pospíšil, M. Pecha, "Active set expansion strategies in MPRGP algorithm", Advances in Engineering Software, Volume 149, 2020.
+   . J. Kruzik, D. Horak, M. Čermak, L. Pospisil, M. Pecha, "Active set expansion strategies in MPRGP algorithm", Advances in Engineering Software, Volume 149, 2020.
 
 .seealso:  QPSCreate(), QPSSetType(), QPSType (for list of available types), QPS,
            QPSMPGPSetAlpha(), QPSMPGPGetAlpha(), QPSMPGPSetGamma(), QPSMPGPGetGamma(),
