@@ -1,8 +1,8 @@
-  last QPSSolve CONVERGED due to CONVERGED_RTOL, KSPReason=2, required 389 iterations
+  last QPSSolve CONVERGED due to CONVERGED_RTOL, KSPReason=2, required 539 iterations
           total number of function/gradient evaluations=2
         Objective value=-0.291767
-        total number of function/gradient evaluations=586,            (max: 4000)
+        total number of function/gradient evaluations=868,            (max: 4000)
 r = ||A*x - b - lambda_lb|| = 0.00e+00    rO/||b|| = 0.00e+00
 r = ||min(x-lb,0)||      = 0.00e+00    r/||b|| = 0.00e+00
-r = ||min(lambda_lb,0)|| = 2.63e-07    r/||b|| = 8.69e-06
-r = |lambda_lb'*(lb-x)|  = 1.39e-07    r/||b|| = 4.59e-06
+r = ||min(lambda_lb,0)|| = 2.85e-07    r/||b|| = 9.41e-06
+r = |lambda_lb'*(lb-x)|  = 1.44e-06    r/||b|| = 4.74e-05
