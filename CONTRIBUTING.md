@@ -9,7 +9,11 @@ with us frequently to ensure that your effort is well-directed.
 
 ## Guidelines
 PERMON follows PETSc code standards.
-Please read the code standards chapter of the PETSc developer guide https://docs.petsc.org/en/latest/developers/style.html.
+Please read the code standards chapter of the PETSc developer guide https://petsc.org/release/developers/style/. The code style can be checked and mostly enforced by running
+```
+make checkbadsource
+make permonclangformat
+```
 
 Before filing a pull request (PR):
 

@@ -6,5 +6,5 @@
 
 <H2> Vectors: <A HREF="PETSC_DIRsrc/vec/vec/examples/tutorials/index.html">Examples</A> </H2>
 
-  PERMON vectors (Vec objects) are used to store the field variables 
-  in PDE-based (or other) simulations. 
+  PERMON vectors (Vec objects) are used to store the field variables
+  in PDE-based (or other) simulations.

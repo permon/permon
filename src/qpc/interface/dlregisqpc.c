@@ -1,4 +1,4 @@
-#define FLLOPQPC_DLL
+#define PERMONQPC_DLL
 
 #include <permon/private/qpcimpl.h>
 
@@ -12,11 +12,11 @@ PetscErrorCode QPCInitializePackage(void)
   if (QPCPackageInitialized) PetscFunctionReturn(PETSC_SUCCESS);
   QPCPackageInitialized = PETSC_TRUE;
   /* Register Classes */
-  PetscCall(PetscClassIdRegister("QP Constraints",&QPC_CLASSID));
+  PetscCall(PetscClassIdRegister("QP Constraints", &QPC_CLASSID));
   /* Register Constructors */
   PetscCall(QPCRegisterAll());
   /* Process info & summary exclusions */
-  PetscCall(FllopProcessInfoExclusions(QPC_CLASSID, QPC_CLASS_NAME));
+  PetscCall(PermonProcessInfoExclusions(QPC_CLASSID, QPC_CLASS_NAME));
   PetscCall(PetscRegisterFinalize(QPCFinalizePackage));
   PetscFunctionReturn(PETSC_SUCCESS);
 }

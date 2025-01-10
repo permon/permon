@@ -4,7 +4,7 @@ ALL: lib
 CFLAGS   =
 FFLAGS   =
 SOURCEC  = permoninit.c petscretro.c utils.c
-SOURCEF  = 
+SOURCEF  =
 SOURCEH  = ../../include/permonpetscretro.h
 OBJSC    = ${SOURCEC:.c=.o}
 LIBBASE  = libpermon

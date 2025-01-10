@@ -1,8 +1,7 @@
-
 #include <permon/private/qpsimpl.h>
 
 PetscClassId  QPS_CLASSID;
-PetscLogEvent  QPS_Solve,QPS_PostSolve;
+PetscLogEvent QPS_Solve, QPS_PostSolve;
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSQPChangeListener_Private"
@@ -11,27 +10,28 @@ static PetscErrorCode QPSQPChangeListener_Private(QP qp)
   QPS sol;
 
   PetscFunctionBegin;
-  PetscCall(QPGetChangeListenerContext(qp,(QPS*)&sol));
+  PetscCall(QPGetChangeListenerContext(qp, (QPS *)&sol));
   sol->setupcalled = PETSC_FALSE;
-  qp->solved = PETSC_FALSE;
+  qp->solved       = PETSC_FALSE;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSAttachQP_Private"
-static PetscErrorCode QPSAttachQP_Private(QPS qps,QP qp)
+static PetscErrorCode QPSAttachQP_Private(QPS qps, QP qp)
 {
   PetscFunctionBegin;
   qps->topQP = qp;
-  PetscCall(QPSetChangeListener(qp,QPSQPChangeListener_Private));
-  PetscCall(QPSetChangeListenerContext(qp,qps));
+  PetscCall(QPSetChangeListener(qp, QPSQPChangeListener_Private));
+  PetscCall(QPSetChangeListenerContext(qp, qps));
   PetscCall(PetscObjectReference((PetscObject)qp));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSDetachQP_Private"
-static PetscErrorCode QPSDetachQP_Private(QPS qps) {
+static PetscErrorCode QPSDetachQP_Private(QPS qps)
+{
   PetscFunctionBegin;
   if (!qps->topQP) PetscFunctionReturn(PETSC_SUCCESS);
 
@@ -58,31 +58,31 @@ static PetscErrorCode QPSDetachQP_Private(QPS qps) {
 
 .seealso QPSDestroy()
 @*/
-PetscErrorCode QPSCreate(MPI_Comm comm,QPS *qps_new)
+PetscErrorCode QPSCreate(MPI_Comm comm, QPS *qps_new)
 {
-  QPS              qps;
-  void             *ctx;
+  QPS   qps;
+  void *ctx;
 
   PetscFunctionBegin;
-  PetscAssertPointer(qps_new,2);
+  PetscAssertPointer(qps_new, 2);
   *qps_new = 0;
   PetscCall(QPSInitializePackage());
 
-  PetscCall(PetscHeaderCreate(qps,QPS_CLASSID,"QPS","Quadratic Programming Solver","QPS",comm,QPSDestroy,QPSView));
+  PetscCall(PetscHeaderCreate(qps, QPS_CLASSID, "QPS", "Quadratic Programming Solver", "QPS", comm, QPSDestroy, QPSView));
 
-  qps->rtol        = 1e-5;
-  qps->atol        = 1e-50;
-  qps->divtol      = 1e4;
-  qps->max_it      = 10000;
-  qps->autoPostSolve = PETSC_TRUE;
-  qps->topQP       = NULL;
-  qps->solQP       = NULL;
-  qps->setupcalled = PETSC_FALSE;
-  qps->postsolvecalled = PETSC_FALSE;
-  qps->user_type   = PETSC_FALSE;
-  qps->iteration   = 0;
+  qps->rtol                   = 1e-5;
+  qps->atol                   = 1e-50;
+  qps->divtol                 = 1e4;
+  qps->max_it                 = 10000;
+  qps->autoPostSolve          = PETSC_TRUE;
+  qps->topQP                  = NULL;
+  qps->solQP                  = NULL;
+  qps->setupcalled            = PETSC_FALSE;
+  qps->postsolvecalled        = PETSC_FALSE;
+  qps->user_type              = PETSC_FALSE;
+  qps->iteration              = 0;
   qps->iterations_accumulated = 0;
-  qps->nsolves     = 0;
+  qps->nsolves                = 0;
 
   /* monitor */
   qps->res_hist       = NULL;
@@ -93,7 +93,7 @@ PetscErrorCode QPSCreate(MPI_Comm comm,QPS *qps_new)
   qps->numbermonitors = 0;
 
   PetscCall(QPSConvergedDefaultCreate(&ctx));
-  PetscCall(QPSSetConvergenceTest(qps,QPSConvergedDefault,ctx,QPSConvergedDefaultDestroy));
+  PetscCall(QPSSetConvergenceTest(qps, QPSConvergedDefault, ctx, QPSConvergedDefaultDestroy));
 
   *qps_new = qps;
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -114,15 +114,15 @@ PetscErrorCode QPSCreate(MPI_Comm comm,QPS *qps_new)
 
 .seealso QPSSetQP(), QPSGetSolvedQP(), QPSSolve()
 @*/
-PetscErrorCode QPSGetQP(QPS qps,QP *qp)
+PetscErrorCode QPSGetQP(QPS qps, QP *qp)
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscAssertPointer(qp,2);
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
+  PetscAssertPointer(qp, 2);
   if (!qps->topQP) {
     QP qp_;
-    PetscCall(QPCreate(PetscObjectComm((PetscObject)qps),&qp_));
-    PetscCall(QPSAttachQP_Private(qps,qp_));
+    PetscCall(QPCreate(PetscObjectComm((PetscObject)qps), &qp_));
+    PetscCall(QPSAttachQP_Private(qps, qp_));
     PetscCall(QPDestroy(&qp_));
   }
   *qp = qps->topQP;
@@ -146,11 +146,11 @@ PetscErrorCode QPSGetQP(QPS qps,QP *qp)
 
 .seealso QPSGetQP(), QPSSolve()
 @*/
-PetscErrorCode QPSGetSolvedQP(QPS qps,QP *qp)
+PetscErrorCode QPSGetSolvedQP(QPS qps, QP *qp)
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscAssertPointer(qp,2);
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
+  PetscAssertPointer(qp, 2);
   *qp = qps->solQP;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -168,15 +168,15 @@ PetscErrorCode QPSGetSolvedQP(QPS qps,QP *qp)
 
    Level: beginner
 @*/
-PetscErrorCode QPSSetQP(QPS qps,QP qp)
+PetscErrorCode QPSSetQP(QPS qps, QP qp)
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscValidHeaderSpecific(qp,QP_CLASSID,2);
-  PetscCheckSameComm(qps,1,qp,2);
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
+  PetscValidHeaderSpecific(qp, QP_CLASSID, 2);
+  PetscCheckSameComm(qps, 1, qp, 2);
   if (qps->topQP == qp) PetscFunctionReturn(PETSC_SUCCESS);
   PetscCall(QPSDetachQP_Private(qps));
-  PetscCall(QPSAttachQP_Private(qps,qp));
+  PetscCall(QPSAttachQP_Private(qps, qp));
   qps->setupcalled = PETSC_FALSE;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -197,24 +197,24 @@ PetscErrorCode QPSSetQP(QPS qps,QP qp)
 @*/
 PetscErrorCode QPSSetUp(QPS qps)
 {
-  QP  solqp;
+  QP        solqp;
   PetscBool flg;
 
-  FllopTracedFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
+  PermonTracedFunctionBegin;
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
   if (qps->setupcalled) PetscFunctionReturn(PETSC_SUCCESS);
 
-  FllopTraceBegin;
+  PermonTraceBegin;
   PetscCall(QPChainSetUp(qps->topQP));
-  if (!qps->solQP) { PetscCall(QPChainGetLast(qps->topQP,&qps->solQP)); }
+  if (!qps->solQP) { PetscCall(QPChainGetLast(qps->topQP, &qps->solQP)); }
   solqp = qps->solQP;
   PetscCall(PetscObjectReference((PetscObject)qps->solQP));
 
   PetscCall(QPSSetDefaultTypeIfNotSpecified(qps));
-  PetscCall(QPSIsQPCompatible(qps,solqp,&flg));
-  if (!flg) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_INCOMP,"QPS solver %s is not compatible with its attached QP",((PetscObject)qps)->type_name);
+  PetscCall(QPSIsQPCompatible(qps, solqp, &flg));
+  PetscCheck(flg, ((PetscObject)qps)->comm, PETSC_ERR_ARG_INCOMP, "QPS solver %s is not compatible with its attached QP", ((PetscObject)qps)->type_name);
 
-  PetscTryTypeMethod(qps,setup);
+  PetscTryTypeMethod(qps, setup);
   PetscCall(QPChainSetUp(solqp));
   qps->setupcalled = PETSC_TRUE;
   PetscFunctionReturnI(PETSC_SUCCESS);
@@ -237,11 +237,11 @@ PetscErrorCode QPSSetUp(QPS qps)
 PetscErrorCode QPSReset(QPS qps)
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscTryTypeMethod(qps,reset);
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
+  PetscTryTypeMethod(qps, reset);
   if (qps->topQP) PetscCall(QPDestroy(&qps->topQP));
   PetscCall(QPDestroy(&qps->solQP));
-  PetscCall(VecDestroyVecs(qps->nwork,&qps->work));
+  PetscCall(VecDestroyVecs(qps->nwork, &qps->work));
   PetscCall(PetscFree(qps->work_state));
   qps->setupcalled = PETSC_FALSE;
   PetscCall(QPSResetStatistics(qps));
@@ -265,12 +265,12 @@ PetscErrorCode QPSReset(QPS qps)
 PetscErrorCode QPSResetStatistics(QPS qps)
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  qps->iteration = 0;
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
+  qps->iteration              = 0;
   qps->iterations_accumulated = 0;
-  qps->nsolves = 0;
+  qps->nsolves                = 0;
 
-  PetscTryTypeMethod(qps,resetstatistics);
+  PetscTryTypeMethod(qps, resetstatistics);
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -289,17 +289,17 @@ PetscErrorCode QPSResetStatistics(QPS qps)
 
 .seealso QPSViewConvergence()
 @*/
-PetscErrorCode QPSView(QPS qps,PetscViewer v)
+PetscErrorCode QPSView(QPS qps, PetscViewer v)
 {
   PetscFunctionBegin;
-  PetscCall(PetscObjectPrintClassNamePrefixType((PetscObject) qps, v));
+  PetscCall(PetscObjectPrintClassNamePrefixType((PetscObject)qps, v));
   PetscCall(PetscViewerASCIIPushTab(v));
   if (*qps->ops->view) {
-    PetscUseTypeMethod(qps,view,v);
+    PetscUseTypeMethod(qps, view, v);
   } else {
     const QPSType type;
     PetscCall(QPSGetType(qps, &type));
-    PetscCall(PetscInfo(qps,"Warning: QPSView not implemented yet for type %s\n",type));
+    PetscCall(PetscInfo(qps, "Warning: QPSView not implemented yet for type %s\n", type));
   }
   PetscCall(PetscViewerASCIIPopTab(v));
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -320,11 +320,10 @@ PetscErrorCode QPSView(QPS qps,PetscViewer v)
 PetscErrorCode QPSDestroyDefault(QPS qps)
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
   PetscCall(PetscFree(qps->data));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
-
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSDestroy"
@@ -343,17 +342,15 @@ PetscErrorCode QPSDestroy(QPS *qps)
   PetscFunctionBegin;
   if (!*qps) PetscFunctionReturn(PETSC_SUCCESS);
   PetscValidHeaderSpecific(*qps, QPS_CLASSID, 1);
-  if (--((PetscObject) (*qps))->refct > 0) {
+  if (--((PetscObject)(*qps))->refct > 0) {
     *qps = 0;
     PetscFunctionReturn(PETSC_SUCCESS);
   }
 
   PetscCall(QPSReset(*qps));
-  PetscTryTypeMethod(*qps,destroy);
+  PetscTryTypeMethod(*qps, destroy);
 
-  if ((*qps)->convergencetestdestroy) {
-    PetscCall((*(*qps)->convergencetestdestroy)((*qps)->cnvctx));
-  }
+  if ((*qps)->convergencetestdestroy) { PetscCall((*(*qps)->convergencetestdestroy)((*qps)->cnvctx)); }
 
   PetscCall(QPDestroy(&(*qps)->topQP));
   PetscCall(PetscFree((*qps)->data));
@@ -381,31 +378,31 @@ PetscErrorCode QPSDestroy(QPS *qps)
 @*/
 PetscErrorCode QPSSetType(QPS qps, const QPSType type)
 {
-    PetscErrorCode (*create_xxx)(QPS);
-    PetscBool  issame;
+  PetscErrorCode (*create_xxx)(QPS);
+  PetscBool issame;
 
-    PetscFunctionBegin;
-    PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-    PetscAssertPointer(type,2);
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
+  PetscAssertPointer(type, 2);
 
-    PetscCall(PetscObjectTypeCompare((PetscObject)qps,type,&issame));
-    if (issame) PetscFunctionReturn(PETSC_SUCCESS);
+  PetscCall(PetscObjectTypeCompare((PetscObject)qps, type, &issame));
+  if (issame) PetscFunctionReturn(PETSC_SUCCESS);
 
-    PetscCall(PetscFunctionListFind(QPSList,type,(void(**)(void))&create_xxx));
-    if (!create_xxx) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_UNKNOWN_TYPE,"Unable to find requested QPS type %s",type);
+  PetscCall(PetscFunctionListFind(QPSList, type, (void (**)(void))&create_xxx));
+  PetscCheck(create_xxx, PETSC_COMM_SELF, PETSC_ERR_ARG_UNKNOWN_TYPE, "Unable to find requested QPS type %s", type);
 
-    /* Destroy the pre-existing private QPS context */
-    PetscTryTypeMethod(qps,destroy);
+  /* Destroy the pre-existing private QPS context */
+  PetscTryTypeMethod(qps, destroy);
 
-    /* Reinitialize function pointers in QPSOps structure */
-    PetscCall(PetscMemzero(qps->ops,sizeof(struct _QPSOps)));
+  /* Reinitialize function pointers in QPSOps structure */
+  PetscCall(PetscMemzero(qps->ops, sizeof(struct _QPSOps)));
 
-    qps->setupcalled = PETSC_FALSE;
-    qps->user_type = PETSC_TRUE;
+  qps->setupcalled = PETSC_FALSE;
+  qps->user_type   = PETSC_TRUE;
 
-    PetscCall((*create_xxx)(qps));
-    PetscCall(PetscObjectChangeTypeName((PetscObject)qps,type));
-    PetscFunctionReturn(PETSC_SUCCESS);
+  PetscCall((*create_xxx)(qps));
+  PetscCall(PetscObjectChangeTypeName((PetscObject)qps, type));
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -424,33 +421,33 @@ PetscErrorCode QPSSetType(QPS qps, const QPSType type)
 @*/
 PetscErrorCode QPSSetDefaultType(QPS qps)
 {
-  QP qp;
-  Mat Beq,Bineq;
-  Vec ceq,cineq;
+  QP  qp;
+  Mat Beq, Bineq;
+  Vec ceq, cineq;
   QPC qpc;
 
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  if (!qps->topQP) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ORDER,"QPS needs QP to be set in order to find a default type");
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
+  PetscCheck(qps->topQP, ((PetscObject)qps)->comm, PETSC_ERR_ORDER, "QPS needs QP to be set in order to find a default type");
 
-  PetscCall(QPChainGetLast(qps->topQP,&qp));
+  PetscCall(QPChainGetLast(qps->topQP, &qp));
 
-  PetscCall(QPGetEq(qp,&Beq,&ceq));
-  PetscCall(QPGetIneq(qp,&Bineq,&cineq));
-  PetscCall(QPGetQPC(qp,&qpc));
+  PetscCall(QPGetEq(qp, &Beq, &ceq));
+  PetscCall(QPGetIneq(qp, &Bineq, &cineq));
+  PetscCall(QPGetQPC(qp, &qpc));
 
   /* general linear inequality constraints Bx <= c */
-  if (Bineq) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_SUP,"There is currently no QPS type implemented that can solve QP s.t. linear inequality constraints without any preprocessing. Try to use QPDualize");
+  PetscCheck(!Bineq, ((PetscObject)qps)->comm, PETSC_ERR_SUP, "There is currently no QPS type implemented that can solve QP s.t. linear inequality constraints without any preprocessing. Try to use QPDualize");
 
   /* problem with linear equality constraints Bx = c */
   if (Beq) {
-    PetscCall(QPSSetType(qps,QPSSMALXE));
+    PetscCall(QPSSetType(qps, QPSSMALXE));
   } else if (qpc) {
     /* problem without equality constraints but with box constraints */
-      PetscCall(QPSSetType(qps,QPSMPGP));
+    PetscCall(QPSSetType(qps, QPSMPGP));
   } else {
     /* without constraints */
-    PetscCall(QPSSetType(qps,QPSKSP));
+    PetscCall(QPSSetType(qps, QPSKSP));
   }
 
   qps->user_type = PETSC_FALSE;
@@ -486,13 +483,14 @@ PetscErrorCode QPSSetDefaultTypeIfNotSpecified(QPS qps)
 
 .seealso QPSSetType()
 @*/
-PetscErrorCode QPSGetType(QPS qps,const QPSType *type)
+PetscErrorCode QPSGetType(QPS qps, const QPSType *type)
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscAssertPointer(type,2);
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
+  PetscAssertPointer(type, 2);
   *type = ((PetscObject)qps)->type_name;
-  PetscFunctionReturn(PETSC_SUCCESS);}
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSIsQPCompatible"
@@ -512,13 +510,13 @@ PetscErrorCode QPSGetType(QPS qps,const QPSType *type)
 
 .seealso QPSSolve(), QPSetQP()
 @*/
-PetscErrorCode QPSIsQPCompatible(QPS qps,QP qp,PetscBool *flg)
+PetscErrorCode QPSIsQPCompatible(QPS qps, QP qp, PetscBool *flg)
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscValidHeaderSpecific(qp,QP_CLASSID,2);
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
+  PetscValidHeaderSpecific(qp, QP_CLASSID, 2);
   *flg = PETSC_FALSE;
-  PetscTryTypeMethod(qps,isqpcompatible,qp,flg);
+  PetscTryTypeMethod(qps, isqpcompatible, qp, flg);
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -539,22 +537,20 @@ PetscErrorCode QPSIsQPCompatible(QPS qps,QP qp,PetscBool *flg)
 PetscErrorCode QPSSolve(QPS qps)
 {
   PetscFunctionBeginI;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
   PetscCall(QPSSetUp(qps));
 
-  PetscCall(PetscLogEventBegin(QPS_Solve,qps,0,0,0));
-  PetscUseTypeMethod(qps,solve);
-  PetscCall(PetscLogEventEnd(  QPS_Solve,qps,0,0,0));
+  PetscCall(PetscLogEventBegin(QPS_Solve, qps, 0, 0, 0));
+  PetscUseTypeMethod(qps, solve);
+  PetscCall(PetscLogEventEnd(QPS_Solve, qps, 0, 0, 0));
 
   qps->iterations_accumulated += qps->iteration;
   qps->nsolves++;
 
   qps->postsolvecalled = PETSC_FALSE;
-  qps->solQP->solved = (PetscBool)(qps->reason > 0);
+  qps->solQP->solved   = (PetscBool)(qps->reason > 0);
 
-  if (qps->autoPostSolve) {
-    PetscCall(QPSPostSolve(qps));
-  }
+  if (qps->autoPostSolve) { PetscCall(QPSPostSolve(qps)); }
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
@@ -582,49 +578,47 @@ PetscErrorCode QPSSolve(QPS qps)
 @*/
 PetscErrorCode QPSPostSolve(QPS qps)
 {
-  QP qp;
-  PetscBool view;
-  PetscViewer v;
+  QP                qp;
+  PetscBool         view;
+  PetscViewer       v;
   PetscViewerFormat format;
 
-  FllopTracedFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
+  PermonTracedFunctionBegin;
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
   if (qps->postsolvecalled) PetscFunctionReturn(PETSC_SUCCESS);
 
-  FllopTraceBegin;
-  PetscCall(PetscLogEventBegin(QPS_PostSolve,qps,0,0,0));
-  PetscCall(PetscOptionsCreateViewer(((PetscObject)qps)->comm,NULL,((PetscObject)qps)->prefix,"-qps_view",&v,&format,&view));
+  PermonTraceBegin;
+  PetscCall(PetscLogEventBegin(QPS_PostSolve, qps, 0, 0, 0));
+  PetscCall(PetscOptionsCreateViewer(((PetscObject)qps)->comm, NULL, ((PetscObject)qps)->prefix, "-qps_view", &v, &format, &view));
   if (view && !PetscPreLoadingOn) {
-    PetscCall(PetscViewerPushFormat(v,format));
-    PetscCall(QPSView(qps,v));
+    PetscCall(PetscViewerPushFormat(v, format));
+    PetscCall(QPSView(qps, v));
     PetscCall(PetscViewerPopFormat(v));
   }
   PetscCall(PetscViewerDestroy(&v));
 
-  PetscCall(PetscOptionsCreateViewer(((PetscObject)qps)->comm,NULL,((PetscObject)qps)->prefix,"-qps_view_convergence",&v,&format,&view));
+  PetscCall(PetscOptionsCreateViewer(((PetscObject)qps)->comm, NULL, ((PetscObject)qps)->prefix, "-qps_view_convergence", &v, &format, &view));
   if (view && !PetscPreLoadingOn) {
-    PetscCall(PetscViewerPushFormat(v,format));
-    PetscCall(QPSViewConvergence(qps,v));
+    PetscCall(PetscViewerPushFormat(v, format));
+    PetscCall(QPSViewConvergence(qps, v));
     PetscCall(PetscViewerPopFormat(v));
   }
   PetscCall(PetscViewerDestroy(&v));
 
-  PetscCall(QPSGetQP(qps,&qp));
+  PetscCall(QPSGetQP(qps, &qp));
   PetscCall(QPChainPostSolve(qp));
   qps->postsolvecalled = PETSC_TRUE;
-  PetscCall(PetscLogEventEnd(  QPS_PostSolve,qps,0,0,0));
+  PetscCall(PetscLogEventEnd(QPS_PostSolve, qps, 0, 0, 0));
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSSetConvergenceTest"
-PetscErrorCode QPSSetConvergenceTest(QPS qps,PetscErrorCode (*converge)(QPS,KSPConvergedReason*),void *cctx,PetscErrorCode (*destroy)(void*))
+PetscErrorCode QPSSetConvergenceTest(QPS qps, PetscErrorCode (*converge)(QPS, KSPConvergedReason *), void *cctx, PetscErrorCode (*destroy)(void *))
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  if (qps->convergencetestdestroy) {
-    PetscCall((*qps->convergencetestdestroy)(qps->cnvctx));
-  }
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
+  if (qps->convergencetestdestroy) { PetscCall((*qps->convergencetestdestroy)(qps->cnvctx)); }
   qps->convergencetest        = converge;
   qps->convergencetestdestroy = destroy;
   qps->cnvctx                 = cctx;
@@ -633,10 +627,10 @@ PetscErrorCode QPSSetConvergenceTest(QPS qps,PetscErrorCode (*converge)(QPS,KSPC
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSGetConvergenceContext"
-PetscErrorCode QPSGetConvergenceContext(QPS qps,void **ctx)
+PetscErrorCode QPSGetConvergenceContext(QPS qps, void **ctx)
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
   *ctx = qps->cnvctx;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -678,42 +672,42 @@ $      rnorm > dtol * rnorm_0,
 .seealso: QPSSetConvergenceTest(), QPSSetTolerances(), QPSConvergedSkip(), KSPConvergedReason, QPSGetConvergedReason(),
           QPSConvergedDefaultCreate(), QPSConvergedDefaultDestroy()
 @*/
-PetscErrorCode QPSConvergedDefault(QPS qps,KSPConvergedReason *reason)
+PetscErrorCode QPSConvergedDefault(QPS qps, KSPConvergedReason *reason)
 {
-  QPSConvergedDefaultCtx *cctx = (QPSConvergedDefaultCtx*) qps->cnvctx;
-  PetscInt i = qps->iteration;
-  PetscReal rnorm = qps->rnorm;
+  QPSConvergedDefaultCtx *cctx  = (QPSConvergedDefaultCtx *)qps->cnvctx;
+  PetscInt                i     = qps->iteration;
+  PetscReal               rnorm = qps->rnorm;
 
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
   *reason = KSP_CONVERGED_ITERATING;
 
-  if (!cctx) SETERRQ(((PetscObject) qps)->comm, PETSC_ERR_ARG_NULL, "Convergence context must have been created with QPSConvergedDefaultCreate()");
-  if (!cctx->setup_called) {
-    PetscCall(QPSConvergedDefaultSetUp(qps));
-  }
+  PetscCheck(cctx, ((PetscObject)qps)->comm, PETSC_ERR_ARG_NULL, "Convergence context must have been created with QPSConvergedDefaultCreate()");
+  if (!cctx->setup_called) { PetscCall(QPSConvergedDefaultSetUp(qps)); }
 
   if (i > qps->max_it) {
     *reason = KSP_DIVERGED_ITS;
-    PetscCall(PetscInfo(qps,"QP solver is diverging (iteration count reached the maximum). Initial right hand size norm %14.12e, current residual norm %14.12e at iteration %" PetscInt_FMT "\n",(double)cctx->norm_rhs,(double)rnorm,i));
+    PetscCall(PetscInfo(qps, "QP solver is diverging (iteration count reached the maximum). Initial right hand size norm %14.12e, current residual norm %14.12e at iteration %" PetscInt_FMT "\n", (double)cctx->norm_rhs, (double)rnorm, i));
     PetscFunctionReturn(PETSC_SUCCESS);
   }
 
-  if (i != -1) PetscCall(FllopDebug2("iteration %5d  rnorm %.10e \n", i, rnorm));
+  if (i != -1) PetscCall(PermonDebug2("iteration %5d  rnorm %.10e \n", i, rnorm));
 
   if (PetscIsInfOrNanScalar(rnorm)) {
-    PetscCall(PetscInfo(qps,"QP solver has created a not a number (NaN) as the residual norm, declaring divergence \n"));
+    PetscCall(PetscInfo(qps, "QP solver has created a not a number (NaN) as the residual norm, declaring divergence \n"));
     *reason = KSP_DIVERGED_NANORINF;
   } else if (rnorm <= cctx->ttol) {
     if (rnorm < qps->atol) {
-      PetscCall(PetscInfo(qps,"QP solver has converged. Residual norm %14.12e is less than absolute tolerance %14.12e at iteration %" PetscInt_FMT "\n",(double)rnorm,(double)qps->atol,i));
+      PetscCall(PetscInfo(qps, "QP solver has converged. Residual norm %14.12e is less than absolute tolerance %14.12e at iteration %" PetscInt_FMT "\n", (double)rnorm, (double)qps->atol, i));
       *reason = KSP_CONVERGED_ATOL;
     } else {
-      PetscCall(PetscInfo(qps,"QP solver has converged. Residual norm %14.12e is less than rtol*||b|| =  %14.12e * %14.12e = %14.12e at iteration %" PetscInt_FMT "\n",(double)rnorm,(double)qps->rtol,(double)cctx->norm_rhs,(double)qps->rtol*cctx->norm_rhs,i));
+      PetscCall(
+        PetscInfo(qps, "QP solver has converged. Residual norm %14.12e is less than rtol*||b|| =  %14.12e * %14.12e = %14.12e at iteration %" PetscInt_FMT "\n", (double)rnorm, (double)qps->rtol, (double)cctx->norm_rhs, (double)qps->rtol * cctx->norm_rhs, i));
       *reason = KSP_CONVERGED_RTOL;
     }
-  } else if (rnorm >= qps->divtol*cctx->norm_rhs_div) {
-    PetscCall(PetscInfo(qps,"QP solver is diverging. Residual norm %14.12e exceeded the divergence tolerance divtol * ||b|| = %14.12e * %14.12e = %14.12e at iteration %" PetscInt_FMT "\n",(double)rnorm,(double)qps->divtol,(double)cctx->norm_rhs,(double)qps->divtol*cctx->norm_rhs_div,i));
+  } else if (rnorm >= qps->divtol * cctx->norm_rhs_div) {
+    PetscCall(PetscInfo(qps, "QP solver is diverging. Residual norm %14.12e exceeded the divergence tolerance divtol * ||b|| = %14.12e * %14.12e = %14.12e at iteration %" PetscInt_FMT "\n", (double)rnorm, (double)qps->divtol, (double)cctx->norm_rhs,
+                        (double)qps->divtol * cctx->norm_rhs_div, i));
     *reason = KSP_DIVERGED_DTOL;
   }
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -723,16 +717,16 @@ PetscErrorCode QPSConvergedDefault(QPS qps,KSPConvergedReason *reason)
 #define __FUNCT__ "QPSConvergedDefaultSetUp"
 PetscErrorCode QPSConvergedDefaultSetUp(QPS qps)
 {
-  QPSConvergedDefaultCtx *cctx = (QPSConvergedDefaultCtx*) qps->cnvctx;
+  QPSConvergedDefaultCtx *cctx = (QPSConvergedDefaultCtx *)qps->cnvctx;
 
   PetscFunctionBegin;
   if (cctx->setup_called) PetscFunctionReturn(PETSC_SUCCESS);
-  if (!qps->setupcalled) SETERRQ(((PetscObject) qps)->comm, PETSC_ERR_ARG_WRONGSTATE, "QPSSetUp() not yet called");
+  PetscCheck(qps->setupcalled, ((PetscObject)qps)->comm, PETSC_ERR_ARG_WRONGSTATE, "QPSSetUp() not yet called");
   PetscCall(VecNorm(qps->solQP->b, NORM_2, &cctx->norm_rhs));
-  cctx->ttol = PetscMax(qps->rtol*cctx->norm_rhs, qps->atol);
+  cctx->ttol         = PetscMax(qps->rtol * cctx->norm_rhs, qps->atol);
   cctx->norm_rhs_div = cctx->norm_rhs;
   cctx->setup_called = PETSC_TRUE;
-  PetscCall(PetscInfo(qps,"QP solver convergence criterion initialized: ttol = max(rtol*norm(b),atol) = max(%.4e * %.4e, %.4e) = %.4e\n",qps->rtol,cctx->norm_rhs,qps->atol,cctx->ttol));
+  PetscCall(PetscInfo(qps, "QP solver convergence criterion initialized: ttol = max(rtol*norm(b),atol) = max(%.4e * %.4e, %.4e) = %.4e\n", qps->rtol, cctx->norm_rhs, qps->atol, cctx->ttol));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -741,7 +735,8 @@ PetscErrorCode QPSConvergedDefaultSetUp(QPS qps)
 #define __FUNCT__ "QPSConvergedDefaultSetRhsForDivergence"
 PetscErrorCode QPSConvergedDefaultSetRhsForDivergence(void *ctx, Vec b)
 {
-  QPSConvergedDefaultCtx *cctx = (QPSConvergedDefaultCtx*) ctx;
+  QPSConvergedDefaultCtx *cctx = (QPSConvergedDefaultCtx *)ctx;
+
   PetscFunctionBegin;
   PetscCall(VecNorm(b, NORM_2, &cctx->norm_rhs_div));
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -751,7 +746,7 @@ PetscErrorCode QPSConvergedDefaultSetRhsForDivergence(void *ctx, Vec b)
 #define __FUNCT__ "QPSConvergedDefaultDestroy"
 PetscErrorCode QPSConvergedDefaultDestroy(void *ctx)
 {
-  QPSConvergedDefaultCtx *cctx = (QPSConvergedDefaultCtx*) ctx;
+  QPSConvergedDefaultCtx *cctx = (QPSConvergedDefaultCtx *)ctx;
 
   PetscFunctionBegin;
   //PetscCall(VecDestroy(&cctx->work));
@@ -767,19 +762,19 @@ PetscErrorCode QPSConvergedDefaultCreate(void **ctx)
 
   PetscFunctionBegin;
   PetscCall(PetscNew(&cctx));
-  *ctx = cctx;
-  cctx->norm_rhs = NAN;
-  cctx->ttol   = NAN;
+  *ctx               = cctx;
+  cctx->norm_rhs     = NAN;
+  cctx->ttol         = NAN;
   cctx->setup_called = PETSC_FALSE;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSConvergedSkip"
-PetscErrorCode QPSConvergedSkip(QPS qps,KSPConvergedReason *reason)
+PetscErrorCode QPSConvergedSkip(QPS qps, KSPConvergedReason *reason)
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
   *reason = KSP_CONVERGED_ITERATING;
   if (qps->iteration >= qps->max_it) *reason = KSP_CONVERGED_ITS;
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -787,75 +782,75 @@ PetscErrorCode QPSConvergedSkip(QPS qps,KSPConvergedReason *reason)
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSGetConvergedReason"
-PetscErrorCode QPSGetConvergedReason(QPS qps,KSPConvergedReason *reason)
+PetscErrorCode QPSGetConvergedReason(QPS qps, KSPConvergedReason *reason)
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscAssertPointer(reason,2);
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
+  PetscAssertPointer(reason, 2);
   *reason = qps->reason;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSGetResidualNorm"
-PetscErrorCode QPSGetResidualNorm(QPS qps,PetscReal *rnorm)
+PetscErrorCode QPSGetResidualNorm(QPS qps, PetscReal *rnorm)
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscAssertPointer(rnorm,2);
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
+  PetscAssertPointer(rnorm, 2);
   *rnorm = qps->rnorm;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSGetIterationNumber"
-PetscErrorCode QPSGetIterationNumber(QPS qps,PetscInt *its)
+PetscErrorCode QPSGetIterationNumber(QPS qps, PetscInt *its)
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscAssertPointer(its,2);
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
+  PetscAssertPointer(its, 2);
   *its = qps->iteration;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSGetAccumulatedIterationNumber"
-PetscErrorCode QPSGetAccumulatedIterationNumber(QPS qps,PetscInt *its)
+PetscErrorCode QPSGetAccumulatedIterationNumber(QPS qps, PetscInt *its)
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscAssertPointer(its,2);
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
+  PetscAssertPointer(its, 2);
   *its = qps->iterations_accumulated;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSSetOptionsPrefix"
-PetscErrorCode QPSSetOptionsPrefix(QPS qps,const char prefix[])
+PetscErrorCode QPSSetOptionsPrefix(QPS qps, const char prefix[])
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscCall(PetscObjectSetOptionsPrefix((PetscObject)qps,prefix));
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
+  PetscCall(PetscObjectSetOptionsPrefix((PetscObject)qps, prefix));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSAppendOptionsPrefix"
-PetscErrorCode QPSAppendOptionsPrefix(QPS qps,const char prefix[])
+PetscErrorCode QPSAppendOptionsPrefix(QPS qps, const char prefix[])
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscCall(PetscObjectAppendOptionsPrefix((PetscObject)qps,prefix));
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
+  PetscCall(PetscObjectAppendOptionsPrefix((PetscObject)qps, prefix));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSGetOptionsPrefix"
-PetscErrorCode QPSGetOptionsPrefix(QPS qps,const char *prefix[])
+PetscErrorCode QPSGetOptionsPrefix(QPS qps, const char *prefix[])
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscCall(PetscObjectGetOptionsPrefix((PetscObject)qps,prefix));
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
+  PetscCall(PetscObjectGetOptionsPrefix((PetscObject)qps, prefix));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -864,40 +859,40 @@ PetscErrorCode QPSGetOptionsPrefix(QPS qps,const char *prefix[])
 PetscErrorCode QPSSetFromOptions(QPS qps)
 {
   PetscBool flg;
-  PetscReal rtol,atol,dtol;
+  PetscReal rtol, atol, dtol;
   PetscInt  maxit;
-  char type[256];
+  char      type[256];
 
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
   PetscObjectOptionsBegin((PetscObject)qps);
-  PetscCall(PetscOptionsFList("-qps_type","QP solution method","QPSSetType",QPSList,(char*)(((PetscObject)qps)->type_name),type,256,&flg));
-  if (flg) PetscCall(QPSSetType(qps,type));
+  PetscCall(PetscOptionsFList("-qps_type", "QP solution method", "QPSSetType", QPSList, (char *)(((PetscObject)qps)->type_name), type, 256, &flg));
+  if (flg) PetscCall(QPSSetType(qps, type));
   PetscCall(QPSSetDefaultTypeIfNotSpecified(qps));
 
-  PetscCall(PetscOptionsInt("-qps_max_it","Maximum number of iterations","QPSSetTolerances",qps->max_it,&maxit,&flg));
+  PetscCall(PetscOptionsInt("-qps_max_it", "Maximum number of iterations", "QPSSetTolerances", qps->max_it, &maxit, &flg));
   if (!flg) maxit = qps->max_it;
-  PetscCall(PetscOptionsReal("-qps_rtol","Relative decrease in residual norm","QPSSetTolerances",qps->rtol,&rtol,&flg));
+  PetscCall(PetscOptionsReal("-qps_rtol", "Relative decrease in residual norm", "QPSSetTolerances", qps->rtol, &rtol, &flg));
   if (!flg) rtol = qps->rtol;
-  PetscCall(PetscOptionsReal("-qps_atol","Absolute value of residual norm","QPSSetTolerances",qps->atol,&atol,&flg));
+  PetscCall(PetscOptionsReal("-qps_atol", "Absolute value of residual norm", "QPSSetTolerances", qps->atol, &atol, &flg));
   if (!flg) atol = qps->atol;
-  PetscCall(PetscOptionsReal("-qps_divtol","Residual norm increase cause divergence","QPSSetTolerances",qps->divtol,&dtol,&flg));
+  PetscCall(PetscOptionsReal("-qps_divtol", "Residual norm increase cause divergence", "QPSSetTolerances", qps->divtol, &dtol, &flg));
   if (!flg) dtol = qps->divtol;
-  PetscCall(QPSSetTolerances(qps,rtol,atol,dtol,maxit));
-  PetscCall(PetscOptionsBool("-qps_auto_post_solve","QPSSolve automatically triggers PostSolve","QPSSetAutoPostSolve",qps->autoPostSolve,&qps->autoPostSolve,NULL));
+  PetscCall(QPSSetTolerances(qps, rtol, atol, dtol, maxit));
+  PetscCall(PetscOptionsBool("-qps_auto_post_solve", "QPSSolve automatically triggers PostSolve", "QPSSetAutoPostSolve", qps->autoPostSolve, &qps->autoPostSolve, NULL));
   flg = PETSC_FALSE;
-  PetscCall(PetscOptionsBool("-qps_monitor_cancel","Turn off all QPS monitors","QPSMonitorCancel",flg,&flg,NULL));
+  PetscCall(PetscOptionsBool("-qps_monitor_cancel", "Turn off all QPS monitors", "QPSMonitorCancel", flg, &flg, NULL));
   if (flg) PetscCall(QPSMonitorCancel(qps));
   flg = PETSC_FALSE;
-  PetscCall(PetscOptionsBool("-qps_monitor","Turn on default QPS monitor","QPSMonitorSet",flg,&flg,NULL));
-  if (flg) PetscCall(QPSMonitorSet(qps,QPSMonitorDefault,NULL,NULL));
+  PetscCall(PetscOptionsBool("-qps_monitor", "Turn on default QPS monitor", "QPSMonitorSet", flg, &flg, NULL));
+  if (flg) PetscCall(QPSMonitorSet(qps, QPSMonitorDefault, NULL, NULL));
   flg = PETSC_FALSE;
-  PetscCall(PetscOptionsBool("-qps_monitor_cost","Switches QPS monitor","QPSMonitorSet",flg,&flg,NULL));
-  if (flg) PetscCall(QPSMonitorSet(qps,QPSMonitorCostFunction,NULL,NULL));
+  PetscCall(PetscOptionsBool("-qps_monitor_cost", "Switches QPS monitor", "QPSMonitorSet", flg, &flg, NULL));
+  if (flg) PetscCall(QPSMonitorSet(qps, QPSMonitorCostFunction, NULL, NULL));
   /* actually checked in setup - this is just here to go into help message */
-  PetscCall(PetscOptionsName("-qps_view","print the QPS parameters at the end of a QPSSolve call","QPSView",&flg));
-  PetscCall(PetscOptionsName("-qps_view_convergence","print the QPS convergence info at the end of a QPSSolve call","QPSViewConvergence",&flg));
-  PetscTryTypeMethod(qps,setfromoptions,PetscOptionsObject);
+  PetscCall(PetscOptionsName("-qps_view", "print the QPS parameters at the end of a QPSSolve call", "QPSView", &flg));
+  PetscCall(PetscOptionsName("-qps_view_convergence", "print the QPS convergence info at the end of a QPSSolve call", "QPSViewConvergence", &flg));
+  PetscTryTypeMethod(qps, setfromoptions, PetscOptionsObject);
   if (qps->topQP) PetscCall(QPChainSetFromOptions(qps->topQP));
   PetscOptionsEnd();
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -905,29 +900,29 @@ PetscErrorCode QPSSetFromOptions(QPS qps)
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSSetTolerances"
-PetscErrorCode QPSSetTolerances(QPS qps,PetscReal rtol,PetscReal atol,PetscReal divtol,PetscInt max_it)
+PetscErrorCode QPSSetTolerances(QPS qps, PetscReal rtol, PetscReal atol, PetscReal divtol, PetscInt max_it)
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscValidLogicalCollectiveReal(qps,rtol,2);
-  PetscValidLogicalCollectiveReal(qps,atol,3);
-  PetscValidLogicalCollectiveReal(qps,divtol,4);
-  PetscValidLogicalCollectiveInt(qps,max_it,5);
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
+  PetscValidLogicalCollectiveReal(qps, rtol, 2);
+  PetscValidLogicalCollectiveReal(qps, atol, 3);
+  PetscValidLogicalCollectiveReal(qps, divtol, 4);
+  PetscValidLogicalCollectiveInt(qps, max_it, 5);
 
   if (rtol != PETSC_DEFAULT) {
-    if (rtol < 0.0 || 1.0 <= rtol) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Relative tolerance %g must be non-negative and less than 1.0",rtol);
+    PetscCheck(rtol >= 0.0 && 1.0 > rtol, ((PetscObject)qps)->comm, PETSC_ERR_ARG_OUTOFRANGE, "Relative tolerance %g must be non-negative and less than 1.0", rtol);
     qps->rtol = rtol;
   }
   if (atol != PETSC_DEFAULT) {
-    if (atol < 0.0) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Absolute tolerance %g must be non-negative",atol);
+    PetscCheck(atol >= 0.0, ((PetscObject)qps)->comm, PETSC_ERR_ARG_OUTOFRANGE, "Absolute tolerance %g must be non-negative", atol);
     qps->atol = atol;
   }
   if (divtol != PETSC_DEFAULT) {
-    if (divtol < 0.0) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Divergence tolerance %g must be larger than 1.0",divtol);
+    PetscCheck(divtol >= 0.0, ((PetscObject)qps)->comm, PETSC_ERR_ARG_OUTOFRANGE, "Divergence tolerance %g must be larger than 1.0", divtol);
     qps->divtol = divtol;
   }
   if (max_it != PETSC_DEFAULT) {
-    if (max_it < 0) SETERRQ(((PetscObject)qps)->comm,PETSC_ERR_ARG_OUTOFRANGE,"Maximum number of iterations %" PetscInt_FMT " must be non-negative",max_it);
+    PetscCheck(max_it >= 0, ((PetscObject)qps)->comm, PETSC_ERR_ARG_OUTOFRANGE, "Maximum number of iterations %" PetscInt_FMT " must be non-negative", max_it);
     qps->max_it = max_it;
   }
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -935,12 +930,12 @@ PetscErrorCode QPSSetTolerances(QPS qps,PetscReal rtol,PetscReal atol,PetscReal 
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSGetTolerances"
-PetscErrorCode QPSGetTolerances(QPS qps,PetscReal *rtol,PetscReal *atol,PetscReal *divtol,PetscInt *max_it)
+PetscErrorCode QPSGetTolerances(QPS qps, PetscReal *rtol, PetscReal *atol, PetscReal *divtol, PetscInt *max_it)
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  if (atol)   *atol   = qps->atol;
-  if (rtol)   *rtol   = qps->rtol;
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
+  if (atol) *atol = qps->atol;
+  if (rtol) *rtol = qps->rtol;
   if (divtol) *divtol = qps->divtol;
   if (max_it) *max_it = qps->max_it;
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -948,22 +943,22 @@ PetscErrorCode QPSGetTolerances(QPS qps,PetscReal *rtol,PetscReal *atol,PetscRea
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSSetAutoPostSolve"
-PetscErrorCode QPSSetAutoPostSolve(QPS qps,PetscBool flg)
+PetscErrorCode QPSSetAutoPostSolve(QPS qps, PetscBool flg)
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscValidLogicalCollectiveBool(qps,flg,2);
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
+  PetscValidLogicalCollectiveBool(qps, flg, 2);
   qps->autoPostSolve = flg;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSGetAutoPostSolve"
-PetscErrorCode QPSGetAutoPostSolve(QPS qps,PetscBool *flg)
+PetscErrorCode QPSGetAutoPostSolve(QPS qps, PetscBool *flg)
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscAssertPointer(flg,2);
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
+  PetscAssertPointer(flg, 2);
   *flg = qps->autoPostSolve;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -972,15 +967,15 @@ PetscErrorCode QPSGetAutoPostSolve(QPS qps,PetscBool *flg)
 #define __FUNCT__ "QPSViewConvergence"
 PetscErrorCode QPSViewConvergence(QPS qps, PetscViewer v)
 {
-  MPI_Comm comm;
-  PetscReal rnorm, rtol, abstol, dtol;
-  PetscInt its, maxits;
-  QP topqp;
-  const QPSType qpstype;
+  MPI_Comm           comm;
+  PetscReal          rnorm, rtol, abstol, dtol;
+  PetscInt           its, maxits;
+  QP                 topqp;
+  const QPSType      qpstype;
   KSPConvergedReason reason;
 
   PetscFunctionBegin;
-  PetscCall(PetscObjectGetComm((PetscObject) qps, &comm));
+  PetscCall(PetscObjectGetComm((PetscObject)qps, &comm));
   PetscCall(QPSGetQP(qps, &topqp));
 
   PetscCall(QPSGetConvergedReason(qps, &reason));
@@ -989,15 +984,15 @@ PetscErrorCode QPSViewConvergence(QPS qps, PetscViewer v)
   PetscCall(QPSGetTolerances(qps, &rtol, &abstol, &dtol, &maxits));
   PetscCall(QPSGetType(qps, &qpstype));
 
-  PetscCall(PetscObjectPrintClassNamePrefixType((PetscObject)qps,v));
+  PetscCall(PetscObjectPrintClassNamePrefixType((PetscObject)qps, v));
   PetscCall(PetscViewerASCIIPushTab(v));
-  PetscCall(PetscViewerASCIIPrintf(v,"last QPSSolve %s due to %s, KSPReason=%d, required %d iterations\n", (reason>0)?"CONVERGED":"DIVERGED", KSPConvergedReasons[reason], reason, its));
-  PetscCall(PetscViewerASCIIPrintf(v,"all %d QPSSolves from last QPSReset/QPSResetStatistics have required %d iterations\n", qps->nsolves, qps->iterations_accumulated));
-  PetscCall(PetscViewerASCIIPrintf(v,"tolerances: rtol=%.1e, abstol=%.1e, dtol=%.1e, maxits=%d\n",rtol,abstol,dtol,maxits));
+  PetscCall(PetscViewerASCIIPrintf(v, "last QPSSolve %s due to %s, KSPReason=%d, required %d iterations\n", (reason > 0) ? "CONVERGED" : "DIVERGED", KSPConvergedReasons[reason], reason, its));
+  PetscCall(PetscViewerASCIIPrintf(v, "all %d QPSSolves from last QPSReset/QPSResetStatistics have required %d iterations\n", qps->nsolves, qps->iterations_accumulated));
+  PetscCall(PetscViewerASCIIPrintf(v, "tolerances: rtol=%.1e, abstol=%.1e, dtol=%.1e, maxits=%d\n", rtol, abstol, dtol, maxits));
   if (*qps->ops->viewconvergence) {
-    PetscCall(PetscViewerASCIIPrintf(v,"%s specific:\n", qpstype));
+    PetscCall(PetscViewerASCIIPrintf(v, "%s specific:\n", qpstype));
     PetscCall(PetscViewerASCIIPushTab(v));
-    PetscUseTypeMethod(qps,viewconvergence,v);
+    PetscUseTypeMethod(qps, viewconvergence, v);
     PetscCall(PetscViewerASCIIPopTab(v));
   }
   PetscCall(PetscViewerASCIIPopTab(v));
@@ -1025,21 +1020,21 @@ PetscErrorCode QPSViewConvergence(QPS qps, PetscViewer v)
 
 .seealso: MatCreateVecs()
 @*/
-PetscErrorCode QPSGetVecs(QPS qps,PetscInt rightn, Vec **right,PetscInt leftn,Vec **left)
+PetscErrorCode QPSGetVecs(QPS qps, PetscInt rightn, Vec **right, PetscInt leftn, Vec **left)
 {
-  Vec vecr,vecl;
+  Vec vecr, vecl;
 
   PetscFunctionBegin;
   if (rightn) {
-    if (!right) SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_INCOMP,"You asked for right vectors but did not pass a pointer to hold them");
-    PetscCall(QPGetVecs(qps->solQP,&vecr,NULL));
-    PetscCall(VecDuplicateVecs(vecr,rightn,right));
+    PetscCheck(right, PetscObjectComm((PetscObject)qps), PETSC_ERR_ARG_INCOMP, "You asked for right vectors but did not pass a pointer to hold them");
+    PetscCall(QPGetVecs(qps->solQP, &vecr, NULL));
+    PetscCall(VecDuplicateVecs(vecr, rightn, right));
     PetscCall(VecDestroy(&vecr));
   }
   if (leftn) {
-    if (!left) SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_INCOMP,"You asked for left vectors but did not pass a pointer to hold them");
-    PetscCall(QPGetVecs(qps->solQP,NULL,&vecl));
-    PetscCall(VecDuplicateVecs(vecl,leftn,left));
+    PetscCheck(left, PetscObjectComm((PetscObject)qps), PETSC_ERR_ARG_INCOMP, "You asked for left vectors but did not pass a pointer to hold them");
+    PetscCall(QPGetVecs(qps->solQP, NULL, &vecl));
+    PetscCall(VecDuplicateVecs(vecl, leftn, left));
     PetscCall(VecDestroy(&vecl));
   }
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -1058,25 +1053,25 @@ PetscErrorCode QPSGetVecs(QPS qps,PetscInt rightn, Vec **right,PetscInt leftn,Ve
 
    Level: developer
 */
-PetscErrorCode QPSSetWorkVecs(QPS qps,PetscInt nw)
+PetscErrorCode QPSSetWorkVecs(QPS qps, PetscInt nw)
 {
   PetscFunctionBegin;
-  PetscCall(VecDestroyVecs(qps->nwork,&qps->work));
+  PetscCall(VecDestroyVecs(qps->nwork, &qps->work));
   PetscCall(PetscFree(qps->work_state));
 
   qps->nwork = nw;
-  PetscCall(QPSGetVecs(qps,nw,&qps->work,0,NULL));
-  PetscCall(PetscMalloc1(nw,&qps->work_state));
-  PetscCall(PetscMemzero(qps->work_state,nw*sizeof(PetscObjectState)));
+  PetscCall(QPSGetVecs(qps, nw, &qps->work, 0, NULL));
+  PetscCall(PetscMalloc1(nw, &qps->work_state));
+  PetscCall(PetscMemzero(qps->work_state, nw * sizeof(PetscObjectState)));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSWorkVecStateUpdate"
-PetscErrorCode QPSWorkVecStateUpdate(QPS qps,PetscInt idx)
+PetscErrorCode QPSWorkVecStateUpdate(QPS qps, PetscInt idx)
 {
   PetscFunctionBegin;
-  PetscCall(PetscObjectStateGet((PetscObject)qps->work[idx],&qps->work_state[idx]));
+  PetscCall(PetscObjectStateGet((PetscObject)qps->work[idx], &qps->work_state[idx]));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -1085,34 +1080,34 @@ PetscErrorCode QPSWorkVecStateUpdate(QPS qps,PetscInt idx)
 PetscErrorCode QPSSolutionVecStateUpdate(QPS qps)
 {
   PetscFunctionBegin;
-  PERMON_ASSERT(qps->solQP,"qps->solQP initialized");
-  PetscCall(PetscObjectStateGet((PetscObject)qps->solQP->x,&qps->xstate));
+  PERMON_ASSERT(qps->solQP, "qps->solQP initialized");
+  PetscCall(PetscObjectStateGet((PetscObject)qps->solQP->x, &qps->xstate));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSWorkVecStateChanged"
-PetscErrorCode QPSWorkVecStateChanged(QPS qps,PetscInt idx,PetscBool *flg)
+PetscErrorCode QPSWorkVecStateChanged(QPS qps, PetscInt idx, PetscBool *flg)
 {
-  PetscObjectState state_saved,state_current;
+  PetscObjectState state_saved, state_current;
 
   PetscFunctionBegin;
   state_saved = qps->work_state[idx];
-  PetscCall(PetscObjectStateGet((PetscObject)qps->work[idx],&state_current));
+  PetscCall(PetscObjectStateGet((PetscObject)qps->work[idx], &state_current));
   *flg = (PetscBool)(state_current != state_saved);
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSSolutionVecStateChanged"
-PetscErrorCode QPSSolutionVecStateChanged(QPS qps,PetscBool *flg)
+PetscErrorCode QPSSolutionVecStateChanged(QPS qps, PetscBool *flg)
 {
-  PetscObjectState state_saved,state_current;
+  PetscObjectState state_saved, state_current;
 
   PetscFunctionBegin;
-  PERMON_ASSERT(qps->solQP,"qps->solQP initialized");
+  PERMON_ASSERT(qps->solQP, "qps->solQP initialized");
   state_saved = qps->xstate;
-  PetscCall(PetscObjectStateGet((PetscObject)qps->solQP->x,&state_current));
+  PetscCall(PetscObjectStateGet((PetscObject)qps->solQP->x, &state_current));
   *flg = (PetscBool)(state_current != state_saved);
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1139,12 +1134,10 @@ PetscErrorCode QPSSolutionVecStateChanged(QPS qps,PetscBool *flg)
 @*/
 PetscErrorCode QPSMonitor(QPS qps, PetscInt it, PetscReal rnorm)
 {
-  PetscInt       i, n = qps->numbermonitors;
+  PetscInt i, n = qps->numbermonitors;
 
   PetscFunctionBegin;
-  for (i=0; i<n; i++) {
-    (*qps->monitor[i])(qps,it,rnorm,qps->monitorcontext[i]);
-  }
+  for (i = 0; i < n; i++) { (*qps->monitor[i])(qps, it, rnorm, qps->monitorcontext[i]); }
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -1187,28 +1180,26 @@ $     monitor (QPS qps, PetscInt it, PetscReal rnorm, void *mctx)
 
 .seealso: QPSMonitorDefault(), QPSMonitorCancel()
 @*/
-PetscErrorCode  QPSMonitorSet(QPS qps,PetscErrorCode (*monitor)(QPS,PetscInt,PetscReal,void*),void *mctx,PetscErrorCode (*monitordestroy)(void**))
+PetscErrorCode QPSMonitorSet(QPS qps, PetscErrorCode (*monitor)(QPS, PetscInt, PetscReal, void *), void *mctx, PetscErrorCode (*monitordestroy)(void **))
 {
   PetscInt i;
 
   PetscFunctionBegin;
-  if (!monitor) SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_NULL,"Monitor function must be specified");
+  PetscCheck(monitor, PetscObjectComm((PetscObject)qps), PETSC_ERR_ARG_NULL, "Monitor function must be specified");
 
   /* verify the number of monitors */
-  if (qps->numbermonitors >= MAXQPSMONITORS) SETERRQ(PetscObjectComm((PetscObject)qps),PETSC_ERR_ARG_OUTOFRANGE,"Too many QPS monitors set");
+  PetscCheck(qps->numbermonitors < MAXQPSMONITORS, PetscObjectComm((PetscObject)qps), PETSC_ERR_ARG_OUTOFRANGE, "Too many QPS monitors set");
 
   /* don't add exactly the same monitor twice */
   //TODO we could use PetscMonitorCompare() once it gets fixed
-  for (i=0; i<qps->numbermonitors;i++) {
-    if (monitor == qps->monitor[i] && monitordestroy == qps->monitordestroy[i] && mctx == qps->monitorcontext[i]) {
-      PetscFunctionReturn(PETSC_SUCCESS);
-    }
+  for (i = 0; i < qps->numbermonitors; i++) {
+    if (monitor == qps->monitor[i] && monitordestroy == qps->monitordestroy[i] && mctx == qps->monitorcontext[i]) { PetscFunctionReturn(PETSC_SUCCESS); }
   }
 
   /* set new QPS monitor */
-  qps->monitor[qps->numbermonitors]          = monitor;
-  qps->monitordestroy[qps->numbermonitors]   = monitordestroy;
-  qps->monitorcontext[qps->numbermonitors]   = (void*)mctx;
+  qps->monitor[qps->numbermonitors]        = monitor;
+  qps->monitordestroy[qps->numbermonitors] = monitordestroy;
+  qps->monitorcontext[qps->numbermonitors] = (void *)mctx;
   qps->numbermonitors++;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1231,15 +1222,13 @@ PetscErrorCode  QPSMonitorSet(QPS qps,PetscErrorCode (*monitor)(QPS,PetscInt,Pet
 
 .seealso: QPSMonitorDefault(), QPSMonitorSet()
 @*/
-PetscErrorCode  QPSMonitorCancel(QPS qps)
+PetscErrorCode QPSMonitorCancel(QPS qps)
 {
-  PetscInt       i;
+  PetscInt i;
 
   PetscFunctionBegin;
-  for (i=0; i<qps->numbermonitors; i++) {
-    if (qps->monitordestroy[i]) {
-      (*qps->monitordestroy[i])(&qps->monitorcontext[i]);
-    }
+  for (i = 0; i < qps->numbermonitors; i++) {
+    if (qps->monitordestroy[i]) { (*qps->monitordestroy[i])(&qps->monitorcontext[i]); }
   }
   qps->numbermonitors = 0;
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -1265,7 +1254,7 @@ PetscErrorCode  QPSMonitorCancel(QPS qps)
 
 .seealso: QPSMonitorDefault()
 @*/
-PetscErrorCode  QPSGetMonitorContext(QPS qps,void **ctx)
+PetscErrorCode QPSGetMonitorContext(QPS qps, void **ctx)
 {
   PetscFunctionBegin;
   *ctx = (qps->monitorcontext[0]);
@@ -1301,7 +1290,7 @@ PetscErrorCode  QPSGetMonitorContext(QPS qps,void **ctx)
 
 .seealso: QPSGetResidualHistory()
 @*/
-PetscErrorCode  QPSSetResidualHistory(QPS qps,PetscReal a[],PetscInt na,PetscBool reset)
+PetscErrorCode QPSSetResidualHistory(QPS qps, PetscReal a[], PetscInt na, PetscBool reset)
 {
   PetscFunctionBegin;
   PetscCall(PetscFree(qps->res_hist_alloc));
@@ -1311,7 +1300,7 @@ PetscErrorCode  QPSSetResidualHistory(QPS qps,PetscReal a[],PetscInt na,PetscBoo
   } else {
     if (na != PETSC_DECIDE && na != PETSC_DEFAULT) qps->res_hist_max = na;
     else qps->res_hist_max = 10000; /* like default ksp->max_it */
-    PetscCall(PetscMalloc(qps->res_hist_max,&qps->res_hist_alloc));
+    PetscCall(PetscMalloc(qps->res_hist_max, &qps->res_hist_alloc));
 
     qps->res_hist = qps->res_hist_alloc;
   }
@@ -1344,7 +1333,7 @@ PetscErrorCode  QPSSetResidualHistory(QPS qps,PetscReal a[],PetscInt na,PetscBoo
 
 .seealso: QPSGetResidualHistory()
 @*/
-PetscErrorCode  QPSGetResidualHistory(QPS qps,PetscReal *a[],PetscInt *na)
+PetscErrorCode QPSGetResidualHistory(QPS qps, PetscReal *a[], PetscInt *na)
 {
   PetscFunctionBegin;
   if (a) *a = qps->res_hist;
@@ -1372,29 +1361,25 @@ PetscErrorCode  QPSGetResidualHistory(QPS qps,PetscReal *a[],PetscInt *na)
 
 .seealso: QPSMonitorSet(), QPSMonitorCostFunction(), QPSMonitorCancel()
 @*/
-PetscErrorCode QPSMonitorDefault(QPS qps,PetscInt n,PetscReal rnorm,void *ctx)
+PetscErrorCode QPSMonitorDefault(QPS qps, PetscInt n, PetscReal rnorm, void *ctx)
 {
-  PetscViewer    viewer = (PetscViewer) ctx;
+  PetscViewer viewer = (PetscViewer)ctx;
 
   PetscFunctionBegin;
-  if (!viewer) {
-    PetscCall(PetscViewerASCIIGetStdout(PetscObjectComm((PetscObject)qps),&viewer));
-  }
-  PetscCall(PetscViewerASCIIAddTab(viewer,((PetscObject)qps)->tablevel));
+  if (!viewer) { PetscCall(PetscViewerASCIIGetStdout(PetscObjectComm((PetscObject)qps), &viewer)); }
+  PetscCall(PetscViewerASCIIAddTab(viewer, ((PetscObject)qps)->tablevel));
 
-  if (qps->ops->monitor){
+  if (qps->ops->monitor) {
     /* this algorithm has own monitor */
-    PetscUseTypeMethod(qps,monitor,n,viewer);
+    PetscUseTypeMethod(qps, monitor, n, viewer);
   } else {
     /* use default QPS monitor */
-    if (n == 0 && ((PetscObject)qps)->prefix) {
-      PetscCall(PetscViewerASCIIPrintf(viewer,"  Projected gradient norms for %s solve.\n",((PetscObject)qps)->prefix));
-    }
-    PetscCall(PetscViewerASCIIPrintf(viewer,"%3" PetscInt_FMT " QPS Projected gradient norm %14.12e \n",n,(double)rnorm));
-    PetscCall(PetscViewerASCIISubtractTab(viewer,((PetscObject)qps)->tablevel));
+    if (n == 0 && ((PetscObject)qps)->prefix) { PetscCall(PetscViewerASCIIPrintf(viewer, "  Projected gradient norms for %s solve.\n", ((PetscObject)qps)->prefix)); }
+    PetscCall(PetscViewerASCIIPrintf(viewer, "%3" PetscInt_FMT " QPS Projected gradient norm %14.12e \n", n, (double)rnorm));
+    PetscCall(PetscViewerASCIISubtractTab(viewer, ((PetscObject)qps)->tablevel));
   }
 
-  PetscCall(PetscViewerASCIISubtractTab(viewer,((PetscObject)qps)->tablevel));
+  PetscCall(PetscViewerASCIISubtractTab(viewer, ((PetscObject)qps)->tablevel));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -1418,34 +1403,30 @@ PetscErrorCode QPSMonitorDefault(QPS qps,PetscInt n,PetscReal rnorm,void *ctx)
 
 .seealso: QPSMonitorSet(), QPSMonitorDefault()
 @*/
-PetscErrorCode QPSMonitorCostFunction(QPS qps,PetscInt n,PetscReal rnorm,void *dummy)
+PetscErrorCode QPSMonitorCostFunction(QPS qps, PetscInt n, PetscReal rnorm, void *dummy)
 {
-   PetscViewer    viewer = (PetscViewer) dummy;
-   QP             qp;
-   Vec            x;
-   PetscReal      f;
+  PetscViewer viewer = (PetscViewer)dummy;
+  QP          qp;
+  Vec         x;
+  PetscReal   f;
 
-   PetscFunctionBegin;
-   if (!viewer) {
-     PetscCall(PetscViewerASCIIGetStdout(PetscObjectComm((PetscObject)qps),&viewer));
-   }
-   PetscCall(PetscViewerASCIIAddTab(viewer,((PetscObject)qps)->tablevel));
+  PetscFunctionBegin;
+  if (!viewer) { PetscCall(PetscViewerASCIIGetStdout(PetscObjectComm((PetscObject)qps), &viewer)); }
+  PetscCall(PetscViewerASCIIAddTab(viewer, ((PetscObject)qps)->tablevel));
 
-   if (qps->ops->monitorcostfunction){
-       /* this algorithm has own monitor */
-       PetscUseTypeMethod(qps,monitorcostfunction,n,viewer);
-   } else {
-       /* use default QPS monitor */
-       if (n == 0 && ((PetscObject)qps)->prefix) {
-             PetscCall(PetscViewerASCIIPrintf(viewer,"  Cost function values for %s solve.\n",((PetscObject)qps)->prefix));
-       }
-       PetscCall(QPSGetSolvedQP(qps,&qp));
-       PetscCall(QPGetSolutionVector(qp, &x));
-       PetscCall(QPComputeObjective(qp,x,&f));
-       PetscCall(PetscViewerASCIIPrintf(viewer,"%3" PetscInt_FMT " QPS Cost function value %14.12e \n",n,(double)f));
-       PetscCall(PetscViewerASCIISubtractTab(viewer,((PetscObject)qps)->tablevel));
-   }
+  if (qps->ops->monitorcostfunction) {
+    /* this algorithm has own monitor */
+    PetscUseTypeMethod(qps, monitorcostfunction, n, viewer);
+  } else {
+    /* use default QPS monitor */
+    if (n == 0 && ((PetscObject)qps)->prefix) { PetscCall(PetscViewerASCIIPrintf(viewer, "  Cost function values for %s solve.\n", ((PetscObject)qps)->prefix)); }
+    PetscCall(QPSGetSolvedQP(qps, &qp));
+    PetscCall(QPGetSolutionVector(qp, &x));
+    PetscCall(QPComputeObjective(qp, x, &f));
+    PetscCall(PetscViewerASCIIPrintf(viewer, "%3" PetscInt_FMT " QPS Cost function value %14.12e \n", n, (double)f));
+    PetscCall(PetscViewerASCIISubtractTab(viewer, ((PetscObject)qps)->tablevel));
+  }
 
-   PetscCall(PetscViewerASCIISubtractTab(viewer,((PetscObject)qps)->tablevel));
-   PetscFunctionReturn(PETSC_SUCCESS);
+  PetscCall(PetscViewerASCIISubtractTab(viewer, ((PetscObject)qps)->tablevel));
+  PetscFunctionReturn(PETSC_SUCCESS);
 }

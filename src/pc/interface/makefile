@@ -3,11 +3,11 @@ ALL: lib
 
 CFLAGS   =
 FFLAGS   =
-SOURCEC  = flloppcregis.c
-SOURCEF  = 
-SOURCEH  = 
+SOURCEC  = permonpcregis.c
+SOURCEF  =
+SOURCEH  =
 OBJSC    = ${SOURCEC:.c=.o}
-OBJSF    = 
+OBJSF    =
 LIBBASE  = libpermon
 MANSEC   = PC
 LOCDIR   = src/pc/interface/

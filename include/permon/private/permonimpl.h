@@ -1,11 +1,9 @@
-#if !defined(__FLLOPIMPL_H)
-#define	__FLLOPIMPL_H
+#pragma once
+
 #include <petsc/private/petscimpl.h>
 #include <permon/private/petscimpl.h>
 #include <permonsys.h>
 
-struct _p_FLLOP {
+struct _p_PERMON {
   PETSCHEADER(int);
 };
-
-#endif

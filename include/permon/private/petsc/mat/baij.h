@@ -1,6 +1,4 @@
-
-#ifndef __BAIJ_H
-#define __BAIJ_H
+#pragma once
 #include <petsc/private/matimpl.h>
 #include "aij.h"
 #include <petsc/private/hashmapijv.h>
@@ -35,5 +33,3 @@ typedef struct {
   SEQAIJHEADER(MatScalar);
   SEQBAIJHEADER;
 } Mat_SeqBAIJ;
-
-#endif

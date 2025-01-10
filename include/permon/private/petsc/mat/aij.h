@@ -1,6 +1,4 @@
-
-#ifndef __AIJ_H
-#define __AIJ_H
+#pragma once
 
 #include <petsc/private/matimpl.h>
 #include <petsc/private/hashmapi.h>
@@ -177,4 +175,3 @@ static inline PetscErrorCode MatSeqXAIJFreeAIJ(Mat AA, MatScalar **a, PetscInt *
   }
   PetscFunctionReturn(PETSC_SUCCESS);
 }
-#endif

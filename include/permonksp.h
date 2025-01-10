@@ -1,14 +1,12 @@
-#if !defined(__FLLOPKSP_H)
-#define	__FLLOPKSP_H
+#pragma once
+
 #include <petscksp.h>
 #include <permonqpfeti.h>
 
-#define KSPFETI             "feti"
+#define KSPFETI "feti"
 
 PETSC_EXTERN PetscErrorCode PermonKSPRegisterAll();
 
 PETSC_EXTERN PetscErrorCode KSPViewBriefInfo(KSP ksp, PetscViewer viewer);
-        
-PETSC_EXTERN PetscErrorCode KSPFETISetDirichlet(KSP ksp,IS isDir,QPFetiNumberingType numtype,PetscBool enforce_by_B);
 
-#endif
+PETSC_EXTERN PetscErrorCode KSPFETISetDirichlet(KSP ksp, IS isDir, QPFetiNumberingType numtype, PetscBool enforce_by_B);
