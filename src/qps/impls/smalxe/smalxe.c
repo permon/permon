@@ -768,7 +768,7 @@ PetscErrorCode QPSSetUp_SMALXE(QPS qps)
 {
   QPS_SMALXE *smalxe = (QPS_SMALXE *)qps->data;
   QP          qp, qp_inner;
-  Mat         A, B, A_inner;
+  Mat         A, B;
   Vec         c, b_inner;
   PetscReal   maxeig_inner, rho;
 
@@ -793,7 +793,8 @@ PetscErrorCode QPSSetUp_SMALXE(QPS qps)
   /* initialize work vectors */
   PetscCall(QPSSetWorkVecs(qps, 1));
   PetscCall(MatCreateVecs(B, NULL, &smalxe->Bu));
-  PetscCall(VecZeroEntries(qp->lambda_E));
+  /* the computation is done in B^T*lambda */
+  PetscCall(VecInvalidate(qp->lambda_E));
   PetscCall(VecZeroEntries(qp->Bt_lambda));
 
   /* initialize parameter eta */
@@ -872,15 +873,12 @@ PetscErrorCode QPSSetUp_SMALXE(QPS qps)
   if (qp->BE->ops->mult) {
     smalxe->updateNormBu = QPSSMALXEUpdateNormBu_SMALXE;
   } else {
-    PetscCall(VecInvalidate(qps->solQP->lambda_E));
     if (smalxe->lag_enabled) {
       smalxe->updateNormBu = QPSSMALXEUpdateNormBu_Lag_SMALXEON;
     } else {
       smalxe->updateNormBu = QPSSMALXEUpdateNormBu_SMALXEON;
     }
   }
-
-  PetscCall(QPGetOperator(qp_inner, &A_inner));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
