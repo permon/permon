@@ -125,4 +125,7 @@ int main(int argc, char **args)
       suffix: 3
       output_file: output/ex1_1.out
       args: -dual_qppf_redundancy 2
+    test:
+      suffix: smalxe_orth
+      args: -project 0 -qps_smalxe_rho 1e1 -dual_qp_E_orth_type {{implicit gs}separated output}
 TEST*/
