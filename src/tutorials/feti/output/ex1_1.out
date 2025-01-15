@@ -1,14 +1,14 @@
-r = ||A*x - b|| = 2.39e-16    rO/||b|| = 7.86e-14
+r = ||A*x - b|| = 1.77e-17    rO/||b|| = 3.45e-09
 r = ||A*x - b + (B'*lambda)|| = 0.00e+00    rO/||b|| = 0.00e+00
-r = ||BE*x||             = 2.26e-17    r/||b|| = 2.16e-17
-r = ||A*x - b + (B'*lambda)|| = 1.13e-16    rO/||b|| = 1.91e-15
-r = ||BE*x-cE||          = 2.23e-17    r/||b|| = 3.78e-16
-r = ||A*x - b + (B'*lambda)|| = 1.13e-16    rO/||b|| = 1.91e-15
-r = ||BE*x-cE||          = 2.23e-17    r/||b|| = 3.78e-16
-r = ||A*x - b + B'*lambda|| = 8.19e-16    rO/||b|| = 1.27e-14
-r = ||BE*x||             = 3.51e-16    r/||b|| = 5.45e-15
-Dirichlet in Hess: 0, r = ||Ax-b|| = 1.024177e-15, r/||b|| = 1.533019e-14
-r = ||A*x - b + B'*lambda|| = 3.24e-01    rO/||b|| = 5.03e+00
-r = ||BE*x||             = 3.51e-16    r/||b|| = 5.45e-15
-r = ||A*x - b|| = 6.68e-02    rO/||b|| = 1.00e+00
+r = ||BE*x||             = 2.38e-18    r/||b|| = 2.57e-17
+r = ||A*x - b + (B'*lambda)|| = 2.86e-17    rO/||b|| = 5.91e-15
+r = ||BE*x-cE||          = 1.62e-18    r/||b|| = 3.35e-16
+r = ||A*x - b + (B'*lambda)|| = 2.86e-17    rO/||b|| = 5.91e-15
+r = ||BE*x-cE||          = 1.62e-18    r/||b|| = 3.35e-16
+r = ||A*x - b + B'*lambda|| = 1.28e-16    rO/||b|| = 2.78e-14
+r = ||BE*x||             = 2.24e-17    r/||b|| = 4.88e-15
+Dirichlet in Hess: 0, r = ||Ax-b|| = 1.370615e-16, r/||b|| = 2.876412e-14
+r = ||A*x - b + B'*lambda|| = 2.31e-02    rO/||b|| = 5.04e+00
+r = ||BE*x||             = 2.24e-17    r/||b|| = 4.88e-15
+r = ||A*x - b|| = 4.77e-03    rO/||b|| = 1.00e+00
 PERMON FETI CONVERGED_RTOL in 1 iteration
