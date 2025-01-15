@@ -39,7 +39,7 @@ int main(int argc, char **args)
   ne      = ns * ne_l;
   ndofs   = ns * ne_l + 1;
   ndofs_l = ne_l + 1;
-  h       = 1.0 / ne;
+  h       = 1. / ne;
 
   /* Create l2g mapping*/
   PetscCall(PetscMalloc1(ndofs_l, &global_indices));
@@ -52,8 +52,8 @@ int main(int argc, char **args)
 
   /* assemble global matrix */
   for (i = 0; i < ne_l; i++) {
-    bloc[0] = sin((rank * ne_l + i + 0.5) * h * 3.14159) * .5 * h;
-    bloc[1] = bloc[1];
+    bloc[0] = sin((rank * ne_l + i + .5) * h * 3.14159) * .5 * h * h;
+    bloc[1] = bloc[0];
     idx[0]  = i;
     idx[1]  = i + 1;
     PetscCall(MatSetValuesLocal(A, 2, idx, 2, idx, Aloc, ADD_VALUES));
@@ -96,7 +96,6 @@ int main(int argc, char **args)
   PetscCall(KSPSolve(ksp, rhs, solution));
   PetscCall(KSPGetIterationNumber(ksp, &its));
   PetscCall(KSPGetConvergedReason(ksp, &reason));
-
   PetscCall(PetscPrintf(PETSC_COMM_WORLD, "PERMON FETI %s in %d iteration\n", KSPConvergedReasons[reason], its));
 
   /* Free workspace */
@@ -126,4 +125,7 @@ int main(int argc, char **args)
       suffix: 3
       output_file: output/ex1_1.out
       args: -dual_qppf_redundancy 2
+    test:
+      suffix: smalxe_orth
+      args: -project 0 -qps_smalxe_rho 1e1 -dual_qp_E_orth_type {{implicit gs}separated output}
 TEST*/
