@@ -150,7 +150,7 @@ PetscErrorCode FllopAIFSetFETIOperator(PetscInt n,PetscInt *i,PetscInt *j,PetscS
   PetscCall(FllopAIFMatCompleteFromUpperTriangular(A_l,symflg));
   PetscCall(MatCreateBlockDiag(aif_comm,A_l,&A_g));
   PetscCall(PetscObjectSetName((PetscObject)A_g,name));
-  PetscCall(FllopPetscObjectInheritName((PetscObject)A_l,(PetscObject)A_g,"_loc"));
+  PetscCall(PermonPetscObjectInheritName((PetscObject)A_l,(PetscObject)A_g,"_loc"));
   PetscCall(MatDestroy(&A_l));
 
   PetscCall(QPSetOperator(aif_qp,A_g));
@@ -190,7 +190,7 @@ PetscErrorCode FllopAIFSetFETIOperatorMATIS(PetscInt n,PetscInt N,PetscInt *i,Pe
   PetscCall(MatAssemblyBegin(A_g,MAT_FINAL_ASSEMBLY));
   PetscCall(MatAssemblyEnd(A_g,MAT_FINAL_ASSEMBLY));
   PetscCall(PetscObjectSetName((PetscObject)A_g,name));
-  PetscCall(FllopPetscObjectInheritName((PetscObject)A_l,(PetscObject)A_g,"_loc"));
+  PetscCall(PermonPetscObjectInheritName((PetscObject)A_l,(PetscObject)A_g,"_loc"));
   PetscCall(MatDestroy(&A_l));
 
   Mat_IS *matis  = (Mat_IS*)A_g->data;
@@ -233,7 +233,7 @@ PetscErrorCode FllopAIFSetFETIOperatorNullspace(PetscInt n,PetscInt d,PetscScala
 
   PetscCall(MatCreateBlockDiag(aif_comm,R_l,&R_g));
   PetscCall(PetscObjectSetName((PetscObject)R_g,name));
-  PetscCall(FllopPetscObjectInheritName((PetscObject)R_l,(PetscObject)R_g,"_loc"));
+  PetscCall(PermonPetscObjectInheritName((PetscObject)R_l,(PetscObject)R_g,"_loc"));
   PetscCall(MatDestroy(&R_l));
 
   PetscCall(QPSetOperatorNullSpace(aif_qp,R_g));
@@ -338,7 +338,7 @@ static PetscErrorCode FllopAIFCreateLinearConstraints_Private(PetscBool coo,Pets
     tmat = B_g;
     PetscCall(PermonMatTranspose(tmat, MAT_TRANSPOSE_CHEAPEST, &B_g));
     PetscCall(PetscObjectSetName((PetscObject)B_g, Bname));
-    PetscCall(FllopPetscObjectInheritName((PetscObject)tmat,(PetscObject)B_g,"_T"));
+    PetscCall(PermonPetscObjectInheritName((PetscObject)tmat,(PetscObject)B_g,"_T"));
     PetscCall(MatDestroy(&tmat));
   } else {
     PetscCall(PetscObjectSetName((PetscObject)B_g,Bname));
@@ -662,7 +662,7 @@ PetscErrorCode FllopAIFKSPSolveMATIS(IS isDir,PetscInt n,PetscInt N,PetscInt *i,
   PetscCall(MatAssemblyBegin(A_g,MAT_FINAL_ASSEMBLY));
   PetscCall(MatAssemblyEnd(A_g,MAT_FINAL_ASSEMBLY));
   PetscCall(PetscObjectSetName((PetscObject)A_g,name));
-  PetscCall(FllopPetscObjectInheritName((PetscObject)A_l,(PetscObject)A_g,"_loc"));
+  PetscCall(PermonPetscObjectInheritName((PetscObject)A_l,(PetscObject)A_g,"_loc"));
   PetscCall(MatDestroy(&A_l));
 
   Mat_IS *matis  = (Mat_IS*)A_g->data;
