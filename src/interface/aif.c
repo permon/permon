@@ -135,6 +135,53 @@ PetscErrorCode FllopAIFSetSolutionVector(PetscInt n, PetscReal *x, const char *n
 }
 
 #undef __FUNCT__
+#define __FUNCT__ "FllopAIFSetDirichlet"
+PetscErrorCode FllopAIFSetDirichlet(IS is)
+{
+  Vec         d, b, x;
+  Mat         A;
+  PetscScalar alpha;
+
+  PetscFunctionBegin;
+  PetscCall(QPGetOperator(aif_qp, &A));
+  PetscCall(QPGetRhs(aif_qp, &b));
+  PetscCall(QPGetSolutionVector(aif_qp, &x));
+  PetscCall(MatCreateVecs(A, NULL, &d));
+  PetscCall(MatGetDiagonal(A, d));
+  PetscCall(VecAbs(d));
+  PetscCall(VecMax(d, NULL, &alpha));
+  PetscCall(MatZeroRowsColumnsIS(A, is, alpha, x, b));
+  aif_setup_called = PETSC_FALSE;
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "FllopAIFSetOperator"
+PetscErrorCode FllopAIFSetOperator(PetscInt n, PetscInt *i, PetscInt *j, PetscScalar *A, AIFMatSymmetry symflg, const char *name)
+{
+  Mat      A_l, A_g;
+  PetscInt ni = n + 1, nj = i[n];
+
+  PetscFunctionBegin;
+  PetscCall(FllopAIFApplyBase_Private(PETSC_FALSE, ni, i, nj, j));
+
+  if (symflg == AIF_MAT_SYM_UPPER_TRIANGULAR) {
+    PetscCall(MatCreateSeqSBAIJWithArrays(PETSC_COMM_SELF, 1, n, n, i, j, A, &A_l));
+  } else {
+    PetscCall(MatCreateSeqAIJWithArrays(PETSC_COMM_SELF, n, n, i, j, A, &A_l));
+  }
+  PetscCall(FllopAIFMatCompleteFromUpperTriangular(A_l, symflg));
+  PetscCall(MatConvert(A_l, MATAIJ, MAT_INITIAL_MATRIX, &A_g));
+  PetscCall(PetscObjectSetName((PetscObject)A_l, name));
+
+  PetscCall(QPSetOperator(aif_qp, A_g));
+  PetscCall(MatDestroy(&A_l));
+  PetscCall(MatDestroy(&A_g));
+  aif_setup_called = PETSC_FALSE;
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ "FllopAIFSetFETIOperator"
 PetscErrorCode FllopAIFSetFETIOperator(PetscInt n, PetscInt *i, PetscInt *j, PetscScalar *A, AIFMatSymmetry symflg, const char *name)
 {
