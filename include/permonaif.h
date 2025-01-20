@@ -26,6 +26,8 @@ PERMON_EXTERN PetscErrorCode FllopAIFGetQP(QP *qp);
 PERMON_EXTERN PetscErrorCode FllopAIFGetQPS(QPS *qps);
 
 PERMON_EXTERN PetscErrorCode FllopAIFSetSolutionVector(PetscInt n, PetscReal *x, const char *name);
+PERMON_EXTERN PetscErrorCode FllopAIFSetDirichlet(IS is);
+PERMON_EXTERN PetscErrorCode FllopAIFSetOperator(PetscInt n,PetscInt* i,PetscInt*j,PetscScalar *A,AIFMatSymmetry symflg,const char *name);
 PERMON_EXTERN PetscErrorCode FllopAIFSetFETIOperator(PetscInt n, PetscInt *i, PetscInt *j, PetscScalar *A, AIFMatSymmetry symflg, const char *name);
 PERMON_EXTERN PetscErrorCode FllopAIFSetFETIOperatorMATIS(PetscInt n, PetscInt N, PetscInt *i, PetscInt *j, PetscScalar *A, AIFMatSymmetry symflg, IS l2g, const char *name);
 PERMON_EXTERN PetscErrorCode FllopAIFSetFETIOperatorNullspace(PetscInt n, PetscInt d, PetscScalar *R, const char *name);
