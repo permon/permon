@@ -95,7 +95,6 @@ static PetscErrorCode PCSetUp_Dual(PC pc)
   Mat Bt, Kplus, K, K_loc;
   Mat C_bb_loc;
   IS iis, bis;   /* local indices of internal dofs and boundary dofs, respectively */
-  MPI_Comm comm;
   PetscBool flg=PETSC_FALSE;
 
   PetscFunctionBegin;
@@ -156,7 +155,7 @@ static PetscErrorCode PCSetUp_Dual(PC pc)
       PetscCall(MatConvert(K_loc,MATAIJ,MAT_INITIAL_MATRIX,&K_loc_aij));
       PetscCall(MatGetSchurComplement(K_loc_aij,iis,iis,bis,bis,MAT_INITIAL_MATRIX,&C_bb_loc,MAT_SCHUR_COMPLEMENT_AINV_DIAG,MAT_IGNORE_MATRIX,NULL));
 
-      if (FllopObjectInfoEnabled) {
+      if (PermonObjectInfoEnabled) {
         Mat A;
         PetscCall(MatSchurComplementGetSubMatrices(C_bb_loc,&A,NULL,NULL,NULL,NULL));
         PetscCall(PetscObjectSetName((PetscObject)A,"pcdual_schur_A00"));
@@ -169,8 +168,8 @@ static PetscErrorCode PCSetUp_Dual(PC pc)
       PetscCall(KSPSetType(ksp,KSPPREONLY));
       PetscCall(KSPGetPC(ksp,&pc_inner));
       PetscCall(PCSetType(pc_inner,PCCHOLESKY));
-      PetscCall(FllopPetscObjectInheritPrefix((PetscObject)ksp,(PetscObject)pc,"pcdual_schur_"));
-      PetscCall(FllopPetscObjectInheritPrefix((PetscObject)pc_inner,(PetscObject)pc,"pcdual_schur_"));
+      PetscCall(PermonPetscObjectInheritPrefix((PetscObject)ksp,(PetscObject)pc,"pcdual_schur_"));
+      PetscCall(PermonPetscObjectInheritPrefix((PetscObject)pc_inner,(PetscObject)pc,"pcdual_schur_"));
       if (pc->setfromoptionscalled) PetscCall(KSPSetFromOptions(ksp));
       PetscCall(KSPSetUp(ksp));
 
