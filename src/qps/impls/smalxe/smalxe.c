@@ -464,24 +464,30 @@ PetscErrorCode QPSSMALXEUpdate_SMALXE(QPS qps, PetscReal Lag_old, PetscReal Lag,
   }
 
   if (flag && M1_update != 1.0) {
-    if (smalxe->inner->reason != KSP_CONVERGED_ATOL) {
-      PetscCall(PetscInfo(qps, "not updating M1 as the inner solver has not returned due to M1\n"));
-    } else {
-      M1_new = smalxe->M1 / M1_update;
-      {
-        PetscCall(PetscInfo(qps, "updating M1 := M1/M1_update = %.4e/%.4e = %.4e\n", smalxe->M1, M1_update, M1_new));
-        smalxe->M1 = M1_new; /* M1 = M1 / M1_update       */
-        smalxe->M1_updates++;
-      }
+    M1_new = smalxe->M1 / M1_update;
+    {
+      PetscCall(PetscInfo(qps, "updating M1 := M1/M1_update = %.4e/%.4e = %.4e\n", smalxe->M1, M1_update, M1_new));
+      smalxe->M1 = M1_new; /* M1 = M1 / M1_update       */
+      smalxe->M1_updates++;
     }
   }
 
-  if (smalxe->inner->rnorm > smalxe->enorm) {
-    PetscCall(PetscInfo(qps, "not updating rho because G = %.8e > %.8e = E\n", smalxe->inner->rnorm, smalxe->enorm));
-    PetscFunctionReturn(PETSC_SUCCESS);
+  PetscReal rho_update = smalxe->rho_update;
+  if (flag && rho_update != 1.0) {
+    Mat A_inner = smalxe->qp_penalized->A;
+
+    PetscCall(PetscInfo(qps, "updating rho, multiply by rho_update%d = %.4e\n", smalxe->state, rho_update));
+    PetscCall(MatPenalizedUpdatePenalty(A_inner, rho_update));
+    PetscCall(QPSMPGPUpdateMaxEigenvalue(smalxe->inner, rho_update));
+    smalxe->rho_updates++;
   }
 
-  PetscCall(QPSSMALXEUpdateRho_SMALXE(qps, flag));
+  //if (smalxe->inner->rnorm > smalxe->enorm) {
+  //  PetscCall(PetscInfo(qps, "not updating rho because G = %.8e > %.8e = E\n", smalxe->inner->rnorm, smalxe->enorm));
+  //  PetscFunctionReturn(PETSC_SUCCESS);
+  //}
+
+  //PetscCall(QPSSMALXEUpdateRho_SMALXE(qps, flag));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -937,8 +943,6 @@ PetscErrorCode QPSSolve_SMALXE(QPS qps)
     PetscCall(QPPFApplyP(qppf_exact, b, u));
   }
 
-  /* compute initial value of Lagrangian */
-  PetscCall(QPComputeObjective(qp_inner, u, &Lag_old));
 
   /* update BtBu and normBu */
   PetscCall(smalxe->updateNormBu(qps, u, &smalxe->normBu_old, &smalxe->enorm));
@@ -948,17 +952,15 @@ PetscErrorCode QPSSolve_SMALXE(QPS qps)
   smalxe->inner_iter_accu = 0;
   qps->reason             = KSP_CONVERGED_ITERATING;
   PetscCall(QPSResetStatistics(qps_inner));
+  /* update Btmu (eq. con. multiplier pre-multiplied by eq. con. matrix transpose) */
+  PetscCall(QPSSMALXEUpdateLambda_SMALXE(qps, rho));
+  /* update the inner RHS b_inner=b-Btmu */
+  PetscCall(VecWAXPY(b_inner, -1.0, Btmu, b));
+  /* compute initial value of Lagrangian */
+  PetscCall(QPComputeObjective(qp_inner, u, &Lag));
+  Lag_old = 0.;
 
   for (i = 0; i < maxits; i++) {
-    /* update Btmu (eq. con. multiplier pre-multiplied by eq. con. matrix transpose) */
-    PetscCall(QPSSMALXEUpdateLambda_SMALXE(qps, rho));
-
-    /* inner solver can set the convergence reason of the outer solver so check it */
-    if (qps->reason) break;
-
-    /* update the inner RHS b_inner=b-Btmu */
-    PetscCall(VecWAXPY(b_inner, -1.0, Btmu, b));
-
     /* call inner solver with custom stopping criterion */
     qps_inner->divtol = qps->divtol;
     PetscCall(QPSConvergedSetUp_Inner_SMALXE(qps_inner));
@@ -970,16 +972,25 @@ PetscErrorCode QPSSolve_SMALXE(QPS qps)
     /* update BtBu and normBu */
     PetscCall(smalxe->updateNormBu(qps, u, &smalxe->normBu, &smalxe->enorm));
 
+    /* inner solver can set the convergence reason of the outer solver so check it */
+    if (qps->reason) break;
+
     /* store rho used in inner solve before update */
     PetscCall(MatPenalizedGetPenalty(A_inner, &rho));
 
+    /* update Btmu (eq. con. multiplier pre-multiplied by eq. con. matrix transpose) */
+    PetscCall(QPSSMALXEUpdateLambda_SMALXE(qps, rho));
+
+    Lag_old = Lag;
     /* compute current value of Lagrangian */
     PetscCall(QPComputeObjective(qp_inner, u, &Lag));
 
     /* update M1, rho if needed */
     PetscCall(QPSSMALXEUpdate_SMALXE(qps, Lag_old, Lag, rho));
-    Lag_old            = Lag;
     smalxe->normBu_old = smalxe->normBu;
+
+    /* update the inner RHS b_inner=b-Btmu */
+    PetscCall(VecWAXPY(b_inner, -1.0, Btmu, b));
   }
   if (i == maxits) {
     PetscCall(PetscInfo(qps, "Maximum number of iterations has been reached: %" PetscInt_FMT "\n", maxits));
