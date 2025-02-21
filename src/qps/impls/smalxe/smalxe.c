@@ -446,7 +446,11 @@ PetscErrorCode QPSSMALXEUpdate_SMALXE(QPS qps, PetscReal Lag_old, PetscReal Lag,
     t = 0.5 * rho * smalxe->normBu * smalxe->normBu;
   }
   t2   = Lag - (Lag_old + t);
-  flag = (PetscBool)(t2 < smalxe->update_threshold);
+
+  flag = PETSC_FALSE;
+  if (qps->iteration > 1) {
+    flag = (PetscBool)(t2 < smalxe->update_threshold);
+  }
 
   if (smalxe->monitor_outer) {
     MPI_Comm                      comm;
