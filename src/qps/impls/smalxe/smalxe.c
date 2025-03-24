@@ -439,6 +439,7 @@ PetscErrorCode QPSSMALXEUpdate_SMALXE(QPS qps, PetscReal Lag_old, PetscReal Lag,
   QPS_SMALXE *smalxe = (QPS_SMALXE *)qps->data;
   PetscReal   M1_new, M1_update = smalxe->M1_update;
   PetscReal   t, t2;
+  PetscReal   diff;
   PetscBool   flag;
 
   PetscFunctionBegin;
@@ -467,6 +468,26 @@ PetscErrorCode QPSSMALXEUpdate_SMALXE(QPS qps, PetscReal Lag_old, PetscReal Lag,
                           (gnorm < cctx->gtol) ? '<' : '>', cctx->gtol));
   }
 
+  PetscReal rho_update = smalxe->rho_update;
+  QPSConvergedCtx_Inner_SMALXE *cctx = (QPSConvergedCtx_Inner_SMALXE *)smalxe->inner->cnvctx;
+  diff = smalxe->enorm - smalxe->inner->rnorm;
+  if (diff > 0 && (flag || qps->iteration == 1)) {
+    rho_update = .5*(smalxe->enorm/cctx->gtol);
+    Mat A_inner = smalxe->qp_penalized->A;
+
+    PetscCall(PetscInfo(qps, "Dynamically updating rho, multiply by rho_update%d = %.4e\n", smalxe->state, rho_update));
+    PetscCall(MatPenalizedUpdatePenalty(A_inner, rho_update));
+    PetscCall(QPSMPGPUpdateMaxEigenvalue(smalxe->inner, rho_update));
+    smalxe->rho_updates++;
+    rho_update = 1.0;
+    M1_update = 1.0;
+  }
+
+  diff = smalxe->enorm - cctx->gtol;
+  if (diff <= 0) {
+    rho_update = 1.0;
+  }
+
   if (flag && M1_update != 1.0) {
     M1_new = smalxe->M1 / M1_update;
     {
@@ -476,7 +497,6 @@ PetscErrorCode QPSSMALXEUpdate_SMALXE(QPS qps, PetscReal Lag_old, PetscReal Lag,
     }
   }
 
-  PetscReal rho_update = smalxe->rho_update;
   if (flag && rho_update != 1.0) {
     Mat A_inner = smalxe->qp_penalized->A;
 
