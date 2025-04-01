@@ -278,7 +278,9 @@ static PetscErrorCode QPSSMALXEUpdateNormBu_SMALXEON(QPS qps, Vec u, PetscReal *
   PetscCall(QPSSolutionVecStateUpdate(qps));
 
   PetscCall(VecDot(u, BtBu, normBu)); /* normBu = u'*B'*B*u */
-  *normBu = PetscSqrtReal(*normBu);   /* normBu = sqrt(u'*B'*B*u) */
+  /* TODO abs() is fix for negative dot prod,
+  *  but what happens with Cholesky orth for dependent linear constraints? */
+  *normBu = PetscSqrtReal(PetscAbs(*normBu));   /* normBu = sqrt(u'*B'*B*u) */
   *enorm  = *normBu / smalxe->rtol_E; /* enorm = norm(Bu)/rtol_E */
   PetscFunctionReturn(PETSC_SUCCESS);
 }
