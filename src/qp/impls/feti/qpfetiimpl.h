@@ -27,7 +27,7 @@ PERMON_INTERN PetscErrorCode QPFetiAssembleGluing(QP qp, FetiGluingType type, Pe
 PERMON_INTERN PetscErrorCode QPFetiGetGlobalDir(QP qp, IS dbc, QPFetiNumberingType numtype, IS *dbc_g);
 
 PERMON_INTERN PetscErrorCode QPFetiCtxCreate(QPFetiCtx *ctxout);
-PERMON_INTERN PetscErrorCode QPFetiCtxDestroy(QPFetiCtx ctx);
+PERMON_INTERN PetscErrorCode QPFetiCtxDestroy(QPFetiCtx *ctx_p);
 PERMON_INTERN PetscErrorCode QPFetiGetCtx(QP qp, QPFetiCtx *ctxout);
 
 PERMON_INTERN PetscErrorCode QPFetiDirichletCreate(IS dbcis, QPFetiNumberingType numtype, PetscBool enforce_by_B, QPFetiDirichlet *dbc);

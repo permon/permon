@@ -110,7 +110,7 @@ PetscErrorCode MatCompleteFromUpperTriangular(Mat A)
   PetscCall(MatCompleteCtxCreate(A, &ctx));
   PetscCall(PetscContainerCreate(comm, &container));
   PetscCall(PetscContainerSetPointer(container, ctx));
-  PetscCall(PetscContainerSetUserDestroy(container, (PetscErrorCode (*)(void *))MatCompleteCtxDestroy));
+  PetscCall(PetscContainerSetCtxDestroy(container, (PetscCtxDestroyFn *)MatCompleteCtxDestroy));
   PetscCall(PetscObjectCompose((PetscObject)A, "permon_mat_complete_ctx", (PetscObject)container));
   PetscCall(PetscContainerDestroy(&container));
   A->ops->mult             = MatMult_Complete;

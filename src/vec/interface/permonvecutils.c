@@ -277,7 +277,7 @@ PetscErrorCode VecInvalidate(Vec vec)
   PetscCall(PetscNew(&state));
   *state = vecstate;
   PetscCall(PetscContainerSetPointer(container, (void *)state));
-  PetscCall(PetscContainerSetUserDestroy(container, PetscContainerUserDestroyDefault));
+  PetscCall(PetscContainerSetCtxDestroy(container, PetscCtxDestroyDefault));
   PetscCall(PetscObjectCompose((PetscObject)vec, "VecInvalidState", (PetscObject)container));
   PetscCall(PetscContainerDestroy(&container));
   PetscFunctionReturn(PETSC_SUCCESS);

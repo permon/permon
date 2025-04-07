@@ -76,7 +76,7 @@ PERMON_EXTERN PetscErrorCode QPSDestroyDefault(QPS);
 
 /* QPSMonitor */
 PERMON_EXTERN PetscErrorCode QPSMonitor(QPS, PetscInt, PetscReal);
-PERMON_EXTERN PetscErrorCode QPSMonitorSet(QPS, PetscErrorCode (*)(QPS, PetscInt, PetscReal, void *), void *, PetscErrorCode (*)(void **));
+PERMON_EXTERN PetscErrorCode QPSMonitorSet(QPS, PetscErrorCode (*)(QPS, PetscInt, PetscReal, void *), void *, PetscCtxDestroyFn *);
 PERMON_EXTERN PetscErrorCode QPSMonitorCancel(QPS);
 PERMON_EXTERN PetscErrorCode QPSGetMonitorContext(QPS, void **);
 PERMON_EXTERN PetscErrorCode QPSGetResidualHistory(QPS, PetscReal *[], PetscInt *);

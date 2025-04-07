@@ -1180,7 +1180,7 @@ $     monitor (QPS qps, PetscInt it, PetscReal rnorm, void *mctx)
 
 .seealso: QPSMonitorDefault(), QPSMonitorCancel()
 @*/
-PetscErrorCode QPSMonitorSet(QPS qps, PetscErrorCode (*monitor)(QPS, PetscInt, PetscReal, void *), void *mctx, PetscErrorCode (*monitordestroy)(void **))
+PetscErrorCode QPSMonitorSet(QPS qps, PetscErrorCode (*monitor)(QPS, PetscInt, PetscReal, void *), void *mctx, PetscCtxDestroyFn *monitordestroy)
 {
   PetscInt i;
 
