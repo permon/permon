@@ -187,6 +187,7 @@ TypeNames:
   - PetscErrorCode
   - PetscBool
   - PetscBool3
+  - PetscCtxDestroyFn
 TabWidth: 2
 UseCRLF: false
 UseTab: Never

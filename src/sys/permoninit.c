@@ -71,7 +71,7 @@ PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], cons
     }
     PetscCall(PetscOptionsInsertFile(PETSC_COMM_WORLD, NULL, "permonrc", PETSC_FALSE));
     PetscCall(PetscOptionsInsertFile(PETSC_COMM_WORLD, NULL, ".permonrc", PETSC_FALSE));
-    /* override by petsc options - permonrc currently takes the lowest precedence */
+    /* override by PETSc options - permonrc currently takes the lowest precedence */
     PetscCall(PetscOptionsInsert(NULL, argc, args, file));
   } else {
     PetscCall(PetscInfo(permon, "skipping permonrc due to -skip_permonrc\n"));
