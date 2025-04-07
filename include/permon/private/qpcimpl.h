@@ -10,7 +10,7 @@ struct _QPCOps {
   PetscErrorCode (*destroy)(QPC);
   PetscErrorCode (*view)(QPC, PetscViewer);
   PetscErrorCode (*viewkkt)(QPC, Vec, PetscReal, PetscViewer);
-  PetscErrorCode (*setfromoptions)(QPC, PetscOptionItems *);
+  PetscErrorCode (*setfromoptions)(QPC, PetscOptionItems);
   PetscErrorCode (*reset)(QPC);
   PetscErrorCode (*getblocksize)(QPC, PetscInt *);
   PetscErrorCode (*islinear)(QPC, PetscBool *);
