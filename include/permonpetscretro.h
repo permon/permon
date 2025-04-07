@@ -6,7 +6,7 @@
   #error "PERMON requires PETSc version 3.17 or higher"
 #endif
 
-/* allow to use petsc master branch while still supporting maint */
+/* allow to use PETSc master branch while still supporting maint */
 #if PETSC_VERSION_RELEASE
 #endif /* #if PETSC_VERSION_RELEASE */
 

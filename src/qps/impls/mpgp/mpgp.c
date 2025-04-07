@@ -712,7 +712,7 @@ PetscErrorCode QPSIsQPCompatible_MPGP(QPS qps, QP qp, PetscBool *flg)
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSSetFromOptions_MPGP"
-PetscErrorCode QPSSetFromOptions_MPGP(QPS qps, PetscOptionItems *PetscOptionsObject)
+PetscErrorCode QPSSetFromOptions_MPGP(QPS qps, PetscOptionItems PetscOptionsObject)
 {
   QPS_MPGP *mpgp = (QPS_MPGP *)qps->data;
   PetscBool flg1, flg2, alpha_direct;

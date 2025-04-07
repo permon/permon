@@ -67,7 +67,7 @@ typedef struct {
 } QPS_SMALXE;
 
 PERMON_EXTERN PetscErrorCode QPSCreate_SMALXE(QPS qps);
-PERMON_INTERN PetscErrorCode QPSSetFromOptions_SMALXE(QPS qps, PetscOptionItems *PetscOptionsObject);
+PERMON_INTERN PetscErrorCode QPSSetFromOptions_SMALXE(QPS qps, PetscOptionItems PetscOptionsObject);
 PERMON_INTERN PetscErrorCode QPSSetUp_SMALXE(QPS qps);
 PERMON_INTERN PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner, KSPConvergedReason *reason);
 PERMON_INTERN PetscErrorCode QPSConvergedSetUp_Inner_SMALXE(QPS qps_inner);

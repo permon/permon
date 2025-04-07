@@ -26,9 +26,13 @@ PetscErrorCode QPFetiCtxCreate(QPFetiCtx *ctxout)
 
 #undef __FUNCT__
 #define __FUNCT__ "QPFetiCtxDestroy"
-PetscErrorCode QPFetiCtxDestroy(QPFetiCtx ctx)
+PetscErrorCode QPFetiCtxDestroy(QPFetiCtx *ctx_p)
 {
+  QPFetiCtx ctx;
+
   PetscFunctionBegin;
+  ctx   = *ctx_p;
+  ctx_p = NULL;
   PetscCall(ISDestroy(&ctx->i2g));
   PetscCall(ISDestroy(&ctx->l2g));
   PetscCall(ISLocalToGlobalMappingDestroy(&ctx->i2g_map));
@@ -51,7 +55,7 @@ PetscErrorCode QPFetiGetCtx(QP qp, QPFetiCtx *ctxout)
     PetscCall(QPFetiCtxCreate(&ctx));
     PetscCall(PetscContainerCreate(PetscObjectComm((PetscObject)qp), &ctr));
     PetscCall(PetscContainerSetPointer(ctr, ctx));
-    PetscCall(PetscContainerSetUserDestroy(ctr, (PetscErrorCode (*)(void *))QPFetiCtxDestroy));
+    PetscCall(PetscContainerSetCtxDestroy(ctr, (PetscCtxDestroyFn *)QPFetiCtxDestroy));
     PetscCall(PetscObjectCompose((PetscObject)qp, __FUNCT__, (PetscObject)ctr));
     PetscCall(PetscObjectDereference((PetscObject)ctr));
   }
