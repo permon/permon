@@ -212,7 +212,7 @@ PetscErrorCode QPFetiAssembleDirichlet(QP qp)
     PetscCall(PetscOptionsGetBool(NULL, NULL, "-EXTENSION_ON", &flg, NULL));
 
     if (flg) {
-      PetscCall(PetscPrintf(PETSC_COMM_WORLD, " MATEXTENSION type used for Dirichlet condition\n"));
+      PetscCall(PetscInfo(qp, "MATEXTENSION type used for Dirichlet condition\n"));
       Mat         At;
       IS          cis;
       PetscLayout layout;
@@ -315,7 +315,6 @@ PetscErrorCode QPFetiAssembleDirichlet(QP qp)
 #define __FUNCT__ "QPFetiSetUp"
 PetscErrorCode QPFetiSetUp(QP qp)
 {
-  MPI_Comm         comm;
   static PetscBool registered = PETSC_FALSE;
   QPFetiCtx        ctx;
   Mat              Bg;
@@ -333,7 +332,6 @@ PetscErrorCode QPFetiSetUp(QP qp)
   }
 
   PermonTraceBegin;
-  PetscCall(PetscObjectGetComm((PetscObject)qp, &comm));
   PetscCall(PetscLogEventBegin(QP_Feti_SetUp, qp, 0, 0, 0));
 
   PERMON_ASSERT(qp->A, "Operator must be specified");
@@ -341,19 +339,18 @@ PetscErrorCode QPFetiSetUp(QP qp)
 
   PetscCall(PetscOptionsGetEnum(NULL, NULL, "-feti_gluing_type", FetiGluingTypes, (PetscEnum *)&type, NULL));
   PetscCall(PetscOptionsGetBool(NULL, NULL, "-feti_gluing_exclude_dirichlet", &exclude_dir, NULL));
-  PetscCall(PetscPrintf(comm, "============\n FETI gluing type: %s\n excluding Dirichlet DOFs? %d\n", FetiGluingTypes[type], exclude_dir));
+  PetscCall(PetscInfo(qp, "FETI gluing type: %s, excluding Dirichlet DOFs? %d\n", FetiGluingTypes[type], exclude_dir));
   PetscCall(QPFetiAssembleDirichlet(qp));
 
   PetscCheck(ctx->l2g, PetscObjectComm((PetscObject)qp), PETSC_ERR_ARG_WRONGSTATE, "L2G mapping must be set first - call QPFetiSetLocalToGlobalMapping before QPFetiSetUp");
   PetscCheck(ctx->i2g, PetscObjectComm((PetscObject)qp), PETSC_ERR_ARG_WRONGSTATE, "I2G mapping must be set first - call QPFetiSetInterfaceToGlobalMapping before QPFetiSetUp");
   PetscCall(QPFetiAssembleGluing(qp, type, exclude_dir, &Bg));
-  PetscCall(PetscPrintf(comm, "============\n"));
 
   PetscCall(PetscObjectSetName((PetscObject)Bg, "Bg"));
   PetscCall(QPAddEq(qp, Bg, NULL));
   PetscCall(MatDestroy(&Bg));
 
-  if (!qp->BE) printf("child (BE) is needed for dualization\n");
+  PERMON_ASSERT(qp->BE, "child (BE) is needed for dualization\n");
   ctx->setupcalled = PETSC_TRUE;
   PetscCall(PetscLogEventEnd(QP_Feti_SetUp, qp, 0, 0, 0));
   PetscFunctionReturnI(PETSC_SUCCESS);
@@ -412,7 +409,6 @@ PetscErrorCode QPFetiAssembleGluing(QP qp, FetiGluingType type, PetscBool exclud
   Mat              Bgt;
   PetscInt         nl, Nu, Nug;
   IS               i2l, i2g_less, all_dir;
-  PetscMPIInt      commsize;
   IS               l2g, i2g, global_dir;
   MPI_Comm         comm;
 
@@ -427,7 +423,6 @@ PetscErrorCode QPFetiAssembleGluing(QP qp, FetiGluingType type, PetscBool exclud
   PetscCall(QPFetiGetCtx(qp, &ctx));
   l2g = ctx->l2g;
   i2g = ctx->i2g;
-  PetscCallMPI(MPI_Comm_size(comm, &commsize));
   PetscCall(ISGetLocalSize(l2g, &nl));
 
   if (exclude_dir) {
@@ -449,7 +444,7 @@ PetscErrorCode QPFetiAssembleGluing(QP qp, FetiGluingType type, PetscBool exclud
   PetscCallMPI(MPI_Allreduce(&Nu, &Nug, 1, MPIU_INT, MPIU_MAX, comm));
   Nu = Nug + 1;
 
-  PetscCall(QPFetiGetBgtSF(comm, i2g_less, Nu, i2l, nl, type, &Bgt));
+  PetscCall(QPFetiGetBgtSF(qp, i2g_less, Nu, i2l, nl, type, &Bgt));
 
   PetscCall(PetscObjectSetName((PetscObject)Bgt, "Bgt"));
 
@@ -467,11 +462,10 @@ PetscErrorCode QPFetiAssembleGluing(QP qp, FetiGluingType type, PetscBool exclud
 
 #undef __FUNCT__
 #define __FUNCT__ "QPFetiGetBgtSF"
-PetscErrorCode QPFetiGetBgtSF(MPI_Comm comm, IS i2g, PetscInt Nu, IS i2l, PetscInt nl, FetiGluingType type, Mat *Bgt_out)
+PetscErrorCode QPFetiGetBgtSF(QP qp, IS i2g, PetscInt Nu, IS i2l, PetscInt nl, FetiGluingType type, Mat *Bgt_out)
 {
   static PetscBool registered = PETSC_FALSE;
   Mat              At, Bgt;
-  PetscMPIInt      commsize, rank;
   PetscInt         i, j, k, idx, idx2, data_scat_size, rstart, rend;
   PetscInt         nleaves_SF1, nroots_SF1, n_link = 0, nleaves_SF2 = 0, nleaves_SF2_unique = 0;
   const PetscInt  *i2g_array, *i2l_array, *root_degree_onroots_SF1, *root_degree_onroots_SF2;
@@ -484,6 +478,8 @@ PetscErrorCode QPFetiGetBgtSF(MPI_Comm comm, IS i2g, PetscInt Nu, IS i2l, PetscI
   PetscLayout      layout_SF1, links;
   PetscSF          SF1, SF2, link_SF;
   IS               myneighbors;
+  PetscMPIInt      commsize, rank;
+  MPI_Comm         comm;
 
   PetscFunctionBeginI;
   if (!registered) {
@@ -492,6 +488,7 @@ PetscErrorCode QPFetiGetBgtSF(MPI_Comm comm, IS i2g, PetscInt Nu, IS i2l, PetscI
   }
   PetscCall(PetscLogEventBegin(QP_Feti_GetBgtSF, 0, 0, 0, 0));
 
+  PetscCall(PetscObjectGetComm((PetscObject)qp, &comm));
   PetscCallMPI(MPI_Comm_size(comm, &commsize));
   PetscCallMPI(MPI_Comm_rank(comm, &rank));
 
@@ -759,7 +756,7 @@ PetscErrorCode QPFetiGetBgtSF(MPI_Comm comm, IS i2g, PetscInt Nu, IS i2l, PetscI
 
   PetscBool flg_SCALE_ON = PETSC_TRUE;
   PetscCall(PetscOptionsGetBool(NULL, NULL, "-SCALE_ON", &flg_SCALE_ON, NULL));
-  if (flg_SCALE_ON && (type == FETI_GLUING_NONRED || type == FETI_GLUING_FULL)) PetscCall(PetscPrintf(PETSC_COMM_WORLD, " SCALING\n"));
+  if (flg_SCALE_ON && (type == FETI_GLUING_NONRED || type == FETI_GLUING_FULL)) PetscCall(PetscInfo(qp, "scaling of gluing matrix enabled\n"));
 
   /* compose array of neighbors to Bg */
   {
@@ -833,7 +830,7 @@ PetscErrorCode QPFetiGetBgtSF(MPI_Comm comm, IS i2g, PetscInt Nu, IS i2l, PetscI
 
   if (flg_EXTENSION_ON) {
     IS cis, ris;
-    PetscCall(PetscPrintf(PETSC_COMM_WORLD, " MATEXTENSION type used for gluing matrix\n"));
+    PetscCall(PetscInfo(qp, "MATEXTENSION type used for gluing matrix\n"));
 
     PetscCall(MatCreateSeqAIJ(PETSC_COMM_SELF, nleaves_SF2_unique, nleaves_SF2, -1, prealloc_seqEX, &At));
     PetscCall(MatSetFromOptions(At));
@@ -857,7 +854,7 @@ PetscErrorCode QPFetiGetBgtSF(MPI_Comm comm, IS i2g, PetscInt Nu, IS i2l, PetscI
     PetscCall(PetscFree(ris_array));
 
     if (!flg_MATGLUING_ON) {
-      PetscCall(PetscPrintf(PETSC_COMM_WORLD, " just PetscSF (no special type) used for gluing matrix\n"));
+      PetscCall(PetscInfo(qp, "PetscSF (no special type) used for gluing matrix\n"));
 
       PetscCall(MatCreate(comm, &At));
       PetscCall(MatSetSizes(At, nleaves_SF1, n_link, PETSC_DETERMINE, PETSC_DETERMINE));
@@ -871,7 +868,7 @@ PetscErrorCode QPFetiGetBgtSF(MPI_Comm comm, IS i2g, PetscInt Nu, IS i2l, PetscI
       PetscCall(MatAssemblyBegin(At, MAT_FINAL_ASSEMBLY));
       PetscCall(MatAssemblyEnd(At, MAT_FINAL_ASSEMBLY));
     } else {
-      PetscCall(PetscPrintf(PETSC_COMM_WORLD, " MATGLUING type used for gluing matrix\n"));
+      PetscCall(PetscInfo(qp, "MATGLUING type used for gluing matrix\n"));
       PetscCall(MatCreateGluing(comm, nleaves_SF1, nleaves_SF2_unique, n_link, local_idx, values, link_SF, &At));
     }
 
@@ -948,7 +945,7 @@ PetscErrorCode QPFetiGetGlobalDir(QP qp, IS dbc, QPFetiNumberingType numtype, IS
       PetscInt               nout;
       ISLocalToGlobalMapping l2dg;
 
-      PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qp), " FETI_GLOBAL_DECOMPOSED numbering of Dirichlet DOFs\n"));
+      PetscCall(PetscInfo(qp, "FETI_GLOBAL_DECOMPOSED numbering of Dirichlet DOFs\n"));
       /* convert global decomposed indices to local */
       PetscCall(MatGetLocalToGlobalMapping(qp->A, &l2dg, NULL));
       PetscCall(ISGlobalToLocalMappingApply(l2dg, IS_GTOLM_DROP, ndbc, dbc_arr, &nout, NULL));
@@ -957,7 +954,7 @@ PetscErrorCode QPFetiGetGlobalDir(QP qp, IS dbc, QPFetiNumberingType numtype, IS
       PetscCall(ISGlobalToLocalMappingApply(l2dg, IS_GTOLM_DROP, ndbc, dbc_arr, NULL, dbc_l_arr_nonconst));
       dbc_l_arr = dbc_l_arr_nonconst;
     } else { //FETI_LOCAL
-      PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qp), " FETI_LOCAL numbering of Dirichlet DOFs\n"));
+      PetscCall(PetscInfo(qp, "FETI_LOCAL numbering of Dirichlet DOFs\n"));
       dbc_l_arr = dbc_arr;
     }
     /* convert local indices to global undecomposed */
@@ -970,7 +967,7 @@ PetscErrorCode QPFetiGetGlobalDir(QP qp, IS dbc, QPFetiNumberingType numtype, IS
     PetscCall(PetscFree(dbc_l_arr_nonconst));
 
   } else { //FETI_GLOBAL_UNDECOMPOSED
-    PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qp), " FETI_GLOBAL_UNDECOMPOSED numbering of Dirichlet DOFs\n"));
+    PetscCall(PetscInfo(qp, "FETI_GLOBAL_UNDECOMPOSED numbering of Dirichlet DOFs\n"));
     PetscCall(PetscObjectReference((PetscObject)dbc));
     *dbc_g = dbc;
   }

@@ -36,7 +36,7 @@ PERMON_INTERN PetscErrorCode QPFetiDirichletDestroy(QPFetiDirichlet *dbc);
 PERMON_INTERN PetscErrorCode QPFetiCreateMapMatrix(MPI_Comm comm, PetscInt Nu, PetscInt ni, PetscInt mm_size, IS i2g, Mat *MapMatrix_new);
 PERMON_INTERN PetscErrorCode QPFetiGetI2Lmapping(MPI_Comm comm, IS l2g, IS i2g, IS *i2l_new);
 PERMON_INTERN PetscErrorCode QPFetiGetNotOrthoBgtSF(MPI_Comm comm, IS i2g, PetscInt Nu, IS i2l, PetscInt nl, PetscBool full_red, Mat *Bgt_out);
-PERMON_INTERN PetscErrorCode QPFetiGetBgtSF(MPI_Comm comm, IS i2g, PetscInt Nu, IS i2l, PetscInt nl, FetiGluingType type, Mat *Bgt_out);
+PERMON_INTERN PetscErrorCode QPFetiGetBgtSF(QP qp, IS i2g, PetscInt Nu, IS i2l, PetscInt nl, FetiGluingType type, Mat *Bgt_out);
 PERMON_INTERN PetscErrorCode QPFetiGetOrthonorBgtSF(MPI_Comm comm, IS i2g, PetscInt Nu, IS i2l, PetscInt nl, Mat *Bgt_out);
 
 PERMON_INTERN PetscLogEvent QP_Feti_SetUp, QP_Feti_AssembleGluingFromNeighbors, QP_Feti_AssembleDirichlet;
