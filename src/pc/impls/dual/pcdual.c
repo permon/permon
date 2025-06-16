@@ -203,8 +203,8 @@ PERMON_EXTERN PetscErrorCode PCCreate_Dual(PC pc)
 
   /* prepare log events*/
   if (!registered) {
-    PetscCall(PetscLogEventRegister("PCdual:Apply", PC_CLASSID, &PC_Dual_Apply));
-    PetscCall(PetscLogEventRegister("PCdual:ApplySchur", PC_CLASSID, &PC_Dual_MatMultSchur));
+    PetscCall(PetscLogEventRegister("PCdualApply", PC_CLASSID, &PC_Dual_Apply));
+    PetscCall(PetscLogEventRegister("PCdualApplySchur", PC_CLASSID, &PC_Dual_MatMultSchur));
     registered = PETSC_TRUE;
   }
 
