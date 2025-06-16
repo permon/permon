@@ -99,6 +99,7 @@ PetscErrorCode KSPSetUp_FETI(KSP ksp)
 {
   KSP_FETI *feti = (KSP_FETI *)ksp->data;
   Mat       A;
+  PC        pc;
   PetscBool ismatis;
 
   PetscFunctionBegin;
@@ -116,6 +117,8 @@ PetscErrorCode KSPSetUp_FETI(KSP ksp)
     KSPFETISetUp(ksp);
   }
   */
+  PetscCall(KSPGetPC(ksp, &pc));
+  PetscCall(PCSetType(pc, PCNONE));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
