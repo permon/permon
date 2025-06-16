@@ -163,7 +163,7 @@ PetscErrorCode QPFetiAssembleDirichlet(QP qp)
 
   PetscFunctionBeginI;
   if (!registered) {
-    PetscCall(PetscLogEventRegister("QPFetiAssembleDir", QP_CLASSID, &QP_Feti_AssembleDirichlet));
+    PetscCall(PetscLogEventRegister("QPFetiAssemDir", QP_CLASSID, &QP_Feti_AssembleDirichlet));
     PetscCall(PetscLogEventRegister("QPAddEq", QP_CLASSID, &QP_AddEq));
     registered = PETSC_TRUE;
   }
@@ -367,7 +367,7 @@ PetscErrorCode QPFetiGetI2Lmapping(MPI_Comm comm, IS l2g, IS i2g, IS *i2l_new)
   PetscFunctionBeginI;
 
   if (!registered) {
-    PetscCall(PetscLogEventRegister("QPFetiGetI2Lmapping", QP_CLASSID, &QP_Feti_GetI2Lmapping));
+    PetscCall(PetscLogEventRegister("QPFetiGetI2Lmap", QP_CLASSID, &QP_Feti_GetI2Lmapping));
     registered = PETSC_TRUE;
   }
   PetscCall(PetscLogEventBegin(QP_Feti_GetI2Lmapping, 0, 0, 0, 0));
@@ -414,7 +414,7 @@ PetscErrorCode QPFetiAssembleGluing(QP qp, FetiGluingType type, PetscBool exclud
 
   PetscFunctionBeginI;
   if (!registered) {
-    PetscCall(PetscLogEventRegister("QPFetiAssemGluing", QP_CLASSID, &QP_Feti_AssemGluing));
+    PetscCall(PetscLogEventRegister("QPFetiAssemGlue", QP_CLASSID, &QP_Feti_AssemGluing));
     registered = PETSC_TRUE;
   }
   PetscCall(PetscLogEventBegin(QP_Feti_AssemGluing, 0, 0, 0, 0));
