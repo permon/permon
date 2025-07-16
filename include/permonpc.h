@@ -4,7 +4,7 @@
 #include "permonmat.h"
 
 /* subclasses */
-#define PCDUAL "dual"
+#define PCDUAL    "dual"
 #define PCFREESET "freeset"
 
 PERMON_EXTERN PetscErrorCode PermonPCRegisterAll();
@@ -20,7 +20,10 @@ PERMON_EXTERN PetscErrorCode PCDualSetType(PC pc, PCDualType type);
 PERMON_EXTERN PetscErrorCode PCDualGetType(PC pc, PCDualType *type);
 
 /* PCFREESET type-specific functions */
-typedef enum {PC_FREESET_BASIC=0, PC_FREESET_CHEAP=1} PCFreeSetType;
-FLLOP_EXTERN const char *PCFreeSetTypes[];
-FLLOP_EXTERN PetscErrorCode PCFreeSetSetIS(PC pc,IS is);
-FLLOP_EXTERN PetscErrorCode PCFreeSetGetIS(PC pc,IS *is);
+typedef enum {
+  PC_FREESET_BASIC = 0,
+  PC_FREESET_CHEAP = 1
+} PCFreeSetType;
+PERMON_EXTERN const char    *PCFreeSetTypes[];
+PERMON_EXTERN PetscErrorCode PCFreeSetSetIS(PC pc, IS is);
+PERMON_EXTERN PetscErrorCode PCFreeSetGetIS(PC pc, IS *is);

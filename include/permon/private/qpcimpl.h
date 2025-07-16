@@ -35,6 +35,6 @@ struct _p_QPC {
   IS        freeset;         /* index set with indexes corresponding to free constraints */
   PetscBool setchanged;      /* indicate if active/free set has changed */
   PetscReal astol;           /* active set tolerance - used e.g. in grad splitting */
-  void      *data;           /* holder for misc stuff associated with a particular constraints type */
-  PetscBool setupcalled;    /* current state */
+  void     *data;            /* holder for misc stuff associated with a particular constraints type */
+  PetscBool setupcalled;     /* current state */
 };

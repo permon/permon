@@ -287,11 +287,11 @@ PetscErrorCode QPCGetIS(QPC qpc, IS *is)
 
 .seealso `QPC`, `QPCGetFreeSet`, `QPCGetActiveSet`
 @*/
-PetscErrorCode QPCSetChangedActiveSet(QPC qpc,PetscBool changed)
+PetscErrorCode QPCSetChangedActiveSet(QPC qpc, PetscBool changed)
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
-  PetscValidLogicalCollectiveBool(qpc,changed,2);
+  PetscValidHeaderSpecific(qpc, QPC_CLASSID, 1);
+  PetscValidLogicalCollectiveBool(qpc, changed, 2);
   qpc->setchanged = changed;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -318,14 +318,14 @@ PetscErrorCode QPCSetChangedActiveSet(QPC qpc,PetscBool changed)
 
 .seealso `QPC`, `QPCGetFreeSet`, `QPCSetIS`, `QPCGetSubVector`
 @*/
-PetscErrorCode QPCGetActiveSet(QPC qpc,PetscBool global,IS *is)
+PetscErrorCode QPCGetActiveSet(QPC qpc, PetscBool global, IS *is)
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
-  PetscAssertPointer(is,3);
+  PetscValidHeaderSpecific(qpc, QPC_CLASSID, 1);
+  PetscAssertPointer(is, 3);
   if (qpc->setchanged) {
     //PetscCall(ISDestroy(&qpc->activeset));
-    PetscUseTypeMethod(qpc,getactiveset,&qpc->activeset);
+    PetscUseTypeMethod(qpc, getactiveset, &qpc->activeset);
     //if (!qpc->is) {
     //  PetscCall(ISDestroy(&qpc->activesetglobal));
     //  qpc->activesetglobal = qpc->activeset;
@@ -365,20 +365,20 @@ PetscErrorCode QPCGetActiveSet(QPC qpc,PetscBool global,IS *is)
 
 .seealso `QPC`, `QPCGetActiveSet`, `QPCSetIS`, `QPCGetSubVector`
 @*/
-PetscErrorCode QPCGetFreeSet(QPC qpc,PetscBool global,Vec x,IS *is)
+PetscErrorCode QPCGetFreeSet(QPC qpc, PetscBool global, Vec x, IS *is)
 {
-  PetscInt nmin,nmax;
+  PetscInt nmin, nmax;
 
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qpc,QPC_CLASSID,1);
-  PetscAssertPointer(is,2);
+  PetscValidHeaderSpecific(qpc, QPC_CLASSID, 1);
+  PetscAssertPointer(is, 2);
   if (!x) x = qpc->lambdawork;
   if (qpc->setchanged) {
-    PetscCall(QPCGetActiveSet(qpc,global,is));
+    PetscCall(QPCGetActiveSet(qpc, global, is));
     //PetscCall(ISDestroy(is));
     PetscCall(ISDestroy(&qpc->freeset));
-    PetscCall(VecGetOwnershipRange(x,&nmin,&nmax));
-    PetscCall(ISComplement(qpc->activeset,nmin,nmax,&qpc->freeset));
+    PetscCall(VecGetOwnershipRange(x, &nmin, &nmax));
+    PetscCall(ISComplement(qpc->activeset, nmin, nmax, &qpc->freeset));
   }
   *is = qpc->freeset;
   PetscFunctionReturn(PETSC_SUCCESS);

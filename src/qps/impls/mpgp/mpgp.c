@@ -371,7 +371,7 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
       PetscCall(QPSSetWorkVecs(qps, 11));
     }
   } else if (mpgp->explengthtype == QPS_MPGP_EXPANSION_LENGTH_BB) {
-      PetscCall(QPSSetWorkVecs(qps, 10));
+    PetscCall(QPSSetWorkVecs(qps, 10));
   } else {
     PetscCall(QPSSetWorkVecs(qps, 8));
   }
@@ -514,7 +514,7 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
   qps->iteration        = 0; /* main iteration counter */
   while (1)                  /* main cycle */
   {
-    PetscCall(QPCSetChangedActiveSet(qpc,PETSC_TRUE));
+    PetscCall(QPCSetChangedActiveSet(qpc, PETSC_TRUE));
 
     /* compute the norm of projected gradient - stopping criterion */
     PetscCall(VecNorm(gP, NORM_2, &qps->rnorm)); /* qps->rnorm=norm(gP)*/
@@ -545,7 +545,7 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
 
       /* compute step-sizes */
       PetscCall(VecDot(p, Ap, &pAp));        /* pAp=p'*Ap      */
-      PetscCall(VecDot(z, p, &acg));         /* acg=z'*p       */
+      PetscCall(VecDot(z, g, &acg));         /* acg=z'*g       */
       acg = acg / pAp;                       /* acg=acg/pAp    */
       PetscCall(QPCFeas(qpc, x, p, &afeas)); /* finds max.feas.steplength */
 
@@ -555,9 +555,7 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
         ncg++; /* increase CG step counter */
         mpgp->currentStepType = 'c';
 
-        if (acg < afeas) {
-          PetscCall(QPCSetChangedActiveSet(qpc,PETSC_FALSE));
-        }
+        if (acg < afeas) { PetscCall(QPCSetChangedActiveSet(qpc, PETSC_FALSE)); }
 
         /* make CG step */
         PetscCall(VecAXPY(x, -acg, p));     /* x=x-acg*p      */

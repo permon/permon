@@ -5,7 +5,7 @@ PERMON_EXTERN PetscErrorCode PCCreate_FreeSet(PC);
 
 #undef __FUNCT__
 #define __FUNCT__ "FllopPCRegisterAll"
-PetscErrorCode  FllopPCRegisterAll()
+PetscErrorCode FllopPCRegisterAll()
 {
   PetscFunctionBegin;
   PetscCall(PCRegister(PCDUAL, PCCreate_Dual));

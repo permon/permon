@@ -219,11 +219,11 @@ PetscErrorCode QPSSetUp(QPS qps)
   PetscTryTypeMethod(qps, setup);
   PetscCall(QPChainSetUp(solqp));
 
-  PetscCall(QPSGetPC(qps,&pc));
+  PetscCall(QPSGetPC(qps, &pc));
   if (!qps->pcOperatorSet) {
     Mat A;
-    PetscCall(QPGetOperator(solqp,&A));
-    PetscCall(PCSetOperators(pc,A,A));
+    PetscCall(QPGetOperator(solqp, &A));
+    PetscCall(PCSetOperators(pc, A, A));
     qps->pcOperatorSet = PETSC_TRUE;
   }
   PetscCall(PCSetUp(pc));
@@ -314,7 +314,7 @@ PetscErrorCode QPSView(QPS qps, PetscViewer v)
     PetscCall(QPSGetType(qps, &type));
     PetscCall(PetscInfo(qps, "Warning: QPSView not implemented yet for type %s\n", type));
   }
-  if (qps->pc) PetscCall(PCView(qps->pc,v));
+  if (qps->pc) PetscCall(PCView(qps->pc, v));
   PetscCall(PetscViewerASCIIPopTab(v));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -550,9 +550,9 @@ PetscErrorCode QPSIsQPCompatible(QPS qps, QP qp, PetscBool *flg)
 PetscErrorCode QPSSetPC(QPS qps, PC pc)
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscValidHeaderSpecific(pc,PC_CLASSID,2);
-  PetscCheckSameComm(qps,1,pc,2);
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
+  PetscValidHeaderSpecific(pc, PC_CLASSID, 2);
+  PetscCheckSameComm(qps, 1, pc, 2);
   if (pc == qps->pc) PetscFunctionReturn(PETSC_SUCCESS);
   PetscCall(PCDestroy(&qps->pc));
   qps->pc = pc;
@@ -575,27 +575,27 @@ PetscErrorCode QPSSetPC(QPS qps, PC pc)
 
    Level: advanced
 @*/
-PetscErrorCode QPSGetPC(QPS qps,PC *pc)
+PetscErrorCode QPSGetPC(QPS qps, PC *pc)
 {
-  QP         qp;
+  QP          qp;
   const char *prefix;
 
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(qps,QPS_CLASSID,1);
-  PetscAssertPointer(pc,2);
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
+  PetscAssertPointer(pc, 2);
   if (!qps->pc) {
-    PetscCall(PCCreate(PetscObjectComm((PetscObject)qps),&qps->pc));
-    PetscCall(QPSGetOptionsPrefix(qps,&prefix));
-    PetscCall(PCSetOptionsPrefix(qps->pc,prefix));
-    PetscCall(PCAppendOptionsPrefix(qps->pc,"qps_"));
-    PetscCall(PetscObjectIncrementTabLevel((PetscObject)qps->pc,(PetscObject)qps,0));
-    PetscCall(PCSetType(qps->pc,PCNONE));
+    PetscCall(PCCreate(PetscObjectComm((PetscObject)qps), &qps->pc));
+    PetscCall(QPSGetOptionsPrefix(qps, &prefix));
+    PetscCall(PCSetOptionsPrefix(qps->pc, prefix));
+    PetscCall(PCAppendOptionsPrefix(qps->pc, "qps_"));
+    PetscCall(PetscObjectIncrementTabLevel((PetscObject)qps->pc, (PetscObject)qps, 0));
+    PetscCall(PCSetType(qps->pc, PCNONE));
 
     PetscCall(QPSGetSolvedQP(qps, &qp));
     if (qp) {
       Mat A;
-      PetscCall(QPGetOperator(qp,&A));
-      PetscCall(PCSetOperators(qps->pc,A,A));
+      PetscCall(QPGetOperator(qp, &A));
+      PetscCall(PCSetOperators(qps->pc, A, A));
     } else {
       qps->pcOperatorSet = PETSC_FALSE;
     }
@@ -603,7 +603,6 @@ PetscErrorCode QPSGetPC(QPS qps,PC *pc)
   *pc = qps->pc;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
-
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSSolve"
