@@ -22,7 +22,8 @@ PERMON_EXTERN PetscErrorCode PCDualGetType(PC pc, PCDualType *type);
 /* PCFREESET type-specific functions */
 typedef enum {
   PC_FREESET_BASIC = 0,
-  PC_FREESET_CHEAP = 1
+  PC_FREESET_CHEAP = 1,
+  PC_FREESET_FIXED = 2,
 } PCFreeSetType;
 PERMON_EXTERN const char    *PCFreeSetTypes[];
 PERMON_EXTERN PetscErrorCode PCFreeSetSetIS(PC pc, IS is);

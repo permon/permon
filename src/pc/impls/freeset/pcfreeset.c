@@ -1,14 +1,14 @@
-
 #include <permon/private/permonpcimpl.h>
 #include <permon/private/qpcimpl.h>
 #include <petscmat.h>
 #include <permonqps.h>
 
-const char *PCFreeSetTypes[] = {"basic", "cheap", "PCFreeSetType", "PC_FREESET_", 0};
+const char *PCFreeSetTypes[] = {"basic", "cheap", "fixed", "PCFreeSetType", "PC_FREESET_", 0};
 
 PetscLogEvent PC_FreeSet_Apply;
 
 static PetscErrorCode PCApply_FreeSet_Cheap(PC pc, Vec x, Vec y);
+static PetscErrorCode PCApply_FreeSet_Fixed(PC pc, Vec x, Vec y);
 
 /* Private context (data structure) for the FreeSet preconditioner. */
 typedef struct {
@@ -107,7 +107,7 @@ static PetscErrorCode PCSetUpInnerPC_FreeSet(PC pc)
   Mat         innerpmat;
 
   PetscFunctionBegin;
-  if (ctx->type == PC_FREESET_BASIC) {
+  if (ctx->type == PC_FREESET_BASIC || ctx->type == PC_FREESET_FIXED) {
     //TODO add Virtual submat option
     PetscCall(MatCreateSubMatrix(pc->pmat, ctx->is, ctx->is, MAT_INITIAL_MATRIX, &innerpmat));
     PetscCall(PCSetOperators(ctx->pc, innerpmat, innerpmat));
@@ -129,6 +129,8 @@ static PetscErrorCode PCSetUp_FreeSet(PC pc)
   if (ctx->type == PC_FREESET_CHEAP) {
     pc->ops->apply = PCApply_FreeSet_Cheap;
     PetscCall(PCSetOperators(ctx->pc, pc->pmat, pc->pmat));
+  } else if (ctx->type == PC_FREESET_FIXED) {
+    pc->ops->apply = PCApply_FreeSet_Fixed;
   }
   //PetscCall(PCSetUpInnerPC_FreeSet(pc));
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -167,7 +169,7 @@ static PetscErrorCode PCUpdateFromQPS_FreeSet(PC pc, QPS qps)
       PetscCall(PCReset_FreeSet(pc));
       PetscCall(PCSetUpInnerPC_FreeSet(pc));
     }
-  } else { /* CHEAP variant */
+  } else if (ctx->type == PC_FREESET_CHEAP) {
     PetscCall(QPCGetActiveSet(qpc, PETSC_TRUE, &ctx->is));
   }
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -203,6 +205,24 @@ static PetscErrorCode PCApply_FreeSet_Cheap(PC pc, Vec x, Vec y)
   PetscCall(PetscLogEventBegin(PC_FreeSet_Apply, pc, x, y, 0));
   PetscCall(PCApply(ctx->pc, x, y));
   PetscCall(VecISSet(y, ctx->is, 0.));
+  PetscCall(PetscLogEventEnd(PC_FreeSet_Apply, pc, x, y, 0));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "PCApply_FreeSet_Fixed"
+static PetscErrorCode PCApply_FreeSet_Fixed(PC pc, Vec x, Vec y)
+{
+  PC_FreeSet *ctx = (PC_FreeSet *)pc->data;
+
+  PetscFunctionBegin;
+  PetscCall(PetscLogEventBegin(PC_FreeSet_Apply, pc, x, y, 0));
+  PetscCall(VecCopy(x, y)); // could apply Jacobi precond on the rest of the freeset
+  PetscCall(VecGetSubVector(x, ctx->is, &ctx->xwork));
+  PetscCall(VecGetSubVector(y, ctx->is, &ctx->ywork));
+  PetscCall(PCApply(ctx->pc, ctx->xwork, ctx->ywork));
+  PetscCall(VecRestoreSubVector(x, ctx->is, &ctx->xwork));
+  PetscCall(VecRestoreSubVector(y, ctx->is, &ctx->ywork));
   PetscCall(PetscLogEventEnd(PC_FreeSet_Apply, pc, x, y, 0));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
