@@ -21,6 +21,41 @@ typedef struct {
 } PC_FreeSet;
 
 #undef __FUNCT__
+#define __FUNCT__ "PCFreeSetType_FreeSet"
+static PetscErrorCode PCFreeSetSetType_FreeSet(PC pc, PCFreeSetType type)
+{
+  PC_FreeSet *data = (PC_FreeSet *)pc->data;
+
+  PetscFunctionBegin;
+  data->type = type;
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+
+#undef __FUNCT__
+#define __FUNCT__ "PCFreeSetSetType"
+/*@
+   PCFreeSetSetType -  Set type of the preconditioner
+
+   Logically Collective
+
+   Input Parameters:
++  pc - instance of PC
+-  type - the type of preconditioner
+
+   Level: intermediate
+
+.seealso `PCFREESET`
+@*/
+PetscErrorCode PCFreeSetSetType(PC pc, PCFreeSetType type)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(pc, PC_CLASSID, 1);
+  PetscTryMethod(pc, "PCFreeSetSetType_C", (PC, PCFreeSetType), (pc, type));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ "PCFreeSetSetIS_FreeSet"
 static PetscErrorCode PCFreeSetSetIS_FreeSet(PC pc, IS is)
 {
@@ -50,12 +85,12 @@ static PetscErrorCode PCFreeSetSetIS_FreeSet(PC pc, IS is)
 
 .seealso `PCFREESET`, `PCFreeSetGetIS()`, `PCFreeSetSetType()`, `PCFreeSetGetType()`
 @*/
-PetscErrorCode PCFreeSetSetType(PC pc, IS is)
+PetscErrorCode PCFreeSetSetIS(PC pc, IS is)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(pc, PC_CLASSID, 1);
   PetscValidHeaderSpecific(is, IS_CLASSID, 2);
-  PetscTryMethod(pc, "PCFreeSetSetIS_FreeSet_C", (PC, IS), (pc, is));
+  PetscTryMethod(pc, "PCFreeSetSetIS_C", (PC, IS), (pc, is));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -95,7 +130,7 @@ PetscErrorCode PCFreeSetGetIS(PC pc, IS *is)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(pc, PC_CLASSID, 1);
   PetscAssertPointer(is, 2);
-  PetscTryMethod(pc, "PCFreeSetGetIS_FreeSet_C", (PC, IS *), (pc, is));
+  PetscTryMethod(pc, "PCFreeSetGetIS_C", (PC, IS *), (pc, is));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -250,8 +285,9 @@ static PetscErrorCode PCDestroy_FreeSet(PC pc)
   PetscFunctionBegin;
   PetscCall(PCReset_FreeSet(pc));
   PetscCall(PetscFree(pc->data));
-  PetscCall(PetscObjectComposeFunction((PetscObject)pc, "PCFreeSetSetIS_FreeSet_C", NULL));
-  PetscCall(PetscObjectComposeFunction((PetscObject)pc, "PCFreeSetGetIS_FreeSet_C", NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)pc, "PCFreeSetSetType_C", NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)pc, "PCFreeSetSetIS_C", NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)pc, "PCFreeSetGetIS_C", NULL));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -281,7 +317,7 @@ PetscErrorCode PCSetFromOptions_FreeSet(PC pc, PetscOptionItems PetscOptionsObje
   PCFREESET - preconditioner on the free set
 
   Options Database Keys:
-+ -pc_freeset_type <basic,cheap> - approach for forming the preconditioner
++ -pc_freeset_type <basic, cheap, fixed> - approach for forming the preconditioner
 - -pc_freeset_inner_pc - options for the inner preconditioner
 
   Level: intermediate
@@ -295,6 +331,11 @@ PetscErrorCode PCSetFromOptions_FreeSet(PC pc, PetscOptionItems PetscOptionsObje
   The cheap variant approximates the basic variant by applying the inner
   preconditioner (computed once with the whole pmat) and zeroing out
   the active set components.
+
+  The fixed variant is meant to apply preconditoner only on a set that is
+  known to be always free. This is set should be supplied by user through
+  `PCFreeSetSetIS()` or is computed automatically as a complement
+  of the `QPC` index set.
 
   The inner preconditioner can be controlled with
   `PCFreeSetGetInnerPC()` or -pc_freeset_inner_.
@@ -331,8 +372,9 @@ PERMON_EXTERN PetscErrorCode PCCreate_FreeSet(PC pc)
   pc->ops->view           = PCView_FreeSet;
 
   /* set type-specific functions */
-  PetscCall(PetscObjectComposeFunction((PetscObject)pc, "PCFreeSetSetIS_FreeSet_C", PCFreeSetSetIS_FreeSet));
-  PetscCall(PetscObjectComposeFunction((PetscObject)pc, "PCFreeSetGetIS_FreeSet_C", PCFreeSetGetIS_FreeSet));
+  PetscCall(PetscObjectComposeFunction((PetscObject)pc, "PCFreeSetSetType_C", PCFreeSetSetType_FreeSet));
+  PetscCall(PetscObjectComposeFunction((PetscObject)pc, "PCFreeSetSetIS_C", PCFreeSetSetIS_FreeSet));
+  PetscCall(PetscObjectComposeFunction((PetscObject)pc, "PCFreeSetGetIS_C", PCFreeSetGetIS_FreeSet));
   PetscCall(PetscObjectComposeFunction((PetscObject)pc, "PCUpdateFromQPS_C", PCUpdateFromQPS_FreeSet));
 
   /* prepare log events*/

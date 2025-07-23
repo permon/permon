@@ -26,5 +26,6 @@ typedef enum {
   PC_FREESET_FIXED = 2,
 } PCFreeSetType;
 PERMON_EXTERN const char    *PCFreeSetTypes[];
+PERMON_EXTERN PetscErrorCode PCFreeSetSetType(PC pc, PCFreeSetType type);
 PERMON_EXTERN PetscErrorCode PCFreeSetSetIS(PC pc, IS is);
 PERMON_EXTERN PetscErrorCode PCFreeSetGetIS(PC pc, IS *is);
