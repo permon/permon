@@ -31,7 +31,6 @@ static PetscErrorCode PCFreeSetSetType_FreeSet(PC pc, PCFreeSetType type)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-
 #undef __FUNCT__
 #define __FUNCT__ "PCFreeSetSetType"
 /*@
@@ -63,6 +62,7 @@ static PetscErrorCode PCFreeSetSetIS_FreeSet(PC pc, IS is)
 
   PetscFunctionBegin;
   data->is = is;
+  PetscCall(PetscObjectReference((PetscObject)is));
   //PetscCall(PCReset(pc));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -166,6 +166,7 @@ static PetscErrorCode PCSetUp_FreeSet(PC pc)
     PetscCall(PCSetOperators(ctx->pc, pc->pmat, pc->pmat));
   } else if (ctx->type == PC_FREESET_FIXED) {
     pc->ops->apply = PCApply_FreeSet_Fixed;
+    PetscCall(PCSetUpInnerPC_FreeSet(pc));
   }
   //PetscCall(PCSetUpInnerPC_FreeSet(pc));
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -178,7 +179,7 @@ static PetscErrorCode PCReset_FreeSet(PC pc)
   PC_FreeSet *ctx = (PC_FreeSet *)pc->data;
 
   PetscFunctionBegin;
-  PetscCall(PCReset(ctx->pc));
+  if (ctx->pc) PetscCall(PCReset(ctx->pc));
   if (ctx->type == PC_FREESET_BASIC) {
     PetscCall(VecDestroy(&ctx->xwork));
     PetscCall(VecDestroy(&ctx->ywork));
