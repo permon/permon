@@ -1,3 +1,4 @@
+#include "permonpc.h"
 #include <permon/private/permonpcimpl.h>
 #include <permon/private/qpcimpl.h>
 #include <petscmat.h>
@@ -44,13 +45,47 @@ static PetscErrorCode PCFreeSetSetType_FreeSet(PC pc, PCFreeSetType type)
 
    Level: intermediate
 
-.seealso `PCFREESET`
+.seealso `PCFREESET`, `PCFreeSetGetType()`
 @*/
 PetscErrorCode PCFreeSetSetType(PC pc, PCFreeSetType type)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(pc, PC_CLASSID, 1);
   PetscTryMethod(pc, "PCFreeSetSetType_C", (PC, PCFreeSetType), (pc, type));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "PCFreeGetType_FreeSet"
+static PetscErrorCode PCFreeSetGetType_FreeSet(PC pc, PCFreeSetType *type)
+{
+  PC_FreeSet *data = (PC_FreeSet *)pc->data;
+
+  PetscFunctionBegin;
+  *type = data->type;
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "PCFreeSetGetType"
+/*@
+   PCFreeSetGetType -  Get type of the preconditioner
+
+   Logically Collective
+
+   Input Parameters:
++  pc - instance of PC
+-  type - the type of preconditioner
+
+   Level: intermediate
+
+.seealso `PCFREESET`, `PCFreeSetSetType()`
+@*/
+PetscErrorCode PCFreeSetGetType(PC pc, PCFreeSetType *type)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(pc, PC_CLASSID, 1);
+  PetscTryMethod(pc, "PCFreeSetGetType_C", (PC, PCFreeSetType *), (pc, type));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -267,12 +302,15 @@ static PetscErrorCode PCApply_FreeSet_Fixed(PC pc, Vec x, Vec y)
 #define __FUNCT__ "PCView_FreeSet"
 static PetscErrorCode PCView_FreeSet(PC pc, PetscViewer viewer)
 {
-  PC_FreeSet *ctx = (PC_FreeSet *)pc->data;
-  PetscBool   iascii;
+  PC_FreeSet   *ctx = (PC_FreeSet *)pc->data;
+  PetscBool     iascii;
+  PCFreeSetType type;
 
   PetscFunctionBegin;
   PetscCall(PetscObjectTypeCompare((PetscObject)viewer, PETSCVIEWERASCII, &iascii));
   if (!iascii) PetscFunctionReturn(PETSC_SUCCESS);
+  PetscCall(PCFreeSetGetType(pc,&type));
+  PetscCall(PetscViewerASCIIPrintf(viewer, "  type %s\n", PCFreeSetTypes[type]));
   PetscCall(PCView(ctx->pc, viewer));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -287,6 +325,7 @@ static PetscErrorCode PCDestroy_FreeSet(PC pc)
   PetscCall(PCReset_FreeSet(pc));
   PetscCall(PetscFree(pc->data));
   PetscCall(PetscObjectComposeFunction((PetscObject)pc, "PCFreeSetSetType_C", NULL));
+  PetscCall(PetscObjectComposeFunction((PetscObject)pc, "PCFreeSetGetType_C", NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)pc, "PCFreeSetSetIS_C", NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)pc, "PCFreeSetGetIS_C", NULL));
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -374,6 +413,7 @@ PERMON_EXTERN PetscErrorCode PCCreate_FreeSet(PC pc)
 
   /* set type-specific functions */
   PetscCall(PetscObjectComposeFunction((PetscObject)pc, "PCFreeSetSetType_C", PCFreeSetSetType_FreeSet));
+  PetscCall(PetscObjectComposeFunction((PetscObject)pc, "PCFreeSetGetType_C", PCFreeSetGetType_FreeSet));
   PetscCall(PetscObjectComposeFunction((PetscObject)pc, "PCFreeSetSetIS_C", PCFreeSetSetIS_FreeSet));
   PetscCall(PetscObjectComposeFunction((PetscObject)pc, "PCFreeSetGetIS_C", PCFreeSetGetIS_FreeSet));
   PetscCall(PetscObjectComposeFunction((PetscObject)pc, "PCUpdateFromQPS_C", PCUpdateFromQPS_FreeSet));
