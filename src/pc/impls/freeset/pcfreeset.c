@@ -1,4 +1,6 @@
 #include "permonpc.h"
+#include "petscis.h"
+#include "petscvec.h"
 #include <permon/private/permonpcimpl.h>
 #include <permon/private/qpcimpl.h>
 #include <petscmat.h>
@@ -201,7 +203,7 @@ static PetscErrorCode PCSetUp_FreeSet(PC pc)
     PetscCall(PCSetOperators(ctx->pc, pc->pmat, pc->pmat));
   } else if (ctx->type == PC_FREESET_FIXED) {
     pc->ops->apply = PCApply_FreeSet_Fixed;
-    PetscCall(PCSetUpInnerPC_FreeSet(pc));
+    if (ctx->is) { PetscCall(PCSetUpInnerPC_FreeSet(pc)); } // defer the PCSetUp to PCUpdateFromQPS to attempt to grab IS from QPC
   }
   //PetscCall(PCSetUpInnerPC_FreeSet(pc));
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -229,6 +231,8 @@ static PetscErrorCode PCUpdateFromQPS_FreeSet(PC pc, QPS qps)
   PC_FreeSet *ctx = (PC_FreeSet *)pc->data;
   QP          qp;
   QPC         qpc;
+  IS          qpcis;
+  PetscInt    ilo, ihi;
 
   PetscFunctionBegin;
   PetscCall(QPSGetSolvedQP(qps, &qp));
@@ -242,6 +246,15 @@ static PetscErrorCode PCUpdateFromQPS_FreeSet(PC pc, QPS qps)
     }
   } else if (ctx->type == PC_FREESET_CHEAP) {
     PetscCall(QPCGetActiveSet(qpc, PETSC_TRUE, &ctx->is));
+  } else if (ctx->type == PC_FREESET_FIXED) {
+    if (!ctx->is) {
+      PetscCall(QPCGetIS(qpc, &qpcis));
+      PetscCheck(qpcis, PetscObjectComm((PetscObject)pc), PETSC_ERR_ARG_WRONGSTATE, "Fixed type PCFREESET is used but no free set is provided and it cannot be obtained from QPC");
+      PetscCall(VecGetOwnershipRange(ctx->xlayout, &ilo, &ihi));
+      PetscCall(ISComplement(qpcis, ilo, ihi, &ctx->is)); // TODO check if the IS is valid when qpcis is the full space
+      PetscCall(PetscInfo(pc, "computed free set from QPC\n"));
+      PetscCall(PCSetUpInnerPC_FreeSet(pc));
+    }
   }
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -309,7 +322,7 @@ static PetscErrorCode PCView_FreeSet(PC pc, PetscViewer viewer)
   PetscFunctionBegin;
   PetscCall(PetscObjectTypeCompare((PetscObject)viewer, PETSCVIEWERASCII, &iascii));
   if (!iascii) PetscFunctionReturn(PETSC_SUCCESS);
-  PetscCall(PCFreeSetGetType(pc,&type));
+  PetscCall(PCFreeSetGetType(pc, &type));
   PetscCall(PetscViewerASCIIPrintf(viewer, "  type %s\n", PCFreeSetTypes[type]));
   PetscCall(PCView(ctx->pc, viewer));
   PetscFunctionReturn(PETSC_SUCCESS);

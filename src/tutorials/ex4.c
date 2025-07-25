@@ -191,9 +191,14 @@ int main(int argc, char **args)
 }
 
 /*TEST
-  test:
-    suffix: 1
+  testset:
     filter: grep -e CONVERGED -e number -e "r ="
-    nsize: 3
-    args: -n 100 -qps_view_convergence -qp_chain_view_kkt -infinite {{false true}separate output}}
+    args: -n 100 -qps_view_convergence -qp_chain_view_kkt
+    test:
+      suffix: 1
+      nsize: 2
+      args: -qpc_pc_freeset_type basic
+    test:
+      suffix: 2
+      args: -qps_pc_freeset_type cheap
 TEST*/
