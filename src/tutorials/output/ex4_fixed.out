@@ -1,0 +1,9 @@
+  last QPSSolve CONVERGED due to CONVERGED_RTOL, KSPReason=2, required 119 iterations
+    number of Hessian multiplications 129
+    number of CG steps 107
+    number of expansion steps 9
+    number of proportioning steps 3
+r = ||A*x - b - lambda_lb|| = 1.31e-14    rO/||b|| = 4.33e-13
+r = ||min(x-lb,0)||      = 0.00e+00    r/||b|| = 0.00e+00
+r = ||min(lambda_lb,0)|| = 1.01e-14    r/||b|| = 3.34e-13
+r = |lambda_lb'*(lb-x)|  = 7.29e-17    r/||b|| = 2.41e-15

@@ -195,10 +195,13 @@ int main(int argc, char **args)
     filter: grep -e CONVERGED -e number -e "r ="
     args: -n 100 -qps_view_convergence -qp_chain_view_kkt
     test:
-      suffix: 1
+      suffix: basic
       nsize: 2
-      args: -qpc_pc_freeset_type basic
+      args: -qps_pc_freeset_type basic
     test:
-      suffix: 2
-      args: -qps_pc_freeset_type cheap
+      suffix: cheap
+      args: -qps_pc_freeset_type cheap -fixedfree 0 -infinite 1 -qps_pc_inner_pc_type ilu
+    test:
+      suffix: fixed
+      args: -qps_pc_freeset_type fixed -fixedfree {{0 1}}
 TEST*/
