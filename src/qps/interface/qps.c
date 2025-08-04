@@ -72,6 +72,7 @@ PetscErrorCode QPSCreate(MPI_Comm comm, QPS *qps_new)
 
   qps->topQP                  = NULL;
   qps->solQP                  = NULL;
+  qps->pc                     = NULL;
   qps->rtol                   = 1e-5;
   qps->atol                   = 1e-50;
   qps->divtol                 = 1e4;
@@ -254,6 +255,7 @@ PetscErrorCode QPSReset(QPS qps)
   PetscTryTypeMethod(qps, reset);
   if (qps->topQP) PetscCall(QPDestroy(&qps->topQP));
   PetscCall(QPDestroy(&qps->solQP));
+  if (qps->pc) PetscCall(PCReset(qps->pc));
   PetscCall(VecDestroyVecs(qps->nwork, &qps->work));
   PetscCall(PetscFree(qps->work_state));
   qps->setupcalled = PETSC_FALSE;
@@ -353,6 +355,8 @@ PetscErrorCode QPSDestroyDefault(QPS qps)
 @*/
 PetscErrorCode QPSDestroy(QPS *qps)
 {
+  PC pc;
+
   PetscFunctionBegin;
   if (!*qps) PetscFunctionReturn(PETSC_SUCCESS);
   PetscValidHeaderSpecific(*qps, QPS_CLASSID, 1);
@@ -361,8 +365,13 @@ PetscErrorCode QPSDestroy(QPS *qps)
     PetscFunctionReturn(PETSC_SUCCESS);
   }
 
+  // Avoid a cascading call to PCReset(qps->pc) in QPSReset() (allows shared PC)
+  pc         = (*qps)->pc;
+  (*qps)->pc = NULL;
   PetscCall(QPSReset(*qps));
+  (*qps)->pc = pc;
   PetscTryTypeMethod(*qps, destroy);
+  PetscCall(PCDestroy(&(*qps)->pc));
 
   if ((*qps)->convergencetestdestroy) { PetscCall((*(*qps)->convergencetestdestroy)((*qps)->cnvctx)); }
 
