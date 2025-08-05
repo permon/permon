@@ -1,9 +1,5 @@
-#include "permonpc.h"
-#include "petscis.h"
-#include "petscvec.h"
 #include <permon/private/permonpcimpl.h>
 #include <permon/private/qpcimpl.h>
-#include <petscmat.h>
 #include <permonqps.h>
 
 const char *PCFreeSetTypes[] = {"basic", "cheap", "fixed", "PCFreeSetType", "PC_FREESET_", 0};
