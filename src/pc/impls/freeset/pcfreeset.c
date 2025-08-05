@@ -152,7 +152,7 @@ static PetscErrorCode PCFreeSetGetIS_FreeSet(PC pc, IS *is)
 .  is - free/active set IS
 
    Notes:
-   The `IS` corresponds either to free set (basic variant) or active set (cheap variant).
+   The `IS` corresponds either to the active set (cheap variant) or the free set (all other variants).
 
    Level: advanced
 
@@ -176,7 +176,7 @@ static PetscErrorCode PCSetUpInnerPC_FreeSet(PC pc)
 
   PetscFunctionBegin;
   if (ctx->type == PC_FREESET_BASIC || ctx->type == PC_FREESET_FIXED) {
-    //TODO add Virtual submat option
+    //TODO any point in optionally using MatCreateSubMatrixVirtual()?
     PetscCall(MatCreateSubMatrix(pc->pmat, ctx->is, ctx->is, MAT_INITIAL_MATRIX, &innerpmat));
     PetscCall(PCSetOperators(ctx->pc, innerpmat, innerpmat));
     PetscCall(MatCreateVecs(innerpmat, &ctx->xwork, &ctx->ywork));
@@ -199,9 +199,8 @@ static PetscErrorCode PCSetUp_FreeSet(PC pc)
     PetscCall(PCSetOperators(ctx->pc, pc->pmat, pc->pmat));
   } else if (ctx->type == PC_FREESET_FIXED) {
     pc->ops->apply = PCApply_FreeSet_Fixed;
-    if (ctx->is) { PetscCall(PCSetUpInnerPC_FreeSet(pc)); } // defer the PCSetUp to PCUpdateFromQPS to attempt to grab IS from QPC
+    if (ctx->is) { PetscCall(PCSetUpInnerPC_FreeSet(pc)); } // otherwise defer the PCSetUp to PCUpdateFromQPS to attempt to grab IS from QPC
   }
-  //PetscCall(PCSetUpInnerPC_FreeSet(pc));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -233,9 +232,8 @@ static PetscErrorCode PCUpdateFromQPS_FreeSet(PC pc, QPS qps)
   PetscFunctionBegin;
   PetscCall(QPSGetSolvedQP(qps, &qp));
   PetscCall(QPGetQPC(qp, &qpc));
-  /* TODO only if freeset changed */
   if (ctx->type == PC_FREESET_BASIC) {
-    if (qpc->setchanged) {
+    if (qpc->setchanged) { // This should be set by the solver with QPCSetChangedActiveSet()
       PetscCall(QPCGetFreeSet(qpc, PETSC_TRUE, ctx->xlayout, &ctx->is));
       PetscCall(PCReset_FreeSet(pc));
       PetscCall(PCSetUpInnerPC_FreeSet(pc));
@@ -262,7 +260,6 @@ static PetscErrorCode PCApply_FreeSet(PC pc, Vec x, Vec y)
   PC_FreeSet *ctx = (PC_FreeSet *)pc->data;
 
   PetscFunctionBegin;
-  //PetscCall(PCFreeSetSetUpInnerPC(pc));
   PetscCall(PetscLogEventBegin(PC_FreeSet_Apply, pc, x, y, 0));
   PetscCall(VecSet(y, 0.));
   PetscCall(VecGetSubVector(x, ctx->is, &ctx->xwork));
@@ -281,7 +278,6 @@ static PetscErrorCode PCApply_FreeSet_Cheap(PC pc, Vec x, Vec y)
   PC_FreeSet *ctx = (PC_FreeSet *)pc->data;
 
   PetscFunctionBegin;
-  //PetscCall(PCFreeSetSetUpInnerPC(pc));
   PetscCall(PetscLogEventBegin(PC_FreeSet_Apply, pc, x, y, 0));
   PetscCall(PCApply(ctx->pc, x, y));
   PetscCall(VecISSet(y, ctx->is, 0.));
@@ -382,11 +378,11 @@ PetscErrorCode PCSetFromOptions_FreeSet(PC pc, PetscOptionItems PetscOptionsObje
   the active set components.
 
   The fixed variant is meant to apply preconditoner only on a set that is
-  known to be always free. This is set should be supplied by user through
-  `PCFreeSetSetIS()` or is computed automatically as a complement
+  known to be always free. The IS for this set should be supplied by user
+  through `PCFreeSetSetIS()` or is computed automatically as a complement
   of the `QPC` index set.
 
-  The inner preconditioner can be controlled with
+  The inner preconditioner can be controlled through
   `PCFreeSetGetInnerPC()` or -pc_freeset_inner_.
 
   Developer Notes:

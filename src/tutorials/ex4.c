@@ -10,7 +10,7 @@ u(0) = u(1) = 0\n\
 s.t. u(x) >= sin(4*pi*x -pi/6)/2 -2, x in [0,1/2]\n\
 Based on ex2\n\
 Input parameters include:\n\
-  -n <mesh_n> : number of mesh points in both x and y-direction\n\
+  -n <mesh_n> : number of mesh points\n\
   -infinite   : use PETSC_NINFINITY to keep part of the domain unconstrained\n\
   -fixedfree  : use a priori given fixed free set\n";
 
@@ -119,7 +119,7 @@ int main(int argc, char **args)
   PetscCall(VecAssemblyEnd(c));
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  * Setup QP: argmin 1/2 x'Ax -x'b s.t. c_i <= x_i where i in [n/2,n]
+  * Setup QP: argmin 1/2 x'Ax -x'b s.t. c_i <= x_i where i in [0, 1/2]
   *  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   PetscCall(QPCreate(PETSC_COMM_WORLD, &qp));
   /* Set matrix representing QP operator */
