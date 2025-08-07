@@ -73,6 +73,8 @@ PetscErrorCode QPCReset(QPC qpc)
   PetscValidHeaderSpecific(qpc, QPC_CLASSID, 1);
   PetscCall(VecDestroy(&qpc->lambdawork));
   PetscCall(ISDestroy(&qpc->is));
+  if (qpc->activeset) PetscCall(ISDestroy(&qpc->activeset));
+  if (qpc->freeset) PetscCall(ISDestroy(&qpc->freeset));
   PetscTryTypeMethod(qpc, reset);
   qpc->setupcalled = PETSC_FALSE;
   PetscFunctionReturn(PETSC_SUCCESS);

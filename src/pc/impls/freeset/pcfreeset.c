@@ -11,12 +11,11 @@ static PetscErrorCode PCApply_FreeSet_Fixed(PC pc, Vec x, Vec y);
 
 /* Private context (data structure) for the FreeSet preconditioner. */
 typedef struct {
-  PC               pc;
-  IS               is;
-  PetscObjectState ISState;
-  Vec              xlayout, xwork, ywork;
-  PCFreeSetType    type;
-  PetscBool        setfromoptionscalled;
+  PC            pc;
+  IS            is;
+  Vec           xlayout, xwork, ywork;
+  PCFreeSetType type;
+  PetscBool     setfromoptionscalled;
 } PC_FreeSet;
 
 #undef __FUNCT__
@@ -94,9 +93,10 @@ static PetscErrorCode PCFreeSetSetIS_FreeSet(PC pc, IS is)
   PC_FreeSet *data = (PC_FreeSet *)pc->data;
 
   PetscFunctionBegin;
+  if (data->is == is) PetscFunctionReturn(PETSC_SUCCESS);
+  PetscCall(PCReset(pc)); // need to redo setup when index set changes
   data->is = is;
   PetscCall(PetscObjectReference((PetscObject)is));
-  //PetscCall(PCReset(pc));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -179,7 +179,6 @@ static PetscErrorCode PCSetUpInnerPC_FreeSet(PC pc)
     //TODO any point in optionally using MatCreateSubMatrixVirtual()?
     PetscCall(MatCreateSubMatrix(pc->pmat, ctx->is, ctx->is, MAT_INITIAL_MATRIX, &innerpmat));
     PetscCall(PCSetOperators(ctx->pc, innerpmat, innerpmat));
-    PetscCall(MatCreateVecs(innerpmat, &ctx->xwork, &ctx->ywork));
     PetscCall(MatDestroy(&innerpmat));
   }
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -199,8 +198,23 @@ static PetscErrorCode PCSetUp_FreeSet(PC pc)
     PetscCall(PCSetOperators(ctx->pc, pc->pmat, pc->pmat));
   } else if (ctx->type == PC_FREESET_FIXED) {
     pc->ops->apply = PCApply_FreeSet_Fixed;
-    if (ctx->is) { PetscCall(PCSetUpInnerPC_FreeSet(pc)); } // otherwise defer the PCSetUp to PCUpdateFromQPS to attempt to grab IS from QPC
+    if (ctx->is) PetscCall(PCSetUpInnerPC_FreeSet(pc)); // otherwise defer the PCSetUp to PCUpdateFromQPS to attempt to grab IS from QPC
   }
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+/*
+   Reset objects created by PCSetUpInnerPC_FreeSet
+*/
+#undef __FUNCT__
+#define __FUNCT__ "PCResetInnerPC_FreeSet"
+static PetscErrorCode PCResetInnerPC_FreeSet(PC pc)
+{
+  PC_FreeSet *ctx = (PC_FreeSet *)pc->data;
+
+  PetscFunctionBegin;
+  if (ctx->pc) PetscCall(PCReset(ctx->pc));
+  PetscCall(ISDestroy(&ctx->is));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -211,11 +225,8 @@ static PetscErrorCode PCReset_FreeSet(PC pc)
   PC_FreeSet *ctx = (PC_FreeSet *)pc->data;
 
   PetscFunctionBegin;
-  if (ctx->pc) PetscCall(PCReset(ctx->pc));
-  if (ctx->type == PC_FREESET_BASIC) {
-    PetscCall(VecDestroy(&ctx->xwork));
-    PetscCall(VecDestroy(&ctx->ywork));
-  }
+  PetscCall(PCResetInnerPC_FreeSet(pc));
+  PetscCall(VecDestroy(&ctx->xlayout));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -233,13 +244,16 @@ static PetscErrorCode PCUpdateFromQPS_FreeSet(PC pc, QPS qps)
   PetscCall(QPSGetSolvedQP(qps, &qp));
   PetscCall(QPGetQPC(qp, &qpc));
   if (ctx->type == PC_FREESET_BASIC) {
-    if (qpc->setchanged) { // This should be set by the solver with QPCSetChangedActiveSet()
+    if (qpc->setchanged) {                   // This should be set by the solver with QPCSetChangedActiveSet()
+      PetscCall(PCResetInnerPC_FreeSet(pc)); // destroy ctx->is and prepare for new setup of inner PC
       PetscCall(QPCGetFreeSet(qpc, PETSC_TRUE, ctx->xlayout, &ctx->is));
-      PetscCall(PCReset_FreeSet(pc));
+      PetscCall(PetscObjectReference((PetscObject)ctx->is));
       PetscCall(PCSetUpInnerPC_FreeSet(pc));
     }
   } else if (ctx->type == PC_FREESET_CHEAP) {
+    PetscCall(ISDestroy(&ctx->is));
     PetscCall(QPCGetActiveSet(qpc, PETSC_TRUE, &ctx->is));
+    PetscCall(PetscObjectReference((PetscObject)ctx->is));
   } else if (ctx->type == PC_FREESET_FIXED) {
     if (!ctx->is) {
       PetscCall(QPCGetIS(qpc, &qpcis));
@@ -326,10 +340,11 @@ static PetscErrorCode PCView_FreeSet(PC pc, PetscViewer viewer)
 #define __FUNCT__ "PCDestroy_FreeSet"
 static PetscErrorCode PCDestroy_FreeSet(PC pc)
 {
-  //PC_FreeSet         *ctx = (PC_FreeSet*)pc->data;
+  PC_FreeSet *ctx = (PC_FreeSet *)pc->data;
 
   PetscFunctionBegin;
   PetscCall(PCReset_FreeSet(pc));
+  PetscCall(PCDestroy(&ctx->pc));
   PetscCall(PetscFree(pc->data));
   PetscCall(PetscObjectComposeFunction((PetscObject)pc, "PCFreeSetSetType_C", NULL));
   PetscCall(PetscObjectComposeFunction((PetscObject)pc, "PCFreeSetGetType_C", NULL));
