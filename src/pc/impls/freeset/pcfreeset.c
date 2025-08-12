@@ -6,6 +6,7 @@ const char *PCFreeSetTypes[] = {"basic", "cheap", "fixed", "PCFreeSetType", "PC_
 
 PetscLogEvent PC_FreeSet_Apply;
 
+static PetscErrorCode PCApply_FreeSet(PC pc, Vec x, Vec y);
 static PetscErrorCode PCApply_FreeSet_Cheap(PC pc, Vec x, Vec y);
 static PetscErrorCode PCApply_FreeSet_Fixed(PC pc, Vec x, Vec y);
 
@@ -25,6 +26,13 @@ static PetscErrorCode PCFreeSetSetType_FreeSet(PC pc, PCFreeSetType type)
   PC_FreeSet *data = (PC_FreeSet *)pc->data;
 
   PetscFunctionBegin;
+  if (type == PC_FREESET_BASIC) {
+    pc->ops->apply = PCApply_FreeSet;
+  } else if (type == PC_FREESET_CHEAP) {
+    pc->ops->apply = PCApply_FreeSet_Cheap;
+  } else if (type == PC_FREESET_FIXED) {
+    pc->ops->apply = PCApply_FreeSet_Fixed;
+  } else SETERRQ(PetscObjectComm((PetscObject)pc), PETSC_ERR_ARG_WRONG, "Unknown freeset preconditioner type");
   data->type = type;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -194,10 +202,8 @@ static PetscErrorCode PCSetUp_FreeSet(PC pc)
   PetscCall(MatCreateVecs(pc->pmat, &ctx->xlayout, NULL));
   if (!ctx->pc) PetscCall(PCCreate(PetscObjectComm((PetscObject)pc), &ctx->pc));
   if (ctx->type == PC_FREESET_CHEAP) {
-    pc->ops->apply = PCApply_FreeSet_Cheap;
     PetscCall(PCSetOperators(ctx->pc, pc->pmat, pc->pmat));
   } else if (ctx->type == PC_FREESET_FIXED) {
-    pc->ops->apply = PCApply_FreeSet_Fixed;
     if (ctx->is) PetscCall(PCSetUpInnerPC_FreeSet(pc)); // otherwise defer the PCSetUp to PCUpdateFromQPS to attempt to grab IS from QPC
   }
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -359,10 +365,12 @@ PetscErrorCode PCSetFromOptions_FreeSet(PC pc, PetscOptionItems PetscOptionsObje
 {
   PC_FreeSet *ctx = (PC_FreeSet *)pc->data;
   const char *prefix;
+  PetscBool   flg;
 
   PetscFunctionBegin;
   PetscOptionsHeadBegin(PetscOptionsObject, "PCFREESET options");
-  PetscCall(PetscOptionsEnum("-pc_freeset_type", "PCFREESET type", "PCFreeSetSetType", PCFreeSetTypes, (PetscEnum)ctx->type, (PetscEnum *)&ctx->type, NULL));
+  PetscCall(PetscOptionsEnum("-pc_freeset_type", "PCFREESET type", "PCFreeSetSetType", PCFreeSetTypes, (PetscEnum)ctx->type, (PetscEnum *)&ctx->type, &flg));
+  if (flg) PetscCall(PCFreeSetSetType(pc, ctx->type)); // set up PCpply functions
   if (!ctx->pc) {
     PetscCall(PCCreate(PetscObjectComm((PetscObject)pc), &ctx->pc));
     PetscCall(PCGetOptionsPrefix(pc, &prefix));
