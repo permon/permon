@@ -367,7 +367,7 @@ PetscErrorCode PCSetFromOptions_FreeSet(PC pc, PetscOptionItems PetscOptionsObje
     PetscCall(PCCreate(PetscObjectComm((PetscObject)pc), &ctx->pc));
     PetscCall(PCGetOptionsPrefix(pc, &prefix));
     PetscCall(PCSetOptionsPrefix(ctx->pc, prefix));
-    PetscCall(PCAppendOptionsPrefix(ctx->pc, "pc_inner_"));
+    PetscCall(PCAppendOptionsPrefix(ctx->pc, "pc_freeset_"));
   }
   PetscCall(PCSetFromOptions(ctx->pc));
   PetscOptionsHeadEnd();
@@ -380,7 +380,7 @@ PetscErrorCode PCSetFromOptions_FreeSet(PC pc, PetscOptionItems PetscOptionsObje
 
   Options Database Keys:
 + -pc_freeset_type <basic, cheap, fixed> - approach for forming the preconditioner
-- -pc_freeset_inner_pc - options for the inner preconditioner
+- -pc_freeset_ - options prefix for the inner preconditioner
 
   Level: intermediate
 
@@ -400,7 +400,7 @@ PetscErrorCode PCSetFromOptions_FreeSet(PC pc, PetscOptionItems PetscOptionsObje
   of the `QPC` index set.
 
   The inner preconditioner can be controlled through
-  `PCFreeSetGetInnerPC()` or -pc_freeset_inner_.
+  `PCFreeSetGetInnerPC()` or -pc_freeset_pc_.
 
   Developer Notes:
   This is typically applied to the free gradient.

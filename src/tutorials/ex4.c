@@ -200,7 +200,7 @@ int main(int argc, char **args)
       args: -qps_pc_freeset_type basic
     test:
       suffix: cheap
-      args: -qps_pc_freeset_type cheap -fixedfree 0 -infinite 1 -qps_pc_inner_pc_type ilu
+      args: -qps_pc_freeset_type cheap -fixedfree 0 -infinite 1 -qps_pc_freeset_pc_type ilu
     test:
       suffix: fixed
       args: -qps_pc_freeset_type fixed -fixedfree {{0 1}}
