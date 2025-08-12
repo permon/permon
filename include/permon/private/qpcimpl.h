@@ -28,13 +28,16 @@ struct _QPCOps {
 
 struct _p_QPC {
   PETSCHEADER(struct _QPCOps);
-  Vec       lambdawork;      /* working vector with same layout as blocks of IS  */
-  IS        is;              /* index set with indexes corresponding to each constraint */
-  IS        activeset;       /* index set with indexes corresponding to active constraints */
-  IS        activesetglobal; /* global index set with indexes corresponding to active constraints */
-  IS        freeset;         /* index set with indexes corresponding to free constraints */
-  PetscBool setchanged;      /* indicate if active/free set has changed */
-  PetscReal astol;           /* active set tolerance - used e.g. in grad splitting */
-  void     *data;            /* holder for misc stuff associated with a particular constraints type */
-  PetscBool setupcalled;     /* current state */
+  Vec       lambdawork;  /* working vector with same layout as blocks of IS  */
+  IS        is;          /* index set with indices corresponding to each constraint */
+  IS        activeset;   /* index set with indices corresponding to active constraints */
+  IS        freeset;     /* index set with indices corresponding to free constraints */
+  PetscBool setchanged;  /* indicate if active/free set has changed */
+  PetscReal astol;       /* active set tolerance - used e.g. in grad splitting */
+  void     *data;        /* holder for misc stuff associated with a particular constraints type */
+  PetscBool setupcalled; /* current state */
+  PetscInt *activeset_a; /* array holding active set indices */
+  PetscInt *freeset_a;   /* array holding free set indices */
+  Vec       setmask;     /* global vector holding active/free set mask (0. is free) */
+  Vec       setmask_sub; /* subvector on qpc->is holding active/free set mask (0. is free) */
 };

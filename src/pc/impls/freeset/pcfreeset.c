@@ -252,13 +252,13 @@ static PetscErrorCode PCUpdateFromQPS_FreeSet(PC pc, QPS qps)
   if (ctx->type == PC_FREESET_BASIC) {
     if (qpc->setchanged) {                   // This should be set by the solver with QPCSetChangedActiveSet()
       PetscCall(PCResetInnerPC_FreeSet(pc)); // destroy ctx->is and prepare for new setup of inner PC
-      PetscCall(QPCGetFreeSet(qpc, PETSC_TRUE, ctx->xlayout, &ctx->is));
+      PetscCall(QPCGetFreeSet(qpc, &ctx->is));
       PetscCall(PetscObjectReference((PetscObject)ctx->is));
       PetscCall(PCSetUpInnerPC_FreeSet(pc));
     }
   } else if (ctx->type == PC_FREESET_CHEAP) {
     PetscCall(ISDestroy(&ctx->is));
-    PetscCall(QPCGetActiveSet(qpc, PETSC_TRUE, &ctx->is));
+    PetscCall(QPCGetActiveSet(qpc, &ctx->is));
     PetscCall(PetscObjectReference((PetscObject)ctx->is));
   } else if (ctx->type == PC_FREESET_FIXED) {
     if (!ctx->is) {

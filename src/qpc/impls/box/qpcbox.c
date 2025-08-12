@@ -29,53 +29,39 @@ PetscErrorCode QPCGetActiveSet_Box(QPC qpc, IS *is)
 #define __FUNCT__ "QPCGrads_Box"
 static PetscErrorCode QPCGrads_Box(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
 {
-  Vec      lb, ub;
-  QPC_Box *ctx = (QPC_Box *)qpc->data;
-
-  PetscScalar *x_a, *lb_a, *ub_a, *g_a, *gf_a, *gc_a;
-  PetscInt     n_local, i;
-  IS           is1 = NULL, is2 = NULL;
+  Vec          lb, ub;
+  QPC_Box     *ctx = (QPC_Box *)qpc->data;
+  PetscScalar *x_a, *lb_a, *ub_a, *g_a, *gf_a, *gc_a, *setmask_a;
+  PetscInt     n_local, i, ilo;
 
   PetscFunctionBegin;
   lb = ctx->lb;
   ub = ctx->ub;
   PetscCall(VecGetLocalSize(x, &n_local));
+  PetscCall(VecGetOwnershipRange(x, &ilo, NULL));
   PetscCall(VecGetArray(x, &x_a));
   if (lb) PetscCall(VecGetArray(lb, &lb_a));
   if (ub) PetscCall(VecGetArray(ub, &ub_a));
   PetscCall(VecGetArray(g, &g_a));
   PetscCall(VecGetArray(gf, &gf_a));
   PetscCall(VecGetArray(gc, &gc_a));
+  PetscCall(VecGetArray(qpc->setmask_sub, &setmask_a));
 
-  /* TODO create free/active IS? */
   for (i = 0; i < n_local; i++) {
     if (lb && PetscAbsScalar(x_a[i] - lb_a[i]) <= qpc->astol) {
       /* active lower bound */
-      gf_a[i] = 0.0;
-      gc_a[i] = PetscMin(g_a[i], 0.0);
-      //} else if (ub && x_a[i] >= ub_a[i]) {
+      gf_a[i]      = 0.0;
+      gc_a[i]      = PetscMin(g_a[i], 0.0);
+      setmask_a[i] = 1.0;
     } else if (ub && PetscAbsScalar(x_a[i] - ub_a[i]) <= qpc->astol) {
       /* active upper bound */
-      gf_a[i] = 0.0;
-      gc_a[i] = PetscMax(g_a[i], 0.0);
+      gf_a[i]      = 0.0;
+      gc_a[i]      = PetscMax(g_a[i], 0.0);
+      setmask_a[i] = 1.0; /* we could distinguish which exact constraint is active */
     } else {
       /* index of this component is in FREE SET */
       gf_a[i] = g_a[i];
     }
-  }
-
-  /* TODO fix */
-  PetscCall(ISDestroy(&qpc->activeset));
-  if (lb) PetscCall(VecWhichEqual(x, lb, &is1));
-  if (ub) PetscCall(VecWhichEqual(x, ub, &is2));
-  if (lb && ub) {
-    PetscCall(ISExpand(is1, is2, &qpc->activeset));
-    PetscCall(ISDestroy(&is1));
-    PetscCall(ISDestroy(&is2));
-  } else if (lb) {
-    qpc->activeset = is1;
-  } else {
-    qpc->activeset = is2;
   }
 
   PetscCall(VecRestoreArray(x, &x_a));
@@ -84,6 +70,7 @@ static PetscErrorCode QPCGrads_Box(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
   PetscCall(VecRestoreArray(g, &g_a));
   PetscCall(VecRestoreArray(gf, &gf_a));
   PetscCall(VecRestoreArray(gc, &gc_a));
+  PetscCall(VecRestoreArray(qpc->setmask_sub, &setmask_a));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 

@@ -22,12 +22,11 @@ PetscErrorCode QPCCreate(MPI_Comm comm, QPC *qpc_new)
 
   PetscCall(PetscHeaderCreate(qpc, QPC_CLASSID, "QPC", "Quadratic Programming Constraints", "QPC", comm, QPCDestroy, QPCView));
 
-  qpc->lambdawork      = NULL;
-  qpc->is              = NULL;
-  qpc->activeset       = NULL;
-  qpc->activesetglobal = NULL;
-  qpc->freeset         = NULL;
-  qpc->setchanged      = PETSC_TRUE;
+  qpc->lambdawork = NULL;
+  qpc->is         = NULL;
+  qpc->activeset  = NULL;
+  qpc->freeset    = NULL;
+  qpc->setchanged = PETSC_TRUE;
   /* TODO QPCSetFromOptions */
   qpc->astol       = 10 * PETSC_MACHINE_EPSILON;
   qpc->setupcalled = PETSC_FALSE; /* the setup was not called yet */
@@ -60,6 +59,9 @@ PetscErrorCode QPCSetUp(QPC qpc)
   /* set values of working vectors */
   PetscCall(VecSet(qpc->lambdawork, 0.0));
 
+  /* active/free sets need to be computed */
+  qpc->setchanged = PETSC_TRUE;
+
   /* the setup was now called, do not call it again */
   qpc->setupcalled = PETSC_TRUE;
   PetscFunctionReturnI(PETSC_SUCCESS);
@@ -72,9 +74,12 @@ PetscErrorCode QPCReset(QPC qpc)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qpc, QPC_CLASSID, 1);
   PetscCall(VecDestroy(&qpc->lambdawork));
+  PetscCall(VecDestroy(&qpc->setmask));
+  PetscCall(PetscFree(qpc->activeset_a));
+  PetscCall(PetscFree(qpc->freeset_a));
   PetscCall(ISDestroy(&qpc->is));
-  if (qpc->activeset) PetscCall(ISDestroy(&qpc->activeset));
-  if (qpc->freeset) PetscCall(ISDestroy(&qpc->freeset));
+  PetscCall(ISDestroy(&qpc->activeset));
+  PetscCall(ISDestroy(&qpc->freeset));
   PetscTryTypeMethod(qpc, reset);
   qpc->setupcalled = PETSC_FALSE;
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -301,13 +306,12 @@ PetscErrorCode QPCSetChangedActiveSet(QPC qpc, PetscBool changed)
 #undef __FUNCT__
 #define __FUNCT__ "QPCGetActiveSet"
 /*@
-  QPCGetActiveSet - get set of free variables
+  QPCGetActiveSet - get set of active variables in global numbering
 
   Collective
 
   Input Parameters:
-+ qpc    - QPC instance
-- global - whether indices are with respect to the global vector or to the QPC IS
+. qpc    - QPC instance
 
   Output Parameter:
 . is - free set index set
@@ -315,29 +319,16 @@ PetscErrorCode QPCSetChangedActiveSet(QPC qpc, PetscBool changed)
   Level: intermediate
 
   Note:
-  Active variables are those where the constraint function g(x) <= 0 or h(x) = 0
-  does attain equality, i.e., g(x) = 0 or h(x) = 0.
+  Active variables are those where the constraint function g(x) <= 0
+  does attain equality, i.e., g(x) = 0.
 
 .seealso `QPC`, `QPCGetFreeSet`, `QPCSetIS`, `QPCGetSubVector`
 @*/
-PetscErrorCode QPCGetActiveSet(QPC qpc, PetscBool global, IS *is)
+PetscErrorCode QPCGetActiveSet(QPC qpc, IS *is)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qpc, QPC_CLASSID, 1);
   PetscAssertPointer(is, 3);
-  if (qpc->setchanged) {
-    //PetscCall(ISDestroy(&qpc->activeset));
-    PetscUseTypeMethod(qpc, getactiveset, &qpc->activeset);
-    //if (!qpc->is) {
-    //  PetscCall(ISDestroy(&qpc->activesetglobal));
-    //  qpc->activesetglobal = qpc->activeset;
-    //  PetscCall(PetscObjectReference((PetscObject)qpc->activeset));
-    //}
-  }
-  //if (global) {
-  //  if (qpc->is && qpc->) {
-  //    PetscCall(ISCreateSubIS(qpc->is,qpc->activeset,&qpc->activesetglobal));
-
   *is = qpc->activeset;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -345,13 +336,12 @@ PetscErrorCode QPCGetActiveSet(QPC qpc, PetscBool global, IS *is)
 #undef __FUNCT__
 #define __FUNCT__ "QPCGetFreeSet"
 /*@
-  QPCGetFreeSet - get set of free variables
+  QPCGetFreeSet - get set of free variables in global numbering
 
   Collective
 
   Input Parameters:
-+ qpc      - QPC instance
-- global   - whether indices are with respect to the global vector or to the QPC IS
+. qpc      - QPC instance
 
   Output Parameter:
 . is - free set index set
@@ -359,29 +349,16 @@ PetscErrorCode QPCGetActiveSet(QPC qpc, PetscBool global, IS *is)
   Level: intermediate
 
   Note:
-  When `global` is true, then `QPC` `IS` must not be set or the global `IS` must be set
-  using `QPCSetGlobalIS`.
-
-  Free variables are those where the constraint function g(x) <= 0 or h(x) = 0
-  does not attain equality, i.e., g(x) < 0 or h(x) != 0.
+  Free variables are those where the constraint function g(x) <= 0
+  does not attain equality, i.e., g(x) < 0.
 
 .seealso `QPC`, `QPCGetActiveSet`, `QPCSetIS`, `QPCGetSubVector`
 @*/
-PetscErrorCode QPCGetFreeSet(QPC qpc, PetscBool global, Vec x, IS *is)
+PetscErrorCode QPCGetFreeSet(QPC qpc, IS *is)
 {
-  PetscInt nmin, nmax;
-
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qpc, QPC_CLASSID, 1);
   PetscAssertPointer(is, 2);
-  if (!x) x = qpc->lambdawork;
-  if (qpc->setchanged) {
-    PetscCall(QPCGetActiveSet(qpc, global, is));
-    //PetscCall(ISDestroy(is));
-    PetscCall(ISDestroy(&qpc->freeset));
-    PetscCall(VecGetOwnershipRange(x, &nmin, &nmax));
-    PetscCall(ISComplement(qpc->activeset, nmin, nmax, &qpc->freeset));
-  }
   *is = qpc->freeset;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -678,6 +655,9 @@ PetscErrorCode QPCGrads(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
   PetscCall(QPCGetSubvector(qpc, g, &g_sub));
   PetscCall(QPCGetSubvector(qpc, gf, &gf_sub));
   PetscCall(QPCGetSubvector(qpc, gc, &gc_sub));
+  if (!qpc->setmask) { PetscCall(VecDuplicate(x, &qpc->setmask)); }
+  if (qpc->setchanged) PetscCall(VecSet(qpc->setmask, 0.));
+  PetscCall(QPCGetSubvector(qpc, qpc->setmask, &qpc->setmask_sub));
 
   PetscUseTypeMethod(qpc, grads, x_sub, g_sub, gf_sub, gc_sub);
 
@@ -686,6 +666,37 @@ PetscErrorCode QPCGrads(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
   PetscCall(QPCRestoreSubvector(qpc, g, &g_sub));
   PetscCall(QPCRestoreSubvector(qpc, gf, &gf_sub));
   PetscCall(QPCRestoreSubvector(qpc, gc, &gc_sub));
+  PetscCall(QPCRestoreSubvector(qpc, qpc->setmask, &qpc->setmask_sub));
+
+  /* TODO handle bs > 1 */
+  if (qpc->setchanged) {
+    PetscInt           i, ilo, ihi, counta = 0, countf = 0;
+    const PetscScalar *setmask_a;
+    PetscCall(VecGetOwnershipRange(qpc->setmask, &ilo, &ihi));
+    if (!qpc->freeset_a) {
+      PetscCall(PetscMalloc1(ihi - ilo, &qpc->freeset_a));
+      counta = -1;
+      if (qpc->is) PetscCall(ISGetLocalSize(qpc->is, &counta));
+      PetscCall(PetscMalloc1(counta >= 0 ? counta : ihi - ilo, &qpc->activeset_a));
+      counta = 0;
+    }
+    PetscCall(VecGetArrayRead(qpc->setmask, &setmask_a));
+    for (i = 0; i < ihi - ilo; i++) {
+      if (setmask_a[i] != 0.) {
+        qpc->activeset_a[counta] = ilo + i;
+        counta++;
+      } else {
+        qpc->freeset_a[countf] = ilo + i;
+        countf++;
+      }
+    }
+    PetscCall(VecRestoreArrayRead(qpc->setmask, &setmask_a));
+    PetscCall(ISDestroy(&qpc->activeset));
+    PetscCall(ISDestroy(&qpc->freeset));
+    PetscCall(ISCreateGeneral(PetscObjectComm((PetscObject)qpc), counta, qpc->activeset_a, PETSC_USE_POINTER, &qpc->activeset));
+    PetscCall(ISCreateGeneral(PetscObjectComm((PetscObject)qpc), countf, qpc->freeset_a, PETSC_USE_POINTER, &qpc->freeset));
+  }
+
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
