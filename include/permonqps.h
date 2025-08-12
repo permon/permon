@@ -2,6 +2,7 @@
 
 #include <petsctao.h>
 #include "permonqp.h"
+#include "permonpc.h"
 
 typedef struct _p_QPS *QPS;
 

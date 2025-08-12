@@ -14,6 +14,7 @@ Input parameters include:\n\
 *   petscsys.h   - base PERMON routines
 *   permonvec.h  - Vectors
 *   permonmat.h  - Matrices
+*   permonpc.h   - Preconditioners
 *   permonqppf.h - Projection Factory
 *   permonqpc.h  - Quadratic Programming Constraints
 *   permonqp.h   - Quadratic Programming objects and transformations

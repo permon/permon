@@ -20,13 +20,13 @@ Input parameters include:\n\
 *   petscsys.h   - base PERMON routines
 *   permonvec.h  - Vectors
 *   permonmat.h  - Matrices
+*   permonpc.h   - Preconditioners
 *   permonqppf.h - Projection Factory
 *   permonqpc.h  - Quadratic Programming Constraints
 *   permonqp.h   - Quadratic Programming objects and transformations
 *   petsctao.h   - Toolkit for Advanced Optimization solvers
 */
 #include <permonqps.h>
-#include <permonpc.h> //TODO should be included in qps.h
 
 /* Lower bound (obstacle) function */
 PetscReal fobst(PetscInt i, PetscInt n)
