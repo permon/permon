@@ -75,14 +75,14 @@ PERMON_EXTERN PetscErrorCode _permon_ierr;
 static inline PetscErrorCode PetscBoolGlobalAnd(MPI_Comm comm, PetscBool loc, PetscBool *glob)
 {
   PetscFunctionBegin;
-  PetscCallMPI(MPI_Allreduce(&loc, glob, 1, MPIU_BOOL, MPI_LAND, comm));
+  PetscCallMPI(MPI_Allreduce(&loc, glob, 1, MPI_C_BOOL, MPI_LAND, comm));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 static inline PetscErrorCode PetscBoolGlobalOr(MPI_Comm comm, PetscBool loc, PetscBool *glob)
 {
   PetscFunctionBegin;
-  PetscCallMPI(MPI_Allreduce(&loc, glob, 1, MPIU_BOOL, MPI_LOR, comm));
+  PetscCallMPI(MPI_Allreduce(&loc, glob, 1, MPI_C_BOOL, MPI_LOR, comm));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
