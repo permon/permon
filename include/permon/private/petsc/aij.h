@@ -1,3 +1,12 @@
+/* This file is a stripped-down version of
+   src/mat/impls/aij/seq/aij.h
+   found in the PETSc source code.
+
+   The original PETSc code is licensed under the BSD 2-Clause "Simplified" License.
+   See the LICENSE file in this directory for full terms:
+   ./LICENSE or https://gitlab.com/petsc/petsc/-/blob/main/LICENSE
+*/
+
 #pragma once
 
 #include <petsc/private/matimpl.h>
@@ -7,19 +16,20 @@
 /*
  Used by MatCreateSubMatrices_MPIXAIJ_Local()
 */
-typedef struct { /* used by MatCreateSubMatrices_MPIAIJ_SingleIS_Local() and MatCreateSubMatrices_MPIAIJ_Local */
-  PetscInt   id; /* index of submats, only submats[0] is responsible for deleting some arrays below */
-  PetscInt   nrqs, nrqr;
-  PetscInt **rbuf1, **rbuf2, **rbuf3, **sbuf1, **sbuf2;
-  PetscInt **ptr;
-  PetscInt  *tmp;
-  PetscInt  *ctr;
-  PetscInt  *pa; /* proc array */
-  PetscInt  *req_size, *req_source1, *req_source2;
-  PetscBool  allcolumns, allrows;
-  PetscBool  singleis;
-  PetscInt  *row2proc; /* row to proc map */
-  PetscInt   nstages;
+typedef struct {   /* used by MatCreateSubMatrices_MPIAIJ_SingleIS_Local() and MatCreateSubMatrices_MPIAIJ_Local */
+  PetscInt     id; /* index of submats, only submats[0] is responsible for deleting some arrays below */
+  PetscMPIInt  nrqs, nrqr;
+  PetscInt   **rbuf1, **rbuf2, **rbuf3, **sbuf1, **sbuf2;
+  PetscInt   **ptr;
+  PetscInt    *tmp;
+  PetscInt    *ctr;
+  PetscMPIInt *pa; /* process array */
+  PetscInt    *req_size;
+  PetscMPIInt *req_source1, *req_source2;
+  PetscBool    allcolumns, allrows;
+  PetscBool    singleis;
+  PetscMPIInt *row2proc; /* row to process (MPI rank) map */
+  PetscInt     nstages;
 #if defined(PETSC_USE_CTABLE)
   PetscHMapI cmap, rmap;
   PetscInt  *cmap_loc, *rmap_loc;
@@ -44,19 +54,18 @@ typedef struct {
     Struct header shared by SeqAIJ, SeqBAIJ and SeqSBAIJ matrix formats
 */
 #define SEQAIJHEADER(datatype) \
-  PetscBool         roworiented;  /* if true, row-oriented input, default */ \
-  PetscInt          nonew;        /* 1 don't add new nonzeros, -1 generate error on new */ \
-  PetscInt          nounused;     /* -1 generate error on unused space */ \
-  PetscBool         singlemalloc; /* if true a, i, and j have been obtained with one big malloc */ \
-  PetscInt          maxnz;        /* allocated nonzeros */ \
-  PetscInt         *imax;         /* maximum space allocated for each row */ \
-  PetscInt         *ilen;         /* actual length of each row */ \
-  PetscInt         *ipre;         /* space preallocated for each row by user */ \
+  PetscBool         roworiented; /* if true, row-oriented input, default */ \
+  PetscInt          nonew;       /* 1 don't add new nonzeros, -1 generate error on new */ \
+  PetscInt          nounused;    /* -1 generate error on unused space */ \
+  PetscInt          maxnz;       /* allocated nonzeros */ \
+  PetscInt         *imax;        /* maximum space allocated for each row */ \
+  PetscInt         *ilen;        /* actual length of each row */ \
+  PetscInt         *ipre;        /* space preallocated for each row by user */ \
   PetscBool         free_imax_ilen; \
   PetscInt          reallocs;           /* number of mallocs done during MatSetValues() \
                                         as more values are set than were prealloced */ \
   PetscInt          rmax;               /* max nonzeros in any row */ \
-  PetscBool         keepnonzeropattern; /* keeps matrix structure same in calls to MatZeroRows()*/ \
+  PetscBool         keepnonzeropattern; /* keeps matrix nonzero structure same in calls to MatZeroRows()*/ \
   PetscBool         ignorezeroentries; \
   PetscBool         free_ij;       /* free the column indices j and row offsets i when the matrix is destroyed */ \
   PetscBool         free_a;        /* free the numerical values when matrix is destroy */ \
@@ -127,7 +136,7 @@ typedef struct {
 
   PetscBool        use;
   PetscInt         node_count;       /* number of inodes */
-  PetscInt        *size;             /* size of each inode */
+  PetscInt        *size_csr;         /* inode sizes in csr with size_csr[0] = 0 and i-th node size = size_csr[i+1] - size_csr[i], to facilitate parallel computation */
   PetscInt         limit;            /* inode limit */
   PetscInt         max_limit;        /* maximum supported inode limit */
   PetscBool        checked;          /* if inodes have been checked for */
@@ -146,32 +155,16 @@ typedef struct {
   PetscBool    diagonaldense;             /* all entries along the diagonal have been set; i.e. no missing diagonal terms */
   PetscScalar  fshift, omega;             /* last used omega and fshift */
 
-  /* MatSetValuesCOO() related fields on host */
-  PetscCount  coo_n; /* Number of entries in MatSetPreallocationCOO() */
-  PetscCount  Atot;  /* Total number of valid (i.e., w/ non-negative indices) entries in the COO array */
-  PetscCount *jmap;  /* perm[jmap[i]..jmap[i+1]) give indices of entries in v[] associated with i-th nonzero of the matrix */
-  PetscCount *perm;  /* The permutation array in sorting (i,j) by row and then by col */
-
   /* MatSetValues() via hash related fields */
   PetscHMapIJV   ht;
   PetscInt      *dnz;
   struct _MatOps cops;
 } Mat_SeqAIJ;
 
-/*
-  Frees the a, i, and j arrays from the XAIJ (AIJ, BAIJ, and SBAIJ) matrix types
-*/
-static inline PetscErrorCode MatSeqXAIJFreeAIJ(Mat AA, MatScalar **a, PetscInt **j, PetscInt **i)
-{
-  Mat_SeqAIJ *A = (Mat_SeqAIJ *)AA->data;
-
-  PetscFunctionBegin;
-  if (A->singlemalloc) {
-    PetscCall(PetscFree3(*a, *j, *i));
-  } else {
-    if (A->free_a) PetscCall(PetscFree(*a));
-    if (A->free_ij) PetscCall(PetscFree(*j));
-    if (A->free_ij) PetscCall(PetscFree(*i));
-  }
-  PetscFunctionReturn(PETSC_SUCCESS);
-}
+typedef struct {
+  PetscInt    nz;   /* nz of the matrix after assembly */
+  PetscCount  n;    /* Number of entries in MatSetPreallocationCOO() */
+  PetscCount  Atot; /* Total number of valid (i.e., w/ non-negative indices) entries in the COO array */
+  PetscCount *jmap; /* perm[jmap[i]..jmap[i+1]) give indices of entries in v[] associated with i-th nonzero of the matrix */
+  PetscCount *perm; /* The permutation array in sorting (i,j) by row and then by col */
+} MatCOOStruct_SeqAIJ;

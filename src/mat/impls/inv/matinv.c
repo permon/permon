@@ -3,7 +3,7 @@
 #include <permonksp.h>
 #include <petsc/private/pcimpl.h>
 #if defined(PETSC_HAVE_MUMPS)
-  #include <permon/private/petsc/mat/mumpsimpl.h>
+  #include <permon/private/petsc/mumpsimpl.h>
 #endif
 
 PetscLogEvent Mat_Inv_Explicitly, Mat_Inv_SetUp;
