@@ -204,7 +204,7 @@ PetscErrorCode QPCSetType(QPC qpc, const QPCType type)
   PetscCall(PetscObjectTypeCompare((PetscObject)qpc, type, &issame));
   if (issame) PetscFunctionReturn(PETSC_SUCCESS);
 
-  PetscCall(PetscFunctionListFind(QPCList, type, (void (**)(void))&create));
+  PetscCall(PetscFunctionListFind(QPCList, type, &create));
   PetscCheck(create, PETSC_COMM_SELF, PETSC_ERR_ARG_UNKNOWN_TYPE, "Unable to find requested QPC type %s", type);
 
   /* Destroy the pre-existing private QPC context */

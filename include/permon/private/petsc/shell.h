@@ -1,13 +1,24 @@
+/* This file is a stripped-down version of
+   src/mat/impls/shell/shell.h
+   found in the PETSc source code.
+
+   The original PETSc code is licensed under the BSD 2-Clause "Simplified" License.
+   See the LICENSE file in this directory for full terms:
+   ./LICENSE or https://gitlab.com/petsc/petsc/-/blob/main/LICENSE
+*/
 #pragma once
 
 #include <petsc/private/matimpl.h>
+#include <petsc/private/vecimpl.h>
 
 struct _MatShellOps {
-  /*  3 */ PetscErrorCode (*mult)(Mat, Vec, Vec);
-  /*  5 */ PetscErrorCode (*multtranspose)(Mat, Vec, Vec);
-  /* 17 */ PetscErrorCode (*getdiagonal)(Mat, Vec);
-  /* 43 */ PetscErrorCode (*copy)(Mat, Mat, MatStructure);
-  /* 60 */ PetscErrorCode (*destroy)(Mat);
+  /*   3 */ PetscErrorCode (*mult)(Mat, Vec, Vec);
+  /*   5 */ PetscErrorCode (*multtranspose)(Mat, Vec, Vec);
+  /*  17 */ PetscErrorCode (*getdiagonal)(Mat, Vec);
+  /*  32 */ PetscErrorCode (*getdiagonalblock)(Mat, Mat *);
+  /*  43 */ PetscErrorCode (*copy)(Mat, Mat, MatStructure);
+  /*  60 */ PetscErrorCode (*destroy)(Mat);
+  /* 121 */ PetscErrorCode (*multhermitiantranspose)(Mat, Vec, Vec);
 };
 
 struct _n_MatShellMatFunctionList {

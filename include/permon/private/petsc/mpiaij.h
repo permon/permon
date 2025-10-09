@@ -1,3 +1,12 @@
+/* This file is a stripped-down version of
+   src/mat/impls/aij/mpi/mpiaij.h
+   found in the PETSc source code.
+
+   The original PETSc code is licensed under the BSD 2-Clause "Simplified" License.
+   See the LICENSE file in this directory for full terms:
+   ./LICENSE or https://gitlab.com/petsc/petsc/-/blob/main/LICENSE
+*/
+
 #pragma once
 
 #include "aij.h"
@@ -30,45 +39,52 @@ typedef struct {                                /* used by MatPtAPXXX_MPIAIJ_MPI
   Mat_Merge_SeqsToMPI *merge;
 } Mat_APMPI;
 
-typedef struct {
-  Mat         A, B; /* local submatrices: A (diag part),
-                                           B (off-diag part) */
-  PetscMPIInt size; /* size of communicator */
-  PetscMPIInt rank; /* rank of proc in communicator */
-
-  /* The following variables are used for matrix assembly */
-  PetscBool    donotstash;        /* PETSC_TRUE if off processor entries dropped */
-  MPI_Request *send_waits;        /* array of send requests */
-  MPI_Request *recv_waits;        /* array of receive requests */
-  PetscInt     nsends, nrecvs;    /* numbers of sends and receives */
-  PetscScalar *svalues, *rvalues; /* sending and receiving data */
-  PetscInt     rmax;              /* maximum message length */
 #if defined(PETSC_USE_CTABLE)
-  PetscHMapI colmap;
+  #define PETSCTABLE PetscHMapI
 #else
-  PetscInt *colmap; /* local col number of off-diag col */
+  #define PETSCTABLE PetscInt *
 #endif
-  PetscInt *garray; /* global index of all off-processor columns */
 
-  /* The following variables are used for matrix-vector products */
-  Vec        lvec; /* local vector */
-  Vec        diag;
-  VecScatter Mvctx;       /* scatter context for vector */
-  PetscBool  roworiented; /* if true, row-oriented input, default true */
+// Shared by MPIAIJ, MPIBAIJ, MPISBAIJ so that we can access common fields in the same way.
+#define MPIAIJHEADER \
+  Mat         A, B; /* local submatrices: A (diag part), B (off-diag part) */ \
+  PetscMPIInt size; /* size of communicator */ \
+  PetscMPIInt rank; /* rank of proc in communicator */ \
+\
+  /* The following variables are used for matrix assembly */ \
+  PetscBool    donotstash;        /* if 1, off processor entries dropped */ \
+  MPI_Request *send_waits;        /* array of send requests */ \
+  MPI_Request *recv_waits;        /* array of receive requests */ \
+  PetscInt     nsends, nrecvs;    /* numbers of sends and receives */ \
+  MatScalar   *svalues, *rvalues; /* sending and receiving data */ \
+  PetscInt     rmax;              /* maximum message length */ \
+  PETSCTABLE   colmap;            /* local col number of off-diag col */ \
+  PetscInt    *garray;            /* work array */ \
+\
+  /* The following variables are used for matrix-vector products */ \
+  Vec        lvec;        /* local vector */ \
+  VecScatter Mvctx;       /* scatter context for vector */ \
+  PetscBool  roworiented; /* if true, row-oriented input, default true */ \
+\
+  /* The following variables are for MatGetRow() */ \
+  PetscInt    *rowindices; /* column indices for row */ \
+  PetscScalar *rowvalues;  /* nonzero values in row */ \
+  PetscBool    getrowactive
 
-  /* The following variables are for MatGetRow() */
-  PetscInt    *rowindices;   /* column indices for row */
-  PetscScalar *rowvalues;    /* nonzero values in row */
-  PetscBool    getrowactive; /* indicates MatGetRow(), not restored */
-
+typedef struct {
+  MPIAIJHEADER;
+  Vec       diag;
   PetscInt *ld; /* number of entries per row left of diagonal block */
 
   /* Used by device classes */
   void *spptr;
 
-  /* MatSetValuesCOO() related stuff */
-  PetscCount   coo_n;                      /* Number of COOs passed to MatSetPreallocationCOO)() */
-  PetscSF      coo_sf;                     /* SF to send/recv remote values in MatSetValuesCOO() */
+  struct _MatOps cops;
+} Mat_MPIAIJ;
+
+typedef struct {
+  PetscCount   n;                          /* Number of COOs passed to MatSetPreallocationCOO)() */
+  PetscSF      sf;                         /* SF to send/recv remote values in MatSetValuesCOO() */
   PetscCount   Annz, Bnnz;                 /* Number of entries in diagonal A and off-diagonal B */
   PetscCount   Annz2, Bnnz2;               /* Number of unique remote entries belonging to A and B */
   PetscCount   Atot1, Atot2, Btot1, Btot2; /* Total local (tot1) and remote (tot2) entries (which might contain repeats) belonging to A and B */
@@ -79,6 +95,4 @@ typedef struct {
   PetscCount  *Cperm1;                     /* [sendlen] Permutation to fill MPI send buffer. 'C' for communication */
   PetscScalar *sendbuf, *recvbuf;          /* Buffers for remote values in MatSetValuesCOO() */
   PetscInt     sendlen, recvlen;           /* Lengths (in unit of PetscScalar) of send/recvbuf */
-
-  struct _MatOps cops;
-} Mat_MPIAIJ;
+} MatCOOStruct_MPIAIJ;

@@ -1,3 +1,12 @@
+/* This file is a stripped-down version of
+   src/mat/impls/baij/seq/baij.h
+   found in the PETSc source code.
+
+   The original PETSc code is licensed under the BSD 2-Clause "Simplified" License.
+   See the LICENSE file in this directory for full terms:
+   ./LICENSE or https://gitlab.com/petsc/petsc/-/blob/main/LICENSE
+*/
+
 #pragma once
 #include <petsc/private/matimpl.h>
 #include "aij.h"

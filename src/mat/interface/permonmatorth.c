@@ -119,8 +119,8 @@ static PetscErrorCode MatOrthColumns_Cholesky_Default(Mat A, MatOrthType type, M
   } else {
     Mat mats[2];
     PetscCall(MatCreateShellPermon(comm, n, n, N, N, L, &S));
-    PetscCall(MatShellSetOperation(S, MATOP_MULT, (void (*)(void))MatMult_ForwardSolve));
-    PetscCall(MatShellSetOperation(S, MATOP_MULT_TRANSPOSE, (void (*)(void))MatMultTranspose_ForwardSolve));
+    PetscCall(MatShellSetOperation(S, MATOP_MULT, (PetscErrorCodeFn *)MatMult_ForwardSolve));
+    PetscCall(MatShellSetOperation(S, MATOP_MULT_TRANSPOSE, (PetscErrorCodeFn *)MatMultTranspose_ForwardSolve));
     mats[1] = A;
     mats[0] = S;
     PetscCall(MatCreateProd(comm, 2, mats, &Q));
