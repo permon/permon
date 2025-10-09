@@ -101,10 +101,10 @@ PetscErrorCode MatCreateTimer(Mat A, Mat *B)
   PetscCall(PermonPetscObjectInheritName((PetscObject)W, (PetscObject)A, NULL));
 
   PetscCall(MatShellSetOperation(W, MATOP_DESTROY, (PetscErrorCodeFn *)MatDestroy_Timer));
-  PetscCall(MatTimerSetOperation(W, MATOP_MULT, "MatMult", (void (*)(void))MatMult_Timer));
-  PetscCall(MatTimerSetOperation(W, MATOP_MULT_ADD, "MatMultAdd", (void (*)(void))MatMultAdd_Timer));
-  PetscCall(MatTimerSetOperation(W, MATOP_MULT_TRANSPOSE, "MatMultTr", (void (*)(void))MatMultTranspose_Timer));
-  PetscCall(MatTimerSetOperation(W, MATOP_MULT_TRANSPOSE_ADD, "MatMultTrAdd", (void (*)(void))MatMultTransposeAdd_Timer));
+  PetscCall(MatTimerSetOperation(W, MATOP_MULT, "MatMult", (PetscErrorCodeFn *)MatMult_Timer));
+  PetscCall(MatTimerSetOperation(W, MATOP_MULT_ADD, "MatMultAdd", (PetscErrorCodeFn *)MatMultAdd_Timer));
+  PetscCall(MatTimerSetOperation(W, MATOP_MULT_TRANSPOSE, "MatMultTr", (PetscErrorCodeFn *)MatMultTranspose_Timer));
+  PetscCall(MatTimerSetOperation(W, MATOP_MULT_TRANSPOSE_ADD, "MatMultTrAdd", (PetscErrorCodeFn *)MatMultTransposeAdd_Timer));
 
   *B = W;
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -112,7 +112,7 @@ PetscErrorCode MatCreateTimer(Mat A, Mat *B)
 
 #undef __FUNCT__
 #define __FUNCT__ "MatTimerSetOperation"
-PetscErrorCode MatTimerSetOperation(Mat mat, MatOperation op, const char *opname, void (*opf)(void))
+PetscErrorCode MatTimerSetOperation(Mat mat, MatOperation op, const char *opname, PetscErrorCodeFn *opf)
 {
   Mat_Timer    *ctx;
   const char   *name;

@@ -94,7 +94,7 @@ PERMON_EXTERN PetscErrorCode MatInvCreateInnerObjects(Mat imat);
 
 /* MATTIMER specific methods */
 PERMON_EXTERN PetscErrorCode MatTimerGetMat(Mat W, Mat *A);
-PERMON_EXTERN PetscErrorCode MatTimerSetOperation(Mat mat, MatOperation op, const char *opname, void (*opf)(void));
+PERMON_EXTERN PetscErrorCode MatTimerSetOperation(Mat, MatOperation, const char *, PetscErrorCodeFn *);
 
 /* MATGLUING specific methods */
 PERMON_EXTERN PetscErrorCode MatGluingSetLocalBlock(Mat B, Mat Block, PetscInt nghosts);
