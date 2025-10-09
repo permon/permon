@@ -388,7 +388,7 @@ PetscErrorCode QPSSetType(QPS qps, const QPSType type)
   PetscCall(PetscObjectTypeCompare((PetscObject)qps, type, &issame));
   if (issame) PetscFunctionReturn(PETSC_SUCCESS);
 
-  PetscCall(PetscFunctionListFind(QPSList, type, (void (**)(void))&create_xxx));
+  PetscCall(PetscFunctionListFind(QPSList, type, &create_xxx));
   PetscCheck(create_xxx, PETSC_COMM_SELF, PETSC_ERR_ARG_UNKNOWN_TYPE, "Unable to find requested QPS type %s", type);
 
   /* Destroy the pre-existing private QPS context */
