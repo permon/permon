@@ -183,11 +183,8 @@ int main(int argc, char **args)
       suffix: projcg
       args: -qps_mpgp_expansion_type projcg
   testset:
-    filter: grep -e CONVERGED -e "function/" -e Objective -e "r ="
-    args: -n 100 -qps_view_convergence -qp_chain_view_kkt -qps_type tao -qps_tao_type blmvm
-    test:
-      suffix: blmvm_1
-    test:
-      suffix: blmvm_3
-      nsize: 3
+    suffix: gpcg
+    nsize: {{1 3}}
+    filter: grep -e CONVERGED -e Total -e Objective -e "r ="
+    args: -n 100 -qps_view_convergence -qp_chain_view_kkt -qps_type tao -qps_tao_type gpcg
 TEST*/

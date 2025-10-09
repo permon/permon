@@ -1,0 +1,8 @@
+  last QPSSolve CONVERGED due to CONVERGED_RTOL, KSPReason=2, required 6 iterations
+    Total number of KSP iterations: 321
+        Total PG its: 36,        PG tolerance: 0.1 
+        Objective value=-0.291767
+r = ||A*x - b - lambda_lb|| = 0.00e+00    rO/||b|| = 0.00e+00
+r = ||min(x-lb,0)||      = 0.00e+00    r/||b|| = 0.00e+00
+r = ||min(lambda_lb,0)|| = 3.37e-10    r/||b|| = 1.11e-08
+r = |lambda_lb'*(lb-x)|  = 1.84e-10    r/||b|| = 6.06e-09
