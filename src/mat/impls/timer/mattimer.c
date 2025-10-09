@@ -100,7 +100,7 @@ PetscErrorCode MatCreateTimer(Mat A, Mat *B)
   PetscCall(MatCreateShellPermon(PetscObjectComm((PetscObject)A), A->rmap->n, A->cmap->n, A->rmap->N, A->cmap->N, ctx, &W));
   PetscCall(PermonPetscObjectInheritName((PetscObject)W, (PetscObject)A, NULL));
 
-  PetscCall(MatShellSetOperation(W, MATOP_DESTROY, (void (*)(void))MatDestroy_Timer));
+  PetscCall(MatShellSetOperation(W, MATOP_DESTROY, (PetscErrorCodeFn *)MatDestroy_Timer));
   PetscCall(MatTimerSetOperation(W, MATOP_MULT, "MatMult", (void (*)(void))MatMult_Timer));
   PetscCall(MatTimerSetOperation(W, MATOP_MULT_ADD, "MatMultAdd", (void (*)(void))MatMultAdd_Timer));
   PetscCall(MatTimerSetOperation(W, MATOP_MULT_TRANSPOSE, "MatMultTr", (void (*)(void))MatMultTranspose_Timer));

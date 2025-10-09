@@ -228,12 +228,12 @@ PetscErrorCode MatCreatePenalized(QP qp, PetscReal rho, Mat *Arho_new)
   ctx->rho   = rho;
   ctx->xwork = NULL;
   PetscCall(MatCreateShellPermon(PetscObjectComm((PetscObject)qp), A->rmap->n, A->cmap->n, A->rmap->N, A->cmap->N, ctx, &Arho));
-  PetscCall(MatShellSetOperation(Arho, MATOP_DESTROY, (void (*)(void))MatDestroy_Penalized));
-  PetscCall(MatShellSetOperation(Arho, MATOP_MULT, (void (*)(void))MatMult_Penalized));
-  PetscCall(MatShellSetOperation(Arho, MATOP_MULT_ADD, (void (*)(void))MatMultAdd_Penalized));
-  PetscCall(MatShellSetOperation(Arho, MATOP_MULT_TRANSPOSE, (void (*)(void))MatMultTranspose_Penalized));
-  PetscCall(MatShellSetOperation(Arho, MATOP_MULT_TRANSPOSE_ADD, (void (*)(void))MatMultTransposeAdd_Penalized));
-  PetscCall(MatShellSetOperation(Arho, MATOP_GET_DIAGONAL, (void (*)(void))MatGetDiagonal_Penalized));
+  PetscCall(MatShellSetOperation(Arho, MATOP_DESTROY, (PetscErrorCodeFn *)MatDestroy_Penalized));
+  PetscCall(MatShellSetOperation(Arho, MATOP_MULT, (PetscErrorCodeFn *)MatMult_Penalized));
+  PetscCall(MatShellSetOperation(Arho, MATOP_MULT_ADD, (PetscErrorCodeFn *)MatMultAdd_Penalized));
+  PetscCall(MatShellSetOperation(Arho, MATOP_MULT_TRANSPOSE, (PetscErrorCodeFn *)MatMultTranspose_Penalized));
+  PetscCall(MatShellSetOperation(Arho, MATOP_MULT_TRANSPOSE_ADD, (PetscErrorCodeFn *)MatMultTransposeAdd_Penalized));
+  PetscCall(MatShellSetOperation(Arho, MATOP_GET_DIAGONAL, (PetscErrorCodeFn *)MatGetDiagonal_Penalized));
   PetscCall(PetscObjectComposeFunction((PetscObject)Arho, "MatPenalizedGetPenalty_Penalty_C", MatPenalizedGetPenalty_Penalty));
   PetscCall(PetscObjectComposeFunction((PetscObject)Arho, "MatPenalizedSetPenalty_Penalty_C", MatPenalizedSetPenalty_Penalty));
   PetscCall(PetscObjectComposeFunction((PetscObject)Arho, "MatPenalizedUpdatePenalty_Penalty_C", MatPenalizedUpdatePenalty_Penalty));

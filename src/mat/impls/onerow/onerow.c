@@ -103,11 +103,11 @@ PetscErrorCode MatCreateOneRow(Vec a, Mat *A_new)
   PetscCall(PermonPetscObjectInheritName((PetscObject)A, (PetscObject)a, NULL));
   PetscCall(PetscObjectReference((PetscObject)a));
 
-  PetscCall(MatShellSetOperation(A, MATOP_DESTROY, (void (*)(void))MatDestroy_OneRow));
-  PetscCall(MatShellSetOperation(A, MATOP_MULT, (void (*)(void))MatMult_OneRow));
-  PetscCall(MatShellSetOperation(A, MATOP_MULT_ADD, (void (*)(void))MatMultAdd_OneRow));
-  PetscCall(MatShellSetOperation(A, MATOP_MULT_TRANSPOSE, (void (*)(void))MatMultTranspose_OneRow));
-  PetscCall(MatShellSetOperation(A, MATOP_MULT_TRANSPOSE_ADD, (void (*)(void))MatMultTransposeAdd_OneRow));
+  PetscCall(MatShellSetOperation(A, MATOP_DESTROY, (PetscErrorCodeFn *)MatDestroy_OneRow));
+  PetscCall(MatShellSetOperation(A, MATOP_MULT, (PetscErrorCodeFn *)MatMult_OneRow));
+  PetscCall(MatShellSetOperation(A, MATOP_MULT_ADD, (PetscErrorCodeFn *)MatMultAdd_OneRow));
+  PetscCall(MatShellSetOperation(A, MATOP_MULT_TRANSPOSE, (PetscErrorCodeFn *)MatMultTranspose_OneRow));
+  PetscCall(MatShellSetOperation(A, MATOP_MULT_TRANSPOSE_ADD, (PetscErrorCodeFn *)MatMultTransposeAdd_OneRow));
   *A_new = A;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
