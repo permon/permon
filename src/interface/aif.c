@@ -1,6 +1,7 @@
 
 #include <permonaif.h>
 #include <permon/private/permonimpl.h>
+#include <petsc/private/matisimpl.h>
 
 PetscBool FllopAIFInitializeCalled = PETSC_FALSE;
 
