@@ -676,8 +676,8 @@ PetscErrorCode QPCGrads(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
     if (!qpc->freeset_a) {
       PetscCall(PetscMalloc1(ihi - ilo, &qpc->freeset_a));
       counta = -1;
-      if (qpc->is) PetscCall(ISGetLocalSize(qpc->is, &counta));
-      PetscCall(PetscMalloc1(counta >= 0 ? counta : ihi - ilo, &qpc->activeset_a));
+      if (counta < 0) counta = ihi - ilo;
+      PetscCall(PetscMalloc1(counta, &qpc->activeset_a));
       counta = 0;
     }
     PetscCall(VecGetArrayRead(qpc->setmask, &setmask_a));
