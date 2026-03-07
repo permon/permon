@@ -176,6 +176,81 @@ PetscErrorCode PCFreeSetGetIS(PC pc, IS *is)
 }
 
 #undef __FUNCT__
+#define __FUNCT__ "PCFreeSetSetPC_FreeSet"
+static PetscErrorCode PCFreeSetSetPC_FreeSet(PC pc, PC innerpc)
+{
+  PC_FreeSet *data = (PC_FreeSet *)pc->data;
+
+  PetscFunctionBegin;
+  if (data->pc == innerpc) PetscFunctionReturn(PETSC_SUCCESS);
+  data->pc = innerpc;
+  PetscCall(PCReset(pc)); // need to redo setup when pc changes
+  PetscCall(PetscObjectReference((PetscObject)innerpc));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "PCFreeSetSetPC"
+/*@
+   PCFreeSetSetPC -  Set freeset inner PC
+
+   Logically Collective
+
+   Input Parameters:
++  pc      - instance of PC
+-  innerpc - preconditioner to be applied by the freeset PC
+
+   Level: advanced
+
+.seealso `PCFREESET`, `PCFreeSetGetPC()`
+@*/
+PetscErrorCode PCFreeSetSetPC(PC pc, PC innerpc)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(pc, PC_CLASSID, 1);
+  PetscValidHeaderSpecific(innerpc, PC_CLASSID, 2);
+  PetscTryMethod(pc, "PCFreeSetSetPC_C", (PC, PC), (pc, innerpc));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "PCFreeSetGetPC_FreeSet"
+static PetscErrorCode PCFreeSetGetPC_FreeSet(PC pc, PC *innerpc)
+{
+  PC_FreeSet *data = (PC_FreeSet *)pc->data;
+
+  PetscFunctionBegin;
+  *innerpc = data->pc;
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+#undef __FUNCT__
+#define __FUNCT__ "PCFreeSetGetPC"
+/*@
+   PCFreeSetGetPC -  Get the freeset inner pc
+
+   Not Collective
+
+   Input Parameter:
+.  pc - instance of PC
+
+   Output Parameter:
+.  innerpc - preconditioner applied byt the freeset PC
+
+   Level: advanced
+
+.seealso `PCFREESET`, `PCFreeSetSetPC()`, `PCFreeSetSetType()`, `PCFreeSetGetType()`
+@*/
+PetscErrorCode PCFreeSetGetPC(PC pc, PC *innerpc)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(pc, PC_CLASSID, 1);
+  PetscAssertPointer(innerpc, 2);
+  PetscTryMethod(pc, "PCFreeSetGetPC_C", (PC, PC *), (pc, innerpc));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ "PCSetUpInnerPC_FreeSet"
 static PetscErrorCode PCSetUpInnerPC_FreeSet(PC pc)
 {
@@ -446,6 +521,8 @@ PERMON_EXTERN PetscErrorCode PCCreate_FreeSet(PC pc)
   PetscCall(PetscObjectComposeFunction((PetscObject)pc, "PCFreeSetGetType_C", PCFreeSetGetType_FreeSet));
   PetscCall(PetscObjectComposeFunction((PetscObject)pc, "PCFreeSetSetIS_C", PCFreeSetSetIS_FreeSet));
   PetscCall(PetscObjectComposeFunction((PetscObject)pc, "PCFreeSetGetIS_C", PCFreeSetGetIS_FreeSet));
+  PetscCall(PetscObjectComposeFunction((PetscObject)pc, "PCFreeSetSetPC_C", PCFreeSetSetPC_FreeSet));
+  PetscCall(PetscObjectComposeFunction((PetscObject)pc, "PCFreeSetGetPC_C", PCFreeSetGetPC_FreeSet));
   PetscCall(PetscObjectComposeFunction((PetscObject)pc, "PCUpdateFromQPS_C", PCUpdateFromQPS_FreeSet));
 
   /* prepare log events*/

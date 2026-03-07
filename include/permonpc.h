@@ -30,3 +30,5 @@ PERMON_EXTERN PetscErrorCode PCFreeSetSetType(PC pc, PCFreeSetType type);
 PERMON_EXTERN PetscErrorCode PCFreeSetGetType(PC pc, PCFreeSetType *type);
 PERMON_EXTERN PetscErrorCode PCFreeSetSetIS(PC pc, IS is);
 PERMON_EXTERN PetscErrorCode PCFreeSetGetIS(PC pc, IS *is);
+PERMON_EXTERN PetscErrorCode PCFreeSetSetPC(PC pc, PC innerpc);
+PERMON_EXTERN PetscErrorCode PCFreeSetGetPC(PC pc, PC *innerpc);
