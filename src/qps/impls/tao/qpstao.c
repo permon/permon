@@ -256,8 +256,8 @@ PetscErrorCode QPSViewConvergence_Tao(QPS qps, PetscViewer v)
     PetscCall(QPSTaoGetTao(qps, &qpstao->tao));
     PetscCall(TaoGetType(qpstao->tao, &taotype));
     PetscCall(PetscViewerASCIIPrintf(v, "TaoType: %s\n", taotype));
-    PetscCall(PetscViewerASCIIPrintf(v, "Number of KSP iterations in last iteration: %d\n", qpstao->tao->ksp_its));
-    PetscCall(PetscViewerASCIIPrintf(v, "Total number of KSP iterations: %d\n", qpstao->ksp_its));
+    PetscCall(PetscViewerASCIIPrintf(v, "Number of KSP iterations in last iteration: %" PetscInt_FMT "\n", qpstao->tao->ksp_its));
+    PetscCall(PetscViewerASCIIPrintf(v, "Total number of KSP iterations: %" PetscInt_FMT "\n", qpstao->ksp_its));
     PetscCall(PetscViewerASCIIPrintf(v, "Information about last TAOSolve:\n"));
     PetscCall(PetscViewerASCIIPushTab(v));
     PetscCall(TaoView(qpstao->tao, v));

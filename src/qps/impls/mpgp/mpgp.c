@@ -757,13 +757,13 @@ PetscErrorCode QPSViewConvergence_MPGP(QPS qps, PetscViewer v)
   PetscCall(PetscObjectTypeCompare((PetscObject)v, PETSCVIEWERASCII, &iascii));
   if (iascii) {
     PetscCall(PetscViewerASCIIPrintf(v, "from the last QPSReset:\n"));
-    PetscCall(PetscViewerASCIIPrintf(v, "number of Hessian multiplications %d\n", mpgp->nmv));
-    PetscCall(PetscViewerASCIIPrintf(v, "number of CG steps %d\n", mpgp->ncg));
-    PetscCall(PetscViewerASCIIPrintf(v, "number of expansion steps %d\n", mpgp->nexp));
-    PetscCall(PetscViewerASCIIPrintf(v, "number of proportioning steps %d\n", mpgp->nprop));
+    PetscCall(PetscViewerASCIIPrintf(v, "number of Hessian multiplications %" PetscInt_FMT "\n", mpgp->nmv));
+    PetscCall(PetscViewerASCIIPrintf(v, "number of CG steps %" PetscInt_FMT "\n", mpgp->ncg));
+    PetscCall(PetscViewerASCIIPrintf(v, "number of expansion steps %" PetscInt_FMT "\n", mpgp->nexp));
+    PetscCall(PetscViewerASCIIPrintf(v, "number of proportioning steps %" PetscInt_FMT "\n", mpgp->nprop));
     if (mpgp->fallback || mpgp->fallback2) {
-      PetscCall(PetscViewerASCIIPrintf(v, "number of cost function value increases: %d\n", mpgp->nfinc));
-      PetscCall(PetscViewerASCIIPrintf(v, "number of fallbacks: %d\n", mpgp->nfall));
+      PetscCall(PetscViewerASCIIPrintf(v, "number of cost function value increases: %" PetscInt_FMT "\n", mpgp->nfinc));
+      PetscCall(PetscViewerASCIIPrintf(v, "number of fallbacks: %" PetscInt_FMT "\n", mpgp->nfall));
     }
   }
   PetscFunctionReturn(PETSC_SUCCESS);

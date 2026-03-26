@@ -132,7 +132,7 @@ static PetscErrorCode QPFetiAssembleDirichlet_ModifyR_Private(QP qp, IS dbcis)
   PetscCall(ISGetLocalSize(dbcis, &n_dbc_local));
 
   PetscCallMPI(MPI_Comm_rank(PetscObjectComm((PetscObject)qp), &rank));
-  PetscCall(PetscInfo(qp, "n_dbc_local=%d\n", n_dbc_local));
+  PetscCall(PetscInfo(qp, "n_dbc_local=%" PetscInt_FMT "\n", n_dbc_local));
   if (n_dbc_local) {
     PetscCall(MatGetSize(R_loc, &m, NULL));
     PetscCall(MatCreateSeqAIJ(PETSC_COMM_SELF, m, 0, 0, NULL, &R_loc));

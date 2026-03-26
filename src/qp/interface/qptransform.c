@@ -35,7 +35,7 @@ static PetscErrorCode QPTransformBegin_Private(PetscErrorCode (*transform)(QP), 
 
   *qp_inout  = qp;
   *child_new = child;
-  PetscCall(PetscInfo(qp, "QP %p (#%d) transformed by %s to QP %p (#%d)\n", (void *)qp, qp->id, trname, (void *)child, child->id));
+  PetscCall(PetscInfo(qp, "QP %p (#%" PetscInt_FMT ") transformed by %s to QP %p (#%" PetscInt_FMT ")\n", (void *)qp, qp->id, trname, (void *)child, child->id));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 

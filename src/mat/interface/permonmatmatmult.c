@@ -121,9 +121,9 @@ static inline PetscErrorCode MatMatMultByColumns_MatMult_Private(Mat A, PetscBoo
   N = B->cmap->N;
 
   PetscCall(MatGetColumnVectors(B, &N1, &B_cols));
-  PERMON_ASSERT(N1 == N, "N1==N (%d != %d)", N1, N);
+  PERMON_ASSERT(N1 == N, "N1==N (%" PetscInt_FMT " != %" PetscInt_FMT ")", N1, N);
   PetscCall(MatGetColumnVectors(C, &N1, &C_cols));
-  PERMON_ASSERT(N1 == N, "N1==N (%d != %d)", N1, N);
+  PERMON_ASSERT(N1 == N, "N1==N (%" PetscInt_FMT " != %" PetscInt_FMT ")", N1, N);
 
   for (j = 0; j < N; j++) { PetscCall(f(A, B_cols[j], C_cols[j])); }
 

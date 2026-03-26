@@ -31,9 +31,9 @@ static PetscErrorCode MatGetColumnVectors_NestPermon(Mat A, Vec *cols_new[])
     N1_last = mats[0][J]->cmap->N;
     for (II = 0; II < Mn; II++) {
       mat = mats[II][J];
-      PetscCheck(mat, comm, PETSC_ERR_SUP, "block (%d, %d) is null but null blocks not currently supported", II, J);
+      PetscCheck(mat, comm, PETSC_ERR_SUP, "block (%" PetscInt_FMT ", %" PetscInt_FMT ") is null but null blocks not currently supported", II, J);
       PetscCall(MatGetColumnVectors(mat, &N1, &cols_for_each_row_block[II]));
-      PetscCheck(N1 == N1_last, comm, PETSC_ERR_ARG_SIZ, "block (%d, %d) has different number of columns than block (%d, %d)", II, J, II - 1, J);
+      PetscCheck(N1 == N1_last, comm, PETSC_ERR_ARG_SIZ, "block (%" PetscInt_FMT ", %" PetscInt_FMT ") has different number of columns than block (%" PetscInt_FMT ", %" PetscInt_FMT ")", II, J, II - 1, J);
       N1_last = N1;
 
       PetscCall(PetscContainerCreate(comm, &container));
@@ -226,7 +226,7 @@ static PetscErrorCode MatMergeAndDestroy_NestPermon(MPI_Comm comm, Mat *local_in
     }
   PetscCall(MatCreateNestPermon(comm, Mn, NULL, Nn, NULL, mats_out, global_out));
 
-  if (x) PERMON_ASSERT((*global_out)->cmap->n == n, "number of local columns requested equals actual number of local columns of the generated matrix (%d != %d)", (*global_out)->cmap->n, n);
+  if (x) PERMON_ASSERT((*global_out)->cmap->n == n, "number of local columns requested equals actual number of local columns of the generated matrix (%" PetscInt_FMT " != %" PetscInt_FMT ")", (*global_out)->cmap->n, n);
 
   for (i = 0; i < MnNn; i++) PetscCall(MatDestroy(&mats_out[i]));
   PetscCall(PetscFree(mats_out));
@@ -560,7 +560,7 @@ static PetscErrorCode MatExtensionCreateCondensedRows_NestPermon(Mat TA, Mat *A,
   for (j = 0; j < Nn; j++) {
     block = mats_in[0][j];
     PetscCall(PetscObjectTypeCompare((PetscObject)block, MATEXTENSION, &flg));
-    PetscCheck(flg, PetscObjectComm((PetscObject)TA), PETSC_ERR_ARG_WRONG, "nested block %d,0 is not extension", j);
+    PetscCheck(flg, PetscObjectComm((PetscObject)TA), PETSC_ERR_ARG_WRONG, "nested block %" PetscInt_FMT ",0 is not extension", j);
     PetscCall(MatExtensionGetRowISLocal(block, &ris_block_orig[j]));
   }
 

@@ -986,9 +986,9 @@ PetscErrorCode QPSViewConvergence(QPS qps, PetscViewer v)
 
   PetscCall(PetscObjectPrintClassNamePrefixType((PetscObject)qps, v));
   PetscCall(PetscViewerASCIIPushTab(v));
-  PetscCall(PetscViewerASCIIPrintf(v, "last QPSSolve %s due to %s, KSPReason=%d, required %d iterations\n", (reason > 0) ? "CONVERGED" : "DIVERGED", KSPConvergedReasons[reason], reason, its));
-  PetscCall(PetscViewerASCIIPrintf(v, "all %d QPSSolves from last QPSReset/QPSResetStatistics have required %d iterations\n", qps->nsolves, qps->iterations_accumulated));
-  PetscCall(PetscViewerASCIIPrintf(v, "tolerances: rtol=%.1e, abstol=%.1e, dtol=%.1e, maxits=%d\n", rtol, abstol, dtol, maxits));
+  PetscCall(PetscViewerASCIIPrintf(v, "last QPSSolve %s due to %s, KSPReason=%" PetscInt_FMT ", required %" PetscInt_FMT " iterations\n", (reason > 0) ? "CONVERGED" : "DIVERGED", KSPConvergedReasons[reason], reason, its));
+  PetscCall(PetscViewerASCIIPrintf(v, "all %" PetscInt_FMT " QPSSolves from last QPSReset/QPSResetStatistics have required %" PetscInt_FMT " iterations\n", qps->nsolves, qps->iterations_accumulated));
+  PetscCall(PetscViewerASCIIPrintf(v, "tolerances: rtol=%.1e, abstol=%.1e, dtol=%.1e, maxits=%" PetscInt_FMT "\n", rtol, abstol, dtol, maxits));
   if (*qps->ops->viewconvergence) {
     PetscCall(PetscViewerASCIIPrintf(v, "%s specific:\n", qpstype));
     PetscCall(PetscViewerASCIIPushTab(v));

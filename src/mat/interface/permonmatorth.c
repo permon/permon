@@ -224,7 +224,7 @@ static PetscErrorCode MatOrthColumns_GS_Default(MPI_Comm comm, PetscInt N, Vec q
       PetscCall(VecNorm(qcur, NORM_2, &norm));
       o++;
       o_acc_++;
-      PetscCheck(norm >= 1e2 * PETSC_MACHINE_EPSILON, comm, PETSC_ERR_NOT_CONVERGED, "MatOrthColumns has not converged due to zero norm of the current column %d (i.e. columns 0 - %d are linearly dependent)", i, i);
+      PetscCheck(norm >= 1e2 * PETSC_MACHINE_EPSILON, comm, PETSC_ERR_NOT_CONVERGED, "MatOrthColumns has not converged due to zero norm of the current column %" PetscInt_FMT " (i.e. columns 0 - %" PetscInt_FMT " are linearly dependent)", i, i);
     } while (norm <= alpha * norm_last);
     PetscCall(VecScale(qcur, 1.0 / norm));
     if (s) { PetscCall(VecScale(s[i], 1.0 / norm)); }
@@ -272,7 +272,7 @@ static PetscErrorCode MatOrthColumns_GS_Lingen(MPI_Comm comm, PetscInt N, Vec q[
       beta  = 1.0 - beta / PetscSqr(delta_last);
       gamma = PetscSqrtReal(PetscAbsReal(beta));
       delta = delta_last * gamma;
-      PetscCheck(delta >= 1e2 * PETSC_MACHINE_EPSILON, comm, PETSC_ERR_NOT_CONVERGED, "MatOrthColumns has not converged due to zero norm of the current column %d (i.e. columns 0 - %d are linearly dependent)", k, k);
+      PetscCheck(delta >= 1e2 * PETSC_MACHINE_EPSILON, comm, PETSC_ERR_NOT_CONVERGED, "MatOrthColumns has not converged due to zero norm of the current column %" PetscInt_FMT " (i.e. columns 0 - %" PetscInt_FMT " are linearly dependent)", k, k);
       if (delta > alpha * delta_last) break;
 
       PetscCall(VecMDot(qk, k, q, p));
@@ -339,7 +339,7 @@ static PetscErrorCode MatOrthColumns_GS(Mat A, MatOrthType type, MatOrthForm for
   PetscCall(PetscMalloc(N * sizeof(PetscScalar), &dots));
 
   PetscCall((*f)(comm, N, q, s, dots, &o_max, &o_acc));
-  PetscCall(PetscInfo(permon, "number of columns %d,  orthogonalizations max, avg, total %d, %g, %d\n", N, o_max, ((PetscReal)o_acc) / N, o_acc));
+  PetscCall(PetscInfo(permon, "number of columns %" PetscInt_FMT ",  orthogonalizations max, avg, total %" PetscInt_FMT ", %g, %" PetscInt_FMT "\n", N, o_max, ((PetscReal)o_acc) / N, o_acc));
 
   /* copy column vectors back to the matrix Q */
   PetscCall(VecNestRestoreMPI(N, &q));

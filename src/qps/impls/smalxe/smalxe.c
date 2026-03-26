@@ -388,7 +388,7 @@ static PetscErrorCode QPSSMALXEUpdateRho_SMALXE(QPS qps, PetscBool Lagrangian_fl
   }
   if (!Lagrangian_flag || rho_update == 1.0) PetscFunctionReturn(PETSC_SUCCESS);
 
-  PetscCall(PetscInfo(qps, "updating rho, multiply by rho_update%d = %.4e\n", smalxe->state, rho_update));
+  PetscCall(PetscInfo(qps, "updating rho, multiply by rho_update%" PetscInt_FMT " = %.4e\n", smalxe->state, rho_update));
   PetscCall(MatPenalizedUpdatePenalty(A_inner, rho_update));
   PetscCall(QPSMPGPUpdateMaxEigenvalue(smalxe->inner, rho_update));
   smalxe->rho_updates++;
@@ -1002,7 +1002,7 @@ PetscErrorCode QPSViewConvergence_SMALXE(QPS qps, PetscViewer v)
   PetscFunctionBegin;
   PetscCall(PetscObjectTypeCompare((PetscObject)v, PETSCVIEWERASCII, &iascii));
   if (iascii) {
-    PetscCall(PetscViewerASCIIPrintf(v, "Total number of inner iterations %d\n", smalxe->inner_iter_accu));
+    PetscCall(PetscViewerASCIIPrintf(v, "Total number of inner iterations %" PetscInt_FMT "\n", smalxe->inner_iter_accu));
     PetscCall(PetscViewerASCIIPrintf(v, "#hits    of M1, eta: %3d, %3d\n", smalxe->M1_hits, smalxe->eta_hits));
     PetscCall(PetscViewerASCIIPrintf(v, "#updates of M1, rho: %3d, %3d\n", smalxe->M1_updates, smalxe->rho_updates));
 

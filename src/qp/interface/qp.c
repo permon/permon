@@ -15,7 +15,7 @@ static PetscErrorCode QPSetFromOptions_Private(QP qp);
     PetscCall(VecNorm(x, NORM_2, &norm)); \
     PetscCall(VecMax(x, &imax, &max)); \
     PetscCall(VecMin(x, &imin, &min)); \
-    PetscCall(PetscViewerASCIIPrintf(v, "||%2s|| = %.8e    max(%2s) = %.2e = %2s(%d)    min(%2s) = %.2e = %2s(%d)    %p\n", name, norm, name, max, name, imax, name, min, name, imin, (void *)x)); \
+    PetscCall(PetscViewerASCIIPrintf(v, "||%2s|| = %.8e    max(%2s) = %.2e = %2s(%" PetscInt_FMT ")    min(%2s) = %.2e = %2s(%" PetscInt_FMT ")    %p\n", name, norm, name, max, name, imax, name, min, name, imin, (void *)x)); \
   }
 
 #undef __FUNCT__
@@ -265,7 +265,7 @@ PetscErrorCode QPViewKKT(QP qp, PetscViewer v)
 
   PetscCall(PetscObjectName((PetscObject)qp));
   PetscCall(PetscObjectPrintClassNamePrefixType((PetscObject)qp, v));
-  PetscCall(PetscViewerASCIIPrintf(v, "  #%d in chain, derived by %s\n", qp->id, qp->transform_name));
+  PetscCall(PetscViewerASCIIPrintf(v, "  #%" PetscInt_FMT " in chain, derived by %s\n", qp->id, qp->transform_name));
   if (!qp->solved) { PetscCall(PetscViewerASCIIPrintf(v, "*** WARNING: QP is not solved. ***\n")); }
 
   PetscCall(QPGetOperator(qp, &A));
@@ -403,7 +403,7 @@ PetscErrorCode QPView(QP qp, PetscViewer v)
   PetscCheck(iascii, comm, PETSC_ERR_SUP, "Viewer type %s not supported for QP", ((PetscObject)v)->type_name);
   PetscCall(PetscObjectName((PetscObject)qp));
   PetscCall(PetscObjectPrintClassNamePrefixType((PetscObject)qp, v));
-  PetscCall(PetscViewerASCIIPrintf(v, "#%d in chain, derived by %s\n", qp->id, qp->transform_name));
+  PetscCall(PetscViewerASCIIPrintf(v, "#%" PetscInt_FMT " in chain, derived by %s\n", qp->id, qp->transform_name));
 
   PetscCall(QPGetOperator(qp, &A));
   PetscCall(QPGetOperatorNullSpace(qp, &R));
@@ -505,7 +505,7 @@ PetscErrorCode QPSetUpInnerObjects(QP qp)
   PetscCheck(qp->b, comm, PETSC_ERR_ORDER, "linear term must be set before " __FUNCT__);
 
   PermonTraceBegin;
-  PetscCall(PetscInfo(qp, "setup inner objects for QP #%d\n", qp->id));
+  PetscCall(PetscInfo(qp, "setup inner objects for QP #%" PetscInt_FMT "\n", qp->id));
 
   if (!qp->pc) PetscCall(QPGetPC(qp, &qp->pc));
   PetscCall(PCSetOperators(qp->pc, qp->A, qp->A));
@@ -623,7 +623,7 @@ PetscErrorCode QPSetUp(QP qp)
   PetscCheck(qp->b, comm, PETSC_ERR_ORDER, "linear term must be set before " __FUNCT__);
 
   PermonTraceBegin;
-  PetscCall(PetscInfo(qp, "setup QP #%d\n", qp->id));
+  PetscCall(PetscInfo(qp, "setup QP #%" PetscInt_FMT "\n", qp->id));
   PetscCall(QPSetUpInnerObjects(qp));
   PetscCall(QPSetFromOptions_Private(qp));
   PetscCall(PCSetUp(qp->pc));
@@ -819,7 +819,7 @@ PetscErrorCode QPComputeMissingEqMultiplier(QP qp)
   }
 
   PetscCall(PetscObjectGetName((PetscObject)qp, &name));
-  PetscCall(PetscInfo(qp, "missing eq. con. multiplier computed for QP Object %s (#%d in chain, derived by %s)\n", name, qp->id, qp->transform_name));
+  PetscCall(PetscInfo(qp, "missing eq. con. multiplier computed for QP Object %s (#%" PetscInt_FMT " in chain, derived by %s)\n", name, qp->id, qp->transform_name));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -883,7 +883,7 @@ PetscErrorCode QPComputeMissingBoxMultipliers(QP qp)
   {
     const char *name_qp;
     PetscCall(PetscObjectGetName((PetscObject)qp, &name_qp));
-    PetscCall(PetscInfo(qp, "missing lower bound con. multiplier computed for QP Object %s (#%d in chain, derived by %s)\n", name_qp, qp->id, qp->transform_name));
+    PetscCall(PetscInfo(qp, "missing lower bound con. multiplier computed for QP Object %s (#%" PetscInt_FMT " in chain, derived by %s)\n", name_qp, qp->id, qp->transform_name));
   }
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1705,7 +1705,7 @@ PetscErrorCode QPGetEqMultiplicityScaling(QP qp, Vec *dE_new, Vec *dI_new)
       k = 0;
       for (j = 0; j < ncols; j++) {
         if (vals[j]) k++;
-        PetscCheck(k <= 1, comm, PETSC_ERR_PLIB, "more than one nonzero in Bd row %d", i);
+        PetscCheck(k <= 1, comm, PETSC_ERR_PLIB, "more than one nonzero in Bd row %" PetscInt_FMT "", i);
       }
       PetscCall(MatRestoreRow(Bdt, i, &ncols, &cols, &vals));
       if (k) {
@@ -1727,7 +1727,7 @@ PetscErrorCode QPGetEqMultiplicityScaling(QP qp, Vec *dE_new, Vec *dI_new)
         if (vals[j]) k++;
       }
       PetscCall(MatRestoreRow(Bct, i, &ncols, &cols, &vals));
-      if (k > 1) PetscCall(PetscPrintf(comm, "WARNING: more than one nonzero in Bc row %d\n", i));
+      if (k > 1) PetscCall(PetscPrintf(comm, "WARNING: more than one nonzero in Bc row %" PetscInt_FMT "\n", i));
       if (k) {
         PetscCall(VecGetValues(dof_multiplicities, 1, &i, &multiplicity));
         multiplicity++;

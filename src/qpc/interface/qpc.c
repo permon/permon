@@ -108,11 +108,11 @@ PetscErrorCode QPCView(QPC qpc, PetscViewer v)
 
   /* get block size */
   PetscCall(QPCGetBlockSize(qpc, &block_size));
-  PetscCall(PetscViewerASCIIPrintf(v, "block size: %d\n", block_size));
+  PetscCall(PetscViewerASCIIPrintf(v, "block size: %" PetscInt_FMT "\n", block_size));
 
   /* get number of constraints */
   PetscCall(QPCGetNumberOfConstraints(qpc, &nmb_of_constraints));
-  PetscCall(PetscViewerASCIIPrintf(v, "nmb of constraints: %d\n", nmb_of_constraints));
+  PetscCall(PetscViewerASCIIPrintf(v, "nmb of constraints: %" PetscInt_FMT "\n", nmb_of_constraints));
 
   /* print IS */
   PetscCall(PetscViewerASCIIPrintf(v, "index set:\n"));

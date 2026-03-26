@@ -141,7 +141,7 @@ static PetscErrorCode PCView_Dual(PC pc, PetscViewer viewer)
   PetscFunctionBegin;
   PetscCall(PetscObjectTypeCompare((PetscObject)viewer, PETSCVIEWERASCII, &iascii));
   if (!iascii) PetscFunctionReturn(PETSC_SUCCESS);
-  PetscCall(PetscViewerASCIIPrintf(viewer, "  PCDualType: %d (%s)\n", ctx->pcdualtype, PCDualTypes[ctx->pcdualtype]));
+  PetscCall(PetscViewerASCIIPrintf(viewer, "  PCDualType: %" PetscInt_FMT " (%s)\n", ctx->pcdualtype, PCDualTypes[ctx->pcdualtype]));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
