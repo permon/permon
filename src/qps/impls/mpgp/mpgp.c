@@ -126,18 +126,18 @@ static PetscErrorCode QPSMPGPUpdateMaxEigenvalue_MPGP(QPS qps, PetscReal maxeig_
   PetscCheck(qps->setupcalled, PetscObjectComm((PetscObject)qps), PETSC_ERR_ARG_WRONGSTATE, "this routine is intended to be called after QPSSetUp");
 
   mpgp->maxeig = maxeig_old * maxeig_update;
-  PetscCall(PetscInfo(qps, "updating maxeig := %.8e = %.8e * %.8e = maxeig * maxeig_update\n", mpgp->maxeig, maxeig_old, maxeig_update));
+  PetscCall(PetscInfo(qps, "updating maxeig := %.8e = %.8e * %.8e = maxeig * maxeig_update\n", (double)mpgp->maxeig, (double)maxeig_old, (double)maxeig_update));
 
   if (mpgp->alpha_type == QPS_ARG_MULTIPLE) {
     mpgp->alpha = alpha_old / maxeig_update;
-    PetscCall(PetscInfo(qps, "updating alpha := %.8e = %.8e / %.8e = alpha / maxeig_update\n", mpgp->alpha, alpha_old, maxeig_update));
+    PetscCall(PetscInfo(qps, "updating alpha := %.8e = %.8e / %.8e = alpha / maxeig_update\n", (double)mpgp->alpha, (double)alpha_old, (double)maxeig_update));
   }
 
   //TODO temporary
   if (PermonDebugEnabled) {
     PetscReal lambda;
     PetscCall(MatGetMaxEigenvalue(qps->solQP->A, NULL, &lambda, mpgp->maxeig_tol, mpgp->maxeig_iter));
-    PetscCall(PermonDebug1("|maxeig_from_power_method - mpgp->maxeig| = %8e\n", PetscAbs(lambda - mpgp->maxeig)));
+    PetscCall(PermonDebug1("|maxeig_from_power_method - mpgp->maxeig| = %8e\n", (double)PetscAbs(lambda - mpgp->maxeig)));
   }
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -417,13 +417,13 @@ PetscErrorCode QPSSetup_MPGP(QPS qps)
   if (mpgp->alpha_type == QPS_ARG_MULTIPLE) {
     if (mpgp->maxeig == PETSC_DECIDE) { PetscCall(MatGetMaxEigenvalue(qps->solQP->A, NULL, &mpgp->maxeig, mpgp->maxeig_tol, mpgp->maxeig_iter)); }
     if (mpgp->alpha_user == PETSC_DECIDE) { mpgp->alpha_user = 2.0; }
-    PetscCall(PetscInfo(qps, "maxeig     = %.8e\n", mpgp->maxeig));
-    PetscCall(PetscInfo(qps, "alpha_user = %.8e\n", mpgp->alpha_user));
+    PetscCall(PetscInfo(qps, "maxeig     = %.8e\n", (double)mpgp->maxeig));
+    PetscCall(PetscInfo(qps, "alpha_user = %.8e\n", (double)mpgp->alpha_user));
     mpgp->alpha = mpgp->alpha_user / mpgp->maxeig;
   } else {
     mpgp->alpha = mpgp->alpha_user;
   }
-  PetscCall(PetscInfo(qps, "alpha      = %.8e\n", mpgp->alpha));
+  PetscCall(PetscInfo(qps, "alpha      = %.8e\n", (double)mpgp->alpha));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 

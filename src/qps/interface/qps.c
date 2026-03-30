@@ -691,7 +691,7 @@ PetscErrorCode QPSConvergedDefault(QPS qps, KSPConvergedReason *reason)
     PetscFunctionReturn(PETSC_SUCCESS);
   }
 
-  if (i != -1) PetscCall(PermonDebug2("iteration %5d  rnorm %.10e \n", i, rnorm));
+  if (i != -1) PetscCall(PermonDebug2("iteration %5d  rnorm %.10e \n", i, (double)rnorm));
 
   if (PetscIsInfOrNanScalar(rnorm)) {
     PetscCall(PetscInfo(qps, "QP solver has created a not a number (NaN) as the residual norm, declaring divergence \n"));
@@ -726,7 +726,7 @@ PetscErrorCode QPSConvergedDefaultSetUp(QPS qps)
   cctx->ttol         = PetscMax(qps->rtol * cctx->norm_rhs, qps->atol);
   cctx->norm_rhs_div = cctx->norm_rhs;
   cctx->setup_called = PETSC_TRUE;
-  PetscCall(PetscInfo(qps, "QP solver convergence criterion initialized: ttol = max(rtol*norm(b),atol) = max(%.4e * %.4e, %.4e) = %.4e\n", qps->rtol, cctx->norm_rhs, qps->atol, cctx->ttol));
+  PetscCall(PetscInfo(qps, "QP solver convergence criterion initialized: ttol = max(rtol*norm(b),atol) = max(%.4e * %.4e, %.4e) = %.4e\n", (double)qps->rtol, (double)cctx->norm_rhs, (double)qps->atol, (double)cctx->ttol));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -910,15 +910,15 @@ PetscErrorCode QPSSetTolerances(QPS qps, PetscReal rtol, PetscReal atol, PetscRe
   PetscValidLogicalCollectiveInt(qps, max_it, 5);
 
   if (rtol != PETSC_DEFAULT) {
-    PetscCheck(rtol >= 0.0 && 1.0 > rtol, ((PetscObject)qps)->comm, PETSC_ERR_ARG_OUTOFRANGE, "Relative tolerance %g must be non-negative and less than 1.0", rtol);
+    PetscCheck(rtol >= 0.0 && 1.0 > rtol, ((PetscObject)qps)->comm, PETSC_ERR_ARG_OUTOFRANGE, "Relative tolerance %g must be non-negative and less than 1.0", (double)rtol);
     qps->rtol = rtol;
   }
   if (atol != PETSC_DEFAULT) {
-    PetscCheck(atol >= 0.0, ((PetscObject)qps)->comm, PETSC_ERR_ARG_OUTOFRANGE, "Absolute tolerance %g must be non-negative", atol);
+    PetscCheck(atol >= 0.0, ((PetscObject)qps)->comm, PETSC_ERR_ARG_OUTOFRANGE, "Absolute tolerance %g must be non-negative", (double)atol);
     qps->atol = atol;
   }
   if (divtol != PETSC_DEFAULT) {
-    PetscCheck(divtol >= 0.0, ((PetscObject)qps)->comm, PETSC_ERR_ARG_OUTOFRANGE, "Divergence tolerance %g must be larger than 1.0", divtol);
+    PetscCheck(divtol >= 0.0, ((PetscObject)qps)->comm, PETSC_ERR_ARG_OUTOFRANGE, "Divergence tolerance %g must be larger than 1.0", (double)divtol);
     qps->divtol = divtol;
   }
   if (max_it != PETSC_DEFAULT) {
@@ -988,7 +988,7 @@ PetscErrorCode QPSViewConvergence(QPS qps, PetscViewer v)
   PetscCall(PetscViewerASCIIPushTab(v));
   PetscCall(PetscViewerASCIIPrintf(v, "last QPSSolve %s due to %s, KSPReason=%" PetscInt_FMT ", required %" PetscInt_FMT " iterations\n", (reason > 0) ? "CONVERGED" : "DIVERGED", KSPConvergedReasons[reason], reason, its));
   PetscCall(PetscViewerASCIIPrintf(v, "all %" PetscInt_FMT " QPSSolves from last QPSReset/QPSResetStatistics have required %" PetscInt_FMT " iterations\n", qps->nsolves, qps->iterations_accumulated));
-  PetscCall(PetscViewerASCIIPrintf(v, "tolerances: rtol=%.1e, abstol=%.1e, dtol=%.1e, maxits=%" PetscInt_FMT "\n", rtol, abstol, dtol, maxits));
+  PetscCall(PetscViewerASCIIPrintf(v, "tolerances: rtol=%.1e, abstol=%.1e, dtol=%.1e, maxits=%" PetscInt_FMT "\n", (double)rtol, (double)abstol, (double)dtol, maxits));
   if (*qps->ops->viewconvergence) {
     PetscCall(PetscViewerASCIIPrintf(v, "%s specific:\n", qpstype));
     PetscCall(PetscViewerASCIIPushTab(v));

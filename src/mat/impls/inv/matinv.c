@@ -101,7 +101,7 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
     if (flg) {
       /* If MUMPS Cholesky is used, avoid doubled factorization. */
       char opts[128];
-      PetscCall(PetscSNPrintf(opts, sizeof(opts), "-%smat_mumps_icntl_24 1 -%smat_mumps_cntl_3 %e", ((PetscObject)pc)->prefix, ((PetscObject)pc)->prefix, null_pivot_threshold));
+      PetscCall(PetscSNPrintf(opts, sizeof(opts), "-%smat_mumps_icntl_24 1 -%smat_mumps_cntl_3 %e", ((PetscObject)pc)->prefix, ((PetscObject)pc)->prefix, (double)null_pivot_threshold));
       PetscCall(PetscOptionsInsertString(NULL, opts));
       PetscCall(PCSetFromOptions(pc));
       PetscCall(PCSetUp(pc));

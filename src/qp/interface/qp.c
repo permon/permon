@@ -15,7 +15,7 @@ static PetscErrorCode QPSetFromOptions_Private(QP qp);
     PetscCall(VecNorm(x, NORM_2, &norm)); \
     PetscCall(VecMax(x, &imax, &max)); \
     PetscCall(VecMin(x, &imin, &min)); \
-    PetscCall(PetscViewerASCIIPrintf(v, "||%2s|| = %.8e    max(%2s) = %.2e = %2s(%" PetscInt_FMT ")    min(%2s) = %.2e = %2s(%" PetscInt_FMT ")    %p\n", name, norm, name, max, name, imax, name, min, name, imin, (void *)x)); \
+    PetscCall(PetscViewerASCIIPrintf(v, "||%2s|| = %.8e    max(%2s) = %.2e = %2s(%" PetscInt_FMT ")    min(%2s) = %.2e = %2s(%" PetscInt_FMT ")    %p\n", name, (double)norm, name, (double)max, name, imax, name, (double)min, name, imin, (void *)x)); \
   }
 
 #undef __FUNCT__
@@ -289,10 +289,10 @@ PetscErrorCode QPViewKKT(QP qp, PetscViewer v)
   if (!notavail) {
     if (compare_lambda_E) {
       PetscCall(QPCompareEqMultiplierWithLeastSquare(qp, &norm));
-      PetscCall(PetscViewerASCIIPrintf(v, "||BE'*lambda_E - BE'*lambda_E_LS|| = %.4e\n", norm));
+      PetscCall(PetscViewerASCIIPrintf(v, "||BE'*lambda_E - BE'*lambda_E_LS|| = %.4e\n", (double)norm));
     }
     PetscCall(VecNorm(r, NORM_2, &norm));
-    PetscCall(PetscViewerASCIIPrintf(v, "r = ||%s|| = %.2e    rO/||b|| = %.2e\n", kkt_name, norm, norm / normb));
+    PetscCall(PetscViewerASCIIPrintf(v, "r = ||%s|| = %.2e    rO/||b|| = %.2e\n", kkt_name, (double)norm, (double)norm / (double)normb));
   } else {
     PetscCall(PetscViewerASCIIPrintf(v, "r = ||%s|| not available\n", kkt_name));
   }
@@ -306,9 +306,9 @@ PetscErrorCode QPViewKKT(QP qp, PetscViewer v)
       if (cE) PetscCall(VecAXPY(r, -1.0, cE));
       PetscCall(VecNorm(r, NORM_2, &norm));
       if (cE) {
-        PetscCall(PetscViewerASCIIPrintf(v, "r = ||BE*x-cE||          = %.2e    r/||b|| = %.2e\n", norm, norm / normb));
+        PetscCall(PetscViewerASCIIPrintf(v, "r = ||BE*x-cE||          = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
       } else {
-        PetscCall(PetscViewerASCIIPrintf(v, "r = ||BE*x||             = %.2e    r/||b|| = %.2e\n", norm, norm / normb));
+        PetscCall(PetscViewerASCIIPrintf(v, "r = ||BE*x||             = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
       }
       PetscCall(VecDestroy(&r));
     } else {
@@ -319,7 +319,7 @@ PetscErrorCode QPViewKKT(QP qp, PetscViewer v)
         PetscCall(QPPFApplyGtG(qp->pf, x, t)); /* BEtBEx = BE'*BE*x */
         PetscCall(VecDot(x, t, &norm));        /* norm = x'*BE'*BE*x */
         norm = PetscSqrtReal(norm);
-        PetscCall(PetscViewerASCIIPrintf(v, "r = ||BE*x||             = %.2e    r/||b|| = %.2e\n", norm, norm / normb));
+        PetscCall(PetscViewerASCIIPrintf(v, "r = ||BE*x||             = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
       }
     }
   }
@@ -339,24 +339,24 @@ PetscErrorCode QPViewKKT(QP qp, PetscViewer v)
     PetscCall(VecPointwiseMax(t, r, o));  /* t = max(r,o)     */
     PetscCall(VecNorm(t, NORM_2, &norm)); /* norm = norm(t)     */
     if (cI) {
-      PetscCall(PetscViewerASCIIPrintf(v, "r = ||max(BI*x-cI,0)||   = %.2e    r/||b|| = %.2e\n", norm, norm / normb));
+      PetscCall(PetscViewerASCIIPrintf(v, "r = ||max(BI*x-cI,0)||   = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
     } else {
-      PetscCall(PetscViewerASCIIPrintf(v, "r = ||max(BI*x,0)||      = %.2e    r/||b|| = %.2e\n", norm, norm / normb));
+      PetscCall(PetscViewerASCIIPrintf(v, "r = ||max(BI*x,0)||      = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
     }
 
     /* lambda >= o  =>  examine min(lambda,o) */
     PetscCall(VecSet(o, 0.0)); /* o = zeros(size(r)) */
     PetscCall(VecPointwiseMin(t, qp->lambda_I, o));
     PetscCall(VecNorm(t, NORM_2, &norm)); /* norm = ||min(lambda,o)|| */
-    PetscCall(PetscViewerASCIIPrintf(v, "r = ||min(lambda_I,0)||  = %.2e    r/||b|| = %.2e\n", norm, norm / normb));
+    PetscCall(PetscViewerASCIIPrintf(v, "r = ||min(lambda_I,0)||  = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
 
     /* lambda'*(BI*x-cI) = 0 */
     PetscCall(VecDot(qp->lambda_I, r, &dot));
     dot = PetscAbs(dot);
     if (cI) {
-      PetscCall(PetscViewerASCIIPrintf(v, "r = |lambda_I'*(BI*x-cI)|= %.2e    r/||b|| = %.2e\n", dot, dot / normb));
+      PetscCall(PetscViewerASCIIPrintf(v, "r = |lambda_I'*(BI*x-cI)|= %.2e    r/||b|| = %.2e\n", (double)dot, (double)dot / (double)normb));
     } else {
-      PetscCall(PetscViewerASCIIPrintf(v, "r = |lambda_I'*(BI*x)|= %.2e       r/||b|| = %.2e\n", dot, dot / normb));
+      PetscCall(PetscViewerASCIIPrintf(v, "r = |lambda_I'*(BI*x)|= %.2e       r/||b|| = %.2e\n", (double)dot, (double)dot / (double)normb));
     }
 
     PetscCall(VecDestroy(&o));
@@ -815,7 +815,7 @@ PetscErrorCode QPComputeMissingEqMultiplier(QP qp)
       PetscCall(VecAXPY(r, 1.0, qp->Bt_lambda));
     }
     PetscCall(VecNorm(r, NORM_2, &norm));
-    PetscCall(PermonDebug1("||r||=%.2e\n", norm));
+    PetscCall(PermonDebug1("||r||=%.2e\n", (double)norm));
   }
 
   PetscCall(PetscObjectGetName((PetscObject)qp, &name));

@@ -39,7 +39,7 @@ PetscErrorCode KSPViewBriefInfo(KSP ksp, PetscViewer viewer)
   PetscCall(PetscViewerASCIIPrintf(viewer, "PCType:           %s\n", pctype));
   PetscCall(PetscViewerASCIIPrintf(viewer, "MatSolverType:    %s\n", pcpkg));
   PetscCall(PetscViewerASCIIPrintf(viewer, "MatType:          %s\n", mattype));
-  PetscCall(PetscViewerASCIIPrintf(viewer, "(rtol, dtol, atol, maxit) = (%.1e, %.1e, %.1e, %" PetscInt_FMT ")\n", rtol, dtol, atol, maxit));
+  PetscCall(PetscViewerASCIIPrintf(viewer, "(rtol, dtol, atol, maxit) = (%.1e, %.1e, %.1e, %" PetscInt_FMT ")\n", (double)rtol, (double)dtol, (double)atol, maxit));
   PetscCall(PetscViewerASCIIPopTab(viewer));
   PetscFunctionReturn(PETSC_SUCCESS);
 }

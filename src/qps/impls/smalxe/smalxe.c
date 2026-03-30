@@ -323,11 +323,11 @@ static PetscErrorCode QPSSMALXEUpdateNormBu_Lag_SMALXEON(QPS qps, Vec u, PetscRe
       neval++;
       rdiff = PetscAbs(normBu_exact / normBu0);
       if (rdiff >= upper) {
-        PetscCall(PetscInfo(qps, "rdiff = |%.3e / %.3e| = %.3e >= %.3e, ||B*u|| will be recalculated\n", normBu_exact, normBu0, rdiff, upper));
+        PetscCall(PetscInfo(qps, "rdiff = |%.3e / %.3e| = %.3e >= %.3e, ||B*u|| will be recalculated\n", (double)normBu_exact, (double)normBu0, (double)rdiff, (double)upper));
         II = 0;
         J  = Jstart;
       } else if (rdiff < lower) {
-        PetscCall(PetscInfo(qps, "rdiff = |%.3e / %.3e| = %.3e < %.3e, ||B*u|| will be recalculated\n", normBu_exact, normBu0, rdiff, lower));
+        PetscCall(PetscInfo(qps, "rdiff = |%.3e / %.3e| = %.3e < %.3e, ||B*u|| will be recalculated\n", (double)normBu_exact, (double)normBu0, (double)rdiff, (double)lower));
         II = 0;
         J  = Jstart;
       } else {
@@ -357,7 +357,7 @@ static PetscErrorCode QPSSMALXEUpdateNormBu_Lag_SMALXEON(QPS qps, Vec u, PetscRe
     } else {
       sign = '=';
     }
-    PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps), __FUNCT__ ": out %3d in %4d   II=%2d J=%2d niter=%4d neval=%4d   ||Bu||=%.4e  %c  %.4e=~||Bu|| relative_difference=%.4e %c\n", qps->iteration, qps_inner->iteration, II, J, niter, neval, normBu_exact, sign, normBu_approx, rdiff, rdiff > 10 ? sign : ' '));
+    PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps), __FUNCT__ ": out %3d in %4d   II=%2d J=%2d niter=%4d neval=%4d   ||Bu||=%.4e  %c  %.4e=~||Bu|| relative_difference=%.4e %c\n", qps->iteration, qps_inner->iteration, II, J, niter, neval, (double)normBu_exact, sign, (double)normBu_approx, (double)rdiff, rdiff > 10 ? sign : ' '));
   } else if (lag_monitor) {
     PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps), __FUNCT__ ": out %3d in %4d   II=%2d J=%2d niter=%4d neval=%4d\n", qps->iteration, qps_inner->iteration, II, J, niter, neval));
   }
@@ -388,7 +388,7 @@ static PetscErrorCode QPSSMALXEUpdateRho_SMALXE(QPS qps, PetscBool Lagrangian_fl
   }
   if (!Lagrangian_flag || rho_update == 1.0) PetscFunctionReturn(PETSC_SUCCESS);
 
-  PetscCall(PetscInfo(qps, "updating rho, multiply by rho_update%" PetscInt_FMT " = %.4e\n", smalxe->state, rho_update));
+  PetscCall(PetscInfo(qps, "updating rho, multiply by rho_update%" PetscInt_FMT " = %.4e\n", smalxe->state, (double)rho_update));
   PetscCall(MatPenalizedUpdatePenalty(A_inner, rho_update));
   PetscCall(QPSMPGPUpdateMaxEigenvalue(smalxe->inner, rho_update));
   smalxe->rho_updates++;
@@ -456,11 +456,11 @@ PetscErrorCode QPSSMALXEUpdate_SMALXE(QPS qps, PetscReal Lag_old, PetscReal Lag,
 
     PetscCall(PetscObjectGetComm((PetscObject)qps, &comm));
     PetscCall(PetscPrintf(comm, "END   outer %3d:  Lagrangian L       L-L_old      L-(L_old+1/2*rho*||Bu||^2) %c threshold    1/2*rho*||Bu||^2\n", qps->iteration, flag ? '<' : '>'));
-    PetscCall(PetscPrintf(comm, "                  %+.10e  %+.3e                   %+.3e %c %+.3e   %.3e\n", Lag, Lag - Lag_old, t2, flag ? '<' : '>', smalxe->update_threshold, t));
+    PetscCall(PetscPrintf(comm, "                  %+.10e  %+.3e                   %+.3e %c %+.3e   %.3e\n", (double)Lag, (double)Lag - (double)Lag_old, (double)t2, flag ? '<' : '>', (double)smalxe->update_threshold, (double)t));
     PetscCall(PetscPrintf(comm, "          max(G,E) = %c %c ttol_outer      |               G %c min(M1||Bx||,eta) = %-8s  |               G %c gtol\n", (gnorm > smalxe->enorm) ? 'G' : 'E', (qps->rnorm < cctx->ttol_outer) ? '<' : '>',
                           (gnorm < qps_inner->atol) ? '<' : '>', (cctx->MNormBu < smalxe->eta) ? "M1||Bu||" : "eta", (gnorm < cctx->gtol) ? '<' : '>'));
-    PetscCall(PetscPrintf(comm, "        %.8e %c %.8e  |  %.8e %c %.8e                |  %.8e %c %.8e\n\n", qps->rnorm, (qps->rnorm < cctx->ttol_outer) ? '<' : '>', cctx->ttol_outer, gnorm, (gnorm < qps_inner->atol) ? '<' : '>', qps_inner->atol, gnorm,
-                          (gnorm < cctx->gtol) ? '<' : '>', cctx->gtol));
+    PetscCall(PetscPrintf(comm, "        %.8e %c %.8e  |  %.8e %c %.8e                |  %.8e %c %.8e\n\n", (double)qps->rnorm, (qps->rnorm < cctx->ttol_outer) ? '<' : '>', (double)cctx->ttol_outer, (double)gnorm, (gnorm < qps_inner->atol) ? '<' : '>',
+                          (double)qps_inner->atol, (double)gnorm, (gnorm < cctx->gtol) ? '<' : '>', (double)cctx->gtol));
   }
 
   if (flag && M1_update != 1.0) {
@@ -469,7 +469,7 @@ PetscErrorCode QPSSMALXEUpdate_SMALXE(QPS qps, PetscReal Lag_old, PetscReal Lag,
     } else {
       M1_new = smalxe->M1 / M1_update;
       {
-        PetscCall(PetscInfo(qps, "updating M1 := M1/M1_update = %.4e/%.4e = %.4e\n", smalxe->M1, M1_update, M1_new));
+        PetscCall(PetscInfo(qps, "updating M1 := M1/M1_update = %.4e/%.4e = %.4e\n", (double)smalxe->M1, (double)M1_update, (double)M1_new));
         smalxe->M1 = M1_new; /* M1 = M1 / M1_update       */
         smalxe->M1_updates++;
       }
@@ -477,7 +477,7 @@ PetscErrorCode QPSSMALXEUpdate_SMALXE(QPS qps, PetscReal Lag_old, PetscReal Lag,
   }
 
   if (smalxe->inner->rnorm > smalxe->enorm) {
-    PetscCall(PetscInfo(qps, "not updating rho because G = %.8e > %.8e = E\n", smalxe->inner->rnorm, smalxe->enorm));
+    PetscCall(PetscInfo(qps, "not updating rho because G = %.8e > %.8e = E\n", (double)smalxe->inner->rnorm, (double)smalxe->enorm));
     PetscFunctionReturn(PETSC_SUCCESS);
   }
 
@@ -544,9 +544,9 @@ PetscErrorCode QPSConvergedSetUp_Inner_SMALXE(QPS qps_inner)
 
   PetscCall(VecNorm(b_outer, NORM_2, &cctx->norm_rhs_outer));
   cctx->gtol = qps_outer->rtol * cctx->norm_rhs_outer;
-  PetscCall(PetscInfo(qps_inner, "  gtol = rtol * norm_rhs_outer= %.4e * %.4e = %.4e\n", qps_outer->rtol, cctx->norm_rhs_outer, cctx->gtol));
+  PetscCall(PetscInfo(qps_inner, "  gtol = rtol * norm_rhs_outer= %.4e * %.4e = %.4e\n", (double)qps_outer->rtol, (double)cctx->norm_rhs_outer, (double)cctx->gtol));
   cctx->ttol_outer = PetscMax(qps_outer->rtol * cctx->norm_rhs_outer, qps_outer->atol);
-  PetscCall(PetscInfo(qps_outer, "  ttol_outer = max(rtol_outer*norm_rhs_outer, atol_outer) = max(%.4e * %.4e, %.4e) = %.4e\n", qps_outer->rtol, cctx->norm_rhs_outer, qps_outer->atol, cctx->ttol_outer));
+  PetscCall(PetscInfo(qps_outer, "  ttol_outer = max(rtol_outer*norm_rhs_outer, atol_outer) = max(%.4e * %.4e, %.4e) = %.4e\n", (double)qps_outer->rtol, (double)cctx->norm_rhs_outer, (double)qps_outer->atol, (double)cctx->ttol_outer));
 
   //TODO this is just a quick&dirty solution
   /* use inner b for divergence criterion of outer solver */
@@ -567,7 +567,7 @@ static inline PetscErrorCode QPSConverged_Inner_SMALXE_Monitor_Outer(QPS qps_inn
   if (smalxe->monitor_outer) {
     PetscCall(MatPenalizedGetPenalty(qp_inner->A, &rho));
     PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps_outer), "BEGIN outer %3d:   M1         rho        eta             gtol            rtol_E\n", qps_outer->iteration));
-    PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps_outer), "                   %.3e  %.3e  %.8e  %.8e  %.3e\n", smalxe->M1, rho, smalxe->eta, cctx->gtol, smalxe->rtol_E));
+    PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps_outer), "                   %.3e  %.3e  %.8e  %.8e  %.3e\n", (double)smalxe->M1, (double)rho, (double)smalxe->eta, (double)cctx->gtol, (double)smalxe->rtol_E));
   }
   if (header) {
     if (smalxe->monitor) {
@@ -590,13 +590,13 @@ static inline PetscErrorCode QPSConverged_Inner_SMALXE_Monitor_Inner(QPS qps_inn
   PetscFunctionBegin;
   PetscCall(QPSMPGPGetCurrentStepType(qps_inner, &stepType));
   if (smalxe->monitor) {
-    PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps_outer), "  %4d %c  %.8e  %.8e  %c = %.8e %c %.8e  %.8e %c %.8e = %-8s  %.8e\n", i, stepType, gnorm, smalxe->enorm, (gnorm > smalxe->enorm) ? 'G' : 'E', qps_outer->rnorm,
-                          (qps_outer->rnorm < cctx->ttol_outer) ? '<' : '>', cctx->ttol_outer, gnorm, (gnorm < qps_inner->atol) ? '<' : '>', qps_inner->atol, (cctx->MNormBu < smalxe->eta) ? "M1||Bu||" : "eta", cctx->MNormBu));
+    PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps_outer), "  %4d %c  %.8e  %.8e  %c = %.8e %c %.8e  %.8e %c %.8e = %-8s  %.8e\n", i, stepType, (double)gnorm, (double)smalxe->enorm, (gnorm > smalxe->enorm) ? 'G' : 'E', (double)qps_outer->rnorm,
+                          (qps_outer->rnorm < cctx->ttol_outer) ? '<' : '>', (double)cctx->ttol_outer, (double)gnorm, (gnorm < qps_inner->atol) ? '<' : '>', (double)qps_inner->atol, (cctx->MNormBu < smalxe->eta) ? "M1||Bu||" : "eta", (double)cctx->MNormBu));
   } else if (smalxe->monitor_excel) {
     PetscReal rho, Lag;
     PetscCall(MatPenalizedGetPenalty(qp_inner->A, &rho));
     PetscCall(QPComputeObjective(qps_outer->solQP, qps_outer->solQP->x, &Lag));
-    PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps_outer), "%5d  %4d   %.4e   %.4e   %4d   %.4e   %.4e   %.8e\n", smalxe->inner_iter_accu + i, i, gnorm, smalxe->normBu, qps_outer->iteration, smalxe->M1, rho, Lag));
+    PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps_outer), "%5d  %4d   %.4e   %.4e   %4d   %.4e   %.4e   %.8e\n", smalxe->inner_iter_accu + i, i, (double)gnorm, (double)smalxe->normBu, qps_outer->iteration, (double)smalxe->M1, (double)rho, (double)Lag));
   }
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -655,7 +655,8 @@ PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner, KSPConvergedReason *reas
   }
 
   if (gnorm < qps_inner->atol) {
-    PetscCall(PetscInfo(qps_inner, "Inner QP solver has converged. Residual norm gnorm=%.8e is less than atol = min(M1*||Bu||),eta) = %s = %.8e at iteration %" PetscInt_FMT ".\n", gnorm, (cctx->MNormBu < smalxe->eta) ? "M1||Bu||" : "eta", qps_inner->atol, i));
+    PetscCall(PetscInfo(qps_inner, "Inner QP solver has converged. Residual norm gnorm=%.8e is less than atol = min(M1*||Bu||),eta) = %s = %.8e at iteration %" PetscInt_FMT ".\n", (double)gnorm, (cctx->MNormBu < smalxe->eta) ? "M1||Bu||" : "eta",
+                        (double)qps_inner->atol, i));
     *reason = KSP_CONVERGED_ATOL;
     if (cctx->MNormBu < smalxe->eta) {
       smalxe->M1_hits++;
@@ -669,13 +670,13 @@ PetscErrorCode QPSConverged_Inner_SMALXE(QPS qps_inner, KSPConvergedReason *reas
 
   if (gnorm <= cctx->gtol) {
     if (smalxe->inner->rnorm > smalxe->enorm) {
-      PetscCall(PetscInfo(qps_inner, "skipping gtol criterion because G = %.8e > %.8e = E\n", smalxe->inner->rnorm, smalxe->enorm));
+      PetscCall(PetscInfo(qps_inner, "skipping gtol criterion because G = %.8e > %.8e = E\n", (double)smalxe->inner->rnorm, (double)smalxe->enorm));
     } else {
       if (smalxe->inner_no_gtol_stop < 2) {
-        PetscCall(PetscInfo(qps_inner, "Inner QP solver has converged. Residual norm gnorm=%.8e is less than gtol = %.8e at iteration %" PetscInt_FMT "\n", gnorm, cctx->gtol, i));
+        PetscCall(PetscInfo(qps_inner, "Inner QP solver has converged. Residual norm gnorm=%.8e is less than gtol = %.8e at iteration %" PetscInt_FMT "\n", (double)gnorm, (double)cctx->gtol, i));
         *reason = KSP_CONVERGED_RTOL;
       } else {
-        PetscCall(PetscInfo(qps_inner, "Gradient tolerance has been reached. Residual norm gnorm=%.8e is less than gtol = %.8e at iteration %" PetscInt_FMT "\n", gnorm, cctx->gtol, i));
+        PetscCall(PetscInfo(qps_inner, "Gradient tolerance has been reached. Residual norm gnorm=%.8e is less than gtol = %.8e at iteration %" PetscInt_FMT "\n", (double)gnorm, (double)cctx->gtol, i));
       }
       if (smalxe->state != 3) {
         PetscCall(PetscInfo(qps_inner, "changing rho_update_type to 3\n"));
@@ -820,10 +821,10 @@ PetscErrorCode QPSSetUp_SMALXE(QPS qps)
     rho = smalxe->rho_user;
   }
 
-  PetscCall(PetscInfo(qps, "   eta=%.8e eta_user=%.8e eta_type=%c\n", smalxe->eta, smalxe->eta_user, smalxe->eta_type == QPS_ARG_DIRECT ? 'D' : 'M'));
-  PetscCall(PetscInfo(qps, "maxeig=%.8e\n", smalxe->maxeig));
-  PetscCall(PetscInfo(qps, "    M1=%.8e  M1_user=%.8e  M1_type=%c\n", smalxe->M1_initial, smalxe->M1_user, smalxe->M1_type == QPS_ARG_DIRECT ? 'D' : 'M'));
-  PetscCall(PetscInfo(qps, "   rho=%.8e rho_user=%.8e rho_type=%c\n", rho, smalxe->rho_user, smalxe->rho_type == QPS_ARG_DIRECT ? 'D' : 'M'));
+  PetscCall(PetscInfo(qps, "   eta=%.8e eta_user=%.8e eta_type=%c\n", (double)smalxe->eta, (double)smalxe->eta_user, smalxe->eta_type == QPS_ARG_DIRECT ? 'D' : 'M'));
+  PetscCall(PetscInfo(qps, "maxeig=%.8e\n", (double)smalxe->maxeig));
+  PetscCall(PetscInfo(qps, "    M1=%.8e  M1_user=%.8e  M1_type=%c\n", (double)smalxe->M1_initial, (double)smalxe->M1_user, smalxe->M1_type == QPS_ARG_DIRECT ? 'D' : 'M'));
+  PetscCall(PetscInfo(qps, "   rho=%.8e rho_user=%.8e rho_type=%c\n", (double)rho, (double)smalxe->rho_user, smalxe->rho_type == QPS_ARG_DIRECT ? 'D' : 'M'));
 
   /* explicitly setup projector factory, e.g. to set its inner G_has_orthonormal_rows flag */
   PetscCall(QPPFSetUp(qp->pf));
@@ -859,7 +860,7 @@ PetscErrorCode QPSSetUp_SMALXE(QPS qps)
   /* if the inner solver is MPGP, it inherits maximum operator eigenvalue maxeig_inner */
   maxeig_inner = PetscMax(rho, smalxe->maxeig);
   if (!smalxe->inject_maxeig_set) { PetscCall(QPPFGetGHasOrthonormalRows(qp->pf, &smalxe->inject_maxeig)); }
-  PetscCall(PetscInfo(qps, "maximum operator eigenvalue estimate %.8e is %sinjected to the inner solver\n", maxeig_inner, smalxe->inject_maxeig ? "" : "NOT "));
+  PetscCall(PetscInfo(qps, "maximum operator eigenvalue estimate %.8e is %sinjected to the inner solver\n", (double)maxeig_inner, smalxe->inject_maxeig ? "" : "NOT "));
   if (smalxe->inject_maxeig) PetscCall(QPSMPGPSetOperatorMaxEigenvalue(smalxe->inner, maxeig_inner));
 
   PetscCall(QPSSetAutoPostSolve(smalxe->inner, PETSC_FALSE));

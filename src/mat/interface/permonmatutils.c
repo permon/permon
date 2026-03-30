@@ -53,7 +53,7 @@ PetscErrorCode MatPrintInfo(Mat mat)
     fill     = ((PetscReal)sumnnz) / M / N;
     PetscCall(MatGetInfo(mat, MAT_GLOBAL_MAX, &info));
     maxnnz = (PetscInt)info.nz_used;
-    PetscCall(PetscPrintf(comm, "  [sum(nnz) sum(alloc) max(nnz) fill]=[%" PetscInt_FMT " %" PetscInt_FMT " %" PetscInt_FMT " %.2f]", sumnnz, sumalloc, maxnnz, fill));
+    PetscCall(PetscPrintf(comm, "  [sum(nnz) sum(alloc) max(nnz) fill]=[%" PetscInt_FMT " %" PetscInt_FMT " %" PetscInt_FMT " %.2g]", sumnnz, sumalloc, maxnnz, (double)fill));
   }
 
   PetscCall(PetscPrintf(comm, "\n"));
@@ -462,7 +462,7 @@ PetscErrorCode MatGetMaxEigenvalue(Mat A, Vec v, PetscScalar *lambda_out, PetscR
   if (lambda_out && !v) {
     PetscCall(PetscObjectComposedDataGetScalar((PetscObject)A, MatGetMaxEigenvalue_composed_id, lambda, flg));
     if (flg) {
-      PetscCall(PetscInfo(permon, "returning stashed estimate ||A|| = %.12e\n", lambda));
+      PetscCall(PetscInfo(permon, "returning stashed estimate ||A|| = %.12e\n", (double)lambda));
       *lambda_out = lambda;
       PetscFunctionReturnI(PETSC_SUCCESS);
     }
@@ -510,7 +510,7 @@ PetscErrorCode MatGetMaxEigenvalue(Mat A, Vec v, PetscScalar *lambda_out, PetscR
     PetscCall(VecScale(v, 1.0 / PetscSqrtReal(vAv_vv[1])));
   }
 
-  PetscCall(PetscInfo(permon, "%s  lambda = %.12e  [err relerr reltol] = [%.12e %.12e %.12e]  actual/max iterations = %" PetscInt_FMT "/%" PetscInt_FMT "\n", (i <= maxits) ? "CONVERGED" : "NOT CONVERGED", lambda, err, relerr, tol, i, maxits));
+  PetscCall(PetscInfo(permon, "%s  lambda = %.12e  [err relerr reltol] = [%.12e %.12e %.12e]  actual/max iterations = %" PetscInt_FMT "/%" PetscInt_FMT "\n", (i <= maxits) ? "CONVERGED" : "NOT CONVERGED", (double)lambda, (double)err, (double)relerr, (double)tol, i, maxits));
 
   if (lambda_out) *lambda_out = lambda;
 
@@ -1195,8 +1195,8 @@ PetscErrorCode MatCheckNullSpace(Mat K, Mat R, PetscReal tol)
   PetscCall(MatMult(R, x, d));
   PetscCall(MatMult(K, d, y));
   PetscCall(VecNorm(y, NORM_2, &normy));
-  PetscCall(PetscInfo(permon, "||K*R*x|| = %.3e   ||diag(K)|| = %.3e    ||K*R*x|| / ||diag(K)|| = %.3e\n", normy, normd, normy / normd));
-  PERMON_ASSERT(normy / normd < tol, "||K*R*x|| / ||diag(K)|| < %.1e", tol);
+  PetscCall(PetscInfo(permon, "||K*R*x|| = %.3e   ||diag(K)|| = %.3e    ||K*R*x|| / ||diag(K)|| = %.3e\n", (double)normy, (double)normd, (double)normy / (double)normd));
+  PERMON_ASSERT(normy / normd < tol, "||K*R*x|| / ||diag(K)|| < %.1e", (double)tol);
   PetscCall(VecDestroy(&d));
   PetscCall(VecDestroy(&x));
   PetscCall(VecDestroy(&y));
