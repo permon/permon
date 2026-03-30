@@ -90,7 +90,7 @@ PetscErrorCode VecPrintInfo(Vec vec)
   PetscCall(VecGetLocalSize(vec, &m));
   PetscCall(VecGetType(vec, &type));
   PetscCall(PetscObjectGetName((PetscObject)vec, &name));
-  PetscCall(PetscPrintf(comm, "Vec %p %-16s %-10s size(m,  M  )=[%6d %10d]\n", (void *)vec, name, type, m, M));
+  PetscCall(PetscPrintf(comm, "Vec %p %-16s %-10s size(m,  M  )=[%6" PetscInt_FMT " %10" PetscInt_FMT "]\n", (void *)vec, name, type, m, M));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 

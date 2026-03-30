@@ -357,9 +357,10 @@ static PetscErrorCode QPSSMALXEUpdateNormBu_Lag_SMALXEON(QPS qps, Vec u, PetscRe
     } else {
       sign = '=';
     }
-    PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps), __FUNCT__ ": out %3d in %4d   II=%2d J=%2d niter=%4d neval=%4d   ||Bu||=%.4e  %c  %.4e=~||Bu|| relative_difference=%.4e %c\n", qps->iteration, qps_inner->iteration, II, J, niter, neval, (double)normBu_exact, sign, (double)normBu_approx, (double)rdiff, rdiff > 10 ? sign : ' '));
+    PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps), __FUNCT__ ": out %3" PetscInt_FMT " in %4" PetscInt_FMT "   II=%2" PetscInt_FMT " J=%2" PetscInt_FMT " niter=%4" PetscInt_FMT " neval=%4" PetscInt_FMT "   ||Bu||=%.4e  %c  %.4e=~||Bu|| relative_difference=%.4e %c\n",
+                          qps->iteration, qps_inner->iteration, II, J, niter, neval, (double)normBu_exact, sign, (double)normBu_approx, (double)rdiff, rdiff > 10 ? sign : ' '));
   } else if (lag_monitor) {
-    PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps), __FUNCT__ ": out %3d in %4d   II=%2d J=%2d niter=%4d neval=%4d\n", qps->iteration, qps_inner->iteration, II, J, niter, neval));
+    PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps), __FUNCT__ ": out %3" PetscInt_FMT " in %4" PetscInt_FMT "   II=%2" PetscInt_FMT " J=%2" PetscInt_FMT " niter=%4" PetscInt_FMT " neval=%4" PetscInt_FMT "\n", qps->iteration, qps_inner->iteration, II, J, niter, neval));
   }
 
   *normBu = normBu_approx;
@@ -455,7 +456,7 @@ PetscErrorCode QPSSMALXEUpdate_SMALXE(QPS qps, PetscReal Lag_old, PetscReal Lag,
     QPSConvergedCtx_Inner_SMALXE *cctx      = (QPSConvergedCtx_Inner_SMALXE *)qps_inner->cnvctx;
 
     PetscCall(PetscObjectGetComm((PetscObject)qps, &comm));
-    PetscCall(PetscPrintf(comm, "END   outer %3d:  Lagrangian L       L-L_old      L-(L_old+1/2*rho*||Bu||^2) %c threshold    1/2*rho*||Bu||^2\n", qps->iteration, flag ? '<' : '>'));
+    PetscCall(PetscPrintf(comm, "END   outer %3" PetscInt_FMT ":  Lagrangian L       L-L_old      L-(L_old+1/2*rho*||Bu||^2) %c threshold    1/2*rho*||Bu||^2\n", qps->iteration, flag ? '<' : '>'));
     PetscCall(PetscPrintf(comm, "                  %+.10e  %+.3e                   %+.3e %c %+.3e   %.3e\n", (double)Lag, (double)Lag - (double)Lag_old, (double)t2, flag ? '<' : '>', (double)smalxe->update_threshold, (double)t));
     PetscCall(PetscPrintf(comm, "          max(G,E) = %c %c ttol_outer      |               G %c min(M1||Bx||,eta) = %-8s  |               G %c gtol\n", (gnorm > smalxe->enorm) ? 'G' : 'E', (qps->rnorm < cctx->ttol_outer) ? '<' : '>',
                           (gnorm < qps_inner->atol) ? '<' : '>', (cctx->MNormBu < smalxe->eta) ? "M1||Bu||" : "eta", (gnorm < cctx->gtol) ? '<' : '>'));
@@ -566,7 +567,7 @@ static inline PetscErrorCode QPSConverged_Inner_SMALXE_Monitor_Outer(QPS qps_inn
   if (i) PetscFunctionReturn(PETSC_SUCCESS);
   if (smalxe->monitor_outer) {
     PetscCall(MatPenalizedGetPenalty(qp_inner->A, &rho));
-    PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps_outer), "BEGIN outer %3d:   M1         rho        eta             gtol            rtol_E\n", qps_outer->iteration));
+    PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps_outer), "BEGIN outer %3" PetscInt_FMT ":   M1         rho        eta             gtol            rtol_E\n", qps_outer->iteration));
     PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps_outer), "                   %.3e  %.3e  %.8e  %.8e  %.3e\n", (double)smalxe->M1, (double)rho, (double)smalxe->eta, (double)cctx->gtol, (double)smalxe->rtol_E));
   }
   if (header) {
@@ -590,13 +591,15 @@ static inline PetscErrorCode QPSConverged_Inner_SMALXE_Monitor_Inner(QPS qps_inn
   PetscFunctionBegin;
   PetscCall(QPSMPGPGetCurrentStepType(qps_inner, &stepType));
   if (smalxe->monitor) {
-    PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps_outer), "  %4d %c  %.8e  %.8e  %c = %.8e %c %.8e  %.8e %c %.8e = %-8s  %.8e\n", i, stepType, (double)gnorm, (double)smalxe->enorm, (gnorm > smalxe->enorm) ? 'G' : 'E', (double)qps_outer->rnorm,
-                          (qps_outer->rnorm < cctx->ttol_outer) ? '<' : '>', (double)cctx->ttol_outer, (double)gnorm, (gnorm < qps_inner->atol) ? '<' : '>', (double)qps_inner->atol, (cctx->MNormBu < smalxe->eta) ? "M1||Bu||" : "eta", (double)cctx->MNormBu));
+    PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps_outer), "  %4" PetscInt_FMT " %c  %.8e  %.8e  %c = %.8e %c %.8e  %.8e %c %.8e = %-8s  %.8e\n", i, stepType, (double)gnorm, (double)smalxe->enorm, (gnorm > smalxe->enorm) ? 'G' : 'E',
+                          (double)qps_outer->rnorm, (qps_outer->rnorm < cctx->ttol_outer) ? '<' : '>', (double)cctx->ttol_outer, (double)gnorm, (gnorm < qps_inner->atol) ? '<' : '>', (double)qps_inner->atol, (cctx->MNormBu < smalxe->eta) ? "M1||Bu||" : "eta",
+                          (double)cctx->MNormBu));
   } else if (smalxe->monitor_excel) {
     PetscReal rho, Lag;
     PetscCall(MatPenalizedGetPenalty(qp_inner->A, &rho));
     PetscCall(QPComputeObjective(qps_outer->solQP, qps_outer->solQP->x, &Lag));
-    PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps_outer), "%5d  %4d   %.4e   %.4e   %4d   %.4e   %.4e   %.8e\n", smalxe->inner_iter_accu + i, i, (double)gnorm, (double)smalxe->normBu, qps_outer->iteration, (double)smalxe->M1, (double)rho, (double)Lag));
+    PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps_outer), "%5" PetscInt_FMT "  %4" PetscInt_FMT "   %.4e   %.4e   %4" PetscInt_FMT "   %.4e   %.4e   %.8e\n", smalxe->inner_iter_accu + i, i, (double)gnorm, (double)smalxe->normBu, qps_outer->iteration,
+                          (double)smalxe->M1, (double)rho, (double)Lag));
   }
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1004,8 +1007,8 @@ PetscErrorCode QPSViewConvergence_SMALXE(QPS qps, PetscViewer v)
   PetscCall(PetscObjectTypeCompare((PetscObject)v, PETSCVIEWERASCII, &iascii));
   if (iascii) {
     PetscCall(PetscViewerASCIIPrintf(v, "Total number of inner iterations %" PetscInt_FMT "\n", smalxe->inner_iter_accu));
-    PetscCall(PetscViewerASCIIPrintf(v, "#hits    of M1, eta: %3d, %3d\n", smalxe->M1_hits, smalxe->eta_hits));
-    PetscCall(PetscViewerASCIIPrintf(v, "#updates of M1, rho: %3d, %3d\n", smalxe->M1_updates, smalxe->rho_updates));
+    PetscCall(PetscViewerASCIIPrintf(v, "#hits    of M1, eta: %3" PetscInt_FMT ", %3" PetscInt_FMT "\n", smalxe->M1_hits, smalxe->eta_hits));
+    PetscCall(PetscViewerASCIIPrintf(v, "#updates of M1, rho: %3" PetscInt_FMT ", %3" PetscInt_FMT "\n", smalxe->M1_updates, smalxe->rho_updates));
 
     PetscCall(QPSGetType(smalxe->inner, &qpstype));
     PetscCall(PetscViewerASCIIPrintf(v, "inner "));

@@ -691,7 +691,7 @@ PetscErrorCode QPSConvergedDefault(QPS qps, KSPConvergedReason *reason)
     PetscFunctionReturn(PETSC_SUCCESS);
   }
 
-  if (i != -1) PetscCall(PermonDebug2("iteration %5d  rnorm %.10e \n", i, (double)rnorm));
+  if (i != -1) PetscCall(PermonDebug2("iteration %5" PetscInt_FMT "  rnorm %.10e \n", i, (double)rnorm));
 
   if (PetscIsInfOrNanScalar(rnorm)) {
     PetscCall(PetscInfo(qps, "QP solver has created a not a number (NaN) as the residual norm, declaring divergence \n"));
