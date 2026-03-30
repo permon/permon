@@ -41,7 +41,7 @@ PetscErrorCode MatPrintInfo(Mat mat)
   PetscCall(PetscObjectGetName((PetscObject)mat, &name));
   PetscCall(PetscObjectGetOptionsPrefix((PetscObject)mat, &prefix));
 
-  PetscCall(PetscPrintf(comm, "Mat %p %-16s %-10s %-10s sizes %d %d %d %d", (void *)mat, name, prefix, type, m, n, M, N));
+  PetscCall(PetscPrintf(comm, "Mat %p %-16s %-10s %-10s sizes %" PetscInt_FMT " %" PetscInt_FMT " %" PetscInt_FMT " %" PetscInt_FMT "", (void *)mat, name, prefix, type, m, n, M, N));
 
   if (mat->ops->getinfo) {
     MatInfo  info;
@@ -53,7 +53,7 @@ PetscErrorCode MatPrintInfo(Mat mat)
     fill     = ((PetscReal)sumnnz) / M / N;
     PetscCall(MatGetInfo(mat, MAT_GLOBAL_MAX, &info));
     maxnnz = (PetscInt)info.nz_used;
-    PetscCall(PetscPrintf(comm, "  [sum(nnz) sum(alloc) max(nnz) fill]=[%d %d %d %.2f]", sumnnz, sumalloc, maxnnz, fill));
+    PetscCall(PetscPrintf(comm, "  [sum(nnz) sum(alloc) max(nnz) fill]=[%" PetscInt_FMT " %" PetscInt_FMT " %" PetscInt_FMT " %.2g]", sumnnz, sumalloc, maxnnz, (double)fill));
   }
 
   PetscCall(PetscPrintf(comm, "\n"));
@@ -91,7 +91,7 @@ PetscErrorCode MatPrintInfo(Mat mat)
         PetscCall(MatNestGetSubMat(mat, i, j, &inmat));
         PetscCall(PetscObjectGetTabLevel((PetscObject)inmat, &tablevel));
         PetscCall(PetscObjectIncrementTabLevel((PetscObject)inmat, (PetscObject)mat, 1));
-        PetscCall(PetscPrintf(comm, "  nested Mat (%d,%d):\n", i, j));
+        PetscCall(PetscPrintf(comm, "  nested Mat (%" PetscInt_FMT ",%" PetscInt_FMT "):\n", i, j));
         PetscCall(MatPrintInfo(inmat));
         PetscCall(PetscObjectSetTabLevel((PetscObject)inmat, tablevel));
       }
@@ -462,7 +462,7 @@ PetscErrorCode MatGetMaxEigenvalue(Mat A, Vec v, PetscScalar *lambda_out, PetscR
   if (lambda_out && !v) {
     PetscCall(PetscObjectComposedDataGetScalar((PetscObject)A, MatGetMaxEigenvalue_composed_id, lambda, flg));
     if (flg) {
-      PetscCall(PetscInfo(permon, "returning stashed estimate ||A|| = %.12e\n", lambda));
+      PetscCall(PetscInfo(permon, "returning stashed estimate ||A|| = %.12e\n", (double)lambda));
       *lambda_out = lambda;
       PetscFunctionReturnI(PETSC_SUCCESS);
     }
@@ -491,7 +491,7 @@ PetscErrorCode MatGetMaxEigenvalue(Mat A, Vec v, PetscScalar *lambda_out, PetscR
     PetscCall(VecMDot(v, 2, y_v, vAv_vv));
     lambda = vAv_vv[0] / vAv_vv[1];
     if (lambda < PETSC_MACHINE_EPSILON) {
-      PetscCall(PetscInfo(permon, "hit nullspace of A and setting A*v to random vector in iteration %d\n", i));
+      PetscCall(PetscInfo(permon, "hit nullspace of A and setting A*v to random vector in iteration %" PetscInt_FMT "\n", i));
 
       if (!rand) {
         PetscCall(PetscRandomCreate(PetscObjectComm((PetscObject)A), &rand));
@@ -510,7 +510,7 @@ PetscErrorCode MatGetMaxEigenvalue(Mat A, Vec v, PetscScalar *lambda_out, PetscR
     PetscCall(VecScale(v, 1.0 / PetscSqrtReal(vAv_vv[1])));
   }
 
-  PetscCall(PetscInfo(permon, "%s  lambda = %.12e  [err relerr reltol] = [%.12e %.12e %.12e]  actual/max iterations = %d/%d\n", (i <= maxits) ? "CONVERGED" : "NOT CONVERGED", lambda, err, relerr, tol, i, maxits));
+  PetscCall(PetscInfo(permon, "%s  lambda = %.12e  [err relerr reltol] = [%.12e %.12e %.12e]  actual/max iterations = %" PetscInt_FMT "/%" PetscInt_FMT "\n", (i <= maxits) ? "CONVERGED" : "NOT CONVERGED", (double)lambda, (double)err, (double)relerr, (double)tol, i, maxits));
 
   if (lambda_out) *lambda_out = lambda;
 
@@ -1195,8 +1195,8 @@ PetscErrorCode MatCheckNullSpace(Mat K, Mat R, PetscReal tol)
   PetscCall(MatMult(R, x, d));
   PetscCall(MatMult(K, d, y));
   PetscCall(VecNorm(y, NORM_2, &normy));
-  PetscCall(PetscInfo(permon, "||K*R*x|| = %.3e   ||diag(K)|| = %.3e    ||K*R*x|| / ||diag(K)|| = %.3e\n", normy, normd, normy / normd));
-  PERMON_ASSERT(normy / normd < tol, "||K*R*x|| / ||diag(K)|| < %.1e", tol);
+  PetscCall(PetscInfo(permon, "||K*R*x|| = %.3e   ||diag(K)|| = %.3e    ||K*R*x|| / ||diag(K)|| = %.3e\n", (double)normy, (double)normd, (double)normy / (double)normd));
+  PERMON_ASSERT(normy / normd < tol, "||K*R*x|| / ||diag(K)|| < %.1e", (double)tol);
   PetscCall(VecDestroy(&d));
   PetscCall(VecDestroy(&x));
   PetscCall(VecDestroy(&y));

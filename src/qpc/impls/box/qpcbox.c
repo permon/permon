@@ -334,7 +334,8 @@ PetscErrorCode QPCViewKKT_Box(QPC qpc, Vec x, PetscReal normb, PetscViewer v)
 {
   QPC_Box    *ctx = (QPC_Box *)qpc->data;
   Vec         lb, ub, llb, lub, r, o;
-  PetscScalar norm, dot;
+  PetscScalar dot;
+  PetscReal   norm;
 
   PetscFunctionBegin;
   lb  = ctx->lb;
@@ -350,13 +351,13 @@ PetscErrorCode QPCViewKKT_Box(QPC qpc, Vec x, PetscReal normb, PetscViewer v)
     PetscCall(VecWAXPY(r, -1.0, lb, x));  /* r = x - lb       */
     PetscCall(VecPointwiseMin(r, r, o));  /* r = min(r,o)     */
     PetscCall(VecNorm(r, NORM_2, &norm)); /* norm = norm(r)     */
-    PetscCall(PetscViewerASCIIPrintf(v, "r = ||min(x-lb,0)||      = %.2e    r/||b|| = %.2e\n", norm, norm / normb));
+    PetscCall(PetscViewerASCIIPrintf(v, "r = ||min(x-lb,0)||      = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
 
     /* lambda >= o  =>  examine min(lambda,o) */
     PetscCall(VecSet(o, 0.0)); /* o = zeros(size(r)) */
     PetscCall(VecPointwiseMin(r, llb, o));
     PetscCall(VecNorm(r, NORM_2, &norm)); /* norm = ||min(lambda,o)|| */
-    PetscCall(PetscViewerASCIIPrintf(v, "r = ||min(lambda_lb,0)|| = %.2e    r/||b|| = %.2e\n", norm, norm / normb));
+    PetscCall(PetscViewerASCIIPrintf(v, "r = ||min(lambda_lb,0)|| = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
 
     /* lambda'*(lb-x) = 0 */
     PetscCall(VecCopy(lb, r));
@@ -374,8 +375,8 @@ PetscErrorCode QPCViewKKT_Box(QPC qpc, Vec x, PetscReal normb, PetscViewer v)
       PetscCall(VecRestoreArrayRead(lb, &larr));
     }
     PetscCall(VecDot(llb, r, &dot));
-    dot = PetscAbs(dot);
-    PetscCall(PetscViewerASCIIPrintf(v, "r = |lambda_lb'*(lb-x)|  = %.2e    r/||b|| = %.2e\n", dot, dot / normb));
+    norm = PetscAbs(dot);
+    PetscCall(PetscViewerASCIIPrintf(v, "r = |lambda_lb'*(lb-x)|  = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
 
     PetscCall(VecDestroy(&o));
     PetscCall(VecDestroy(&r));
@@ -392,13 +393,13 @@ PetscErrorCode QPCViewKKT_Box(QPC qpc, Vec x, PetscReal normb, PetscViewer v)
     PetscCall(VecWAXPY(r, -1.0, ub, x));  /* r = x - ub       */
     PetscCall(VecPointwiseMax(r, r, o));  /* r = max(r,o)     */
     PetscCall(VecNorm(r, NORM_2, &norm)); /* norm = norm(r)     */
-    PetscCall(PetscViewerASCIIPrintf(v, "r = ||max(x-ub,0)||      = %.2e    r/||b|| = %.2e\n", norm, norm / normb));
+    PetscCall(PetscViewerASCIIPrintf(v, "r = ||max(x-ub,0)||      = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
 
     /* lambda >= o  =>  examine min(lambda,o) */
     PetscCall(VecSet(o, 0.0)); /* o = zeros(size(r)) */
     PetscCall(VecPointwiseMin(r, lub, o));
     PetscCall(VecNorm(r, NORM_2, &norm)); /* norm = ||min(lambda,o)|| */
-    PetscCall(PetscViewerASCIIPrintf(v, "r = ||min(lambda_ub,0)|| = %.2e    r/||b|| = %.2e\n", norm, norm / normb));
+    PetscCall(PetscViewerASCIIPrintf(v, "r = ||min(lambda_ub,0)|| = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
 
     /* lambda'*(x-ub) = 0 */
     PetscCall(VecCopy(ub, r));
@@ -416,8 +417,8 @@ PetscErrorCode QPCViewKKT_Box(QPC qpc, Vec x, PetscReal normb, PetscViewer v)
       PetscCall(VecRestoreArrayRead(ub, &uarr));
     }
     PetscCall(VecDot(lub, r, &dot));
-    dot = PetscAbs(dot);
-    PetscCall(PetscViewerASCIIPrintf(v, "r = |lambda_ub'*(x-ub)|  = %.2e    r/||b|| = %.2e\n", dot, dot / normb));
+    norm = PetscAbs(dot);
+    PetscCall(PetscViewerASCIIPrintf(v, "r = |lambda_ub'*(x-ub)|  = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / normb));
 
     PetscCall(VecDestroy(&o));
     PetscCall(VecDestroy(&r));

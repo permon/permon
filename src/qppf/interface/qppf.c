@@ -809,9 +809,9 @@ PetscErrorCode QPPFView(QPPF cp, PetscViewer viewer)
   PetscCall(PetscViewerASCIIPrintf(viewer, "G has orth. rows e.:%c\n", cp->G_has_orthonormal_rows_explicitly ? 'y' : 'n'));
   PetscCall(PetscViewerASCIIPrintf(viewer, "G has orth. rows i.:%c\n", cp->G_has_orthonormal_rows_implicitly ? 'y' : 'n'));
   PetscCall(PetscViewerASCIIPrintf(viewer, "explicit:           %c\n", cp->explicitInv ? 'y' : 'n'));
-  PetscCall(PetscViewerASCIIPrintf(viewer, "redundancy:         %d\n", cp->redundancy));
-  PetscCall(PetscViewerASCIIPrintf(viewer, "last conv. reason:  %d\n", cp->conv_GGtinvv));
-  PetscCall(PetscViewerASCIIPrintf(viewer, "cumulative #iter.:  %d\n", cp->it_GGtinvv));
+  PetscCall(PetscViewerASCIIPrintf(viewer, "redundancy:         %" PetscInt_FMT "\n", cp->redundancy));
+  PetscCall(PetscViewerASCIIPrintf(viewer, "last conv. reason:  %" PetscInt_FMT "\n", cp->conv_GGtinvv));
+  PetscCall(PetscViewerASCIIPrintf(viewer, "cumulative #iter.:  %" PetscInt_FMT "\n", cp->it_GGtinvv));
 
   PetscCall(PetscViewerPushFormat(viewer, PETSC_VIEWER_ASCII_INFO));
   if (cp->explicitInv) {

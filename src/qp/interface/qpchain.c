@@ -398,7 +398,7 @@ PetscErrorCode QPChainViewQPPF(QP qp, PetscViewer v)
     if (pf) {
       PetscCall(PetscViewerASCIIPrintf(v, "-------------------\n"));
       PetscCall(PetscObjectPrintClassNamePrefixType((PetscObject)qp, v));
-      PetscCall(PetscViewerASCIIPrintf(v, "  #%d in chain, derived by %s\n", qp->id, qp->transform_name));
+      PetscCall(PetscViewerASCIIPrintf(v, "  #%" PetscInt_FMT " in chain, derived by %s\n", qp->id, qp->transform_name));
       PetscCall(PetscViewerASCIIPushTab(v));
       PetscCall(QPPFView(pf, v));
       PetscCall(PetscViewerASCIIPopTab(v));

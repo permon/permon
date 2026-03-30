@@ -35,7 +35,7 @@ static PetscErrorCode QPTransformBegin_Private(PetscErrorCode (*transform)(QP), 
 
   *qp_inout  = qp;
   *child_new = child;
-  PetscCall(PetscInfo(qp, "QP %p (#%d) transformed by %s to QP %p (#%d)\n", (void *)qp, qp->id, trname, (void *)child, child->id));
+  PetscCall(PetscInfo(qp, "QP %p (#%" PetscInt_FMT ") transformed by %s to QP %p (#%" PetscInt_FMT ")\n", (void *)qp, qp->id, trname, (void *)child, child->id));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -293,7 +293,7 @@ PetscErrorCode QPTEnforceEqByProjector(QP qp)
     PetscReal norm1, norm2;
     PetscCall(VecNorm(qp->b, NORM_2, &norm1));
     PetscCall(VecNorm(newb, NORM_2, &norm2));
-    PetscCall(PermonDebug2("\n    ||b||\t= %.12e  b = b_bar\n    ||Pb||\t= %.12e\n", norm1, norm2));
+    PetscCall(PermonDebug2("\n    ||b||\t= %.12e  b = b_bar\n    ||Pb||\t= %.12e\n", (double)norm1, (double)norm2));
   }
   PetscCall(QPSetRhs(child, newb));
   PetscCall(VecDestroy(&newb));
@@ -376,7 +376,7 @@ PetscErrorCode QPTEnforceEqByPenalty(QP qp, PetscReal rho_user, PetscBool rho_di
   }
 
   PetscCheck(rho >= 0, PetscObjectComm((PetscObject)qp), PETSC_ERR_ARG_WRONG, "rho must be nonnegative");
-  PetscCall(PetscInfo(qp, "using penalty = real %.12e\n", rho));
+  PetscCall(PetscInfo(qp, "using penalty = real %.12e\n", (double)rho));
 
   PetscCall(PetscLogEventBegin(QPT_EnforceEqByPenalty, qp, 0, 0, 0));
   PetscCall(QPTransformBegin(QPTEnforceEqByPenalty, QPTEnforceEqByPenalty_PostSolve_Private, NULL, QP_DUPLICATE_DO_NOT_COPY, &qp, &child, &comm));
@@ -481,7 +481,7 @@ PetscErrorCode QPTHomogenizeEq(QP qp)
                            "    ||xtilde||\t= %.12e  xtilde = Beq'*inv(Beq*Beq')*ceq\n"
                            "    ||b||\t= %.12e  b = d\n"
                            "    ||b_bar||\t= %.12e  b_bar = b-A*xtilde\n",
-                           norm1, norm2, norm3, norm4));
+                           (double)norm1, (double)norm2, (double)norm3, (double)norm4));
   }
 
   PetscCall(QPSetQPPF(child, qp->pf));
@@ -682,7 +682,7 @@ static PetscErrorCode QPTDualizeViewBSpectra_Private(Mat B)
   PetscCall(MatCreateTranspose(B, &Bt));
   PetscCall(MatCreateNormal(Bt, &BBt));
   PetscCall(MatGetMaxEigenvalue(BBt, NULL, &norm, 1e-6, 10));
-  PetscCall(PetscPrintf(PetscObjectComm((PetscObject)B), "||%s * %s'|| = %.12e (10 power method iterations)\n", name, name, norm));
+  PetscCall(PetscPrintf(PetscObjectComm((PetscObject)B), "||%s * %s'|| = %.12e (10 power method iterations)\n", name, name, (double)norm));
   PetscCall(MatDestroy(&BBt));
   PetscCall(MatDestroy(&Bt));
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -773,7 +773,7 @@ static PetscErrorCode QPTDualizeView_Private(QP qp, QP child)
                            "    ||c||\t= %.12e\n"
                            "    ||d||\t= %.12e  d = B*Kplus*f-c \n"
                            "    ||e||\t= %.12e  e = R'*f \n",
-                           norm1, norm2, norm3, norm4));
+                           (double)norm1, (double)norm2, (double)norm3, (double)norm4));
   }
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1580,12 +1580,12 @@ PetscErrorCode QPTNormalizeObjective(QP qp)
   PetscCall(QPChainGetLast(qp, &qp));
   PetscCall(MatGetMaxEigenvalue(qp->A, NULL, &norm_A, PETSC_DECIDE, PETSC_DECIDE));
   PetscCall(VecNorm(qp->b, NORM_2, &norm_b));
-  PetscCall(PetscInfo(qp, "||A||=%.12e, scale A by 1/||A||=%.12e\n", norm_A, 1.0 / norm_A));
+  PetscCall(PetscInfo(qp, "||A||=%.12e, scale A by 1/||A||=%.12e\n", (double)norm_A, 1.0 / (double)norm_A));
   if (norm_b) {
-    PetscCall(PetscInfo(qp, "||b||=%.12e, scale b by 1/||b||=%.12e\n", norm_b, 1.0 / norm_b));
+    PetscCall(PetscInfo(qp, "||b||=%.12e, scale b by 1/||b||=%.12e\n", (double)norm_b, 1.0 / (double)norm_b));
   } else {
     norm_b = norm_A;
-    PetscCall(PetscInfo(qp, "||b||=0, scale b by 1/||A||=%.12e\n", 1.0 / norm_b));
+    PetscCall(PetscInfo(qp, "||b||=0, scale b by 1/||A||=%.12e\n", 1.0 / (double)norm_b));
   }
   PetscCall(QPTScaleObjectiveByScalar(qp, 1.0 / norm_A, 1.0 / norm_b));
   PetscFunctionReturnI(PETSC_SUCCESS);
@@ -1617,7 +1617,7 @@ PetscErrorCode QPTNormalizeHessian(QP qp)
   PetscValidHeaderSpecific(qp, QP_CLASSID, 1);
   PetscCall(QPChainGetLast(qp, &qp));
   PetscCall(MatGetMaxEigenvalue(qp->A, NULL, &norm_A, PETSC_DECIDE, PETSC_DECIDE));
-  PetscCall(PetscInfo(qp, "||A||=%.12e, scale A by 1/||A||=%.12e\n", norm_A, 1.0 / norm_A));
+  PetscCall(PetscInfo(qp, "||A||=%.12e, scale A by 1/||A||=%.12e\n", (double)norm_A, 1.0 / (double)norm_A));
   PetscCall(QPTScaleObjectiveByScalar(qp, 1.0 / norm_A, 1.0 / norm_A));
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
@@ -1720,9 +1720,9 @@ PetscErrorCode QPTScaleObjectiveByScalar(QP qp, PetscScalar scale_A, PetscScalar
 
   if (PermonDebugEnabled) {
     PetscCall(MatGetMaxEigenvalue(qp->A, NULL, &norm_A, 1e-5, 50));
-    PetscCall(PermonDebug1("||A||=%.12e\n", norm_A));
+    PetscCall(PermonDebug1("||A||=%.12e\n", (double)norm_A));
     PetscCall(VecNorm(qp->b, NORM_2, &norm_b));
-    PetscCall(PermonDebug1("||b||=%.12e\n", norm_b));
+    PetscCall(PermonDebug1("||b||=%.12e\n", (double)norm_b));
   }
 
   if (qp->A->ops->duplicate) {
@@ -1763,9 +1763,9 @@ PetscErrorCode QPTScaleObjectiveByScalar(QP qp, PetscScalar scale_A, PetscScalar
 
   if (PermonDebugEnabled) {
     PetscCall(MatGetMaxEigenvalue(child->A, NULL, &norm_A, 1e-5, 50));
-    PetscCall(PermonDebug1("||A_new||=%.12e\n", norm_A));
+    PetscCall(PermonDebug1("||A_new||=%.12e\n", (double)norm_A));
     PetscCall(VecNorm(child->b, NORM_2, &norm_b));
-    PetscCall(PermonDebug1("||b_new||=%.12e\n", norm_b));
+    PetscCall(PermonDebug1("||b_new||=%.12e\n", (double)norm_b));
   }
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
@@ -1974,7 +1974,7 @@ static PetscErrorCode QPTPostSolve_QPTMatISToBlockDiag(QP child, QP parent)
       PetscCall(VecNorm(parent->b, NORM_2, &normb));
     }
     PetscCall(VecNorm(resid, NORM_2, &norm));
-    PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Dirichlet in Hess: %d, r = ||Ax-b|| = %e, r/||b|| = %e\n", !ctx->isDir, norm, norm / normb));
+    PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Dirichlet in Hess: %d, r = ||Ax-b|| = %e, r/||b|| = %e\n", !ctx->isDir, (double)norm, (double)norm / (double)normb));
     PetscCall(VecDestroy(&resid));
   }
   PetscFunctionReturn(PETSC_SUCCESS);

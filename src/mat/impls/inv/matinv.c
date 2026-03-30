@@ -101,7 +101,7 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
     if (flg) {
       /* If MUMPS Cholesky is used, avoid doubled factorization. */
       char opts[128];
-      PetscCall(PetscSNPrintf(opts, sizeof(opts), "-%smat_mumps_icntl_24 1 -%smat_mumps_cntl_3 %e", ((PetscObject)pc)->prefix, ((PetscObject)pc)->prefix, null_pivot_threshold));
+      PetscCall(PetscSNPrintf(opts, sizeof(opts), "-%smat_mumps_icntl_24 1 -%smat_mumps_cntl_3 %e", ((PetscObject)pc)->prefix, ((PetscObject)pc)->prefix, (double)null_pivot_threshold));
       PetscCall(PetscOptionsInsertString(NULL, opts));
       PetscCall(PCSetFromOptions(pc));
       PetscCall(PCSetUp(pc));
@@ -679,7 +679,7 @@ static PetscErrorCode MatInvExplicitly_Inv(Mat imat, PetscBool transpose, MatReu
   PetscCall(PetscObjectGetComm((PetscObject)imat, &comm));
   PetscCall(MatGetSize(imat, &M, PETSC_IGNORE));
   PetscCall(MatGetLocalSize(imat, &m, &n));
-  PetscCheck(m == n, comm, PETSC_ERR_ARG_SIZ, "only for locally square matrices, m != n, %d != %d", m, n);
+  PetscCheck(m == n, comm, PETSC_ERR_ARG_SIZ, "only for locally square matrices, m != n, %" PetscInt_FMT " != %" PetscInt_FMT "", m, n);
   PetscCall(MatInvGetKSP(imat, &ksp)); //innerksp
   PetscCall(MatInvGetRedundancy(imat, &redundancy));
 
@@ -850,7 +850,7 @@ PetscErrorCode MatView_Inv(Mat imat, PetscViewer viewer)
   }
 
   if (format == PETSC_VIEWER_ASCII_INFO) {
-    PetscCall(PetscViewerASCIIPrintf(viewer, "redundancy:  %d\n", inv->redundancy));
+    PetscCall(PetscViewerASCIIPrintf(viewer, "redundancy:  %" PetscInt_FMT "\n", inv->redundancy));
     if (inv->redundancy) { /* inv->ksp is PCREDUNDANT */
       PetscCall(PetscViewerASCIIPrintf(viewer, "subcomm type:  %s\n", PetscSubcommTypes[inv->psubcommType]));
     }
