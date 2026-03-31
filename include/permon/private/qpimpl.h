@@ -65,7 +65,7 @@ typedef struct {
 } QPTNormalizeObjective_Ctx;
 
 typedef struct {
-  PetscReal scale_A, scale_b;
+  PetscScalar scale_A, scale_b;
 } QPTScaleObjectiveByScalar_Ctx;
 
 typedef struct {

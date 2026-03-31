@@ -31,14 +31,14 @@ PetscErrorCode MatRemoveGluingOfDirichletDofs_old(Mat Bgt, Vec cg, Mat Bdt, Mat 
     PetscCall(MatGetRow(Bdt, i, &ncolsd, &colsd, &valsd));
     k = 0;
     for (j = 0; j < ncolsd; j++) {
-      if (valsd[j]) k++;
+      if (valsd[j] != 0.) k++;
       PetscCheck(k <= 1, comm, PETSC_ERR_PLIB, "more than one nonzero in Bd row %" PetscInt_FMT "", i);
     }
     PetscCall(MatRestoreRow(Bdt, i, &ncolsd, &colsd, &valsd));
     if (k) {
       PetscCall(MatGetRow(Bgt, i, &ncolsg, &colsg, &valsg));
       for (j = 0; j < ncolsg; j++) {
-        if (valsg[j]) { remove[colsg[j]] = PETSC_TRUE; }
+        if (valsg[j] != 0.) { remove[colsg[j]] = PETSC_TRUE; }
       }
       PetscCall(MatRestoreRow(Bgt, i, &ncolsg, &colsg, &valsg));
     }

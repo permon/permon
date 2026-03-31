@@ -9,8 +9,8 @@ static PetscErrorCode MatRegularize_GetPivots_Private(Mat R, IS *pivots)
   PetscInt     p, npivots, maxdp;
   PetscInt    *idx_arr;
   PetscScalar *v1, *v2, *v1p, *v2p;
-  PetscScalar  vpivot, alpha, t;
-  PetscInt     i, j, II, J, ipivot, jpivot;
+  PetscScalar  vpivot, alpha;
+  PetscInt     i, j, II, J, ipivot, jpivot, t;
   PetscInt    *all, *perm;
   Mat          R_work, R_work1;
 

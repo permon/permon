@@ -1627,8 +1627,8 @@ PetscErrorCode QPTNormalizeHessian(QP qp)
 static PetscErrorCode QPTPostSolve_QPTScaleObjectiveByScalar(QP child, QP parent)
 {
   QPTScaleObjectiveByScalar_Ctx *psctx   = (QPTScaleObjectiveByScalar_Ctx *)child->postSolveCtx;
-  PetscReal                      scale_A = psctx->scale_A;
-  PetscReal                      scale_b = psctx->scale_b;
+  PetscScalar                    scale_A = psctx->scale_A;
+  PetscScalar                    scale_b = psctx->scale_b;
   Vec                            lb, ub;
   Vec                            llb, lub;
   Vec                            llbnew, lubnew;
@@ -1710,8 +1710,8 @@ PetscErrorCode QPTScaleObjectiveByScalar(QP qp, PetscScalar scale_A, PetscScalar
 
   PetscFunctionBeginI;
   PetscValidHeaderSpecific(qp, QP_CLASSID, 1);
-  PetscCheck(PetscIsNormalScalar(scale_A), PetscObjectComm((PetscObject)qp), PETSC_ERR_ARG_OUTOFRANGE, "scale_A cannot be %g", (double)scale_A);
-  PetscCheck(PetscIsNormalScalar(scale_b), PetscObjectComm((PetscObject)qp), PETSC_ERR_ARG_OUTOFRANGE, "scale_b cannot be %g", (double)scale_b);
+  PetscCheck(PetscIsNormalScalar(scale_A), PetscObjectComm((PetscObject)qp), PETSC_ERR_ARG_OUTOFRANGE, "scale_A cannot be %g", (double)PetscRealPart(scale_A));
+  PetscCheck(PetscIsNormalScalar(scale_b), PetscObjectComm((PetscObject)qp), PETSC_ERR_ARG_OUTOFRANGE, "scale_b cannot be %g", (double)PetscRealPart(scale_b));
   PetscCall(QPTransformBegin(QPTScaleObjectiveByScalar, QPTPostSolve_QPTScaleObjectiveByScalar, QPTPostSolveDestroy_QPTScaleObjectiveByScalar, QP_DUPLICATE_COPY_POINTERS, &qp, &child, &comm));
   PetscCall(PetscNew(&ctx));
   ctx->scale_A        = scale_A;
@@ -1862,7 +1862,7 @@ PetscErrorCode QPTSplitBE(QP qp)
     PetscCall(MatGetRow(Be, i, &ncols, &cols, &vals));
     k = 0;
     for (j = 0; j < ncols; j++) {
-      if (vals[j]) k++;
+      if (vals[j] != 0.) k++;
     }
     if (k == 1) {
       idxd[nd] = i;

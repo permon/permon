@@ -319,7 +319,7 @@ PetscErrorCode QPViewKKT(QP qp, PetscViewer v)
         Vec t = qp->xwork;
         PetscCall(QPPFApplyGtG(qp->pf, x, t)); /* BEtBEx = BE'*BE*x */
         PetscCall(VecDot(x, t, &dot));         /* norm = x'*BE'*BE*x */
-        norm = PetscSqrtReal(dot);
+        norm = PetscRealPart(PetscSqrtScalar(dot));
         PetscCall(PetscViewerASCIIPrintf(v, "r = ||BE*x||             = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
       }
     }
@@ -353,11 +353,11 @@ PetscErrorCode QPViewKKT(QP qp, PetscViewer v)
 
     /* lambda'*(BI*x-cI) = 0 */
     PetscCall(VecDot(qp->lambda_I, r, &dot));
-    dot = PetscAbsScalar(dot);
+    norm = PetscRealPart(PetscAbsScalar(dot));
     if (cI) {
-      PetscCall(PetscViewerASCIIPrintf(v, "r = |lambda_I'*(BI*x-cI)|= %.2e    r/||b|| = %.2e\n", (double)dot, (double)dot / (double)normb));
+      PetscCall(PetscViewerASCIIPrintf(v, "r = |lambda_I'*(BI*x-cI)|= %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
     } else {
-      PetscCall(PetscViewerASCIIPrintf(v, "r = |lambda_I'*(BI*x)|= %.2e       r/||b|| = %.2e\n", (double)dot, (double)dot / (double)normb));
+      PetscCall(PetscViewerASCIIPrintf(v, "r = |lambda_I'*(BI*x)|= %.2e       r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
     }
 
     PetscCall(VecDestroy(&o));
@@ -922,7 +922,7 @@ PetscErrorCode QPComputeObjective(QP qp, Vec x, PetscReal *f)
   PetscCall(MatMult(qp->A, x, qp->xwork));
   PetscCall(VecAYPX(qp->xwork, -0.5, qp->b));
   PetscCall(VecDot(x, qp->xwork, &dot));
-  *f = -dot;
+  *f = -PetscRealPart(dot);
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -991,7 +991,7 @@ PetscErrorCode QPComputeObjectiveFromGradient(QP qp, Vec x, Vec g, PetscReal *f)
 
   PetscCall(VecWAXPY(qp->xwork, -1.0, qp->b, g));
   PetscCall(VecDot(x, qp->xwork, &dot));
-  *f = .5 * dot;
+  *f = .5 * PetscRealPart(dot);
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -1691,7 +1691,7 @@ PetscErrorCode QPGetEqMultiplicityScaling(QP qp, Vec *dE_new, Vec *dI_new)
       PetscCall(MatGetRow(Bgt, i, &ncols, &cols, &vals));
       k = 0;
       for (j = 0; j < ncols; j++) {
-        if (vals[j]) k++;
+        if (vals[j] != 0.) k++;
       }
       PetscCall(MatRestoreRow(Bgt, i, &ncols, &cols, &vals));
       if (k) {
@@ -1709,13 +1709,13 @@ PetscErrorCode QPGetEqMultiplicityScaling(QP qp, Vec *dE_new, Vec *dI_new)
       PetscCall(MatGetRow(Bdt, i, &ncols, &cols, &vals));
       k = 0;
       for (j = 0; j < ncols; j++) {
-        if (vals[j]) k++;
+        if (vals[j] != 0.) k++;
         PetscCheck(k <= 1, comm, PETSC_ERR_PLIB, "more than one nonzero in Bd row %" PetscInt_FMT "", i);
       }
       PetscCall(MatRestoreRow(Bdt, i, &ncols, &cols, &vals));
       if (k) {
         PetscCall(VecGetValues(dof_multiplicities, 1, &i, &multiplicity));
-        multiplicity++;
+        multiplicity += 1;
         PetscCall(VecSetValue(dof_multiplicities, i, multiplicity, INSERT_VALUES));
       }
     }
@@ -1729,13 +1729,13 @@ PetscErrorCode QPGetEqMultiplicityScaling(QP qp, Vec *dE_new, Vec *dI_new)
       PetscCall(MatGetRow(Bct, i, &ncols, &cols, &vals));
       k = 0;
       for (j = 0; j < ncols; j++) {
-        if (vals[j]) k++;
+        if (vals[j] != 0) k++;
       }
       PetscCall(MatRestoreRow(Bct, i, &ncols, &cols, &vals));
       if (k > 1) PetscCall(PetscPrintf(comm, "WARNING: more than one nonzero in Bc row %" PetscInt_FMT "\n", i));
       if (k) {
         PetscCall(VecGetValues(dof_multiplicities, 1, &i, &multiplicity));
-        multiplicity++;
+        multiplicity += 1;
         PetscCall(VecSetValue(dof_multiplicities, i, multiplicity, INSERT_VALUES));
       }
     }

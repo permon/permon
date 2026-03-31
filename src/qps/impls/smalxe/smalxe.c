@@ -278,9 +278,9 @@ static PetscErrorCode QPSSMALXEUpdateNormBu_SMALXEON(QPS qps, Vec u, PetscReal *
   PetscCall(QPSWorkVecStateUpdate(qps, 0));
   PetscCall(QPSSolutionVecStateUpdate(qps));
 
-  PetscCall(VecDot(u, BtBu, &dot));   /* normBu = u'*B'*B*u */
-  *normBu = PetscSqrtReal(dot);       /* normBu = sqrt(u'*B'*B*u) */
-  *enorm  = *normBu / smalxe->rtol_E; /* enorm = norm(Bu)/rtol_E */
+  PetscCall(VecDot(u, BtBu, &dot));            /* normBu = u'*B'*B*u */
+  *normBu = PetscRealPart(PetscSqrtReal(dot)); /* normBu = sqrt(u'*B'*B*u) */
+  *enorm  = *normBu / smalxe->rtol_E;          /* enorm = norm(Bu)/rtol_E */
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 

@@ -38,9 +38,10 @@ PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], cons
   PetscBool flg = PETSC_FALSE;
   char      pfile[PETSC_MAX_PATH_LEN];
 
+  PetscFunctionBegin;
   if (PermonInitializeCalled) {
     PetscCall(PetscInfo(0, "PERMON already initialized, skipping initialization.\n"));
-    return (0);
+    PetscFunctionReturn(PETSC_SUCCESS);
   }
 
   if (!PetscInitializeCalled) {
@@ -53,10 +54,7 @@ PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], cons
     PetscCall(PetscInfo(0, "PERMON successfully started PETSc.\n"));
   }
 
-  if (!PetscInitializeCalled) {
-    printf("Error initializing PETSc -- aborting.\n");
-    exit(1);
-  }
+  PetscCheck(PetscInitializeCalled, PETSC_COMM_SELF, PETSC_ERR_ARG_WRONGSTATE, "Error initializing PETSc -- aborting.");
 
   PetscCall(PetscClassIdRegister("PERMON", &PERMON_CLASSID));
   PetscCall(PermonCreate(PETSC_COMM_WORLD, &permon));
@@ -91,7 +89,7 @@ PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], cons
 
   PermonInitializeCalled = PETSC_TRUE;
   PetscCall(PetscInfo(permon, "PERMON successfully initialized.\n"));
-  return 0;
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
