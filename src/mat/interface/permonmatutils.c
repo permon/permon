@@ -17,7 +17,7 @@ PetscErrorCode MatFactored(Mat mat, PetscBool *flg)
 PetscErrorCode MatPrintInfo(Mat mat)
 {
   PetscInt    m, n, M, N, i, tablevel;
-  PetscScalar fill;
+  PetscReal   fill;
   const char *name, *type, *prefix;
   MPI_Comm    comm = PETSC_COMM_WORLD;
   PetscBool   flg;
@@ -460,7 +460,7 @@ PetscErrorCode MatGetMaxEigenvalue(Mat A, Vec v, PetscReal *lambda_out, PetscRea
     registered = PETSC_TRUE;
   }
   if (lambda_out && !v) {
-    PetscCall(PetscObjectComposedDataGetScalar((PetscObject)A, MatGetMaxEigenvalue_composed_id, lambda, flg));
+    PetscCall(PetscObjectComposedDataGetReal((PetscObject)A, MatGetMaxEigenvalue_composed_id, lambda, flg));
     if (flg) {
       PetscCall(PetscInfo(permon, "returning stashed estimate ||A|| = %.12e\n", (double)lambda));
       *lambda_out = lambda;

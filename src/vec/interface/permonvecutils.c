@@ -109,7 +109,7 @@ PetscErrorCode ISCreateFromVec(Vec vec, IS *is)
   PetscCall(PetscMalloc(n * sizeof(PetscInt), &ia));
 
   PetscCall(VecGetArray(vec, &a));
-  for (i = 0; i < n; i++) ia[i] = (PetscInt)a[i];
+  for (i = 0; i < n; i++) ia[i] = (PetscInt)PetscRealPart(a[i]);
   PetscCall(VecRestoreArray(vec, &a));
 
   PetscCall(ISCreateGeneral(PetscObjectComm((PetscObject)vec), n, ia, PETSC_OWN_POINTER, is));

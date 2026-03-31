@@ -37,37 +37,37 @@ PERMON_EXTERN PetscErrorCode _permon_ierr;
   if (PetscUnlikely(!(c))) SETERRQ(PETSC_COMM_SELF, PETSC_ERR_PLIB, __VA_ARGS__);
 
 #define PermonDebug(msg) \
-  0; \
+  PETSC_SUCCESS; \
   do { \
     if (PermonDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg)); \
   } while (0)
 #define PermonDebug1(msg, a1) \
-  0; \
+  PETSC_SUCCESS; \
   do { \
     if (PermonDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1)); \
   } while (0)
 #define PermonDebug2(msg, a1, a2) \
-  0; \
+  PETSC_SUCCESS; \
   do { \
     if (PermonDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1, a2)); \
   } while (0)
 #define PermonDebug3(msg, a1, a2, a3) \
-  0; \
+  PETSC_SUCCESS; \
   do { \
     if (PermonDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1, a2, a3)); \
   } while (0)
 #define PermonDebug4(msg, a1, a2, a3, a4) \
-  0; \
+  PETSC_SUCCESS; \
   do { \
     if (PermonDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1, a2, a3, a4)); \
   } while (0)
 #define PermonDebug5(msg, a1, a2, a3, a4, a5) \
-  0; \
+  PETSC_SUCCESS; \
   do { \
     if (PermonDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1, a2, a3, a4, a5)); \
   } while (0)
 #define PermonDebug6(msg, a1, a2, a3, a4, a5, a6) \
-  0; \
+  PETSC_SUCCESS; \
   do { \
     if (PermonDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1, a2, a3, a4, a5, a6)); \
   } while (0)

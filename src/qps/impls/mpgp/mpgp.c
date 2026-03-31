@@ -253,7 +253,7 @@ static PetscErrorCode MPGPExpansionLength(QPS qps)
     if (dots[1] == .0 && mpgp->resetalpha) { /* TODO dots[1] is tiny? */
       mpgp->alpha = mpgp->alpha / mpgp->maxeig;
     } else {
-      mpgp->alpha = mpgp->alpha_user * dots[0] / dots[1];
+      mpgp->alpha = mpgp->alpha_user * PetscRealPart(dots[0] / dots[1]);
     }
     break;
   case QPS_MPGP_EXPANSION_LENGTH_OPTAPPROX:
@@ -261,7 +261,7 @@ static PetscErrorCode MPGPExpansionLength(QPS qps)
     vecs[1] = mpgp->explengthvec;
     if (vecs[0] != vecs[1]) {
       PetscCall(VecMDot(mpgp->explengthvec, 2, vecs, dots));
-      mpgp->alpha = mpgp->alpha_user * dots[0] / dots[1];
+      mpgp->alpha = mpgp->alpha_user * PetscRealPart(dots[0] / dots[1]);
     } else {
       mpgp->alpha = mpgp->alpha_user;
     }
@@ -277,7 +277,7 @@ static PetscErrorCode MPGPExpansionLength(QPS qps)
     if (dots[1] == .0 && mpgp->resetalpha) { /* TODO dots[1] is tiny? can be skipped?*/
       mpgp->alpha = mpgp->alpha / mpgp->maxeig;
     } else {
-      mpgp->alpha = mpgp->alpha_user * dots[0] / dots[1];
+      mpgp->alpha = mpgp->alpha_user * PetscRealPart(dots[0] / dots[1]);
     }
     break;
   default:
@@ -522,8 +522,8 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
 
     /* compute norm of gf, gc from computed dot products */
     if (qps->numbermonitors) {
-      mpgp->gfnorm = PetscSqrtScalar(gfTgf);
-      mpgp->gcnorm = PetscSqrtScalar(gcTgc);
+      mpgp->gfnorm = PetscRealPart(PetscSqrtScalar(gfTgf));
+      mpgp->gcnorm = PetscRealPart(PetscSqrtScalar(gcTgc));
       PetscCall(QPSMonitor(qps, qps->iteration, qps->rnorm));
     }
 

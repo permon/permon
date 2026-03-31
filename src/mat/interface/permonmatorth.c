@@ -260,7 +260,7 @@ static PetscErrorCode MatOrthColumns_GS_Lingen(MPI_Comm comm, PetscInt N, Vec q[
     qk = q[k];
     o  = 0;
     PetscCall(VecMDot(qk, k + 1, q, p));
-    delta_last = PetscSqrtScalar(p[k]);
+    delta_last = PetscRealPart(PetscSqrtScalar(p[k]));
     while (1) {
       for (j = 0; j < k; j++) p[j] = -p[j];
       PetscCall(VecMAXPY(qk, k, p, q));

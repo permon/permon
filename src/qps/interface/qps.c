@@ -1137,7 +1137,7 @@ PetscErrorCode QPSMonitor(QPS qps, PetscInt it, PetscReal rnorm)
   PetscInt i, n = qps->numbermonitors;
 
   PetscFunctionBegin;
-  for (i = 0; i < n; i++) { (*qps->monitor[i])(qps, it, rnorm, qps->monitorcontext[i]); }
+  for (i = 0; i < n; i++) PetscCall((*qps->monitor[i])(qps, it, rnorm, qps->monitorcontext[i]));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -1228,7 +1228,7 @@ PetscErrorCode QPSMonitorCancel(QPS qps)
 
   PetscFunctionBegin;
   for (i = 0; i < qps->numbermonitors; i++) {
-    if (qps->monitordestroy[i]) { (*qps->monitordestroy[i])(&qps->monitorcontext[i]); }
+    if (qps->monitordestroy[i]) PetscCall((*qps->monitordestroy[i])(&qps->monitorcontext[i]));
   }
   qps->numbermonitors = 0;
   PetscFunctionReturn(PETSC_SUCCESS);
