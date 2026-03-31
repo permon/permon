@@ -183,6 +183,7 @@ int main(int argc, char **args)
       suffix: projcg
       args: -qps_mpgp_expansion_type projcg
   testset:
+    requires: !complex
     suffix: gpcg
     nsize: {{1 3}}
     filter: grep -e CONVERGED -e Total -e Objective -e "r ="
