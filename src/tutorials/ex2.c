@@ -30,14 +30,14 @@ PetscReal fobst(PetscInt i, PetscInt n)
 
 int main(int argc, char **args)
 {
-  Vec       b, c, x;
-  Mat       A;
-  QP        qp;
-  QPS       qps;
-  IS        is = NULL;
-  PetscInt  i, n = 10, col[3], isn, rstart, rend;
-  PetscReal h, value[3];
-  PetscBool converged, infinite = PETSC_FALSE;
+  Vec         b, c, x;
+  Mat         A;
+  QP          qp;
+  QPS         qps;
+  IS          is = NULL;
+  PetscInt    i, n = 10, col[3], isn, rstart, rend;
+  PetscScalar h, value[3];
+  PetscBool   converged, infinite = PETSC_FALSE;
 
   PetscCall(PermonInitialize(&argc, &args, (char *)0, help));
   PetscCall(PetscOptionsGetInt(NULL, NULL, "-n", &n, NULL));

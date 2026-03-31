@@ -439,15 +439,15 @@ PetscErrorCode MatMatIsZero(Mat A, Mat B, PetscReal tol, PetscInt ntrials, Petsc
 
    Level: intermediate
 @*/
-PetscErrorCode MatGetMaxEigenvalue(Mat A, Vec v, PetscScalar *lambda_out, PetscReal tol, PetscInt maxits)
+PetscErrorCode MatGetMaxEigenvalue(Mat A, Vec v, PetscReal *lambda_out, PetscReal tol, PetscInt maxits)
 {
   static PetscBool registered = PETSC_FALSE;
   Vec              Av;
   PetscInt         i;
-  PetscScalar      lambda, lambda0;
+  PetscReal        lambda, lambda0;
   PetscReal        err, relerr;
   Vec              y_v[2];
-  PetscReal        vAv_vv[2];
+  PetscScalar      vAv_vv[2];
   PetscBool        destroy_v = PETSC_FALSE;
   PetscBool        flg;
   PetscRandom      rand = NULL;
@@ -489,7 +489,7 @@ PetscErrorCode MatGetMaxEigenvalue(Mat A, Vec v, PetscScalar *lambda_out, PetscR
     //PetscCall(VecDot(v, y, &vAv));
     //PetscCall(VecDot(v, v, &vv));
     PetscCall(VecMDot(v, 2, y_v, vAv_vv));
-    lambda = vAv_vv[0] / vAv_vv[1];
+    lambda = PetscRealPart(vAv_vv[0] / vAv_vv[1]);
     if (lambda < PETSC_MACHINE_EPSILON) {
       PetscCall(PetscInfo(permon, "hit nullspace of A and setting A*v to random vector in iteration %" PetscInt_FMT "\n", i));
 
@@ -501,8 +501,8 @@ PetscErrorCode MatGetMaxEigenvalue(Mat A, Vec v, PetscScalar *lambda_out, PetscR
       PetscCall(VecDot(v, Av, &vAv_vv[0]));
     }
 
-    err    = PetscAbsScalar(lambda - lambda0);
-    relerr = err / PetscAbsScalar(lambda);
+    err    = PetscAbs(lambda - lambda0);
+    relerr = err / PetscAbs(lambda);
     if (relerr < tol) break;
 
     /* v = A*v/||A*v||  replaced by v = A*v/||v|| */
@@ -547,7 +547,7 @@ static PetscErrorCode MatFilterZeros_Default(Mat A, PetscReal tol, Mat *newAf)
     d_nnz[i] = 0;
     o_nnz[i] = 0;
     for (j = 0; j < ncols; j++) {
-      if (PetscAbs(vals[j]) > tol) {
+      if (PetscAbsScalar(vals[j]) > tol) {
         if (cols[j] >= jlo && cols[j] < jhi) d_nnz[i]++;
         else o_nnz[i]++;
       }
@@ -570,7 +570,7 @@ static PetscErrorCode MatFilterZeros_Default(Mat A, PetscReal tol, Mat *newAf)
     PetscCall(MatGetRow(A, i, &ncols, &cols, &vals));
     jf = 0;
     for (j = 0; j < ncols; j++) {
-      if (PetscAbs(vals[j]) > tol) {
+      if (PetscAbsScalar(vals[j]) > tol) {
         valsf[jf] = vals[j];
         colsf[jf] = cols[j];
         jf++;

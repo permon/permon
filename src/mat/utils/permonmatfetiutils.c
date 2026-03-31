@@ -112,14 +112,14 @@ PetscErrorCode MatRemoveGluingOfDirichletDofs(Mat Bgt, Vec cg, Mat Bdt, Mat *Bgt
       PetscCall(MatGetRow(Bdt, i, &ncolsd, &colsd, &valsd));
       k = 0;
       for (jj = 0; jj < ncolsd; jj++) {
-        if (valsd[jj] > PETSC_MACHINE_EPSILON) k++;
+        if (PetscRealPart(valsd[jj]) > PETSC_MACHINE_EPSILON) k++;
         PetscCheck(k <= 1, comm, PETSC_ERR_PLIB, "more than one nonzero in Bd row %" PetscInt_FMT "", i);
       }
       PetscCall(MatRestoreRow(Bdt, i, &ncolsd, &colsd, &valsd));
       if (k) {
         PetscCall(MatGetRow(Bgt, i, &ncolsg, &colsg, &valsg));
         for (jj = 0; jj < ncolsg; jj++) {
-          if (valsg[jj] > PETSC_MACHINE_EPSILON) {
+          if (PetscRealPart(valsg[jj]) > PETSC_MACHINE_EPSILON) {
             j = colsg[jj];
             if (j >= jlog && j < jhig) remove[j - jlog] = PETSC_TRUE;
           }

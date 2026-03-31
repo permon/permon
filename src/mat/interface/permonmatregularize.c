@@ -203,7 +203,7 @@ PetscErrorCode MatRegularize(Mat K, Mat R, MatRegularizationType type, Mat *newK
   MPI_Comm              comm;
   IS                    pivots;
   Mat                   Q_loc, Kreg;
-  PetscScalar           rho;
+  PetscReal             rho;
   Mat                   K_loc, R_loc;
   PETSC_UNUSED PetscInt regularized_int;
   PetscBool             regularized = PETSC_FALSE;

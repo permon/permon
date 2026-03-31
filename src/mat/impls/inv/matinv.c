@@ -126,17 +126,17 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
   if (defect) {
     /* stash sol_loc allocated in MatFactorNumeric_MUMPS() */
     MumpsScalar *sol_loc_orig = mumps->id.sol_loc;
-    MumpsScalar *array;
+    PetscScalar *array;
 
     /* inject matrix array as sol_loc */
-    PetscCall(MatDenseGetArray(Rl, (MumpsScalar **)&array));
+    PetscCall(MatDenseGetArray(Rl, &array));
     if (mumps->petsc_size > 1) {
-      mumps->id.sol_loc = array;
+      mumps->id.sol_loc = (MumpsScalar *)array;
       if (!mumps->myid) {
         /* Define dummy rhs on the host otherwise MUMPS fails with INFOG(1)=-22,INFOG(2)=7 */
         PetscCall(PetscMalloc1(M, &mumps->id.rhs));
       }
-    } else mumps->id.rhs = array;
+    } else mumps->id.rhs = (MumpsScalar *)array;
     /* mumps->id.nrhs is reset by MatMatSolve_MUMPS()/MatSolve_MUMPS() */
     mumps->id.nrhs     = defect;
     mumps->id.lrhs     = (mumps->petsc_size > 1) ? M : mm;
@@ -150,7 +150,7 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
     PetscCall(MatMumpsSetIcntl(F, 25, 0)); /* perform a normal solution step next time */
 
     /* restore matrix array */
-    PetscCall(MatDenseRestoreArray(Rl, (MumpsScalar **)&array));
+    PetscCall(MatDenseRestoreArray(Rl, &array));
     /* restore stashed sol_loc */
     mumps->id.sol_loc = sol_loc_orig;
   }

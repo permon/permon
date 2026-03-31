@@ -18,8 +18,8 @@ int main(int argc, char **args)
   Mat                    A;
   KSP                    ksp;
   Vec                    solution, rhs;
-  PetscReal              Aloc[4] = {1, -1, -1, 1};
-  PetscReal              bloc[2];
+  PetscScalar            Aloc[4] = {1, -1, -1, 1};
+  PetscScalar            bloc[2];
   PetscReal              h;
   PetscInt               ndofs_l, ndofs, ns, ne, ne_l = 3;
   PetscInt              *global_indices, idx[2];

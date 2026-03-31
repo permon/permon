@@ -129,7 +129,7 @@ PERMON_EXTERN PetscErrorCode MatHasOrthonormalRowsImplicitly(Mat A, PetscBool *f
 PERMON_EXTERN PetscErrorCode MatIsZero(Mat A, PetscReal tol, PetscInt ntrials, PetscBool *flg);
 PERMON_EXTERN PetscErrorCode MatMatIsZero(Mat A, Mat B, PetscReal tol, PetscInt ntrials, PetscBool *flg);
 PERMON_EXTERN PetscErrorCode MatIsSymmetricByType(Mat A, PetscBool *flg);
-PERMON_EXTERN PetscErrorCode MatGetMaxEigenvalue(Mat A, Vec v, PetscScalar *lambda_out, PetscReal tol, PetscInt maxits);
+PERMON_EXTERN PetscErrorCode MatGetMaxEigenvalue(Mat A, Vec v, PetscReal *lambda_out, PetscReal tol, PetscInt maxits);
 PERMON_EXTERN PetscErrorCode MatGetColumnVectors(Mat A, PetscInt *ncols, Vec *cols_new[]);
 PERMON_EXTERN PetscErrorCode MatRestoreColumnVectors(Mat A, PetscInt *ncols, Vec *cols_new[]);
 PERMON_EXTERN PetscErrorCode MatFilterZeros(Mat A, PetscReal tol, Mat *Af);

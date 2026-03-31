@@ -244,12 +244,13 @@ PetscErrorCode QPCompareEqMultiplierWithLeastSquare(QP qp, PetscReal *norm)
 @*/
 PetscErrorCode QPViewKKT(QP qp, PetscViewer v)
 {
-  PetscReal normb = 0.0, norm = 0.0, dot = 0.0;
-  Vec       x, b, cE, cI, r, o, t;
-  Mat       A, BE, BI;
-  PetscBool flg = PETSC_FALSE, compare_lambda_E = PETSC_FALSE, notavail;
-  MPI_Comm  comm;
-  char     *kkt_name;
+  PetscReal   normb = 0.0, norm = 0.0;
+  PetscScalar dot = 0.0;
+  Vec         x, b, cE, cI, r, o, t;
+  Mat         A, BE, BI;
+  PetscBool   flg = PETSC_FALSE, compare_lambda_E = PETSC_FALSE, notavail;
+  MPI_Comm    comm;
+  char       *kkt_name;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp, QP_CLASSID, 1);
@@ -317,8 +318,8 @@ PetscErrorCode QPViewKKT(QP qp, PetscViewer v)
       } else {
         Vec t = qp->xwork;
         PetscCall(QPPFApplyGtG(qp->pf, x, t)); /* BEtBEx = BE'*BE*x */
-        PetscCall(VecDot(x, t, &norm));        /* norm = x'*BE'*BE*x */
-        norm = PetscSqrtReal(norm);
+        PetscCall(VecDot(x, t, &dot));         /* norm = x'*BE'*BE*x */
+        norm = PetscSqrtReal(dot);
         PetscCall(PetscViewerASCIIPrintf(v, "r = ||BE*x||             = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
       }
     }
@@ -352,7 +353,7 @@ PetscErrorCode QPViewKKT(QP qp, PetscViewer v)
 
     /* lambda'*(BI*x-cI) = 0 */
     PetscCall(VecDot(qp->lambda_I, r, &dot));
-    dot = PetscAbs(dot);
+    dot = PetscAbsScalar(dot);
     if (cI) {
       PetscCall(PetscViewerASCIIPrintf(v, "r = |lambda_I'*(BI*x-cI)|= %.2e    r/||b|| = %.2e\n", (double)dot, (double)dot / (double)normb));
     } else {
@@ -911,6 +912,8 @@ PetscErrorCode QPComputeMissingBoxMultipliers(QP qp)
 @*/
 PetscErrorCode QPComputeObjective(QP qp, Vec x, PetscReal *f)
 {
+  PetscScalar dot;
+
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp, QP_CLASSID, 1);
   PetscValidHeaderSpecific(x, VEC_CLASSID, 2);
@@ -918,8 +921,8 @@ PetscErrorCode QPComputeObjective(QP qp, Vec x, PetscReal *f)
   PetscCheck(qp->setupcalled, PetscObjectComm((PetscObject)qp), PETSC_ERR_ORDER, "QPSetUp must be called first.");
   PetscCall(MatMult(qp->A, x, qp->xwork));
   PetscCall(VecAYPX(qp->xwork, -0.5, qp->b));
-  PetscCall(VecDot(x, qp->xwork, f));
-  *f = -*f;
+  PetscCall(VecDot(x, qp->xwork, &dot));
+  *f = -dot;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -977,6 +980,8 @@ PetscErrorCode QPComputeObjectiveGradient(QP qp, Vec x, Vec g)
 @*/
 PetscErrorCode QPComputeObjectiveFromGradient(QP qp, Vec x, Vec g, PetscReal *f)
 {
+  PetscScalar dot;
+
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp, QP_CLASSID, 1);
   PetscValidHeaderSpecific(x, VEC_CLASSID, 2);
@@ -985,8 +990,8 @@ PetscErrorCode QPComputeObjectiveFromGradient(QP qp, Vec x, Vec g, PetscReal *f)
   PetscCheck(qp->setupcalled, PetscObjectComm((PetscObject)qp), PETSC_ERR_ORDER, "QPSetUp must be called first.");
 
   PetscCall(VecWAXPY(qp->xwork, -1.0, qp->b, g));
-  PetscCall(VecDot(x, qp->xwork, f));
-  *f /= 2.0;
+  PetscCall(VecDot(x, qp->xwork, &dot));
+  *f = .5 * dot;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 

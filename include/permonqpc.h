@@ -46,7 +46,7 @@ PERMON_EXTERN PetscErrorCode QPCGetNumberOfConstraints(QPC, PetscInt *num);
 PERMON_EXTERN PetscErrorCode QPCProject(QPC, Vec x, Vec Px);
 PERMON_EXTERN PetscErrorCode QPCGrads(QPC, Vec x, Vec g, Vec gf, Vec gc);
 PERMON_EXTERN PetscErrorCode QPCGradReduced(QPC qpc, Vec x, Vec gf, PetscReal alpha, Vec gr);
-PERMON_EXTERN PetscErrorCode QPCFeas(QPC, Vec x, Vec d, PetscScalar *alpha);
+PERMON_EXTERN PetscErrorCode QPCFeas(QPC, Vec x, Vec d, PetscReal *alpha);
 PERMON_EXTERN PetscErrorCode QPCOuterNormal(QPC, PetscScalar *n_a, PetscScalar *xconstr_a, PetscInt local_idx);
 
 /* BOX */
