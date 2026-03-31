@@ -232,11 +232,11 @@ Parameters:
 */
 static PetscErrorCode MPGPExpansionLength(QPS qps)
 {
-  QP        qp;
-  Mat       A;
-  Vec       x, vecs[2];
-  PetscReal dots[2];
-  QPS_MPGP *mpgp = (QPS_MPGP *)qps->data;
+  QP          qp;
+  Mat         A;
+  Vec         x, vecs[2];
+  PetscScalar dots[2];
+  QPS_MPGP   *mpgp = (QPS_MPGP *)qps->data;
 
   PetscFunctionBegin;
   PetscCall(QPSGetSolvedQP(qps, &qp));
@@ -514,11 +514,11 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
     PetscCall(VecNorm(gP, NORM_2, &qps->rnorm)); /* qps->rnorm=norm(gP)*/
 
     /* compute dot products to control the proportionality */
-    PetscCall(VecDot(gc, gc, &gcTgc)); /* gcTgc=gc'*gc   */
+    PetscCall(VecDotRealPart(gc, gc, &gcTgc)); /* gcTgc=gc'*gc   */
     /* NOTE: using gf'*gf for proportiong rule instead of gr'*gf
     *  which can lead to more agressive proportioning as
     *  sqrt(g_reduced^T * g_free) <= ||g_free||                    */
-    PetscCall(VecDot(gf, gf, &gfTgf)); /* gfTgf=gr'*gf   */
+    PetscCall(VecDotRealPart(gf, gf, &gfTgf)); /* gfTgf=gr'*gf   */
 
     /* compute norm of gf, gc from computed dot products */
     if (qps->numbermonitors) {
@@ -538,10 +538,10 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
       nmv++;                        /* matrix multiplication counter */
 
       /* compute step-sizes */
-      PetscCall(VecDot(p, Ap, &pAp));        /* pAp=p'*Ap      */
-      PetscCall(VecDot(g, p, &acg));         /* acg=g'*p       */
-      acg = acg / pAp;                       /* acg=acg/pAp    */
-      PetscCall(QPCFeas(qpc, x, p, &afeas)); /* finds max.feas.steplength */
+      PetscCall(VecDotRealPart(p, Ap, &pAp)); /* pAp=p'*Ap      */
+      PetscCall(VecDotRealPart(g, p, &acg));  /* acg=g'*p       */
+      acg = acg / pAp;                        /* acg=acg/pAp    */
+      PetscCall(QPCFeas(qpc, x, p, &afeas));  /* finds max.feas.steplength */
 
       /* decide if it is able to do full CG step */
       if (acg <= afeas) {
@@ -555,10 +555,10 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
         PetscCall(MPGPGrads(qps, x, g)); /* grad. splitting  gP,gf,gc */
 
         /* compute orthogonalization parameter and next orthogonal vector */
-        PetscCall(VecDot(Ap, gf, &bcg)); /* bcg=Ap'*gf     */
-        bcg = bcg / pAp;                 /* bcg=bcg/pAp     */
-        PetscCall(VecAYPX(p, -bcg, gf)); /* p=gf-bcg*p     */
-      } else                             /* expansion step  */
+        PetscCall(VecDotRealPart(Ap, gf, &bcg)); /* bcg=Ap'*gf     */
+        bcg = bcg / pAp;                         /* bcg=bcg/pAp     */
+        PetscCall(VecAYPX(p, -bcg, gf));         /* p=gf-bcg*p     */
+      } else                                     /* expansion step  */
       {
         /* EXPANSION STEP */
         nexp++; /* increase expansion step counter */
@@ -585,10 +585,10 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
           if (f > fold) {
             nfinc++;
             if (mpgp->fallback2) {
-              PetscCall(MPGPGrads(qps, x, g));   /* grad. splitting  gP,gf,gc */
-              PetscCall(VecDot(gc, gc, &gcTgc)); /* gcTgc=gc'*gc   */
-              PetscCall(VecDot(gf, gf, &gfTgf)); /* gfTgf=gr'*gf   */
-              if (gcTgc <= gamma2 * gfTgf) {     /* u is proportional */
+              PetscCall(MPGPGrads(qps, x, g));           /* grad. splitting  gP,gf,gc */
+              PetscCall(VecDotRealPart(gc, gc, &gcTgc)); /* gcTgc=gc'*gc   */
+              PetscCall(VecDotRealPart(gf, gf, &gfTgf)); /* gfTgf=gr'*gf   */
+              if (gcTgc <= gamma2 * gfTgf) {             /* u is proportional */
                 mpgp->fallback = PETSC_FALSE;
               } else {
                 mpgp->fallback = PETSC_TRUE;
@@ -625,9 +625,9 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
       nmv++;                        /* matrix multiplication counter */
 
       /* compute step-size */
-      PetscCall(VecDot(p, Ap, &pAp)); /* pAp=p'*Ap       */
-      PetscCall(VecDot(g, p, &acg));  /* acg=g'*p        */
-      acg = acg / pAp;                /* acg=acg/pAp     */
+      PetscCall(VecDotRealPart(p, Ap, &pAp)); /* pAp=p'*Ap       */
+      PetscCall(VecDotRealPart(g, p, &acg));  /* acg=g'*p        */
+      acg = acg / pAp;                        /* acg=acg/pAp     */
 
       /* make a step */
       PetscCall(VecAXPY(x, -acg, p));  /* x=x-acg*p       */

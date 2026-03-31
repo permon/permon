@@ -500,10 +500,10 @@ Parameters:
 . d - minus value of direction
 - alpha - pointer to return value
 @*/
-PetscErrorCode QPCFeas(QPC qpc, Vec x, Vec d, PetscScalar *alpha)
+PetscErrorCode QPCFeas(QPC qpc, Vec x, Vec d, PetscReal *alpha)
 {
-  Vec         x_sub, d_sub;
-  PetscScalar alpha_temp;
+  Vec       x_sub, d_sub;
+  PetscReal alpha_temp;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qpc, QPC_CLASSID, 1);
@@ -518,7 +518,7 @@ PetscErrorCode QPCFeas(QPC qpc, Vec x, Vec d, PetscScalar *alpha)
 
   /* compute largest step-size for the given QPC type */
   PetscUseTypeMethod(qpc, feas, x_sub, d_sub, &alpha_temp);
-  PetscCallMPI(MPI_Allreduce(&alpha_temp, alpha, 1, MPIU_SCALAR, MPIU_MIN, PetscObjectComm((PetscObject)qpc)));
+  PetscCallMPI(MPI_Allreduce(&alpha_temp, alpha, 1, MPIU_REAL, MPIU_MIN, PetscObjectComm((PetscObject)qpc)));
 
   /* restore the gradients */
   PetscCall(QPCRestoreSubvector(qpc, x, &x_sub));

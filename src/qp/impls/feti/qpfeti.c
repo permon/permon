@@ -291,8 +291,8 @@ PetscErrorCode QPFetiAssembleDirichlet(QP qp)
       }
     }
   } else {
-    Vec         d;
-    PetscScalar alpha;
+    Vec       d;
+    PetscReal alpha;
 
     /* alpha=max(abs(diag(A)) */
     PetscCall(MatCreateVecs(qp->A, NULL, &d));

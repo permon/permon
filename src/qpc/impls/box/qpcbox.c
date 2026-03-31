@@ -42,12 +42,12 @@ static PetscErrorCode QPCGrads_Box(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
     if (lb && PetscAbsScalar(x_a[i] - lb_a[i]) <= qpc->astol) {
       /* active lower bound */
       gf_a[i] = 0.0;
-      gc_a[i] = PetscMin(g_a[i], 0.0);
+      gc_a[i] = PetscMin(PetscRealPart(g_a[i]), 0.0);
       //} else if (ub && x_a[i] >= ub_a[i]) {
     } else if (ub && PetscAbsScalar(x_a[i] - ub_a[i]) <= qpc->astol) {
       /* active upper bound */
       gf_a[i] = 0.0;
-      gc_a[i] = PetscMax(g_a[i], 0.0);
+      gc_a[i] = PetscMax(PetscRealPart(g_a[i]), 0.0);
     } else {
       /* index of this component is in FREE SET */
       gf_a[i] = g_a[i];
@@ -84,10 +84,10 @@ static PetscErrorCode QPCGradReduced_Box(QPC qpc, Vec x, Vec gf, PetscReal alpha
   PetscCall(VecGetArray(gr, &gr_a));
 
   for (i = 0; i < n_local; i++) {
-    if (lb && gf_a[i] > 0.0) {
-      gr_a[i] = PetscMin(gf_a[i], (x_a[i] - lb_a[i]) / alpha);
-    } else if (ub && gf_a[i] < 0.0) {
-      gr_a[i] = PetscMax(gf_a[i], (x_a[i] - ub_a[i]) / alpha);
+    if (lb && PetscRealPart(gf_a[i]) > 0.0) {
+      gr_a[i] = PetscMin(PetscRealPart(gf_a[i]), PetscRealPart(x_a[i] - lb_a[i]) / alpha);
+    } else if (ub && PetscRealPart(gf_a[i]) < 0.0) {
+      gr_a[i] = PetscMax(PetscRealPart(gf_a[i]), PetscRealPart(x_a[i] - ub_a[i]) / alpha);
     }
   }
 
@@ -101,11 +101,11 @@ static PetscErrorCode QPCGradReduced_Box(QPC qpc, Vec x, Vec gf, PetscReal alpha
 
 #undef __FUNCT__
 #define __FUNCT__ "QPCFeas_Box"
-static PetscErrorCode QPCFeas_Box(QPC qpc, Vec x, Vec d, PetscScalar *alpha)
+static PetscErrorCode QPCFeas_Box(QPC qpc, Vec x, Vec d, PetscReal *alpha)
 {
-  Vec         lb, ub;
-  QPC_Box    *ctx = (QPC_Box *)qpc->data;
-  PetscScalar alpha_temp, alpha_i;
+  Vec       lb, ub;
+  QPC_Box  *ctx = (QPC_Box *)qpc->data;
+  PetscReal alpha_temp, alpha_i;
 
   PetscScalar *x_a, *d_a, *lb_a, *ub_a;
   PetscInt     n_local, i;
@@ -123,15 +123,15 @@ static PetscErrorCode QPCFeas_Box(QPC qpc, Vec x, Vec d, PetscScalar *alpha)
   if (ub) PetscCall(VecGetArray(ub, &ub_a));
 
   for (i = 0; i < n_local; i++) {
-    if (d_a[i] > 0 && lb && lb_a[i] > PETSC_NINFINITY) {
-      alpha_i = x_a[i] - lb_a[i];
-      alpha_i = alpha_i / d_a[i];
+    if (PetscRealPart(d_a[i]) > 0. && lb && PetscRealPart(lb_a[i]) > PETSC_NINFINITY) {
+      alpha_i = PetscRealPart(x_a[i] - lb_a[i]);
+      alpha_i = alpha_i / PetscRealPart(d_a[i]);
       if (alpha_i < alpha_temp) { alpha_temp = alpha_i; }
     }
 
-    if (d_a[i] < 0 && ub && ub_a[i] < PETSC_INFINITY) {
-      alpha_i = (x_a[i] - ub_a[i]);
-      alpha_i = alpha_i / d_a[i];
+    if (PetscRealPart(d_a[i]) < 0. && ub && PetscRealPart(ub_a[i]) < PETSC_INFINITY) {
+      alpha_i = PetscRealPart(x_a[i] - ub_a[i]);
+      alpha_i = alpha_i / PetscRealPart(d_a[i]);
 
       if (alpha_i < alpha_temp) { alpha_temp = alpha_i; }
     }
@@ -370,12 +370,12 @@ PetscErrorCode QPCViewKKT_Box(QPC qpc, Vec x, PetscReal normb, PetscViewer v)
       PetscCall(VecGetArray(r, &rarr));
       PetscCall(VecGetArrayRead(lb, &larr));
       for (i = 0; i < n; i++)
-        if (larr[i] <= PETSC_NINFINITY) rarr[i] = -1.0;
+        if (PetscRealPart(larr[i]) <= PETSC_NINFINITY) rarr[i] = -1.0;
       PetscCall(VecRestoreArray(r, &rarr));
       PetscCall(VecRestoreArrayRead(lb, &larr));
     }
     PetscCall(VecDot(llb, r, &dot));
-    norm = PetscAbs(dot);
+    norm = PetscAbsScalar(dot);
     PetscCall(PetscViewerASCIIPrintf(v, "r = |lambda_lb'*(lb-x)|  = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
 
     PetscCall(VecDestroy(&o));
@@ -412,12 +412,12 @@ PetscErrorCode QPCViewKKT_Box(QPC qpc, Vec x, PetscReal normb, PetscViewer v)
       PetscCall(VecGetArray(r, &rarr));
       PetscCall(VecGetArrayRead(ub, &uarr));
       for (i = 0; i < n; i++)
-        if (uarr[i] >= PETSC_INFINITY) rarr[i] = 1.0;
+        if (PetscRealPart(uarr[i]) >= PETSC_INFINITY) rarr[i] = 1.0;
       PetscCall(VecRestoreArray(r, &rarr));
       PetscCall(VecRestoreArrayRead(ub, &uarr));
     }
     PetscCall(VecDot(lub, r, &dot));
-    norm = PetscAbs(dot);
+    norm = PetscAbsScalar(dot);
     PetscCall(PetscViewerASCIIPrintf(v, "r = |lambda_ub'*(x-ub)|  = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / normb));
 
     PetscCall(VecDestroy(&o));
