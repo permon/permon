@@ -6,8 +6,8 @@ TAO tolerances are gatol = 1.000000e-08, grtol =  1.000000e-50, gttol = 1.000000
 Setting PERMON rtol = gttol, atol = gatol
 QPS Object: 2 MPI processes
   type: tao
-  last QPSSolve CONVERGED due to CONVERGED_RTOL, KSPReason=2, required 58 iterations
-  all 1 QPSSolves from last QPSReset/QPSResetStatistics have required 58 iterations
+  last QPSSolve CONVERGED due to CONVERGED_RTOL, KSPReason=2, required 67 iterations
+  all 1 QPSSolves from last QPSReset/QPSResetStatistics have required 67 iterations
   tolerances: rtol=1.0e-06, abstol=1.0e-08, dtol=1.0e+04, maxits=10000
   tao specific:
     TaoType: blmvm
@@ -22,7 +22,7 @@ QPS Object: 2 MPI processes
           rows=160, cols=160
             Max. storage: 5
             Used storage: 5
-            Number of updates: 57
+            Number of updates: 66
             Number of rejects: 0
             Number of resets: 1
             J0:
@@ -46,9 +46,9 @@ QPS Object: 2 MPI processes
           Termination reason: SUCCESS
         Active Set subset type: subvec
         convergence tolerances: gatol=1e-08,         grtol=1e-06,         steptol=0.,         gttol=0.
-        Residual in Function/Gradient:=5.99026e-07
+        Residual in Function/Gradient:=6.20745e-07
         Objective value=-0.182408
-        total number of iterations=58,                                (max: 2000)
-        total number of function/gradient evaluations=86,            (max: 4000)
+        total number of iterations=67,                                (max: 2000)
+        total number of function/gradient evaluations=106,            (max: 4000)
         Solution converged:          User Terminated
-Norm of difference of results from TAO and QP = 4.505503e-07 <= 6.303904e-06 = tolerance
+Norm of difference of results from TAO and QP = 5.134214e-07 <= 6.303904e-06 = tolerance
