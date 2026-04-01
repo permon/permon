@@ -205,6 +205,7 @@ PetscErrorCode ComputeB(AppCtx *user)
   PetscReal temp, *b;
   PetscReal ecc = user->ecc;
 
+  PetscFunctionBegin;
   nx    = user->nx;
   ny    = user->ny;
   hx    = two * pi / (nx + 1.0);
@@ -229,7 +230,7 @@ PetscErrorCode ComputeB(AppCtx *user)
   PetscCall(VecRestoreArray(user->B, &b));
   PetscCall(PetscLogFlops(5 * xm * ym + 3 * xm));
 
-  return 0;
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -248,6 +249,7 @@ PetscErrorCode FormFunctionGradient(Tao tao, Vec X, PetscReal *fcn, Vec G, void 
   PetscReal *x, *g, zero = 0.0;
   Vec        localX;
 
+  PetscFunctionBegin;
   nx   = user->nx;
   ny   = user->ny;
   hx   = two * pi / (nx + 1.0);
@@ -340,7 +342,7 @@ PetscErrorCode FormFunctionGradient(Tao tao, Vec X, PetscReal *fcn, Vec G, void 
   *fcn = f1 / 2.0 + f2;
 
   PetscCall(PetscLogFlops((91 + 10 * ym) * xm));
-  return 0;
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
@@ -362,6 +364,7 @@ PetscErrorCode FormHessian(Tao tao, Vec X, Mat hes, Mat Hpre, void *ptr)
   PetscReal vmiddle, vup, vdown, vleft, vright;
   PetscBool assembled;
 
+  PetscFunctionBegin;
   nx   = user->nx;
   ny   = user->ny;
   hx   = two * pi / (nx + 1.0);
@@ -451,7 +454,7 @@ PetscErrorCode FormHessian(Tao tao, Vec X, Mat hes, Mat Hpre, void *ptr)
 
   PetscCall(PetscLogFlops(9 * xm * ym + 49 * xm));
   PetscCall(MatNorm(hes, NORM_1, &hx));
-  return 0;
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
