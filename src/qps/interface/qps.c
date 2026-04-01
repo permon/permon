@@ -1149,22 +1149,22 @@ PetscErrorCode QPSMonitor(QPS qps, PetscInt it, PetscReal rnorm)
    Logically Collective on QPS
 
    Input Parameters:
-+  qps - iterative context obtained from QPSCreate()
-.  monitor - pointer to function
-.  mctx    - [optional] context for private data for the monitor routine (use NULL if no context is desired)
++  qps            - iterative context obtained from QPSCreate()
+.  monitor        - pointer to function
+.  ctx            - [optional] context for private data for the monitor routine (use NULL if no context is desired)
 -  monitordestroy - [optional] routine that frees monitor context (may be NULL)
 
    Calling Sequence of monitor:
 $     monitor (QPS qps, PetscInt it, PetscReal rnorm, void *mctx)
 
-+  qps - iterative context obtained from QPSCreate()
-.  it - iteration number
++  qps   - iterative context obtained from QPSCreate()
+.  it    - iteration number
 .  rnorm - 2-norm of the residual (more general, a vector whose norm determines convergence, such as a projected gradient for QPSMPGP)
--  mctx  - optional monitoring context, as set by QPSMonitorSet()
+-  ctx   - optional monitoring context, as set by QPSMonitorSet()
 
    Options Database Keys:
-+  -qps_monitor - sets QPSMonitorDefault()
-.  -qps_monitor_cost    - sets QPSMonitorCostFunction()
++  -qps_monitor        - sets QPSMonitorDefault()
+.  -qps_monitor_cost   - sets QPSMonitorCostFunction()
 -  -qps_monitor_cancel - cancels all monitors that have been hardwired into a code by
     calls to QPSMonitorSet(), but does not cancel those set via the options database.
 
@@ -1180,10 +1180,8 @@ $     monitor (QPS qps, PetscInt it, PetscReal rnorm, void *mctx)
 
 .seealso: QPSMonitorDefault(), QPSMonitorCancel()
 @*/
-PetscErrorCode QPSMonitorSet(QPS qps, PetscErrorCode (*monitor)(QPS, PetscInt, PetscReal, void *), void *mctx, PetscCtxDestroyFn *monitordestroy)
+PetscErrorCode QPSMonitorSet(QPS qps, PetscErrorCode (*monitor)(QPS, PetscInt, PetscReal, void *), PetscCtx ctx, PetscCtxDestroyFn *monitordestroy)
 {
-  PetscInt i;
-
   PetscFunctionBegin;
   PetscCheck(monitor, PetscObjectComm((PetscObject)qps), PETSC_ERR_ARG_NULL, "Monitor function must be specified");
 
@@ -1191,15 +1189,17 @@ PetscErrorCode QPSMonitorSet(QPS qps, PetscErrorCode (*monitor)(QPS, PetscInt, P
   PetscCheck(qps->numbermonitors < MAXQPSMONITORS, PetscObjectComm((PetscObject)qps), PETSC_ERR_ARG_OUTOFRANGE, "Too many QPS monitors set");
 
   /* don't add exactly the same monitor twice */
-  //TODO we could use PetscMonitorCompare() once it gets fixed
-  for (i = 0; i < qps->numbermonitors; i++) {
-    if (monitor == qps->monitor[i] && monitordestroy == qps->monitordestroy[i] && mctx == qps->monitorcontext[i]) { PetscFunctionReturn(PETSC_SUCCESS); }
+  for (PetscInt i = 0; i < qps->numbermonitors; i++) {
+    PetscBool identical;
+
+    PetscCall(PetscMonitorCompare((PetscErrorCode (*)(void))(PetscVoidFn *)monitor, ctx, monitordestroy, (PetscErrorCode (*)(void))(PetscVoidFn *)qps->monitor[i], qps->monitorcontext[i], qps->monitordestroy[i], &identical));
+    if (identical) PetscFunctionReturn(PETSC_SUCCESS);
   }
 
   /* set new QPS monitor */
   qps->monitor[qps->numbermonitors]        = monitor;
   qps->monitordestroy[qps->numbermonitors] = monitordestroy;
-  qps->monitorcontext[qps->numbermonitors] = (void *)mctx;
+  qps->monitorcontext[qps->numbermonitors] = ctx;
   qps->numbermonitors++;
   PetscFunctionReturn(PETSC_SUCCESS);
 }

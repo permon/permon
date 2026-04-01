@@ -6,7 +6,6 @@ include ./lib/permon/conf/permon_variables
 PERMON_VERSION_MAJOR    := $(shell git describe --tags | awk -F[.-] '{print substr($$1,2)}')
 PERMON_VERSION_MINOR    := $(shell git describe --tags | awk -F[.-] '{print $$2}')
 PERMON_VERSION_SUBMINOR := $(shell git describe --tags | awk -F[.-] '{print $$3}')
-PERMON_VERSION_RELEASE  := 0
 
 OBJDIR := ./$(PETSC_ARCH)/obj
 LIBDIR := ./$(PETSC_ARCH)/lib
@@ -23,7 +22,7 @@ SONAME_FUNCTION ?= $(1).$(SL_LINKER_SUFFIX).$(2)
 # $(call SL_LINKER_FUNCTION,libfoo,abiversion,libversion)
 SL_LINKER_FUNCTION ?= -shared -Wl,-soname,$(call SONAME_FUNCTION,$(notdir $(1)),$(2))
 
-libpermon_abi_version := $(PERMON_VERSION_MAJOR).$(if $(filter $(PERMON_VERSION_RELEASE), 0 -2 -3 -4 -5),0)$(PERMON_VERSION_MINOR)
+libpermon_abi_version := $(PERMON_VERSION_MAJOR).$(PERMON_VERSION_MINOR)
 libpermon_lib_version := $(libpermon_abi_version).$(PERMON_VERSION_SUBMINOR)
 soname_function = $(call SONAME_FUNCTION,$(1),$(libpermon_abi_version))
 libname_function = $(call SONAME_FUNCTION,$(1),$(libpermon_lib_version))

@@ -59,15 +59,15 @@ struct _p_QPS {
   KSPConvergedReason reason;
 
   /* monitor */
-  PetscReal *res_hist;                                                         /* If !0 stores residual at iterations*/
-  PetscReal *res_hist_alloc;                                                   /* If !0 means user did not provide buffer, needs deallocation */
-  PetscInt   res_hist_len;                                                     /* current size of residual history array */
-  PetscInt   res_hist_max;                                                     /* actual amount of data in residual_history */
-  PetscBool  res_hist_reset;                                                   /* reset history to size zero for each new solve */
-  PetscErrorCode (*monitor[MAXQPSMONITORS])(QPS, PetscInt, PetscReal, void *); /* returns control to user after */
-  PetscErrorCode (*monitordestroy[MAXQPSMONITORS])(void **);                   /* */
-  void    *monitorcontext[MAXQPSMONITORS];                                     /* residual calculation, allows user */
-  PetscInt numbermonitors;                                                     /* to, for instance, print residual norm, etc. */
+  PetscReal *res_hist;       /* If !0 stores residual at iterations*/
+  PetscReal *res_hist_alloc; /* If !0 means user did not provide buffer, needs deallocation */
+  PetscInt   res_hist_len;   /* current size of residual history array */
+  PetscInt   res_hist_max;   /* actual amount of data in residual_history */
+  PetscBool  res_hist_reset; /* reset history to size zero for each new solve */
+  PetscErrorCode (*monitor[MAXQPSMONITORS])(QPS, PetscInt, PetscReal, void *);
+  PetscCtxDestroyFn *monitordestroy[MAXQPSMONITORS];
+  void              *monitorcontext[MAXQPSMONITORS];
+  PetscInt           numbermonitors;
 };
 
 typedef struct {

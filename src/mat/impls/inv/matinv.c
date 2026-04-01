@@ -125,34 +125,40 @@ static PetscErrorCode MatInvComputeNullSpace_Inv(Mat imat)
 
   if (defect) {
     /* stash sol_loc allocated in MatFactorNumeric_MUMPS() */
-    MumpsScalar *sol_loc_orig = mumps->id.sol_loc;
-    PetscScalar *array;
-
-    /* inject matrix array as sol_loc */
-    PetscCall(MatDenseGetArray(Rl, &array));
-    if (mumps->petsc_size > 1) {
-      mumps->id.sol_loc = (MumpsScalar *)array;
-      if (!mumps->myid) {
-        /* Define dummy rhs on the host otherwise MUMPS fails with INFOG(1)=-22,INFOG(2)=7 */
-        PetscCall(PetscMalloc1(M, &mumps->id.rhs));
-      }
-    } else mumps->id.rhs = (MumpsScalar *)array;
+    void        *sol_loc_orig     = mumps->id.sol_loc;
+    PetscCount   sol_loc_len_save = mumps->id.sol_loc_len;
+    PetscScalar *array, *rhs;
     /* mumps->id.nrhs is reset by MatMatSolve_MUMPS()/MatSolve_MUMPS() */
     mumps->id.nrhs     = defect;
     mumps->id.lrhs     = (mumps->petsc_size > 1) ? M : mm;
     mumps->id.lrhs_loc = mm;
+
+    /* inject matrix array as sol_loc */
+    PetscCall(MatDenseGetArray(Rl, &array));
+    if (mumps->petsc_size > 1) {
+      mumps->id.sol_loc_len = 0;
+      PetscCall(MatMumpsMakeMumpsScalarArray(PETSC_FALSE, mm * defect, array, mumps->id.precision, &mumps->id.sol_loc_len, &mumps->id.sol_loc));
+      if (!mumps->myid) {
+        /* Define dummy rhs on the host otherwise MUMPS fails with INFOG(1)=-22,INFOG(2)=7 */
+        PetscCall(PetscMalloc1(M, &rhs));
+        PetscCall(MatMumpsMakeMumpsScalarArray(PETSC_FALSE, M, rhs, mumps->id.precision, &mumps->id.rhs_len, &mumps->id.rhs));
+      }
+    } else PetscCall(MatMumpsMakeMumpsScalarArray(PETSC_FALSE, mm * defect, array, mumps->id.precision, &mumps->id.rhs_len, &mumps->id.rhs));
     PetscCall(MatMumpsSetIcntl(F, 25, -1)); /* compute complete null space */
     mumps->id.job = JOB_SOLVE;
-    PetscMUMPS_c(&mumps->id);
+    PetscMUMPS_c(mumps);
     PetscCheck(mumps->id.INFOG(1) >= 0, PETSC_COMM_SELF, PETSC_ERR_LIB, "Error reported by MUMPS in solve phase: INFOG(1)=%d,INFOG(2)=%d", mumps->id.INFOG(1), mumps->id.INFOG(2));
-
-    if (mumps->petsc_size > 1 && !mumps->myid) { PetscCall(PetscFree(mumps->id.rhs)); }
     PetscCall(MatMumpsSetIcntl(F, 25, 0)); /* perform a normal solution step next time */
 
+    if (mumps->petsc_size > 1 && !mumps->myid) PetscCall(PetscFree(rhs)); /* mumps->id.rhs is freed when MUMPS struct is freed */
+
     /* restore matrix array */
+    if (mumps->petsc_size > 1) PetscCall(MatMumpsCastMumpsScalarArray(mumps->id.sol_loc_len, mumps->id.precision, mumps->id.sol_loc, array));
+    else PetscCall(MatMumpsCastMumpsScalarArray(mumps->id.rhs_len, mumps->id.precision, mumps->id.rhs, array));
     PetscCall(MatDenseRestoreArray(Rl, &array));
     /* restore stashed sol_loc */
-    mumps->id.sol_loc = sol_loc_orig;
+    mumps->id.sol_loc     = sol_loc_orig;
+    mumps->id.sol_loc_len = sol_loc_len_save;
   }
 
   //TODO return just NULL if defect=0 ?
