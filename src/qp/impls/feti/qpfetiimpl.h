@@ -24,7 +24,6 @@ struct _n_QPFetiCtx {
 
 PERMON_INTERN PetscErrorCode QPFetiAssembleDirichlet(QP qp);
 PERMON_INTERN PetscErrorCode QPFetiAssembleGluing(QP qp, FetiGluingType type, PetscBool exclude_dir, Mat *Bg_new);
-PERMON_INTERN PetscErrorCode QPFetiGetGlobalDir(QP qp, IS dbc, QPFetiNumberingType numtype, IS *dbc_g);
 
 PERMON_INTERN PetscErrorCode QPFetiCtxCreate(QPFetiCtx *ctxout);
 PERMON_INTERN PetscErrorCode QPFetiCtxDestroy(QPFetiCtx *ctx_p);

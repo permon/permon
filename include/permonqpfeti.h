@@ -20,4 +20,5 @@ PERMON_EXTERN PetscErrorCode QPFetiSetDirichlet(QP qp, IS dbcis, QPFetiNumbering
 /* l2g_dof_map is mapping from the local dof indexing of decomposed problem to global dof indexing of undecomposed problem */
 PERMON_EXTERN PetscErrorCode QPFetiSetLocalToGlobalMapping(QP qp, IS l2g_dof_map);
 PERMON_EXTERN PetscErrorCode QPFetiSetInterfaceToGlobalMapping(QP qp, IS i2g);
+PERMON_EXTERN PetscErrorCode QPFetiConvertNumberingIS(QP qp, QPFetiNumberingType numtype, IS is, QPFetiNumberingType newnumtype, IS *newis);
 PERMON_EXTERN PetscErrorCode QPFetiSetUp(QP qp);

@@ -149,17 +149,110 @@ static PetscErrorCode QPFetiAssembleDirichlet_ModifyR_Private(QP qp, IS dbcis)
 }
 
 #undef __FUNCT__
+#define __FUNCT__ "QPFetiConvertNumberingIS"
+/*@
+   QPFetiConvertNumberingIS - Convert index set in a given numbering to another numbering.
+
+   Collective on QP
+
+   Input Parameters:
++  qp      - QP in FETI decomposed numbering
+.  numtype - the index set numbering - one of FETI_LOCAL, FETI_GLOBAL_DECOMPOSED, FETI_GLOBAL_UNDECOMPOSED
+-  is      - index set to convert
+
+   Output Parameter:
++  newnumtype - the new IS numbering
+-  newis      - converted IS
+
+   Level: developer
+
+.seealso:
+@*/
+PetscErrorCode QPFetiConvertNumberingIS(QP qp, QPFetiNumberingType numtype, IS is, QPFetiNumberingType newnumtype, IS *newis)
+{
+  PetscInt               n, nout;
+  const PetscInt        *arr;
+  PetscInt              *arr_l, *arr_g;
+  ISLocalToGlobalMapping l2dg;
+  QPFetiCtx              ctx;
+
+  PetscValidHeaderSpecific(qp, QP_CLASSID, 1);
+  PetscValidLogicalCollectiveEnum(qp, numtype, 2);
+  PetscValidHeaderSpecific(is, IS_CLASSID, 3);
+  PetscValidLogicalCollectiveEnum(qp, numtype, 4);
+  PetscAssertPointer(newis, 5);
+
+  PetscFunctionBegin;
+  if (numtype == newnumtype) {
+    *newis = is;
+    PetscCall(PetscObjectReference((PetscObject)is));
+  }
+
+  PetscCall(MatGetLocalToGlobalMapping(qp->A, &l2dg, NULL));
+  PetscCall(QPFetiGetCtx(qp, &ctx));
+  PetscCall(ISGetLocalSize(is, &n));
+
+  if (numtype == FETI_LOCAL) {
+    if (newnumtype == FETI_GLOBAL_DECOMPOSED) {
+      /* convert local indices to global decomposed */
+      PetscCall(ISLocalToGlobalMappingApplyIS(l2dg, is, newis));
+    } else if (newnumtype == FETI_GLOBAL_UNDECOMPOSED) {
+      /* convert local indices to global undecomposed */
+      PetscCall(ISLocalToGlobalMappingApplyIS(ctx->l2g_map, is, newis));
+    }
+  } else if (numtype == FETI_GLOBAL_DECOMPOSED) {
+    if (newnumtype == FETI_LOCAL || newnumtype == FETI_GLOBAL_UNDECOMPOSED) {
+      /* convert global decomposed indices to local */
+      PetscCall(ISGetIndices(is, &arr));
+      PetscCall(ISGlobalToLocalMappingApply(l2dg, IS_GTOLM_DROP, n, arr, &nout, NULL));
+      PERMON_ASSERT(n == nout, "n==nout");
+      PetscCall(PetscMalloc1(n, &arr_l));
+      PetscCall(ISGlobalToLocalMappingApply(l2dg, IS_GTOLM_DROP, n, arr, NULL, arr_l));
+      if (newnumtype == FETI_LOCAL) {
+        PetscCall(ISCreateGeneral(PetscObjectComm((PetscObject)qp), n, arr_l, PETSC_OWN_POINTER, newis));
+      } else if (newnumtype == FETI_GLOBAL_UNDECOMPOSED) {
+        /* convert local indices to global undecomposed */
+        PetscCall(PetscMalloc1(n, &arr_g));
+        PetscCall(ISLocalToGlobalMappingApply(ctx->l2g_map, n, arr_l, arr_g));
+        PetscCall(ISCreateGeneral(PetscObjectComm((PetscObject)qp), n, arr_g, PETSC_OWN_POINTER, newis));
+        PetscCall(PetscFree(arr_l));
+      }
+      PetscCall(ISRestoreIndices(is, &arr));
+    }
+  } else if (numtype == FETI_GLOBAL_UNDECOMPOSED) {
+    if (newnumtype == FETI_LOCAL || newnumtype == FETI_GLOBAL_DECOMPOSED) {
+      /* convert global undecomposed indices to local */
+      PetscCall(ISGetIndices(is, &arr));
+      PetscCall(ISGlobalToLocalMappingApply(ctx->l2g_map, IS_GTOLM_DROP, n, arr, &nout, NULL));
+      PERMON_ASSERT(n == nout, "n==nout");
+      PetscCall(PetscMalloc1(n, &arr_l));
+      PetscCall(ISGlobalToLocalMappingApply(ctx->l2g_map, IS_GTOLM_DROP, n, arr, NULL, arr_l));
+      if (newnumtype == FETI_LOCAL) {
+        PetscCall(ISCreateGeneral(PetscObjectComm((PetscObject)qp), n, arr_l, PETSC_OWN_POINTER, newis));
+      } else if (newnumtype == FETI_GLOBAL_DECOMPOSED) {
+        /* convert local indices to global decomposed */
+        PetscCall(PetscMalloc1(n, &arr_g));
+        PetscCall(ISLocalToGlobalMappingApply(l2dg, n, arr_l, arr_g));
+        PetscCall(ISCreateGeneral(PetscObjectComm((PetscObject)qp), n, arr_g, PETSC_OWN_POINTER, newis));
+        PetscCall(PetscFree(arr_l));
+      }
+      PetscCall(ISRestoreIndices(is, &arr));
+    }
+  }
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ "QPFetiAssembleDirichlet"
 PetscErrorCode QPFetiAssembleDirichlet(QP qp)
 {
-  static PetscBool       registered = PETSC_FALSE;
-  PetscBool              flg;
-  QPFetiCtx              ctx;
-  ISLocalToGlobalMapping l2dg  = NULL;
-  IS                     dbc_l = NULL, dbc_dg = NULL;
-  IS                     dbcis;
-  QPFetiNumberingType    numtype;
-  PetscBool              enforce_by_B;
+  static PetscBool    registered = PETSC_FALSE;
+  PetscBool           flg;
+  QPFetiCtx           ctx;
+  IS                  dbc_l = NULL, dbc_dg = NULL;
+  IS                  dbcis;
+  QPFetiNumberingType numtype;
+  PetscBool           enforce_by_B;
 
   PetscFunctionBeginI;
   if (!registered) {
@@ -175,29 +268,15 @@ PetscErrorCode QPFetiAssembleDirichlet(QP qp)
   numtype      = ctx->dbc->numtype;
   enforce_by_B = ctx->dbc->enforce_by_B;
 
+  /* convert the Dirichlet IS to the global decomposed numbering */
   if (numtype == FETI_GLOBAL_UNDECOMPOSED || numtype == FETI_LOCAL) {
     if (numtype == FETI_GLOBAL_UNDECOMPOSED) {
-      const PetscInt *dbcarr;
-      PetscInt       *dbc_l_arr;
-      PetscInt        ndbc, nout;
-
-      /* convert global undecomposed indices to local */
-      PetscCall(ISGetLocalSize(dbcis, &ndbc));
-      PetscCall(ISGetIndices(dbcis, &dbcarr));
-      PetscCall(ISGlobalToLocalMappingApply(ctx->l2g_map, IS_GTOLM_DROP, ndbc, dbcarr, &nout, NULL));
-      PERMON_ASSERT(ndbc == nout, "n==nout");
-      PetscCall(PetscMalloc1(ndbc, &dbc_l_arr));
-      PetscCall(ISGlobalToLocalMappingApply(ctx->l2g_map, IS_GTOLM_DROP, ndbc, dbcarr, NULL, dbc_l_arr));
-      PetscCall(ISRestoreIndices(dbcis, &dbcarr));
-      PetscCall(ISCreateGeneral(PetscObjectComm((PetscObject)qp), ndbc, dbc_l_arr, PETSC_OWN_POINTER, &dbc_l));
+      PetscCall(QPFetiConvertNumberingIS(qp, FETI_GLOBAL_UNDECOMPOSED, dbcis, FETI_LOCAL, &dbc_l));
     } else {
       dbc_l = dbcis;
       PetscCall(PetscObjectReference((PetscObject)dbcis));
     }
-
-    /* convert local indices to global decomposed */
-    PetscCall(MatGetLocalToGlobalMapping(qp->A, &l2dg, NULL));
-    PetscCall(ISLocalToGlobalMappingApplyIS(l2dg, dbc_l, &dbc_dg));
+    PetscCall(QPFetiConvertNumberingIS(qp, FETI_LOCAL, dbc_l, FETI_GLOBAL_DECOMPOSED, &dbc_dg));
   } else {
     dbc_dg = dbcis;
     PetscCall(PetscObjectReference((PetscObject)dbcis));
@@ -282,10 +361,6 @@ PetscErrorCode QPFetiAssembleDirichlet(QP qp)
     if (qp->parent) {
       PetscCall(PetscStrcmp(qp->transform_name, "QPTMatISToBlockDiag", &flg));
       if (flg) {
-        if (!dbc_l) {
-          PetscCall(MatGetLocalToGlobalMapping(qp->A, &l2dg, NULL));
-          PetscCall(ISGlobalToLocalMappingApplyIS(l2dg, IS_GTOLM_DROP, dbc_dg, &dbc_l));
-        }
         ((QPTMatISToBlockDiag_Ctx *)qp->postSolveCtx)->isDir = dbc_dg;
         PetscCall(PetscObjectReference((PetscObject)dbc_dg));
       }
@@ -426,7 +501,7 @@ PetscErrorCode QPFetiAssembleGluing(QP qp, FetiGluingType type, PetscBool exclud
   PetscCall(ISGetLocalSize(l2g, &nl));
 
   if (exclude_dir) {
-    PetscCall(QPFetiGetGlobalDir(qp, ctx->dbc->is, ctx->dbc->numtype, &global_dir));
+    PetscCall(QPFetiConvertNumberingIS(qp, ctx->dbc->numtype, ctx->dbc->is, FETI_GLOBAL_DECOMPOSED, &global_dir));
     PetscCall(ISAllGather(global_dir, &all_dir));
     PetscCall(ISSortRemoveDups(all_dir));
     PetscCall(ISDifference(i2g, all_dir, &i2g_less));
@@ -921,55 +996,5 @@ PetscErrorCode QPFetiGetBgtSF(QP qp, IS i2g, PetscInt Nu, IS i2l, PetscInt nl, F
   PetscCall(PetscLayoutDestroy(&links));
 
   PetscCall(PetscLogEventEnd(QP_Feti_GetBgtSF, 0, 0, 0, 0));
-  PetscFunctionReturnI(PETSC_SUCCESS);
-}
-
-#undef __FUNCT__
-#define __FUNCT__ "QPFetiGetGlobalDir"
-PetscErrorCode QPFetiGetGlobalDir(QP qp, IS dbc, QPFetiNumberingType numtype, IS *dbc_g)
-{
-  PetscInt        ndbc;
-  const PetscInt *dbc_arr;
-  const PetscInt *dbc_l_arr;
-  PetscInt       *global_arr;
-
-  PetscFunctionBeginI;
-  if (numtype == FETI_GLOBAL_DECOMPOSED || numtype == FETI_LOCAL) {
-    PetscInt *dbc_l_arr_nonconst = NULL;
-    QPFetiCtx ctx;
-
-    PetscCall(ISGetLocalSize(dbc, &ndbc));
-    PetscCall(ISGetIndices(dbc, &dbc_arr));
-
-    if (numtype == FETI_GLOBAL_DECOMPOSED) {
-      PetscInt               nout;
-      ISLocalToGlobalMapping l2dg;
-
-      PetscCall(PetscInfo(qp, "FETI_GLOBAL_DECOMPOSED numbering of Dirichlet DOFs\n"));
-      /* convert global decomposed indices to local */
-      PetscCall(MatGetLocalToGlobalMapping(qp->A, &l2dg, NULL));
-      PetscCall(ISGlobalToLocalMappingApply(l2dg, IS_GTOLM_DROP, ndbc, dbc_arr, &nout, NULL));
-      PERMON_ASSERT(ndbc == nout, "n==nout");
-      PetscCall(PetscMalloc1(ndbc, &dbc_l_arr_nonconst));
-      PetscCall(ISGlobalToLocalMappingApply(l2dg, IS_GTOLM_DROP, ndbc, dbc_arr, NULL, dbc_l_arr_nonconst));
-      dbc_l_arr = dbc_l_arr_nonconst;
-    } else { //FETI_LOCAL
-      PetscCall(PetscInfo(qp, "FETI_LOCAL numbering of Dirichlet DOFs\n"));
-      dbc_l_arr = dbc_arr;
-    }
-    /* convert local indices to global undecomposed */
-    PetscCall(QPFetiGetCtx(qp, &ctx));
-    PetscCall(PetscMalloc1(ndbc, &global_arr));
-    PetscCall(ISLocalToGlobalMappingApply(ctx->l2g_map, ndbc, dbc_l_arr, global_arr));
-
-    PetscCall(ISRestoreIndices(dbc, &dbc_arr));
-    PetscCall(ISCreateGeneral(PetscObjectComm((PetscObject)qp), ndbc, global_arr, PETSC_OWN_POINTER, dbc_g));
-    PetscCall(PetscFree(dbc_l_arr_nonconst));
-
-  } else { //FETI_GLOBAL_UNDECOMPOSED
-    PetscCall(PetscInfo(qp, "FETI_GLOBAL_UNDECOMPOSED numbering of Dirichlet DOFs\n"));
-    PetscCall(PetscObjectReference((PetscObject)dbc));
-    *dbc_g = dbc;
-  }
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
