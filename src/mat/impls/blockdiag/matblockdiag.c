@@ -826,7 +826,7 @@ PetscErrorCode MatCreateBlockDiag(MPI_Comm comm, Mat block, Mat *B_new)
     if (B->rmap->bs > 1) {
       PetscCall(PetscMalloc1(B->rmap->n, &l2grarr));
       for (i = 0; i < B->rmap->n / B->rmap->bs; i++) l2grarr[i] = rlo / B->rmap->bs + i;
-      PetscCall(ISCreateBlock(comm, B->rmap->bs, B->rmap->n, l2grarr, PETSC_OWN_POINTER, &l2gris));
+      PetscCall(ISCreateBlock(comm, B->rmap->bs, B->rmap->n / B->rmap->bs, l2grarr, PETSC_OWN_POINTER, &l2gris));
     } else {
       PetscCall(ISCreateStride(comm, B->rmap->n, rlo, 1, &l2gris));
     }
@@ -838,7 +838,7 @@ PetscErrorCode MatCreateBlockDiag(MPI_Comm comm, Mat block, Mat *B_new)
     if (B->cmap->bs > 1) {
       PetscCall(PetscMalloc1(B->cmap->n, &l2gcarr));
       for (i = 0; i < B->cmap->n / B->cmap->bs; i++) l2gcarr[i] = clo / B->cmap->bs + i;
-      PetscCall(ISCreateBlock(comm, B->cmap->bs, B->cmap->n, l2gcarr, PETSC_OWN_POINTER, &l2gcis));
+      PetscCall(ISCreateBlock(comm, B->cmap->bs, B->cmap->n / B->cmap->bs, l2gcarr, PETSC_OWN_POINTER, &l2gcis));
     } else {
       PetscCall(ISCreateStride(comm, B->cmap->n, clo, 1, &l2gcis));
     }
