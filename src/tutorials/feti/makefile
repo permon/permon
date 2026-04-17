@@ -1,11 +1,11 @@
-ALL: ex1 ex71
+ALL: ex1 ex3 ex71
 
 CFLAGS      = -I.
 FFLAGS      =
 CPPFLAGS    =
 FPPFLAGS    =
 LOCDIR      = src/tutorials/feti
-EXAMPLESC   = ex1.c ex71.c
+EXAMPLESC   = ex1.c ex3.c ex71.c
 EXAMPLECH   =
 EXAMPLESF   =
 MANSEC      =
