@@ -2,7 +2,7 @@
 ALL: lib
 
 LIBBASE  = libpermon
-DIRS     = blockdiag inv composite timer petscfix onerow gluing extension
+DIRS     = blockdiag inv composite timer petscfix onerow gluing extension is
 LOCDIR   = src/mat/impls/
 MANSEC	 = Mat
 

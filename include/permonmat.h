@@ -115,6 +115,9 @@ PERMON_EXTERN PetscErrorCode MatNestPermonGetColumnISs(Mat A, IS **is_new);
 /* MATPROD specific methods */
 PERMON_EXTERN PetscErrorCode MatProdGetMat(Mat A, PetscInt i, Mat *Ai);
 
+/* MATIS specific methods */
+PERMON_EXTERN PetscErrorCode MatISIndicesGlobalToLocal(Mat A, PetscInt nglobal, const PetscInt global[], PetscInt *nlocal, PetscInt *local[]);
+
 /*   GENERAL Mat   */
 PERMON_EXTERN PetscInt       MatGetMaxEigenvalue_composed_id;
 PERMON_EXTERN PetscErrorCode MatFactored(Mat A, PetscBool *flg);
