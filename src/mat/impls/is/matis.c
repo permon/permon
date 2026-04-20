@@ -4,6 +4,27 @@
 /* This is based on MatZeroRowsColumns_Private_IS */
 #undef __FUNCT__
 #define __FUNCT__ "MatISIndicesGlobalToLocal"
+/*@
+   MatISIndicesGlobalToLocal - Convert and distribute global undecomposed numbering into local numbering
+
+   Collective on Mat
+
+   Input Parameters:
++  A       - MATIS matrix
+.  nglobal - number of indices to convert and distribute
+-  global  - indices to convert
+
+   Output Parameter:
++  nlocal - number of local indices
+-  local  - converted local indices
+
+   Level: developer
+
+   Notes:
+   Any process can set any global number. The local indices are without duplicates.
+
+.seealso:
+@*/
 PetscErrorCode MatISIndicesGlobalToLocal(Mat A, PetscInt nglobal, const PetscInt global[], PetscInt *nlocal, PetscInt *local[])
 {
   Mat_IS   *matis;
@@ -33,11 +54,10 @@ PetscErrorCode MatISIndicesGlobalToLocal(Mat A, PetscInt nglobal, const PetscInt
   PetscCall(PetscSFBcastEnd(matis->sf, MPIU_INT, matis->sf_rootdata, matis->sf_leafdata, MPI_REPLACE));
   /* count the indices */
   nr = 0;
-  for (PetscInt i = 0; i < nl; i++)
-    if (matis->sf_leafdata[i]) nr++;
-  PetscCall(PetscMalloc1(nr, local));
-  for (PetscInt i = 0; i < nr; i++)
-    if (matis->sf_leafdata[i]) (*local)[i] = i;
+  PetscCall(PetscMalloc1(nl, local));
+  for (PetscInt i = 0; i < nl; i++) {
+    if (matis->sf_leafdata[i]) (*local)[nr++] = i;
+  }
   *nlocal = nr;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
