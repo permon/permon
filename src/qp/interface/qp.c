@@ -235,14 +235,14 @@ PetscErrorCode QPCompareEqMultiplierWithLeastSquare(QP qp, PetscReal *norm)
    Collective on QP
 
    Input Parameters:
-+  qp - the QP
--  v - visualization context
++  qp     - the QP
+-  viewer - visualization context
 
    Level: intermediate
 
 .seealso: QPChainViewKKT(), QPSSolve()
 @*/
-PetscErrorCode QPViewKKT(QP qp, PetscViewer v)
+PetscErrorCode QPViewKKT(QP qp, PetscViewer viewer)
 {
   PetscReal   normb = 0.0, norm = 0.0;
   PetscScalar dot = 0.0;
@@ -255,19 +255,19 @@ PetscErrorCode QPViewKKT(QP qp, PetscViewer v)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp, QP_CLASSID, 1);
   PetscCall(PetscObjectGetComm((PetscObject)qp, &comm));
-  if (!v) v = PETSC_VIEWER_STDOUT_(comm);
-  PetscValidHeaderSpecific(v, PETSC_VIEWER_CLASSID, 2);
-  PetscCheckSameComm(qp, 1, v, 2);
+  if (!viewer) PetscCall(PetscViewerASCIIGetStdout(comm, &viewer));
+  PetscValidHeaderSpecific(viewer, PETSC_VIEWER_CLASSID, 2);
+  PetscCheckSameComm(qp, 1, viewer, 2);
 
-  PetscCall(PetscObjectTypeCompare((PetscObject)v, PETSCVIEWERASCII, &flg));
-  PetscCheck(flg, comm, PETSC_ERR_SUP, "Viewer type %s not supported for QP", ((PetscObject)v)->type_name);
+  PetscCall(PetscObjectTypeCompare((PetscObject)viewer, PETSCVIEWERASCII, &flg));
+  PetscCheck(flg, comm, PETSC_ERR_SUP, "Viewer type %s not supported for QP", ((PetscObject)viewer)->type_name);
 
   PetscCall(PetscOptionsGetBool(((PetscObject)qp)->options, NULL, "-qp_view_kkt_compare_lambda_E", &compare_lambda_E, NULL));
 
   PetscCall(PetscObjectName((PetscObject)qp));
-  PetscCall(PetscObjectPrintClassNamePrefixType((PetscObject)qp, v));
-  PetscCall(PetscViewerASCIIPrintf(v, "  #%" PetscInt_FMT " in chain, derived by %s\n", qp->id, qp->transform_name));
-  if (!qp->solved) { PetscCall(PetscViewerASCIIPrintf(v, "*** WARNING: QP is not solved. ***\n")); }
+  PetscCall(PetscObjectPrintClassNamePrefixType((PetscObject)qp, viewer));
+  PetscCall(PetscViewerASCIIPrintf(viewer, "  #%" PetscInt_FMT " in chain, derived by %s\n", qp->id, qp->transform_name));
+  if (!qp->solved) { PetscCall(PetscViewerASCIIPrintf(viewer, "*** WARNING: QP is not solved. ***\n")); }
 
   PetscCall(QPGetOperator(qp, &A));
   PetscCall(QPGetRhs(qp, &b));
@@ -276,12 +276,12 @@ PetscErrorCode QPViewKKT(QP qp, PetscViewer v)
   PetscCall(QPGetSolutionVector(qp, &x));
   PetscCall(VecNorm(b, NORM_2, &normb));
 
-  QPView_Vec(v, x, "x");
-  QPView_Vec(v, b, "b");
-  if (cE) QPView_Vec(v, cE, "cE");
-  if (BE && !cE) PetscCall(PetscViewerASCIIPrintf(v, "||cE|| = 0.00e-00    max(cE) = 0.00e-00 = cE(0)    min(cE) = 0.00e-00 = cE(0)\n"));
-  if (cI) QPView_Vec(v, cI, "cI");
-  if (BI && !cI) PetscCall(PetscViewerASCIIPrintf(v, "||cI|| = 0.00e-00    max(cI) = 0.00e-00 = cI(0)    min(cI) = 0.00e-00 = cI(0)\n"));
+  QPView_Vec(viewer, x, "x");
+  QPView_Vec(viewer, b, "b");
+  if (cE) QPView_Vec(viewer, cE, "cE");
+  if (BE && !cE) PetscCall(PetscViewerASCIIPrintf(viewer, "||cE|| = 0.00e-00    max(cE) = 0.00e-00 = cE(0)    min(cE) = 0.00e-00 = cE(0)\n"));
+  if (cI) QPView_Vec(viewer, cI, "cI");
+  if (BI && !cI) PetscCall(PetscViewerASCIIPrintf(viewer, "||cI|| = 0.00e-00    max(cI) = 0.00e-00 = cI(0)    min(cI) = 0.00e-00 = cI(0)\n"));
 
   PetscCall(VecDuplicate(b, &r));
   PetscCall(QPComputeLagrangianGradient(qp, x, r, &kkt_name));
@@ -290,12 +290,12 @@ PetscErrorCode QPViewKKT(QP qp, PetscViewer v)
   if (!notavail) {
     if (compare_lambda_E) {
       PetscCall(QPCompareEqMultiplierWithLeastSquare(qp, &norm));
-      PetscCall(PetscViewerASCIIPrintf(v, "||BE'*lambda_E - BE'*lambda_E_LS|| = %.4e\n", (double)norm));
+      PetscCall(PetscViewerASCIIPrintf(viewer, "||BE'*lambda_E - BE'*lambda_E_LS|| = %.4e\n", (double)norm));
     }
     PetscCall(VecNorm(r, NORM_2, &norm));
-    PetscCall(PetscViewerASCIIPrintf(v, "r = ||%s|| = %.2e    rO/||b|| = %.2e\n", kkt_name, (double)norm, (double)norm / (double)normb));
+    PetscCall(PetscViewerASCIIPrintf(viewer, "r = ||%s|| = %.2e    rO/||b|| = %.2e\n", kkt_name, (double)norm, (double)norm / (double)normb));
   } else {
-    PetscCall(PetscViewerASCIIPrintf(v, "r = ||%s|| not available\n", kkt_name));
+    PetscCall(PetscViewerASCIIPrintf(viewer, "r = ||%s|| not available\n", kkt_name));
   }
   PetscCall(VecDestroy(&r));
   PetscCall(PetscFree(kkt_name));
@@ -307,20 +307,20 @@ PetscErrorCode QPViewKKT(QP qp, PetscViewer v)
       if (cE) PetscCall(VecAXPY(r, -1.0, cE));
       PetscCall(VecNorm(r, NORM_2, &norm));
       if (cE) {
-        PetscCall(PetscViewerASCIIPrintf(v, "r = ||BE*x-cE||          = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
+        PetscCall(PetscViewerASCIIPrintf(viewer, "r = ||BE*x-cE||          = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
       } else {
-        PetscCall(PetscViewerASCIIPrintf(v, "r = ||BE*x||             = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
+        PetscCall(PetscViewerASCIIPrintf(viewer, "r = ||BE*x||             = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
       }
       PetscCall(VecDestroy(&r));
     } else {
       if (cE) {
-        PetscCall(PetscViewerASCIIPrintf(v, "r = ||BE*x-cE||         not available\n"));
+        PetscCall(PetscViewerASCIIPrintf(viewer, "r = ||BE*x-cE||         not available\n"));
       } else {
         Vec t = qp->xwork;
         PetscCall(QPPFApplyGtG(qp->pf, x, t)); /* BEtBEx = BE'*BE*x */
         PetscCall(VecDot(x, t, &dot));         /* norm = x'*BE'*BE*x */
         norm = PetscRealPart(PetscSqrtScalar(dot));
-        PetscCall(PetscViewerASCIIPrintf(v, "r = ||BE*x||             = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
+        PetscCall(PetscViewerASCIIPrintf(viewer, "r = ||BE*x||             = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
       }
     }
   }
@@ -340,24 +340,24 @@ PetscErrorCode QPViewKKT(QP qp, PetscViewer v)
     PetscCall(VecPointwiseMax(t, r, o));  /* t = max(r,o)     */
     PetscCall(VecNorm(t, NORM_2, &norm)); /* norm = norm(t)     */
     if (cI) {
-      PetscCall(PetscViewerASCIIPrintf(v, "r = ||max(BI*x-cI,0)||   = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
+      PetscCall(PetscViewerASCIIPrintf(viewer, "r = ||max(BI*x-cI,0)||   = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
     } else {
-      PetscCall(PetscViewerASCIIPrintf(v, "r = ||max(BI*x,0)||      = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
+      PetscCall(PetscViewerASCIIPrintf(viewer, "r = ||max(BI*x,0)||      = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
     }
 
     /* lambda >= o  =>  examine min(lambda,o) */
     PetscCall(VecSet(o, 0.0)); /* o = zeros(size(r)) */
     PetscCall(VecPointwiseMin(t, qp->lambda_I, o));
     PetscCall(VecNorm(t, NORM_2, &norm)); /* norm = ||min(lambda,o)|| */
-    PetscCall(PetscViewerASCIIPrintf(v, "r = ||min(lambda_I,0)||  = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
+    PetscCall(PetscViewerASCIIPrintf(viewer, "r = ||min(lambda_I,0)||  = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
 
     /* lambda'*(BI*x-cI) = 0 */
     PetscCall(VecDot(qp->lambda_I, r, &dot));
     norm = PetscRealPart(PetscAbsScalar(dot));
     if (cI) {
-      PetscCall(PetscViewerASCIIPrintf(v, "r = |lambda_I'*(BI*x-cI)|= %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
+      PetscCall(PetscViewerASCIIPrintf(viewer, "r = |lambda_I'*(BI*x-cI)|= %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
     } else {
-      PetscCall(PetscViewerASCIIPrintf(v, "r = |lambda_I'*(BI*x)|= %.2e       r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
+      PetscCall(PetscViewerASCIIPrintf(viewer, "r = |lambda_I'*(BI*x)|= %.2e       r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
     }
 
     PetscCall(VecDestroy(&o));
@@ -365,7 +365,7 @@ PetscErrorCode QPViewKKT(QP qp, PetscViewer v)
     PetscCall(VecDestroy(&t));
   }
 
-  if (qp->qpc) PetscCall(QPCViewKKT(qp->qpc, x, normb, v));
+  if (qp->qpc) PetscCall(QPCViewKKT(qp->qpc, x, normb, viewer));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -377,14 +377,14 @@ PetscErrorCode QPViewKKT(QP qp, PetscViewer v)
    Collective on QP
 
    Input Parameters:
-+  qp - the QP
--  v - visualization context
++  qp     - the QP
+-  viewer - visualization context
 
   Level: beginner
 
 .seealso QPChainView()
 @*/
-PetscErrorCode QPView(QP qp, PetscViewer v)
+PetscErrorCode QPView(QP qp, PetscViewer viewer)
 {
   Vec       b, cE, cI, lb, ub;
   Mat       A, R, BE, BI;
@@ -396,15 +396,15 @@ PetscErrorCode QPView(QP qp, PetscViewer v)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp, QP_CLASSID, 1);
   PetscCall(PetscObjectGetComm((PetscObject)qp, &comm));
-  if (!v) v = PETSC_VIEWER_STDOUT_(comm);
-  PetscValidHeaderSpecific(v, PETSC_VIEWER_CLASSID, 2);
-  PetscCheckSameComm(qp, 1, v, 2);
+  if (!viewer) PetscCall(PetscViewerASCIIGetStdout(comm, &viewer));
+  PetscValidHeaderSpecific(viewer, PETSC_VIEWER_CLASSID, 2);
+  PetscCheckSameComm(qp, 1, viewer, 2);
 
-  PetscCall(PetscObjectTypeCompare((PetscObject)v, PETSCVIEWERASCII, &iascii));
-  PetscCheck(iascii, comm, PETSC_ERR_SUP, "Viewer type %s not supported for QP", ((PetscObject)v)->type_name);
+  PetscCall(PetscObjectTypeCompare((PetscObject)viewer, PETSCVIEWERASCII, &iascii));
+  PetscCheck(iascii, comm, PETSC_ERR_SUP, "Viewer type %s not supported for QP", ((PetscObject)viewer)->type_name);
   PetscCall(PetscObjectName((PetscObject)qp));
-  PetscCall(PetscObjectPrintClassNamePrefixType((PetscObject)qp, v));
-  PetscCall(PetscViewerASCIIPrintf(v, "#%" PetscInt_FMT " in chain, derived by %s\n", qp->id, qp->transform_name));
+  PetscCall(PetscObjectPrintClassNamePrefixType((PetscObject)qp, viewer));
+  PetscCall(PetscViewerASCIIPrintf(viewer, "#%" PetscInt_FMT " in chain, derived by %s\n", qp->id, qp->transform_name));
 
   PetscCall(QPGetOperator(qp, &A));
   PetscCall(QPGetOperatorNullSpace(qp, &R));
@@ -415,18 +415,18 @@ PetscErrorCode QPView(QP qp, PetscViewer v)
   PetscCall(QPGetQPC(qp, &qpc));
   PetscCall(QPChainFind(qp, (PetscErrorCode (*)(QP))QPTDualize, &childDual));
 
-  PetscCall(PetscViewerASCIIPrintf(v, "  LOADED OBJECTS:\n"));
-  PetscCall(PetscViewerASCIIPrintf(v, "    %-32s %-16s %s\n", "what", "name", "present"));
-  PetscCall(QPView_PrintObjectLoaded(v, A, "Hessian"));
-  PetscCall(QPView_PrintObjectLoaded(v, b, "linear term (right-hand-side)"));
-  PetscCall(QPView_PrintObjectLoaded(v, R, "R (kernel of K)"));
-  PetscCall(QPView_PrintObjectLoaded(v, lb, "lower bounds"));
-  PetscCall(QPView_PrintObjectLoaded(v, ub, "upper bounds"));
-  PetscCall(QPView_PrintObjectLoaded(v, BE, "linear eq. constraint matrix"));
-  PetscCall(QPView_PrintObjectLoaded(v, cE, "linear eq. constraint RHS"));
-  PetscCall(QPView_PrintObjectLoaded(v, BI, "linear ineq. constraint"));
-  PetscCall(QPView_PrintObjectLoaded(v, cI, "linear ineq. constraint RHS"));
-  PetscCall(QPView_PrintObjectLoaded(v, qpc, "QPC"));
+  PetscCall(PetscViewerASCIIPrintf(viewer, "  LOADED OBJECTS:\n"));
+  PetscCall(PetscViewerASCIIPrintf(viewer, "    %-32s %-16s %s\n", "what", "name", "present"));
+  PetscCall(QPView_PrintObjectLoaded(viewer, A, "Hessian"));
+  PetscCall(QPView_PrintObjectLoaded(viewer, b, "linear term (right-hand-side)"));
+  PetscCall(QPView_PrintObjectLoaded(viewer, R, "R (kernel of K)"));
+  PetscCall(QPView_PrintObjectLoaded(viewer, lb, "lower bounds"));
+  PetscCall(QPView_PrintObjectLoaded(viewer, ub, "upper bounds"));
+  PetscCall(QPView_PrintObjectLoaded(viewer, BE, "linear eq. constraint matrix"));
+  PetscCall(QPView_PrintObjectLoaded(viewer, cE, "linear eq. constraint RHS"));
+  PetscCall(QPView_PrintObjectLoaded(viewer, BI, "linear ineq. constraint"));
+  PetscCall(QPView_PrintObjectLoaded(viewer, cI, "linear ineq. constraint RHS"));
+  PetscCall(QPView_PrintObjectLoaded(viewer, qpc, "QPC"));
 
   if (A) PetscCall(MatPrintInfo(A));
   if (b) PetscCall(VecPrintInfo(b));

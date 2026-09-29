@@ -282,12 +282,14 @@ PetscErrorCode QPChainPostSolve(QP qp)
    Collective on QP
 
    Input Parameters:
-+  qp - a QP specifying the chain
--  v - viewer
++  qp     - a QP specifying the chain
+-  viewer - viewer
 
    Level: advanced
+
+.seealso: QPChainView(), QPViewKKT()
 @*/
-PetscErrorCode QPChainViewKKT(QP qp, PetscViewer v)
+PetscErrorCode QPChainViewKKT(QP qp, PetscViewer viewer)
 {
   MPI_Comm  comm;
   PetscBool iascii, first = PETSC_TRUE;
@@ -296,26 +298,26 @@ PetscErrorCode QPChainViewKKT(QP qp, PetscViewer v)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp, QP_CLASSID, 1);
   PetscCall(PetscObjectGetComm((PetscObject)qp, &comm));
-  if (!v) v = PETSC_VIEWER_STDOUT_(comm);
-  PetscValidHeaderSpecific(v, PETSC_VIEWER_CLASSID, 2);
-  PetscCheckSameComm(qp, 1, v, 2);
+  if (!viewer) PetscCall(PetscViewerASCIIGetStdout(comm, &viewer));
+  PetscValidHeaderSpecific(viewer, PETSC_VIEWER_CLASSID, 2);
+  PetscCheckSameComm(qp, 1, viewer, 2);
 
-  PetscCall(PetscObjectTypeCompare((PetscObject)v, PETSCVIEWERASCII, &iascii));
-  PetscCheck(iascii, comm, PETSC_ERR_SUP, "Viewer type %s not supported", ((PetscObject)v)->type_name);
+  PetscCall(PetscObjectTypeCompare((PetscObject)viewer, PETSCVIEWERASCII, &iascii));
+  PetscCheck(iascii, comm, PETSC_ERR_SUP, "Viewer type %s not supported", ((PetscObject)viewer)->type_name);
 
-  PetscCall(PetscViewerASCIIPrintf(v, "=====================\n"));
+  PetscCall(PetscViewerASCIIPrintf(viewer, "=====================\n"));
   PetscCall(QPChainGetLast(qp, &cqp));
   while (1) {
     if (first) {
       first = PETSC_FALSE;
     } else {
-      PetscCall(PetscViewerASCIIPrintf(v, "-------------------\n"));
+      PetscCall(PetscViewerASCIIPrintf(viewer, "-------------------\n"));
     }
-    PetscCall(QPViewKKT(cqp, v));
+    PetscCall(QPViewKKT(cqp, viewer));
     cqp = cqp->parent;
     if (cqp == qp) break;
   }
-  PetscCall(PetscViewerASCIIPrintf(v, "=====================\n"));
+  PetscCall(PetscViewerASCIIPrintf(viewer, "=====================\n"));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -328,11 +330,12 @@ PetscErrorCode QPChainViewKKT(QP qp, PetscViewer v)
 
    Input Parameters:
 +  qp - a QP specifying the chain
--  v - viewer
+-  viewer - viewer
 
    Level: advanced
+.seealso: QPChainViewKKT(), QPView()
 @*/
-PetscErrorCode QPChainView(QP qp, PetscViewer v)
+PetscErrorCode QPChainView(QP qp, PetscViewer viewer)
 {
   MPI_Comm  comm;
   PetscBool iascii;
@@ -340,23 +343,23 @@ PetscErrorCode QPChainView(QP qp, PetscViewer v)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp, QP_CLASSID, 1);
   PetscCall(PetscObjectGetComm((PetscObject)qp, &comm));
-  if (!v) v = PETSC_VIEWER_STDOUT_(comm);
-  PetscValidHeaderSpecific(v, PETSC_VIEWER_CLASSID, 2);
-  PetscCheckSameComm(qp, 1, v, 2);
+  if (!viewer) PetscCall(PetscViewerASCIIGetStdout(comm, &viewer));
+  PetscValidHeaderSpecific(viewer, PETSC_VIEWER_CLASSID, 2);
+  PetscCheckSameComm(qp, 1, viewer, 2);
 
-  PetscCall(PetscObjectTypeCompare((PetscObject)v, PETSCVIEWERASCII, &iascii));
-  PetscCheck(iascii, comm, PETSC_ERR_SUP, "Viewer type %s not supported", ((PetscObject)v)->type_name);
+  PetscCall(PetscObjectTypeCompare((PetscObject)viewer, PETSCVIEWERASCII, &iascii));
+  PetscCheck(iascii, comm, PETSC_ERR_SUP, "Viewer type %s not supported", ((PetscObject)viewer)->type_name);
 
-  PetscCall(PetscViewerASCIIPrintf(v, "=====================\n"));
-  PetscCall(PetscViewerASCIIPrintf(v, __FUNCT__ " output follows\n"));
-  PetscCall(QPView(qp, v));
+  PetscCall(PetscViewerASCIIPrintf(viewer, "=====================\n"));
+  PetscCall(PetscViewerASCIIPrintf(viewer, __FUNCT__ " output follows\n"));
+  PetscCall(QPView(qp, viewer));
   PetscCall(QPGetChild(qp, &qp));
   while (qp) {
-    PetscCall(PetscViewerASCIIPrintf(v, "-------------------\n"));
-    PetscCall(QPView(qp, v));
+    PetscCall(PetscViewerASCIIPrintf(viewer, "-------------------\n"));
+    PetscCall(QPView(qp, viewer));
     PetscCall(QPGetChild(qp, &qp));
   }
-  PetscCall(PetscViewerASCIIPrintf(v, "=====================\n"));
+  PetscCall(PetscViewerASCIIPrintf(viewer, "=====================\n"));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -369,11 +372,12 @@ PetscErrorCode QPChainView(QP qp, PetscViewer v)
 
    Input Parameters:
 +  qp - a QP specifying the chain
--  v - viewer
+-  viewer - viewer
 
    Level: advanced
+.seealso: QPChainView(), QPViewQPPF()
 @*/
-PetscErrorCode QPChainViewQPPF(QP qp, PetscViewer v)
+PetscErrorCode QPChainViewQPPF(QP qp, PetscViewer viewer)
 {
   MPI_Comm  comm;
   PetscBool iascii;
@@ -382,30 +386,30 @@ PetscErrorCode QPChainViewQPPF(QP qp, PetscViewer v)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qp, QP_CLASSID, 1);
   PetscCall(PetscObjectGetComm((PetscObject)qp, &comm));
-  if (!v) v = PETSC_VIEWER_STDOUT_(comm);
-  PetscValidHeaderSpecific(v, PETSC_VIEWER_CLASSID, 2);
-  PetscCheckSameComm(qp, 1, v, 2);
+  if (!viewer) PetscCall(PetscViewerASCIIGetStdout(comm, &viewer));
+  PetscValidHeaderSpecific(viewer, PETSC_VIEWER_CLASSID, 2);
+  PetscCheckSameComm(qp, 1, viewer, 2);
 
-  PetscCall(PetscObjectTypeCompare((PetscObject)v, PETSCVIEWERASCII, &iascii));
-  PetscCheck(iascii, comm, PETSC_ERR_SUP, "Viewer type %s not supported", ((PetscObject)v)->type_name);
+  PetscCall(PetscObjectTypeCompare((PetscObject)viewer, PETSCVIEWERASCII, &iascii));
+  PetscCheck(iascii, comm, PETSC_ERR_SUP, "Viewer type %s not supported", ((PetscObject)viewer)->type_name);
 
-  PetscCall(PetscViewerASCIIPrintf(v, "=====================\n"));
-  PetscCall(PetscViewerASCIIPrintf(v, __FUNCT__ " output follows\n"));
+  PetscCall(PetscViewerASCIIPrintf(viewer, "=====================\n"));
+  PetscCall(PetscViewerASCIIPrintf(viewer, __FUNCT__ " output follows\n"));
   PetscCall(QPGetChild(qp, &qp));
-  PetscCall(PetscViewerASCIIPushTab(v));
+  PetscCall(PetscViewerASCIIPushTab(viewer));
   while (qp) {
     PetscCall(QPGetQPPF(qp, &pf));
     if (pf) {
-      PetscCall(PetscViewerASCIIPrintf(v, "-------------------\n"));
-      PetscCall(PetscObjectPrintClassNamePrefixType((PetscObject)qp, v));
-      PetscCall(PetscViewerASCIIPrintf(v, "  #%" PetscInt_FMT " in chain, derived by %s\n", qp->id, qp->transform_name));
-      PetscCall(PetscViewerASCIIPushTab(v));
-      PetscCall(QPPFView(pf, v));
-      PetscCall(PetscViewerASCIIPopTab(v));
+      PetscCall(PetscViewerASCIIPrintf(viewer, "-------------------\n"));
+      PetscCall(PetscObjectPrintClassNamePrefixType((PetscObject)qp, viewer));
+      PetscCall(PetscViewerASCIIPrintf(viewer, "  #%" PetscInt_FMT " in chain, derived by %s\n", qp->id, qp->transform_name));
+      PetscCall(PetscViewerASCIIPushTab(viewer));
+      PetscCall(QPPFView(pf, viewer));
+      PetscCall(PetscViewerASCIIPopTab(viewer));
     }
     PetscCall(QPGetChild(qp, &qp));
   }
-  PetscCall(PetscViewerASCIIPopTab(v));
-  PetscCall(PetscViewerASCIIPrintf(v, "=====================\n"));
+  PetscCall(PetscViewerASCIIPopTab(viewer));
+  PetscCall(PetscViewerASCIIPrintf(viewer, "=====================\n"));
   PetscFunctionReturn(PETSC_SUCCESS);
 }

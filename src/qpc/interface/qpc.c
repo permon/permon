@@ -76,71 +76,102 @@ PetscErrorCode QPCReset(QPC qpc)
 
 #undef __FUNCT__
 #define __FUNCT__ "QPCView"
-PetscErrorCode QPCView(QPC qpc, PetscViewer v)
+/*@
+   QPCView - Print information about the QPC.
+
+   Collective on QPC
+
+   Input Parameters:
++  qpc    - the QPC
+-  viewer - visualization context
+
+  Level: beginner
+
+.seealso QPView()
+@*/
+PetscErrorCode QPCView(QPC qpc, PetscViewer viewer)
 {
   PetscInt  nmb_of_constraints;
   PetscInt  block_size;
-  PetscBool islinear, issubsymmetric;
+  PetscBool islinear, issubsymmetric, isascii;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(qpc, QPC_CLASSID, 1);
-  PetscValidHeaderSpecific(v, PETSC_VIEWER_CLASSID, 2);
-  PetscCall(PetscObjectPrintClassNamePrefixType((PetscObject)qpc, v));
+  if (!viewer) PetscCall(PetscViewerASCIIGetStdout(PetscObjectComm((PetscObject)qpc), &viewer));
+  PetscValidHeaderSpecific(viewer, PETSC_VIEWER_CLASSID, 2);
+  PetscCheckSameComm(qpc, 1, viewer, 2);
+  PetscCall(PetscObjectPrintClassNamePrefixType((PetscObject)qpc, viewer));
 
-  /* get and view general properties of QPC */
-  PetscCall(PetscViewerASCIIPushTab(v));
+  PetscCall(PetscObjectTypeCompare((PetscObject)viewer, PETSCVIEWERASCII, &isascii));
+  if (isascii) {
+    /* get and view general properties of QPC */
+    PetscCall(PetscViewerASCIIPushTab(viewer));
 
-  /* linearity */
-  PetscCall(QPCIsLinear(qpc, &islinear));
-  if (islinear) {
-    PetscCall(PetscViewerASCIIPrintf(v, "linear: yes\n"));
-  } else {
-    PetscCall(PetscViewerASCIIPrintf(v, "linear: no\n"));
-  }
+    /* linearity */
+    PetscCall(QPCIsLinear(qpc, &islinear));
+    if (islinear) {
+      PetscCall(PetscViewerASCIIPrintf(viewer, "linear: yes\n"));
+    } else {
+      PetscCall(PetscViewerASCIIPrintf(viewer, "linear: no\n"));
+    }
 
-  /* subsymmetricity */
-  PetscCall(QPCIsSubsymmetric(qpc, &issubsymmetric));
-  if (issubsymmetric) {
-    PetscCall(PetscViewerASCIIPrintf(v, "subsymmetric: yes\n"));
-  } else {
-    PetscCall(PetscViewerASCIIPrintf(v, "subsymmetric: no\n"));
-  }
+    /* subsymmetricity */
+    PetscCall(QPCIsSubsymmetric(qpc, &issubsymmetric));
+    if (issubsymmetric) {
+      PetscCall(PetscViewerASCIIPrintf(viewer, "subsymmetric: yes\n"));
+    } else {
+      PetscCall(PetscViewerASCIIPrintf(viewer, "subsymmetric: no\n"));
+    }
 
-  /* get block size */
-  PetscCall(QPCGetBlockSize(qpc, &block_size));
-  PetscCall(PetscViewerASCIIPrintf(v, "block size: %" PetscInt_FMT "\n", block_size));
+    /* get block size */
+    PetscCall(QPCGetBlockSize(qpc, &block_size));
+    PetscCall(PetscViewerASCIIPrintf(viewer, "block size: %" PetscInt_FMT "\n", block_size));
 
-  /* get number of constraints */
-  PetscCall(QPCGetNumberOfConstraints(qpc, &nmb_of_constraints));
-  PetscCall(PetscViewerASCIIPrintf(v, "nmb of constraints: %" PetscInt_FMT "\n", nmb_of_constraints));
+    /* get number of constraints */
+    PetscCall(QPCGetNumberOfConstraints(qpc, &nmb_of_constraints));
+    PetscCall(PetscViewerASCIIPrintf(viewer, "nmb of constraints: %" PetscInt_FMT "\n", nmb_of_constraints));
 
-  /* print IS */
-  PetscCall(PetscViewerASCIIPrintf(v, "index set:\n"));
-  PetscCall(PetscViewerASCIIPushTab(v));
-  if (qpc->is) {
-    PetscCall(ISView(qpc->is, v));
-    // TODO: make ISViewBlock to view IS in blocks
-    // PetscCall(ISViewBlock(qpc->is,v,block_size));
-  } else {
-    PetscCall(PetscViewerASCIIPrintf(v, "not present; all components are constrained or QPC is composite\n"));
-  }
+    /* print IS */
+    PetscCall(PetscViewerASCIIPrintf(viewer, "index set:\n"));
+    PetscCall(PetscViewerASCIIPushTab(viewer));
+    if (qpc->is) {
+      PetscCall(ISView(qpc->is, viewer));
+      // TODO: make ISViewBlock to view IS in blocks
+      // PetscCall(ISViewBlock(qpc->is,viewer,block_size));
+    } else {
+      PetscCall(PetscViewerASCIIPrintf(viewer, "not present; all components are constrained or QPC is composite\n"));
+    }
 
-  PetscCall(PetscViewerASCIIPopTab(v));
+    PetscCall(PetscViewerASCIIPopTab(viewer));
 
-  if (*qpc->ops->view) {
-    PetscUseTypeMethod(qpc, view, v);
-  } else {
-    const QPCType type;
-    PetscCall(QPCGetType(qpc, &type));
-    PetscCall(PetscInfo(qpc, "Warning: QPCView not implemented yet for type %s\n", type));
-  }
-  PetscCall(PetscViewerASCIIPopTab(v));
+    if (*qpc->ops->view) {
+      PetscUseTypeMethod(qpc, view, viewer);
+    } else {
+      const QPCType type;
+      PetscCall(QPCGetType(qpc, &type));
+      PetscCall(PetscInfo(qpc, "Warning: QPCView not implemented yet for type %s\n", type));
+    }
+    PetscCall(PetscViewerASCIIPopTab(viewer));
+  } else PetscTryTypeMethod(qpc, view, viewer);
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
 #define __FUNCT__ "QPCViewKKT"
-PetscErrorCode QPCViewKKT(QPC qpc, Vec x, PetscReal normb, PetscViewer v)
+/*@
+   QPCViewKKT - Print information about the QPC KKT conditions.
+
+   Collective on QPC
+
+   Input Parameters:
++  qpc    - the QPC
+-  viewer - visualization context
+
+  Level: beginner
+
+.seealso QPViewKKT()
+@*/
+PetscErrorCode QPCViewKKT(QPC qpc, Vec x, PetscReal normb, PetscViewer viewer)
 {
   Vec x_sub;
 
@@ -148,10 +179,12 @@ PetscErrorCode QPCViewKKT(QPC qpc, Vec x, PetscReal normb, PetscViewer v)
   PetscValidHeaderSpecific(qpc, QPC_CLASSID, 1);
   PetscValidHeaderSpecific(x, VEC_CLASSID, 2);
   PetscValidLogicalCollectiveReal(qpc, normb, 3);
-  PetscValidHeaderSpecific(v, PETSC_VIEWER_CLASSID, 4);
+  if (!viewer) PetscCall(PetscViewerASCIIGetStdout(PetscObjectComm((PetscObject)qpc), &viewer));
+  PetscValidHeaderSpecific(viewer, PETSC_VIEWER_CLASSID, 4);
+  PetscCheckSameComm(qpc, 1, viewer, 4);
 
   PetscCall(QPCGetSubvector(qpc, x, &x_sub));
-  PetscUseTypeMethod(qpc, viewkkt, x_sub, normb, v);
+  PetscUseTypeMethod(qpc, viewkkt, x_sub, normb, viewer);
   PetscCall(QPCRestoreSubvector(qpc, x, &x_sub));
   PetscFunctionReturn(PETSC_SUCCESS);
 }

@@ -19,8 +19,8 @@ PERMON_EXTERN PetscErrorCode    QPCRegisterAll(void);
 PERMON_EXTERN PetscErrorCode    QPCRegister(const char[], PetscErrorCode (*)(QPC));
 
 PERMON_EXTERN PetscErrorCode QPCCreate(MPI_Comm comm, QPC *qpc);
-PERMON_EXTERN PetscErrorCode QPCView(QPC qpc, PetscViewer v);
-PERMON_EXTERN PetscErrorCode QPCViewKKT(QPC qpc, Vec x, PetscReal normb, PetscViewer v);
+PERMON_EXTERN PetscErrorCode QPCView(QPC, PetscViewer);
+PERMON_EXTERN PetscErrorCode QPCViewKKT(QPC, Vec x, PetscReal normb, PetscViewer);
 PERMON_EXTERN PetscErrorCode QPCDestroy(QPC *qpc);
 PERMON_EXTERN PetscErrorCode QPCSetFromOptions(QPC qpc);
 PERMON_EXTERN PetscErrorCode QPCSetUp(QPC qpc);

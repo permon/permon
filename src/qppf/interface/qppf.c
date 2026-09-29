@@ -782,6 +782,19 @@ PetscErrorCode QPPFGetKSP(QPPF cp, KSP *ksp)
 
 #undef __FUNCT__
 #define __FUNCT__ "QPPFView"
+/*@
+   QPPFView - Print information about the QPPF.
+
+   Collective on QPPF
+
+   Input Parameters:
++  cp     - the QPPF
+-  viewer - visualization context
+
+  Level: beginner
+
+.seealso:
+@*/
 PetscErrorCode QPPFView(QPPF cp, PetscViewer viewer)
 {
   MPI_Comm    comm;
@@ -792,12 +805,9 @@ PetscErrorCode QPPFView(QPPF cp, PetscViewer viewer)
   PetscValidHeaderSpecific(cp, QPPF_CLASSID, 1);
   PetscCall(PetscObjectGetComm((PetscObject)cp, &comm));
   PetscCallMPI(MPI_Comm_rank(comm, &rank));
-  if (!viewer) {
-    viewer = PETSC_VIEWER_STDOUT_(comm);
-  } else {
-    PetscValidHeaderSpecific(viewer, PETSC_VIEWER_CLASSID, 2);
-    PetscCheckSameComm(cp, 1, viewer, 2);
-  }
+  if (!viewer) PetscCall(PetscViewerASCIIGetStdout(comm, &viewer));
+  PetscValidHeaderSpecific(viewer, PETSC_VIEWER_CLASSID, 2);
+  PetscCheckSameComm(cp, 1, viewer, 2);
 
   PetscCall(PetscObjectTypeCompare((PetscObject)viewer, PETSCVIEWERASCII, &iascii));
   PetscCheck(iascii, PETSC_COMM_SELF, PETSC_ERR_SUP, "Viewer type %s not supported by QPPF", ((PetscObject)viewer)->type_name);

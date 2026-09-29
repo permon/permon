@@ -30,8 +30,8 @@ PERMON_EXTERN PetscErrorCode    QPSRegisterAll(void);
 PERMON_EXTERN PetscErrorCode    QPSRegister(const char[], PetscErrorCode (*)(QPS));
 
 PERMON_EXTERN PetscErrorCode QPSCreate(MPI_Comm comm, QPS *qps_new);
-PERMON_EXTERN PetscErrorCode QPSView(QPS qps, PetscViewer v);
-PERMON_EXTERN PetscErrorCode QPSViewConvergence(QPS qps, PetscViewer viewer);
+PERMON_EXTERN PetscErrorCode QPSView(QPS, PetscViewer);
+PERMON_EXTERN PetscErrorCode QPSViewConvergence(QPS, PetscViewer);
 PERMON_EXTERN PetscErrorCode QPSDestroy(QPS *qps);
 PERMON_EXTERN PetscErrorCode QPSSetFromOptions(QPS qps);
 PERMON_EXTERN PetscErrorCode QPSSetUp(QPS qps);
