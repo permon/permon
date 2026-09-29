@@ -11,7 +11,7 @@ PERMON_EXTERN PetscErrorCode QPPFInitializePackage();
 
 PERMON_EXTERN PetscErrorCode QPPFCreate(MPI_Comm comm, QPPF *cp);
 PERMON_EXTERN PetscErrorCode QPPFReset(QPPF cp);
-PERMON_EXTERN PetscErrorCode QPPFView(QPPF cp, PetscViewer v);
+PERMON_EXTERN PetscErrorCode QPPFView(QPPF, PetscViewer);
 PERMON_EXTERN PetscErrorCode QPPFSetUp(QPPF cp);
 PERMON_EXTERN PetscErrorCode QPPFSetFromOptions(QPPF cp);
 PERMON_EXTERN PetscErrorCode QPPFDestroy(QPPF *cp);

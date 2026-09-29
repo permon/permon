@@ -25,9 +25,9 @@ PERMON_EXTERN PetscErrorCode QPChainGetLast(QP qp, QP *child);
 PERMON_EXTERN PetscErrorCode QPChainPostSolve(QP qp);
 PERMON_EXTERN PetscErrorCode QPChainSetFromOptions(QP qp);
 PERMON_EXTERN PetscErrorCode QPChainSetUp(QP qp);
-PERMON_EXTERN PetscErrorCode QPChainView(QP qp, PetscViewer v);
-PERMON_EXTERN PetscErrorCode QPChainViewKKT(QP qp, PetscViewer v);
-PERMON_EXTERN PetscErrorCode QPChainViewQPPF(QP qp, PetscViewer v);
+PERMON_EXTERN PetscErrorCode QPChainView(QP, PetscViewer);
+PERMON_EXTERN PetscErrorCode QPChainViewKKT(QP, PetscViewer);
+PERMON_EXTERN PetscErrorCode QPChainViewQPPF(QP, PetscViewer);
 
 PERMON_EXTERN PetscErrorCode QPAddChild(QP qp, QPDuplicateOption opt, QP *newchild);
 PERMON_EXTERN PetscErrorCode QPRemoveChild(QP qp);

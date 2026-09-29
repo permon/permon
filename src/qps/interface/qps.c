@@ -282,26 +282,27 @@ PetscErrorCode QPSResetStatistics(QPS qps)
    Collective on QPS
 
    Input parameters:
-+  qps - instance of QPS
--  v - viewer
++  qps    - instance of QPS
+-  viewer - viewer
 
    Level: beginner
 
 .seealso QPSViewConvergence()
 @*/
-PetscErrorCode QPSView(QPS qps, PetscViewer v)
+PetscErrorCode QPSView(QPS qps, PetscViewer viewer)
 {
   PetscFunctionBegin;
-  PetscCall(PetscObjectPrintClassNamePrefixType((PetscObject)qps, v));
-  PetscCall(PetscViewerASCIIPushTab(v));
+  if (!viewer) PetscCall(PetscViewerASCIIGetStdout(PetscObjectComm((PetscObject)qps), &viewer));
+  PetscCall(PetscObjectPrintClassNamePrefixType((PetscObject)qps, viewer));
+  PetscCall(PetscViewerASCIIPushTab(viewer));
   if (*qps->ops->view) {
-    PetscUseTypeMethod(qps, view, v);
+    PetscUseTypeMethod(qps, view, viewer);
   } else {
     const QPSType type;
     PetscCall(QPSGetType(qps, &type));
     PetscCall(PetscInfo(qps, "Warning: QPSView not implemented yet for type %s\n", type));
   }
-  PetscCall(PetscViewerASCIIPopTab(v));
+  PetscCall(PetscViewerASCIIPopTab(viewer));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -965,37 +966,58 @@ PetscErrorCode QPSGetAutoPostSolve(QPS qps, PetscBool *flg)
 
 #undef __FUNCT__
 #define __FUNCT__ "QPSViewConvergence"
-PetscErrorCode QPSViewConvergence(QPS qps, PetscViewer v)
+/*@
+   QPSViewConvergence - view convergence information of QPS
+
+   Collective on QPS
+
+   Input parameters:
++  qps    - instance of QPS
+-  viewer - viewer
+
+   Level: beginner
+
+.seealso QPSView()
+@*/
+PetscErrorCode QPSViewConvergence(QPS qps, PetscViewer viewer)
 {
   MPI_Comm           comm;
   PetscReal          rnorm, rtol, abstol, dtol;
   PetscInt           its, maxits;
+  PetscBool          isascii;
   QP                 topqp;
   const QPSType      qpstype;
   KSPConvergedReason reason;
 
   PetscFunctionBegin;
+  PetscValidHeaderSpecific(qps, QPS_CLASSID, 1);
   PetscCall(PetscObjectGetComm((PetscObject)qps, &comm));
-  PetscCall(QPSGetQP(qps, &topqp));
+  if (!viewer) PetscCall(PetscViewerASCIIGetStdout(comm, &viewer));
+  PetscValidHeaderSpecific(viewer, PETSC_VIEWER_CLASSID, 2);
+  PetscCheckSameComm(qps, 1, viewer, 2);
 
-  PetscCall(QPSGetConvergedReason(qps, &reason));
-  PetscCall(QPSGetIterationNumber(qps, &its));
-  PetscCall(QPSGetResidualNorm(qps, &rnorm));
-  PetscCall(QPSGetTolerances(qps, &rtol, &abstol, &dtol, &maxits));
-  PetscCall(QPSGetType(qps, &qpstype));
+  PetscCall(PetscObjectTypeCompare((PetscObject)viewer, PETSCVIEWERASCII, &isascii));
+  if (isascii) {
+    PetscCall(QPSGetQP(qps, &topqp));
+    PetscCall(QPSGetConvergedReason(qps, &reason));
+    PetscCall(QPSGetIterationNumber(qps, &its));
+    PetscCall(QPSGetResidualNorm(qps, &rnorm));
+    PetscCall(QPSGetTolerances(qps, &rtol, &abstol, &dtol, &maxits));
+    PetscCall(QPSGetType(qps, &qpstype));
 
-  PetscCall(PetscObjectPrintClassNamePrefixType((PetscObject)qps, v));
-  PetscCall(PetscViewerASCIIPushTab(v));
-  PetscCall(PetscViewerASCIIPrintf(v, "last QPSSolve %s due to %s, KSPReason=%" PetscInt_FMT ", required %" PetscInt_FMT " iterations\n", (reason > 0) ? "CONVERGED" : "DIVERGED", KSPConvergedReasons[reason], reason, its));
-  PetscCall(PetscViewerASCIIPrintf(v, "all %" PetscInt_FMT " QPSSolves from last QPSReset/QPSResetStatistics have required %" PetscInt_FMT " iterations\n", qps->nsolves, qps->iterations_accumulated));
-  PetscCall(PetscViewerASCIIPrintf(v, "tolerances: rtol=%.1e, abstol=%.1e, dtol=%.1e, maxits=%" PetscInt_FMT "\n", (double)rtol, (double)abstol, (double)dtol, maxits));
-  if (*qps->ops->viewconvergence) {
-    PetscCall(PetscViewerASCIIPrintf(v, "%s specific:\n", qpstype));
-    PetscCall(PetscViewerASCIIPushTab(v));
-    PetscUseTypeMethod(qps, viewconvergence, v);
-    PetscCall(PetscViewerASCIIPopTab(v));
-  }
-  PetscCall(PetscViewerASCIIPopTab(v));
+    PetscCall(PetscObjectPrintClassNamePrefixType((PetscObject)qps, viewer));
+    PetscCall(PetscViewerASCIIPushTab(viewer));
+    PetscCall(PetscViewerASCIIPrintf(viewer, "last QPSSolve %s due to %s, KSPReason=%" PetscInt_FMT ", required %" PetscInt_FMT " iterations\n", (reason > 0) ? "CONVERGED" : "DIVERGED", KSPConvergedReasons[reason], reason, its));
+    PetscCall(PetscViewerASCIIPrintf(viewer, "all %" PetscInt_FMT " QPSSolves from last QPSReset/QPSResetStatistics have required %" PetscInt_FMT " iterations\n", qps->nsolves, qps->iterations_accumulated));
+    PetscCall(PetscViewerASCIIPrintf(viewer, "tolerances: rtol=%.1e, abstol=%.1e, dtol=%.1e, maxits=%" PetscInt_FMT "\n", (double)rtol, (double)abstol, (double)dtol, maxits));
+    if (*qps->ops->viewconvergence) {
+      PetscCall(PetscViewerASCIIPrintf(viewer, "%s specific:\n", qpstype));
+      PetscCall(PetscViewerASCIIPushTab(viewer));
+      PetscUseTypeMethod(qps, viewconvergence, viewer);
+      PetscCall(PetscViewerASCIIPopTab(viewer));
+    }
+    PetscCall(PetscViewerASCIIPopTab(viewer));
+  } else PetscTryTypeMethod(qps, viewconvergence, viewer);
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 

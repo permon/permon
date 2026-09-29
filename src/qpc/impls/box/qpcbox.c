@@ -308,120 +308,128 @@ PetscErrorCode QPCProject_Box(QPC qpc, Vec x, Vec Px)
 #define __FUNCT__ "QPCView_Box"
 PetscErrorCode QPCView_Box(QPC qpc, PetscViewer viewer)
 {
-  QPC_Box *ctx = (QPC_Box *)qpc->data;
+  QPC_Box  *ctx = (QPC_Box *)qpc->data;
+  PetscBool isascii;
 
   PetscFunctionBegin;
-  /* print lb */
-  if (ctx->lb) {
-    PetscCall(PetscViewerASCIIPrintf(viewer, "lb:\n"));
-    PetscCall(PetscViewerASCIIPushTab(viewer));
-    PetscCall(VecView(ctx->lb, viewer));
-    PetscCall(PetscViewerASCIIPopTab(viewer));
-  }
-  /* print ub */
-  if (ctx->ub) {
-    PetscCall(PetscViewerASCIIPrintf(viewer, "ub:\n"));
-    PetscCall(PetscViewerASCIIPushTab(viewer));
-    PetscCall(VecView(ctx->ub, viewer));
-    PetscCall(PetscViewerASCIIPopTab(viewer));
+  PetscCall(PetscObjectTypeCompare((PetscObject)viewer, PETSCVIEWERASCII, &isascii));
+  if (isascii) {
+    /* print lb */
+    if (ctx->lb) {
+      PetscCall(PetscViewerASCIIPrintf(viewer, "lb:\n"));
+      PetscCall(PetscViewerASCIIPushTab(viewer));
+      PetscCall(VecView(ctx->lb, viewer));
+      PetscCall(PetscViewerASCIIPopTab(viewer));
+    }
+    /* print ub */
+    if (ctx->ub) {
+      PetscCall(PetscViewerASCIIPrintf(viewer, "ub:\n"));
+      PetscCall(PetscViewerASCIIPushTab(viewer));
+      PetscCall(VecView(ctx->ub, viewer));
+      PetscCall(PetscViewerASCIIPopTab(viewer));
+    }
   }
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 #undef __FUNCT__
 #define __FUNCT__ "QPCViewKKT_Box"
-PetscErrorCode QPCViewKKT_Box(QPC qpc, Vec x, PetscReal normb, PetscViewer v)
+PetscErrorCode QPCViewKKT_Box(QPC qpc, Vec x, PetscReal normb, PetscViewer viewer)
 {
   QPC_Box    *ctx = (QPC_Box *)qpc->data;
   Vec         lb, ub, llb, lub, r, o;
   PetscScalar dot;
   PetscReal   norm;
+  PetscBool   isascii;
 
   PetscFunctionBegin;
-  lb  = ctx->lb;
-  ub  = ctx->ub;
-  llb = ctx->llb;
-  lub = ctx->lub;
-  if (lb) {
-    PetscCall(VecDuplicate(x, &o));
-    PetscCall(VecDuplicate(x, &r));
+  PetscCall(PetscObjectTypeCompare((PetscObject)viewer, PETSCVIEWERASCII, &isascii));
+  if (isascii) {
+    lb  = ctx->lb;
+    ub  = ctx->ub;
+    llb = ctx->llb;
+    lub = ctx->lub;
+    if (lb) {
+      PetscCall(VecDuplicate(x, &o));
+      PetscCall(VecDuplicate(x, &r));
 
-    /* rI = norm(min(x-lb,0)) */
-    PetscCall(VecSet(o, 0.0));            /* o = zeros(size(r)) */
-    PetscCall(VecWAXPY(r, -1.0, lb, x));  /* r = x - lb       */
-    PetscCall(VecPointwiseMin(r, r, o));  /* r = min(r,o)     */
-    PetscCall(VecNorm(r, NORM_2, &norm)); /* norm = norm(r)     */
-    PetscCall(PetscViewerASCIIPrintf(v, "r = ||min(x-lb,0)||      = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
+      /* rI = norm(min(x-lb,0)) */
+      PetscCall(VecSet(o, 0.0));            /* o = zeros(size(r)) */
+      PetscCall(VecWAXPY(r, -1.0, lb, x));  /* r = x - lb       */
+      PetscCall(VecPointwiseMin(r, r, o));  /* r = min(r,o)     */
+      PetscCall(VecNorm(r, NORM_2, &norm)); /* norm = norm(r)     */
+      PetscCall(PetscViewerASCIIPrintf(viewer, "r = ||min(x-lb,0)||      = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
 
-    /* lambda >= o  =>  examine min(lambda,o) */
-    PetscCall(VecSet(o, 0.0)); /* o = zeros(size(r)) */
-    PetscCall(VecPointwiseMin(r, llb, o));
-    PetscCall(VecNorm(r, NORM_2, &norm)); /* norm = ||min(lambda,o)|| */
-    PetscCall(PetscViewerASCIIPrintf(v, "r = ||min(lambda_lb,0)|| = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
+      /* lambda >= o  =>  examine min(lambda,o) */
+      PetscCall(VecSet(o, 0.0)); /* o = zeros(size(r)) */
+      PetscCall(VecPointwiseMin(r, llb, o));
+      PetscCall(VecNorm(r, NORM_2, &norm)); /* norm = ||min(lambda,o)|| */
+      PetscCall(PetscViewerASCIIPrintf(viewer, "r = ||min(lambda_lb,0)|| = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
 
-    /* lambda'*(lb-x) = 0 */
-    PetscCall(VecCopy(lb, r));
-    PetscCall(VecAXPY(r, -1.0, x));
-    {
-      PetscInt           i, n;
-      PetscScalar       *rarr;
-      const PetscScalar *larr;
-      PetscCall(VecGetLocalSize(r, &n));
-      PetscCall(VecGetArray(r, &rarr));
-      PetscCall(VecGetArrayRead(lb, &larr));
-      for (i = 0; i < n; i++)
-        if (PetscRealPart(larr[i]) <= PETSC_NINFINITY) rarr[i] = -1.0;
-      PetscCall(VecRestoreArray(r, &rarr));
-      PetscCall(VecRestoreArrayRead(lb, &larr));
+      /* lambda'*(lb-x) = 0 */
+      PetscCall(VecCopy(lb, r));
+      PetscCall(VecAXPY(r, -1.0, x));
+      {
+        PetscInt           i, n;
+        PetscScalar       *rarr;
+        const PetscScalar *larr;
+        PetscCall(VecGetLocalSize(r, &n));
+        PetscCall(VecGetArray(r, &rarr));
+        PetscCall(VecGetArrayRead(lb, &larr));
+        for (i = 0; i < n; i++)
+          if (PetscRealPart(larr[i]) <= PETSC_NINFINITY) rarr[i] = -1.0;
+        PetscCall(VecRestoreArray(r, &rarr));
+        PetscCall(VecRestoreArrayRead(lb, &larr));
+      }
+      PetscCall(VecDot(llb, r, &dot));
+      norm = PetscAbsScalar(dot);
+      PetscCall(PetscViewerASCIIPrintf(viewer, "r = |lambda_lb'*(lb-x)|  = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
+
+      PetscCall(VecDestroy(&o));
+      PetscCall(VecDestroy(&r));
     }
-    PetscCall(VecDot(llb, r, &dot));
-    norm = PetscAbsScalar(dot);
-    PetscCall(PetscViewerASCIIPrintf(v, "r = |lambda_lb'*(lb-x)|  = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
 
-    PetscCall(VecDestroy(&o));
-    PetscCall(VecDestroy(&r));
-  }
+    if (ub) {
+      PetscCall(VecDuplicate(x, &o));
+      PetscCall(VecDuplicate(x, &r));
 
-  if (ub) {
-    PetscCall(VecDuplicate(x, &o));
-    PetscCall(VecDuplicate(x, &r));
+      /* rI = norm(max(x-ub,0)) */
+      PetscCall(VecDuplicate(x, &r));
+      PetscCall(VecDuplicate(x, &o));
+      PetscCall(VecSet(o, 0.0));            /* o = zeros(size(r)) */
+      PetscCall(VecWAXPY(r, -1.0, ub, x));  /* r = x - ub       */
+      PetscCall(VecPointwiseMax(r, r, o));  /* r = max(r,o)     */
+      PetscCall(VecNorm(r, NORM_2, &norm)); /* norm = norm(r)     */
+      PetscCall(PetscViewerASCIIPrintf(viewer, "r = ||max(x-ub,0)||      = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
 
-    /* rI = norm(max(x-ub,0)) */
-    PetscCall(VecDuplicate(x, &r));
-    PetscCall(VecDuplicate(x, &o));
-    PetscCall(VecSet(o, 0.0));            /* o = zeros(size(r)) */
-    PetscCall(VecWAXPY(r, -1.0, ub, x));  /* r = x - ub       */
-    PetscCall(VecPointwiseMax(r, r, o));  /* r = max(r,o)     */
-    PetscCall(VecNorm(r, NORM_2, &norm)); /* norm = norm(r)     */
-    PetscCall(PetscViewerASCIIPrintf(v, "r = ||max(x-ub,0)||      = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
+      /* lambda >= o  =>  examine min(lambda,o) */
+      PetscCall(VecSet(o, 0.0)); /* o = zeros(size(r)) */
+      PetscCall(VecPointwiseMin(r, lub, o));
+      PetscCall(VecNorm(r, NORM_2, &norm)); /* norm = ||min(lambda,o)|| */
+      PetscCall(PetscViewerASCIIPrintf(viewer, "r = ||min(lambda_ub,0)|| = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
 
-    /* lambda >= o  =>  examine min(lambda,o) */
-    PetscCall(VecSet(o, 0.0)); /* o = zeros(size(r)) */
-    PetscCall(VecPointwiseMin(r, lub, o));
-    PetscCall(VecNorm(r, NORM_2, &norm)); /* norm = ||min(lambda,o)|| */
-    PetscCall(PetscViewerASCIIPrintf(v, "r = ||min(lambda_ub,0)|| = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
+      /* lambda'*(x-ub) = 0 */
+      PetscCall(VecCopy(ub, r));
+      PetscCall(VecAYPX(r, -1.0, x));
+      {
+        PetscInt           i, n;
+        PetscScalar       *rarr;
+        const PetscScalar *uarr;
+        PetscCall(VecGetLocalSize(r, &n));
+        PetscCall(VecGetArray(r, &rarr));
+        PetscCall(VecGetArrayRead(ub, &uarr));
+        for (i = 0; i < n; i++)
+          if (PetscRealPart(uarr[i]) >= PETSC_INFINITY) rarr[i] = 1.0;
+        PetscCall(VecRestoreArray(r, &rarr));
+        PetscCall(VecRestoreArrayRead(ub, &uarr));
+      }
+      PetscCall(VecDot(lub, r, &dot));
+      norm = PetscAbsScalar(dot);
+      PetscCall(PetscViewerASCIIPrintf(viewer, "r = |lambda_ub'*(x-ub)|  = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / normb));
 
-    /* lambda'*(x-ub) = 0 */
-    PetscCall(VecCopy(ub, r));
-    PetscCall(VecAYPX(r, -1.0, x));
-    {
-      PetscInt           i, n;
-      PetscScalar       *rarr;
-      const PetscScalar *uarr;
-      PetscCall(VecGetLocalSize(r, &n));
-      PetscCall(VecGetArray(r, &rarr));
-      PetscCall(VecGetArrayRead(ub, &uarr));
-      for (i = 0; i < n; i++)
-        if (PetscRealPart(uarr[i]) >= PETSC_INFINITY) rarr[i] = 1.0;
-      PetscCall(VecRestoreArray(r, &rarr));
-      PetscCall(VecRestoreArrayRead(ub, &uarr));
+      PetscCall(VecDestroy(&o));
+      PetscCall(VecDestroy(&r));
     }
-    PetscCall(VecDot(lub, r, &dot));
-    norm = PetscAbsScalar(dot);
-    PetscCall(PetscViewerASCIIPrintf(v, "r = |lambda_ub'*(x-ub)|  = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / normb));
-
-    PetscCall(VecDestroy(&o));
-    PetscCall(VecDestroy(&r));
   }
   PetscFunctionReturn(PETSC_SUCCESS);
 }
