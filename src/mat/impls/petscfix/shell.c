@@ -1,8 +1,6 @@
 #include <permon/private/permonmatimpl.h>
 #include <permon/private/petscimpl.h>
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMultAdd_ShellPermon"
 static PetscErrorCode MatMultAdd_ShellPermon(Mat A, Vec x, Vec y, Vec z)
 {
   Mat_Shell *shell = (Mat_Shell *)A->data;
@@ -20,8 +18,6 @@ static PetscErrorCode MatMultAdd_ShellPermon(Mat A, Vec x, Vec y, Vec z)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatCreateShellPermon"
 PetscErrorCode MatCreateShellPermon(MPI_Comm comm, PetscInt m, PetscInt n, PetscInt M, PetscInt N, void *ctx, Mat *A)
 {
   PetscFunctionBegin;
@@ -30,8 +26,6 @@ PetscErrorCode MatCreateShellPermon(MPI_Comm comm, PetscInt m, PetscInt n, Petsc
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatCreateDummy"
 PetscErrorCode MatCreateDummy(MPI_Comm comm, PetscInt m, PetscInt n, PetscInt M, PetscInt N, void *ctx, Mat *A)
 {
   PetscFunctionBegin;

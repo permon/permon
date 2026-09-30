@@ -6,8 +6,6 @@ PetscLogEvent QP_Feti_AssemGluing, QP_Feti_GetI2Lmapping, QP_AddEq;
 
 const char *const FetiGluingTypes[] = {"nonred", "full", "orth", "FetiGluingType", "FETI_GLUING_", 0};
 
-#undef __FUNCT__
-#define __FUNCT__ "QPFetiCtxCreate"
 PetscErrorCode QPFetiCtxCreate(QPFetiCtx *ctxout)
 {
   QPFetiCtx ctx;
@@ -24,8 +22,6 @@ PetscErrorCode QPFetiCtxCreate(QPFetiCtx *ctxout)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPFetiCtxDestroy"
 PetscErrorCode QPFetiCtxDestroy(QPFetiCtx *ctx_p)
 {
   QPFetiCtx ctx;
@@ -42,21 +38,19 @@ PetscErrorCode QPFetiCtxDestroy(QPFetiCtx *ctx_p)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPFetiGetCtx"
 PetscErrorCode QPFetiGetCtx(QP qp, QPFetiCtx *ctxout)
 {
   PetscContainer ctr;
   QPFetiCtx      ctx;
 
   PetscFunctionBegin;
-  PetscCall(PetscObjectQuery((PetscObject)qp, __FUNCT__, (PetscObject *)&ctr));
+  PetscCall(PetscObjectQuery((PetscObject)qp, PETSC_FUNCTION_NAME, (PetscObject *)&ctr));
   if (!ctr) {
     PetscCall(QPFetiCtxCreate(&ctx));
     PetscCall(PetscContainerCreate(PetscObjectComm((PetscObject)qp), &ctr));
     PetscCall(PetscContainerSetPointer(ctr, ctx));
     PetscCall(PetscContainerSetCtxDestroy(ctr, (PetscCtxDestroyFn *)QPFetiCtxDestroy));
-    PetscCall(PetscObjectCompose((PetscObject)qp, __FUNCT__, (PetscObject)ctr));
+    PetscCall(PetscObjectCompose((PetscObject)qp, PETSC_FUNCTION_NAME, (PetscObject)ctr));
     PetscCall(PetscObjectDereference((PetscObject)ctr));
   }
   PetscCall(PetscContainerGetPointer(ctr, (void **)&ctx));
@@ -64,8 +58,6 @@ PetscErrorCode QPFetiGetCtx(QP qp, QPFetiCtx *ctxout)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPFetiSetLocalToGlobalMapping"
 PetscErrorCode QPFetiSetLocalToGlobalMapping(QP qp, IS l2g)
 {
   QPFetiCtx ctx;
@@ -81,8 +73,6 @@ PetscErrorCode QPFetiSetLocalToGlobalMapping(QP qp, IS l2g)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPFetiSetInterfaceToGlobalMapping"
 PetscErrorCode QPFetiSetInterfaceToGlobalMapping(QP qp, IS i2g)
 {
   QPFetiCtx ctx;
@@ -98,8 +88,6 @@ PetscErrorCode QPFetiSetInterfaceToGlobalMapping(QP qp, IS i2g)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPFetiSetDirichlet"
 PetscErrorCode QPFetiSetDirichlet(QP qp, IS dbcis, QPFetiNumberingType numtype, PetscBool enforce_by_B)
 {
   QPFetiCtx ctx;
@@ -116,8 +104,6 @@ PetscErrorCode QPFetiSetDirichlet(QP qp, IS dbcis, QPFetiNumberingType numtype, 
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPFetiAssembleDirichlet_ModifyR_Private"
 static PetscErrorCode QPFetiAssembleDirichlet_ModifyR_Private(QP qp, IS dbcis)
 {
   Mat         R, R_loc;
@@ -148,8 +134,6 @@ static PetscErrorCode QPFetiAssembleDirichlet_ModifyR_Private(QP qp, IS dbcis)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPFetiAssembleDirichlet"
 PetscErrorCode QPFetiAssembleDirichlet(QP qp)
 {
   static PetscBool       registered = PETSC_FALSE;
@@ -311,8 +295,6 @@ PetscErrorCode QPFetiAssembleDirichlet(QP qp)
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPFetiSetUp"
 PetscErrorCode QPFetiSetUp(QP qp)
 {
   static PetscBool registered = PETSC_FALSE;
@@ -356,8 +338,6 @@ PetscErrorCode QPFetiSetUp(QP qp)
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPFetiGetI2Lmapping"
 PetscErrorCode QPFetiGetI2Lmapping(MPI_Comm comm, IS l2g, IS i2g, IS *i2l_new)
 {
   static PetscBool registered = PETSC_FALSE;
@@ -400,8 +380,6 @@ PetscErrorCode QPFetiGetI2Lmapping(MPI_Comm comm, IS l2g, IS i2g, IS *i2l_new)
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPFetiAssembleGluing"
 PetscErrorCode QPFetiAssembleGluing(QP qp, FetiGluingType type, PetscBool exclude_dir, Mat *Bg_new)
 {
   static PetscBool registered = PETSC_FALSE;
@@ -460,8 +438,6 @@ PetscErrorCode QPFetiAssembleGluing(QP qp, FetiGluingType type, PetscBool exclud
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPFetiGetBgtSF"
 PetscErrorCode QPFetiGetBgtSF(QP qp, IS i2g, PetscInt Nu, IS i2l, PetscInt nl, FetiGluingType type, Mat *Bgt_out)
 {
   static PetscBool registered = PETSC_FALSE;
@@ -924,8 +900,6 @@ PetscErrorCode QPFetiGetBgtSF(QP qp, IS i2g, PetscInt Nu, IS i2l, PetscInt nl, F
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPFetiGetGlobalDir"
 PetscErrorCode QPFetiGetGlobalDir(QP qp, IS dbc, QPFetiNumberingType numtype, IS *dbc_g)
 {
   PetscInt        ndbc;

@@ -1,8 +1,6 @@
 #include <permonmat.h>
 #include <petsc/private/matimpl.h>
 
-#undef __FUNCT__
-#define __FUNCT__ "MatRemoveGluingOfDirichletDofs_old"
 PetscErrorCode MatRemoveGluingOfDirichletDofs_old(Mat Bgt, Vec cg, Mat Bdt, Mat *Bgt_new, Vec *cg_new, IS *is_new)
 {
   MPI_Comm           comm;
@@ -74,8 +72,6 @@ PetscErrorCode MatRemoveGluingOfDirichletDofs_old(Mat Bgt, Vec cg, Mat Bdt, Mat 
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatRemoveGluingOfDirichletDofs"
 PetscErrorCode MatRemoveGluingOfDirichletDofs(Mat Bgt, Vec cg, Mat Bdt, Mat *Bgt_new, Vec *cg_new, IS *is_new)
 {
   MPI_Comm           comm;

@@ -9,8 +9,6 @@ PERMON_EXTERN PetscErrorCode MatCreate_MPIDensePermon(Mat);
 PERMON_EXTERN PetscErrorCode MatCreate_Extension(Mat);
 PERMON_EXTERN PetscErrorCode MatCreate_Gluing(Mat);
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonMatRegisterAll"
 PetscErrorCode PermonMatRegisterAll()
 {
   PetscFunctionBegin;

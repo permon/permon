@@ -14,8 +14,6 @@ char           PeFuBe_s_[128];
 char           PERMON_PathBuffer_Global[PERMON_MAX_PATH_LEN];
 char           PERMON_ObjNameBuffer_Global[PERMON_MAX_NAME_LEN];
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonCreate"
 PetscErrorCode PermonCreate(MPI_Comm comm, PERMON *permon_new)
 {
   PERMON permon;
@@ -27,8 +25,6 @@ PetscErrorCode PermonCreate(MPI_Comm comm, PERMON *permon_new)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonDestroy"
 PetscErrorCode PermonDestroy(PERMON *permon)
 {
   PetscFunctionBegin;
@@ -42,8 +38,6 @@ PetscErrorCode PermonDestroy(PERMON *permon)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonMakePath"
 PetscErrorCode PermonMakePath(const char *dir, mode_t mode)
 {
   char     *tmp = PERMON_PathBuffer_Global;
@@ -71,8 +65,6 @@ PetscErrorCode PermonMakePath(const char *dir, mode_t mode)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonProcessInfoExclusions"
 PetscErrorCode PermonProcessInfoExclusions(PetscClassId classid, const char *classname)
 {
   char      logList[256];
@@ -101,8 +93,6 @@ PetscErrorCode PermonProcessInfoExclusions(PetscClassId classid, const char *cla
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonSetTrace"
 PetscErrorCode PermonSetTrace(PetscBool flg)
 {
   PetscFunctionBegin;
@@ -110,8 +100,6 @@ PetscErrorCode PermonSetTrace(PetscBool flg)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonSetObjectInfo"
 PetscErrorCode PermonSetObjectInfo(PetscBool flg)
 {
   PetscFunctionBegin;
@@ -119,8 +107,6 @@ PetscErrorCode PermonSetObjectInfo(PetscBool flg)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonSetDebug"
 PetscErrorCode PermonSetDebug(PetscBool flg)
 {
   PetscFunctionBegin;
@@ -128,8 +114,6 @@ PetscErrorCode PermonSetDebug(PetscBool flg)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonPetscInfoDeactivateAll"
 PetscErrorCode PermonPetscInfoDeactivateAll()
 {
   PetscInt i;
@@ -140,8 +124,6 @@ PetscErrorCode PermonPetscInfoDeactivateAll()
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonSetFromOptions"
 /*@
    PermonSetFromOptions - Sets PERMON options.
 
@@ -217,8 +199,6 @@ PetscErrorCode PermonSetFromOptions()
 }
 
 /* based on PetscLogEventGetId but does not throw an error if the event does not exist */
-#undef __FUNCT__
-#define __FUNCT__ "PermonPetscLogEventGetId"
 PetscErrorCode PermonPetscLogEventGetId(const char name[], PetscLogEvent *event, PetscBool *exists)
 {
   PetscFunctionBegin;
@@ -228,8 +208,6 @@ PetscErrorCode PermonPetscLogEventGetId(const char name[], PetscLogEvent *event,
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonPetscObjectInheritName"
 PetscErrorCode PermonPetscObjectInheritName(PetscObject obj, PetscObject orig, const char *suffix)
 {
   size_t len1 = 0, len2 = 0;
@@ -251,8 +229,6 @@ PetscErrorCode PermonPetscObjectInheritName(PetscObject obj, PetscObject orig, c
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonPetscObjectInheritPrefix"
 PetscErrorCode PermonPetscObjectInheritPrefix(PetscObject obj, PetscObject orig, const char *suffix)
 {
   size_t len1 = 0, len2 = 0;
@@ -276,8 +252,6 @@ PetscErrorCode PermonPetscObjectInheritPrefix(PetscObject obj, PetscObject orig,
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonPetscObjectInheritPrefixIfNotSet"
 PetscErrorCode PermonPetscObjectInheritPrefixIfNotSet(PetscObject obj, PetscObject orig, const char *suffix)
 {
   PetscFunctionBegin;

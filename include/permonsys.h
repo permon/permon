@@ -39,37 +39,37 @@ PERMON_EXTERN PetscErrorCode _permon_ierr;
 #define PermonDebug(msg) \
   PETSC_SUCCESS; \
   do { \
-    if (PermonDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg)); \
+    if (PermonDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** %s: " msg, PETSC_FUNCTION_NAME)); \
   } while (0)
 #define PermonDebug1(msg, a1) \
   PETSC_SUCCESS; \
   do { \
-    if (PermonDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1)); \
+    if (PermonDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** %s: " msg, PETSC_FUNCTION_NAME, a1)); \
   } while (0)
 #define PermonDebug2(msg, a1, a2) \
   PETSC_SUCCESS; \
   do { \
-    if (PermonDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1, a2)); \
+    if (PermonDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** %s: " msg, PETSC_FUNCTION_NAME, a1, a2)); \
   } while (0)
 #define PermonDebug3(msg, a1, a2, a3) \
   PETSC_SUCCESS; \
   do { \
-    if (PermonDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1, a2, a3)); \
+    if (PermonDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** %s: " msg, PETSC_FUNCTION_NAME, a1, a2, a3)); \
   } while (0)
 #define PermonDebug4(msg, a1, a2, a3, a4) \
   PETSC_SUCCESS; \
   do { \
-    if (PermonDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1, a2, a3, a4)); \
+    if (PermonDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** %s: " msg, PETSC_FUNCTION_NAME, a1, a2, a3, a4)); \
   } while (0)
 #define PermonDebug5(msg, a1, a2, a3, a4, a5) \
   PETSC_SUCCESS; \
   do { \
-    if (PermonDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1, a2, a3, a4, a5)); \
+    if (PermonDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** %s: " msg, PETSC_FUNCTION_NAME, a1, a2, a3, a4, a5)); \
   } while (0)
 #define PermonDebug6(msg, a1, a2, a3, a4, a5, a6) \
   PETSC_SUCCESS; \
   do { \
-    if (PermonDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** " __FUNCT__ ": " msg, a1, a2, a3, a4, a5, a6)); \
+    if (PermonDebugEnabled) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "*** %s: " msg, PETSC_FUNCTION_NAME, a1, a2, a3, a4, a5, a6)); \
   } while (0)
 
 static inline PetscErrorCode PetscBoolGlobalAnd(MPI_Comm comm, PetscBool loc, PetscBool *glob)
@@ -113,7 +113,7 @@ PERMON_EXTERN char      PeFuBe_s_[128];
     PeFuBe_s_[PeFuBe_i_]     = ' '; \
     PeFuBe_s_[PeFuBe_i_ + 1] = 0; \
     FLLTIC(&ttttt); \
-    PetscCall(PetscPrintf(PETSC_COMM_WORLD, "%s%d BEGIN FUNCTION %s\n", PeFuBe_s_, PeFuBe_i_, __FUNCT__)); \
+    PetscCall(PetscPrintf(PETSC_COMM_WORLD, "%s%d BEGIN FUNCTION %s\n", PeFuBe_s_, PeFuBe_i_, PETSC_FUNCTION_NAME)); \
     PeFuBe_i_++; \
   }
 
@@ -125,7 +125,7 @@ PERMON_EXTERN char      PeFuBe_s_[128];
   { \
     if (PermonTraceEnabled) { \
       FLLTOC(&ttttt); \
-      PetscCall(PetscPrintf(PETSC_COMM_WORLD, "%s%d END   FUNCTION %s (%2.2f s)\n", PeFuBe_s_, --PeFuBe_i_, __FUNCT__, ttttt)); \
+      PetscCall(PetscPrintf(PETSC_COMM_WORLD, "%s%d END   FUNCTION %s (%2.2f s)\n", PeFuBe_s_, --PeFuBe_i_, PETSC_FUNCTION_NAME, ttttt)); \
       PeFuBe_s_[PeFuBe_i_] = 0; \
       PetscFunctionReturn(rrrrr); \
     } else { \

@@ -3,8 +3,6 @@
 
 PETSC_EXTERN PetscErrorCode MatDestroy_NestPermon(Mat mat);
 
-#undef __FUNCT__
-#define __FUNCT__ "MatGetColumnVectors_NestPermon"
 static PetscErrorCode MatGetColumnVectors_NestPermon(Mat A, Vec *cols_new[])
 {
   MPI_Comm        comm;
@@ -61,8 +59,6 @@ static PetscErrorCode MatGetColumnVectors_NestPermon(Mat A, Vec *cols_new[])
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatRestoreColumnVectors_NestPermon"
 static PetscErrorCode MatRestoreColumnVectors_NestPermon(Mat A, Vec *cols[])
 {
   PetscInt       II, J, N, N1, Mn, Nn;
@@ -88,8 +84,6 @@ static PetscErrorCode MatRestoreColumnVectors_NestPermon(Mat A, Vec *cols[])
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatFilterZeros_NestPermon"
 static PetscErrorCode MatFilterZeros_NestPermon(Mat A, PetscReal tol, Mat *Af_new)
 {
   PetscInt i, j, Mn, Nn, MnNn;
@@ -107,8 +101,6 @@ static PetscErrorCode MatFilterZeros_NestPermon(Mat A, PetscReal tol, Mat *Af_ne
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonMatCreateDenseProductMatrix_NestPermon"
 static PetscErrorCode PermonMatCreateDenseProductMatrix_NestPermon(Mat A, PetscBool A_transpose, Mat B, Mat *C_new)
 {
   PetscInt  i, j, Mn, Nn, MnNn;
@@ -147,8 +139,6 @@ static PetscErrorCode PermonMatCreateDenseProductMatrix_NestPermon(Mat A, PetscB
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonMatTranspose_NestPermon"
 static PetscErrorCode PermonMatTranspose_NestPermon(Mat A, MatTransposeType type, Mat *At_out)
 {
   PetscInt i, j, Mn, Nn, MnNn;
@@ -172,8 +162,6 @@ static PetscErrorCode PermonMatTranspose_NestPermon(Mat A, MatTransposeType type
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonMatGetLocalMat_NestPermon"
 static PetscErrorCode PermonMatGetLocalMat_NestPermon(Mat A, Mat *Aloc)
 {
   PetscInt i, j, Mn, Nn, MnNn;
@@ -191,8 +179,6 @@ static PetscErrorCode PermonMatGetLocalMat_NestPermon(Mat A, Mat *Aloc)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMergeAndDestroy_NestPermon"
 static PetscErrorCode MatMergeAndDestroy_NestPermon(MPI_Comm comm, Mat *local_in, Vec x, Mat *global_out)
 {
   PetscInt  i, j, Mn, Nn, MnNn, n, N;
@@ -235,8 +221,6 @@ static PetscErrorCode MatMergeAndDestroy_NestPermon(MPI_Comm comm, Mat *local_in
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonMatConvertBlocks_NestPermon"
 static PetscErrorCode PermonMatConvertBlocks_NestPermon(Mat A, MatType newtype, MatReuse reuse, Mat *B)
 {
   PetscInt i, j, Mn, Nn, MnNn;
@@ -270,8 +254,6 @@ static PetscErrorCode PermonMatConvertBlocks_NestPermon(Mat A, MatType newtype, 
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatNestPermonGetVecs_NestPermon"
 static PetscErrorCode MatNestPermonGetVecs_NestPermon(Mat A, Vec *right, Vec *left)
 {
   Mat_Nest *bA = (Mat_Nest *)A->data;
@@ -324,8 +306,6 @@ static PetscErrorCode MatNestPermonGetVecs_NestPermon(Mat A, Vec *right, Vec *le
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatNestSetVecType_NestPermon"
 static PetscErrorCode MatNestSetVecType_NestPermon(Mat A, VecType vtype)
 {
   PetscBool flg;
@@ -338,8 +318,6 @@ static PetscErrorCode MatNestSetVecType_NestPermon(Mat A, VecType vtype)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatNestPermonGetColumnISs_NestPermon"
 static PetscErrorCode MatNestPermonGetColumnISs_NestPermon(Mat A, IS **is_new)
 {
   PetscInt        j, r, Mn, Nn;
@@ -379,8 +357,6 @@ static PetscErrorCode MatNestPermonGetColumnISs_NestPermon(Mat A, IS **is_new)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatNestPermonGetColumnISs"
 PetscErrorCode MatNestPermonGetColumnISs(Mat A, IS **is_new)
 {
   PetscFunctionBegin;
@@ -390,8 +366,6 @@ PetscErrorCode MatNestPermonGetColumnISs(Mat A, IS **is_new)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatNestPermonGetVecs"
 PetscErrorCode MatNestPermonGetVecs(Mat A, Vec *x, Vec *y)
 {
   PetscErrorCode (*f)(Mat, Vec *, Vec *);
@@ -406,8 +380,6 @@ PetscErrorCode MatNestPermonGetVecs(Mat A, Vec *x, Vec *y)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMatMult_NestPermon_NestPermon"
 static PetscErrorCode MatMatMult_NestPermon_NestPermon(Mat A, Mat B, PetscReal fill, Mat *AB_new)
 {
   PetscInt i, j, k, M, K1, K2, N, MN;
@@ -453,8 +425,6 @@ static PetscErrorCode MatMatMult_NestPermon_NestPermon(Mat A, Mat B, PetscReal f
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatProductNumeric_NestPermon"
 static PetscErrorCode MatProductNumeric_NestPermon(Mat C)
 {
   Mat_Product *product = C->product;
@@ -476,8 +446,6 @@ static PetscErrorCode MatProductNumeric_NestPermon(Mat C)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatProductSymbolic_NestPermon"
 static PetscErrorCode MatProductSymbolic_NestPermon(Mat C)
 {
   PetscFunctionBegin;
@@ -485,8 +453,6 @@ static PetscErrorCode MatProductSymbolic_NestPermon(Mat C)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatProductSetFromOptions_NestPermon"
 static PetscErrorCode MatProductSetFromOptions_NestPermon(Mat C)
 {
   PetscFunctionBegin;
@@ -494,8 +460,6 @@ static PetscErrorCode MatProductSetFromOptions_NestPermon(Mat C)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatDuplicate_NestPermon"
 static PetscErrorCode MatDuplicate_NestPermon(Mat A, MatDuplicateOption op, Mat *B)
 {
   Mat_Nest *bA = (Mat_Nest *)A->data;
@@ -524,8 +488,6 @@ static PetscErrorCode MatDuplicate_NestPermon(Mat A, MatDuplicateOption op, Mat 
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatAXPY_NestPermon"
 static PetscErrorCode MatAXPY_NestPermon(Mat Y, PetscScalar a, Mat X, MatStructure str)
 {
   PetscInt i, j, Mn, Nn, Mn1, Nn1;
@@ -541,8 +503,6 @@ static PetscErrorCode MatAXPY_NestPermon(Mat Y, PetscScalar a, Mat X, MatStructu
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatExtensionCreateCondensedRows_NestPermon"
 static PetscErrorCode MatExtensionCreateCondensedRows_NestPermon(Mat TA, Mat *A, IS *ris_local)
 {
   PetscInt  j, Mn, Nn, m;
@@ -589,8 +549,6 @@ static PetscErrorCode MatExtensionCreateCondensedRows_NestPermon(Mat TA, Mat *A,
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatConvert_Nest_NestPermon"
 PETSC_EXTERN PetscErrorCode MatConvert_Nest_NestPermon(Mat A, MatType type, MatReuse reuse, Mat *newmat)
 {
   Mat B = *newmat;
@@ -625,8 +583,6 @@ PETSC_EXTERN PetscErrorCode MatConvert_Nest_NestPermon(Mat A, MatType type, MatR
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatDestroy_NestPermon"
 PETSC_EXTERN PetscErrorCode MatDestroy_NestPermon(Mat mat)
 {
   PetscFunctionBegin;
@@ -648,8 +604,6 @@ PETSC_EXTERN PetscErrorCode MatDestroy_NestPermon(Mat mat)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatCreate_NestPermon"
 PETSC_EXTERN PetscErrorCode MatCreate_NestPermon(Mat mat)
 {
   PetscFunctionBegin;
@@ -658,8 +612,6 @@ PETSC_EXTERN PetscErrorCode MatCreate_NestPermon(Mat mat)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatCreateNestPermon"
 PetscErrorCode MatCreateNestPermon(MPI_Comm comm, PetscInt nr, const IS is_row[], PetscInt nc, const IS is_col[], const Mat a[], Mat *B)
 {
   PetscFunctionBegin;
@@ -668,8 +620,6 @@ PetscErrorCode MatCreateNestPermon(MPI_Comm comm, PetscInt nr, const IS is_row[]
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatCreateNestPermonVerticalMerge_Extract_Private"
 static PetscErrorCode MatCreateNestPermonVerticalMerge_Extract_Private(PetscInt nmats_in, Mat *mats_in, PetscInt *nmats_out, Mat **mats_out)
 {
   PetscBool nest;
@@ -731,8 +681,6 @@ static PetscErrorCode MatCreateNestPermonVerticalMerge_Extract_Private(PetscInt 
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatCreateNestPermonVerticalMerge"
 PetscErrorCode MatCreateNestPermonVerticalMerge(MPI_Comm comm, PetscInt nmats, Mat mats[], Mat *merged)
 {
   PetscInt i, nmats_out;

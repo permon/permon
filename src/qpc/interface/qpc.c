@@ -2,8 +2,6 @@
 
 PetscClassId QPC_CLASSID;
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCCreate"
 /*@
 QPCCreate - create qpc instance
 
@@ -32,8 +30,6 @@ PetscErrorCode QPCCreate(MPI_Comm comm, QPC *qpc_new)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCSetUp"
 PetscErrorCode QPCSetUp(QPC qpc)
 {
   PermonTracedFunctionBegin;
@@ -61,8 +57,6 @@ PetscErrorCode QPCSetUp(QPC qpc)
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCReset"
 PetscErrorCode QPCReset(QPC qpc)
 {
   PetscFunctionBegin;
@@ -74,8 +68,6 @@ PetscErrorCode QPCReset(QPC qpc)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCView"
 /*@
    QPCView - Print information about the QPC.
 
@@ -156,8 +148,6 @@ PetscErrorCode QPCView(QPC qpc, PetscViewer viewer)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCViewKKT"
 /*@
    QPCViewKKT - Print information about the QPC KKT conditions.
 
@@ -189,8 +179,6 @@ PetscErrorCode QPCViewKKT(QPC qpc, Vec x, PetscReal normb, PetscViewer viewer)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCDestroy"
 /*@
 QPCDestroy - destroy qpc instance
 
@@ -216,8 +204,6 @@ PetscErrorCode QPCDestroy(QPC *qpc)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCSetType"
 /*@
 QPCSetType - set type of constraint
 
@@ -253,8 +239,6 @@ PetscErrorCode QPCSetType(QPC qpc, const QPCType type)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCGetType"
 /*@
 QPCGetType - get the type of the constraint
 
@@ -271,8 +255,6 @@ PetscErrorCode QPCGetType(QPC qpc, const QPCType *type)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCSetIS"
 PetscErrorCode QPCSetIS(QPC qpc, IS is)
 {
   PetscFunctionBegin;
@@ -287,8 +269,6 @@ PetscErrorCode QPCSetIS(QPC qpc, IS is)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCGetIS"
 PetscErrorCode QPCGetIS(QPC qpc, IS *is)
 {
   PetscFunctionBegin;
@@ -298,8 +278,6 @@ PetscErrorCode QPCGetIS(QPC qpc, IS *is)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCGetBlockSize"
 /*@
 QPCGetBlockSize - get the number of constrained unknowns by each constraint, depends on the type of constraint
 
@@ -316,8 +294,6 @@ PetscErrorCode QPCGetBlockSize(QPC qpc, PetscInt *bs)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCIsLinear"
 /*@
 QPCIsLinear - returns the boolean function of linear property of the QPC type; this property is used in MPRGP and MPGP algorithms
 
@@ -339,8 +315,6 @@ PetscErrorCode QPCIsLinear(QPC qpc, PetscBool *linear)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCIsSubsymmetric"
 /*@
 QPCIsSubsymmetric - returns the boolean function of subsymmetricity property of the QPC type; this property is used in MPRGP and MPGP algorithms
 
@@ -362,8 +336,6 @@ PetscErrorCode QPCIsSubsymmetric(QPC qpc, PetscBool *subsym)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCGetNumberOfConstraints"
 /*@
 QPCGetNumberOfConstraints - get the number of constraints
 
@@ -381,8 +353,6 @@ PetscErrorCode QPCGetNumberOfConstraints(QPC qpc, PetscInt *num)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCGetConstraintFunction"
 /*@
 QPCGetConstraintFunction - get the function value of constraint functions, afterwards call QPCRestoreConstraintFunction
 
@@ -419,8 +389,6 @@ PetscErrorCode QPCGetConstraintFunction(QPC qpc, Vec x, Vec *hx)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCRestoreConstraintFunction"
 /*@
 QPCRestoreConstraintFunction - restore function values, has to be called after QPCGetConstraintFunction
 
@@ -444,8 +412,6 @@ PetscErrorCode QPCRestoreConstraintFunction(QPC qpc, Vec x, Vec *hx)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCGetSubvector"
 PetscErrorCode QPCGetSubvector(QPC qpc, Vec x, Vec *xc)
 {
   Vec xc_out;
@@ -469,8 +435,6 @@ PetscErrorCode QPCGetSubvector(QPC qpc, Vec x, Vec *xc)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCRestoreSubvector"
 PetscErrorCode QPCRestoreSubvector(QPC qpc, Vec x, Vec *xc)
 {
   PetscFunctionBegin;
@@ -486,8 +450,6 @@ PetscErrorCode QPCRestoreSubvector(QPC qpc, Vec x, Vec *xc)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCProject"
 /*@
 QPCProject - project the input vector to feasible set
 
@@ -523,8 +485,6 @@ PetscErrorCode QPCProject(QPC qpc, Vec x, Vec Px)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCFeas"
 /*@
 QPCFeas - compute maximum step-size
 
@@ -559,8 +519,6 @@ PetscErrorCode QPCFeas(QPC qpc, Vec x, Vec d, PetscReal *alpha)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCGrads"
 /*@
 QPCGrads - compute free and chopped gradient
 
@@ -601,8 +559,6 @@ PetscErrorCode QPCGrads(QPC qpc, Vec x, Vec g, Vec gf, Vec gc)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCGradReduced"
 /*@
   QPCGradReduced - compute reduced free gradient
 

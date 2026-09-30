@@ -10,8 +10,6 @@ const char *QPPFVariants[] = {"zero", "all", "dist", "QPPFVariant", "QPPF_", 0};
 #define RANK0           0
 #define G_RELATIVE_FILL 1.0
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFMatMult_P"
 static PetscErrorCode QPPFMatMult_P(Mat matP, Vec v, Vec Pv)
 {
   QPPF cp;
@@ -22,8 +20,6 @@ static PetscErrorCode QPPFMatMult_P(Mat matP, Vec v, Vec Pv)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFMatMult_Q"
 static PetscErrorCode QPPFMatMult_Q(Mat matQ, Vec v, Vec Qv)
 {
   QPPF cp;
@@ -34,8 +30,6 @@ static PetscErrorCode QPPFMatMult_Q(Mat matQ, Vec v, Vec Qv)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFMatMult_HalfQ"
 static PetscErrorCode QPPFMatMult_HalfQ(Mat matHalfQ, Vec x, Vec y)
 {
   QPPF cp;
@@ -46,8 +40,6 @@ static PetscErrorCode QPPFMatMult_HalfQ(Mat matHalfQ, Vec x, Vec y)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFMatMultTranspose_HalfQ"
 static PetscErrorCode QPPFMatMultTranspose_HalfQ(Mat matHalfQ, Vec x, Vec y)
 {
   QPPF cp;
@@ -58,8 +50,6 @@ static PetscErrorCode QPPFMatMultTranspose_HalfQ(Mat matHalfQ, Vec x, Vec y)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFMatMult_GtG"
 static PetscErrorCode QPPFMatMult_GtG(Mat matGtG, Vec v, Vec GtGv)
 {
   QPPF cp;
@@ -70,8 +60,6 @@ static PetscErrorCode QPPFMatMult_GtG(Mat matGtG, Vec v, Vec GtGv)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFCreate"
 PetscErrorCode QPPFCreate(MPI_Comm comm, QPPF *qppf_new)
 {
   QPPF cp;
@@ -111,8 +99,6 @@ PetscErrorCode QPPFCreate(MPI_Comm comm, QPPF *qppf_new)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFSetG"
 PetscErrorCode QPPFSetG(QPPF cp, Mat G)
 {
   Mat G_orig;
@@ -138,8 +124,6 @@ PetscErrorCode QPPFSetG(QPPF cp, Mat G)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFSetExplicitInv"
 PetscErrorCode QPPFSetExplicitInv(QPPF cp, PetscBool explicitInv)
 {
   PetscFunctionBegin;
@@ -153,8 +137,6 @@ PetscErrorCode QPPFSetExplicitInv(QPPF cp, PetscBool explicitInv)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFSetRedundancy"
 PetscErrorCode QPPFSetRedundancy(QPPF cp, PetscInt nred)
 {
   PetscFunctionBegin;
@@ -165,8 +147,6 @@ PetscErrorCode QPPFSetRedundancy(QPPF cp, PetscInt nred)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFSetFromOptions"
 PetscErrorCode QPPFSetFromOptions(QPPF cp)
 {
   PetscBool set, flg;
@@ -187,8 +167,6 @@ PetscErrorCode QPPFSetFromOptions(QPPF cp)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFSetUpGt_Private"
 static PetscErrorCode QPPFSetUpGt_Private(QPPF cp, Mat *newGt)
 {
   Mat              Gt;
@@ -208,8 +186,6 @@ static PetscErrorCode QPPFSetUpGt_Private(QPPF cp, Mat *newGt)
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFSetUpGGt_Private"
 static PetscErrorCode QPPFSetUpGGt_Private(QPPF cp, Mat *newGGt)
 {
   MPI_Comm       comm;
@@ -277,8 +253,6 @@ static PetscErrorCode QPPFSetUpGGt_Private(QPPF cp, Mat *newGGt)
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFSetUpGGtinv_Private"
 static PetscErrorCode QPPFSetUpGGtinv_Private(QPPF cp, Mat *GGtinv_new)
 {
   Mat      GGt = NULL, GGtinv = NULL;
@@ -332,8 +306,6 @@ static PetscErrorCode QPPFSetUpGGtinv_Private(QPPF cp, Mat *GGtinv_new)
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFSetUpView_Private"
 static PetscErrorCode QPPFSetUpView_Private(QPPF cp)
 {
   PetscBool flg;
@@ -350,8 +322,6 @@ static PetscErrorCode QPPFSetUpView_Private(QPPF cp)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFReset"
 PetscErrorCode QPPFReset(QPPF cp)
 {
   PetscFunctionBegin;
@@ -366,8 +336,6 @@ PetscErrorCode QPPFReset(QPPF cp)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFSetUp"
 PetscErrorCode QPPFSetUp(QPPF cp)
 {
   MPI_Comm    comm;
@@ -436,8 +404,6 @@ PetscErrorCode QPPFSetUp(QPPF cp)
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFGetAlphaTilde"
 PetscErrorCode QPPFGetAlphaTilde(QPPF cp, Vec *alpha_tilde)
 {
   PetscFunctionBegin;
@@ -448,8 +414,6 @@ PetscErrorCode QPPFGetAlphaTilde(QPPF cp, Vec *alpha_tilde)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFApplyQ"
 /* Applies the orthogonal projector Q = G'*inv(G*G')*G to vector v */
 PetscErrorCode QPPFApplyQ(QPPF cp, Vec v, Vec Qv)
 {
@@ -502,8 +466,6 @@ PetscErrorCode QPPFApplyQ(QPPF cp, Vec v, Vec Qv)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFApplyHalfQ"
 PetscErrorCode QPPFApplyHalfQ(QPPF cp, Vec x, Vec y)
 {
   PetscFunctionBeginI;
@@ -527,8 +489,6 @@ PetscErrorCode QPPFApplyHalfQ(QPPF cp, Vec x, Vec y)
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFApplyHalfQTranspose"
 PetscErrorCode QPPFApplyHalfQTranspose(QPPF cp, Vec x, Vec y)
 {
   Vec Gt_right;
@@ -558,8 +518,6 @@ PetscErrorCode QPPFApplyHalfQTranspose(QPPF cp, Vec x, Vec y)
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFApplyP"
 PetscErrorCode QPPFApplyP(QPPF cp, Vec v, Vec Pv)
 {
   PetscFunctionBegin;
@@ -574,8 +532,6 @@ PetscErrorCode QPPFApplyP(QPPF cp, Vec v, Vec Pv)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFApplyGtG"
 /* Applies GtG = G'*G to vector v */
 PetscErrorCode QPPFApplyGtG(QPPF cp, Vec v, Vec GtGv)
 {
@@ -604,8 +560,6 @@ PetscErrorCode QPPFApplyGtG(QPPF cp, Vec v, Vec GtGv)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFApplyCP"
 /* Applies inv(G*G') to vector x; in other words y solves the coarse problem G*G'*y = x */
 PetscErrorCode QPPFApplyCP(QPPF cp, Vec x, Vec y)
 {
@@ -644,8 +598,6 @@ PetscErrorCode QPPFApplyCP(QPPF cp, Vec x, Vec y)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFCreateQ"
 /* Get operator Q = G'*inv(G*G')*G in implicit form */
 PetscErrorCode QPPFCreateQ(QPPF cp, Mat *newQ)
 {
@@ -662,8 +614,6 @@ PetscErrorCode QPPFCreateQ(QPPF cp, Mat *newQ)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFCreateHalfQ"
 /* Get operator Q = inv(G*G')*G in implicit form */
 PetscErrorCode QPPFCreateHalfQ(QPPF cp, Mat *newHalfQ)
 {
@@ -681,8 +631,6 @@ PetscErrorCode QPPFCreateHalfQ(QPPF cp, Mat *newHalfQ)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFCreateP"
 /* Get operator P = I - G'*inv(G*G')*G in implicit form */
 PetscErrorCode QPPFCreateP(QPPF cp, Mat *newP)
 {
@@ -699,8 +647,6 @@ PetscErrorCode QPPFCreateP(QPPF cp, Mat *newP)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFCreateGtG"
 /* Get operator GtG = G'*G in implicit form */
 PetscErrorCode QPPFCreateGtG(QPPF cp, Mat *newGtG)
 {
@@ -717,8 +663,6 @@ PetscErrorCode QPPFCreateGtG(QPPF cp, Mat *newGtG)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFGetG"
 PetscErrorCode QPPFGetG(QPPF cp, Mat *G)
 {
   PetscFunctionBegin;
@@ -728,8 +672,6 @@ PetscErrorCode QPPFGetG(QPPF cp, Mat *G)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFGetGHasOrthonormalRows"
 PetscErrorCode QPPFGetGHasOrthonormalRows(QPPF cp, PetscBool *flg)
 {
   PetscFunctionBegin;
@@ -739,8 +681,6 @@ PetscErrorCode QPPFGetGHasOrthonormalRows(QPPF cp, PetscBool *flg)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFGetGGt"
 PetscErrorCode QPPFGetGGt(QPPF cp, Mat *GGt)
 {
   Mat GGtinv;
@@ -754,8 +694,6 @@ PetscErrorCode QPPFGetGGt(QPPF cp, Mat *GGt)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFGetGGtinv"
 PetscErrorCode QPPFGetGGtinv(QPPF cp, Mat *GGtinv)
 {
   PetscFunctionBegin;
@@ -765,8 +703,6 @@ PetscErrorCode QPPFGetGGtinv(QPPF cp, Mat *GGtinv)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFGetKSP"
 PetscErrorCode QPPFGetKSP(QPPF cp, KSP *ksp)
 {
   Mat GGtinv;
@@ -780,8 +716,6 @@ PetscErrorCode QPPFGetKSP(QPPF cp, KSP *ksp)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFView"
 /*@
    QPPFView - Print information about the QPPF.
 
@@ -842,8 +776,6 @@ PetscErrorCode QPPFView(QPPF cp, PetscViewer viewer)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPPFDestroy"
 PetscErrorCode QPPFDestroy(QPPF *cp)
 {
   PetscFunctionBegin;
