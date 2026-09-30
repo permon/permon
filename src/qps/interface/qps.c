@@ -657,12 +657,12 @@ PetscErrorCode QPSConvergedDefault(QPS qps, KSPConvergedReason *reason)
       *reason = KSP_CONVERGED_ATOL;
     } else {
       PetscCall(
-        PetscInfo(qps, "QP solver has converged. Residual norm %14.12e is less than rtol*||b|| =  %14.12e * %14.12e = %14.12e at iteration %" PetscInt_FMT "\n", (double)rnorm, (double)qps->rtol, (double)cctx->norm_rhs, (double)qps->rtol * cctx->norm_rhs, i));
+        PetscInfo(qps, "QP solver has converged. Residual norm %14.12e is less than rtol*||b|| =  %14.12e * %14.12e = %14.12e at iteration %" PetscInt_FMT "\n", (double)rnorm, (double)qps->rtol, (double)cctx->norm_rhs, (double)(qps->rtol * cctx->norm_rhs), i));
       *reason = KSP_CONVERGED_RTOL;
     }
   } else if (rnorm >= qps->divtol * cctx->norm_rhs_div) {
     PetscCall(PetscInfo(qps, "QP solver is diverging. Residual norm %14.12e exceeded the divergence tolerance divtol * ||b|| = %14.12e * %14.12e = %14.12e at iteration %" PetscInt_FMT "\n", (double)rnorm, (double)qps->divtol, (double)cctx->norm_rhs,
-                        (double)qps->divtol * cctx->norm_rhs_div, i));
+                        (double)(qps->divtol * cctx->norm_rhs_div), i));
     *reason = KSP_DIVERGED_DTOL;
   }
   PetscFunctionReturn(PETSC_SUCCESS);

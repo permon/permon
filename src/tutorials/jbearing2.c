@@ -512,7 +512,7 @@ PetscErrorCode CallPermonAndCompareResults(Tao tao, void *ctx)
 
   /* Get Tao tolerances */
   PetscCall(TaoGetTolerances(tao, &gatol, &grtol, &gttol));
-  PetscCall(PetscPrintf(PETSC_COMM_WORLD, "TAO tolerances are gatol = %e, grtol =  %e, gttol = %e\n", gatol, grtol, gttol));
+  PetscCall(PetscPrintf(PETSC_COMM_WORLD, "TAO tolerances are gatol = %e, grtol =  %e, gttol = %e\n", (double)gatol, (double)grtol, (double)gttol));
 
   /* Set default QPS options. */
   PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Setting PERMON rtol = gttol, atol = gatol\n"));
@@ -544,7 +544,7 @@ PetscErrorCode CallPermonAndCompareResults(Tao tao, void *ctx)
   PetscCall(VecCopy(x_tao, x_diff));
   PetscCall(VecAXPY(x_diff, -1.0, x_qp));
   PetscCall(VecNorm(x_diff, NORM_2, &x_diff_norm));
-  PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps), "Norm of difference of results from TAO and QP = %e %s %e = tolerance\n", x_diff_norm, (x_diff_norm <= tao_diff_tol) ? "<=" : ">", tao_diff_tol));
+  PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps), "Norm of difference of results from TAO and QP = %e %s %e = tolerance\n", (double)x_diff_norm, (x_diff_norm <= tao_diff_tol) ? "<=" : ">", (double)tao_diff_tol));
   PetscCheck(x_diff_norm <= tao_diff_tol, PetscObjectComm((PetscObject)qps), PETSC_ERR_PLIB, "PERMON and TAO yield different results!");
   PetscCall(QPSDestroy(&qps));
   PetscCall(QPDestroy(&qp));

@@ -395,7 +395,7 @@ PetscErrorCode QPCViewKKT_Box(QPC qpc, Vec x, PetscReal normb, PetscViewer viewe
       }
       PetscCall(VecDot(lub, r, &dot));
       norm = PetscAbsScalar(dot);
-      PetscCall(PetscViewerASCIIPrintf(viewer, "r = |lambda_ub'*(x-ub)|  = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / normb));
+      PetscCall(PetscViewerASCIIPrintf(viewer, "r = |lambda_ub'*(x-ub)|  = %.2e    r/||b|| = %.2e\n", (double)norm, (double)norm / (double)normb));
 
       PetscCall(VecDestroy(&o));
       PetscCall(VecDestroy(&r));
