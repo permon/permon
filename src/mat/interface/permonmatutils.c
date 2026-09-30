@@ -335,7 +335,7 @@ static PetscErrorCode MatMultEqualTol_Private(Mat A, PetscBool transpose, Mat B,
       PetscCall(VecNorm(s2, NORM_INFINITY, &r1));
       r1 /= r2;
     }
-    PetscCall(PetscInfo(permon, "relative error of %" PetscInt_FMT "-th MatMult() %g\n", k, r1));
+    PetscCall(PetscInfo(permon, "relative error of %" PetscInt_FMT "-th MatMult() %g\n", k, (double)r1));
     if (r1 > tol) {
       *flg = PETSC_FALSE;
       break;

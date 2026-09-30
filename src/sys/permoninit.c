@@ -110,7 +110,7 @@ PetscErrorCode PermonFinalize()
 }
 
 #if defined(PETSC_HAVE_DYNAMIC_LIBRARIES)
-  /*
+/*
   PetscDLLibraryRegister_permon - This function is called when the dynamic library
   it is in is opened.
 

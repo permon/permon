@@ -310,10 +310,11 @@ static PetscErrorCode QPSSMALXEUpdateNormBu_Lag_SMALXEON(QPS qps, Vec u, PetscRe
     } else {
       sign = '=';
     }
-    PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps), "%s: out %3" PetscInt_FMT " in %4" PetscInt_FMT "   II=%2" PetscInt_FMT " J=%2" PetscInt_FMT " niter=%4" PetscInt_FMT " neval=%4" PetscInt_FMT "   ||Bu||=%.4e  %c  %.4e=~||Bu|| relative_difference=%.4e %c\n",
-                          PETSC_FUNCTION_NAME, qps->iteration, qps_inner->iteration, II, J, niter, neval, (double)normBu_exact, sign, (double)normBu_approx, (double)rdiff, rdiff > 10 ? sign : ' '));
+    PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps), "%s: out %3" PetscInt_FMT " in %4" PetscInt_FMT "   II=%2" PetscInt_FMT " J=%2" PetscInt_FMT " niter=%4" PetscInt_FMT " neval=%4" PetscInt_FMT "   ||Bu||=%.4e  %c  %.4e=~||Bu|| relative_difference=%.4e %c\n", PETSC_FUNCTION_NAME,
+                          qps->iteration, qps_inner->iteration, II, J, niter, neval, (double)normBu_exact, sign, (double)normBu_approx, (double)rdiff, rdiff > 10 ? sign : ' '));
   } else if (lag_monitor) {
-    PetscCall(PetscPrintf(PetscObjectComm((PetscObject)qps), "%s: out %3" PetscInt_FMT " in %4" PetscInt_FMT "   II=%2" PetscInt_FMT " J=%2" PetscInt_FMT " niter=%4" PetscInt_FMT " neval=%4" PetscInt_FMT "\n", PETSC_FUNCTION_NAME, qps->iteration, qps_inner->iteration, II, J, niter, neval));
+    PetscCall(
+      PetscPrintf(PetscObjectComm((PetscObject)qps), "%s: out %3" PetscInt_FMT " in %4" PetscInt_FMT "   II=%2" PetscInt_FMT " J=%2" PetscInt_FMT " niter=%4" PetscInt_FMT " neval=%4" PetscInt_FMT "\n", PETSC_FUNCTION_NAME, qps->iteration, qps_inner->iteration, II, J, niter, neval));
   }
 
   *normBu = normBu_approx;
