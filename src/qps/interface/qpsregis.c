@@ -12,8 +12,6 @@ PERMON_EXTERN PetscErrorCode QPSCreate_PCPG(QPS);
 PetscFunctionList QPSList              = 0;
 PetscBool         QPSRegisterAllCalled = PETSC_FALSE;
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSRegisterAll"
 PetscErrorCode QPSRegisterAll(void)
 {
   PetscFunctionBegin;
@@ -26,8 +24,6 @@ PetscErrorCode QPSRegisterAll(void)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPSRegister"
 PetscErrorCode QPSRegister(const char sname[], PetscErrorCode (*function)(QPS))
 {
   PetscFunctionBegin;

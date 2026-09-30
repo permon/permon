@@ -14,8 +14,6 @@ static char **permon_executablePtr = &permon_executable;
 PetscClassId PERMON_CLASSID;
 PERMON       permon;
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonInitialize"
 /*@
    PermonInitialize - Initializes PETSc (if not already initialized), init PERMON, register functions, etc.
    This function must be called in order to use the PERMON library!
@@ -92,8 +90,6 @@ PetscErrorCode PermonInitialize(int *argc, char ***args, const char file[], cons
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonFinalize"
 /*@
    PermonFinalize - Permon cleanup, PetscFinalize() (if PERMON started petsc), etc.
 
@@ -120,8 +116,6 @@ PetscErrorCode PermonFinalize()
 
   This one registers all the QP methods in the libpermon.a library.
  */
-  #undef __FUNCT__
-  #define __FUNCT__ "PetscDLLibraryRegister_permon"
 PetscErrorCode PetscDLLibraryRegister_permon()
 {
   PetscFunctionBegin;

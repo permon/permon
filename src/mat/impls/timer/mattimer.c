@@ -1,7 +1,5 @@
 #include <permon/private/permonmatimpl.h>
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMult_Timer"
 PetscErrorCode MatMult_Timer(Mat W, Vec x, Vec y)
 {
   Mat_Timer *ctx;
@@ -14,8 +12,6 @@ PetscErrorCode MatMult_Timer(Mat W, Vec x, Vec y)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMultAdd_Timer"
 PetscErrorCode MatMultAdd_Timer(Mat W, Vec x, Vec y, Vec z)
 {
   Mat_Timer *ctx;
@@ -28,8 +24,6 @@ PetscErrorCode MatMultAdd_Timer(Mat W, Vec x, Vec y, Vec z)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMultTranspose_Timer"
 PetscErrorCode MatMultTranspose_Timer(Mat W, Vec x, Vec y)
 {
   Mat_Timer *ctx;
@@ -42,8 +36,6 @@ PetscErrorCode MatMultTranspose_Timer(Mat W, Vec x, Vec y)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMultTransposeAdd_Timer"
 PetscErrorCode MatMultTransposeAdd_Timer(Mat W, Vec x, Vec y, Vec z)
 {
   Mat_Timer *ctx;
@@ -56,8 +48,6 @@ PetscErrorCode MatMultTransposeAdd_Timer(Mat W, Vec x, Vec y, Vec z)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatDestroy_Timer"
 PetscErrorCode MatDestroy_Timer(Mat W)
 {
   Mat_Timer *ctx;
@@ -70,8 +60,6 @@ PetscErrorCode MatDestroy_Timer(Mat W)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatCreateTimer"
 /*@
    MatCreateTimer - Creates a matrix that behaves like original but logs all MatMult operations
 
@@ -110,8 +98,6 @@ PetscErrorCode MatCreateTimer(Mat A, Mat *B)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatTimerSetOperation"
 PetscErrorCode MatTimerSetOperation(Mat mat, MatOperation op, const char *opname, PetscErrorCodeFn *opf)
 {
   Mat_Timer    *ctx;
@@ -136,8 +122,6 @@ PetscErrorCode MatTimerSetOperation(Mat mat, MatOperation op, const char *opname
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatTimerGetMat"
 PetscErrorCode MatTimerGetMat(Mat W, Mat *A)
 {
   Mat_Timer *ctx;

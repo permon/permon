@@ -3,8 +3,6 @@
 #include <petsc/private/vecimpl.h>
 #include <petsc/private/isimpl.h>
 
-#undef __FUNCT__
-#define __FUNCT__ "ISAdd"
 PetscErrorCode ISAdd(IS is, PetscInt value, IS *isnew)
 {
   PetscInt        i, n;
@@ -23,8 +21,6 @@ PetscErrorCode ISAdd(IS is, PetscInt value, IS *isnew)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "VecMergeAndDestroy"
 PetscErrorCode VecMergeAndDestroy(MPI_Comm comm, Vec *local_in, Vec *global_out)
 {
   Vec         local, global;
@@ -67,8 +63,6 @@ PetscErrorCode VecMergeAndDestroy(MPI_Comm comm, Vec *local_in, Vec *global_out)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "VecPrintInfo"
 PetscErrorCode VecPrintInfo(Vec vec)
 {
   PetscInt    m, M, i, tablevel;
@@ -94,8 +88,6 @@ PetscErrorCode VecPrintInfo(Vec vec)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "ISCreateFromVec"
 PetscErrorCode ISCreateFromVec(Vec vec, IS *is)
 {
   PetscInt     n, i;
@@ -116,8 +108,6 @@ PetscErrorCode ISCreateFromVec(Vec vec, IS *is)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "VecCreateFromIS"
 PetscErrorCode VecCreateFromIS(IS is, Vec *vecout)
 {
   PetscInt        n, N, i;
@@ -144,8 +134,6 @@ PetscErrorCode VecCreateFromIS(IS is, Vec *vecout)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "ISGetVec"
 /*
 ISGetVec - set the layout of vector subject to the layout defined by index set
 
@@ -171,8 +159,6 @@ PetscErrorCode ISGetVec(IS is, Vec *vec)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "ISGetVecBlock"
 /*
 ISGetVecBlock - set the layout of vector subject to the layout defined by index set; each block of IS has one component in vector
 
@@ -213,8 +199,6 @@ PetscErrorCode ISGetVecBlock(IS is, Vec *vec, PetscInt bs)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "VecCheckSameLayoutIS"
 PetscErrorCode VecCheckSameLayoutIS(Vec vec, IS is)
 {
   PetscInt n, N, bs;
@@ -232,8 +216,6 @@ PetscErrorCode VecCheckSameLayoutIS(Vec vec, IS is)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "VecCheckSameLayoutVec"
 PetscErrorCode VecCheckSameLayoutVec(Vec v1, Vec v2)
 {
   PetscFunctionBegin;
@@ -246,8 +228,6 @@ PetscErrorCode VecCheckSameLayoutVec(Vec v1, Vec v2)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "VecInvalidate"
 /*@
    VecInvalidate - Mark vector invalid and set entries to Inf
 
@@ -283,8 +263,6 @@ PetscErrorCode VecInvalidate(Vec vec)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "VecIsInvalidated"
 /*@
    VecIsInvalidated - Check if vector is invalid
 
@@ -324,8 +302,6 @@ PetscErrorCode VecIsInvalidated(Vec vec, PetscBool *flg)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "VecHasValidValues"
 PetscErrorCode VecHasValidValues(Vec vec, PetscBool *flg)
 {
   PetscInt           n, i;
@@ -352,8 +328,6 @@ struct _n_VecNestGetMPICtx {
 };
 typedef struct _n_VecNestGetMPICtx *VecNestGetMPICtx;
 
-#undef __FUNCT__
-#define __FUNCT__ "VecGetMPIVector"
 PetscErrorCode VecGetMPIVector(MPI_Comm comm, PetscInt N, Vec vecs[], Vec *VecOut)
 {
   IS               isl, isg;
@@ -398,8 +372,6 @@ PetscErrorCode VecGetMPIVector(MPI_Comm comm, PetscInt N, Vec vecs[], Vec *VecOu
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "VecRestoreMPIVector"
 PetscErrorCode VecRestoreMPIVector(MPI_Comm comm, PetscInt N, Vec vecs[], Vec *VecIn)
 {
   Vec              locNest;
@@ -427,8 +399,6 @@ PetscErrorCode VecRestoreMPIVector(MPI_Comm comm, PetscInt N, Vec vecs[], Vec *V
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "VecNestGetMPI"
 PetscErrorCode VecNestGetMPI(PetscInt N, Vec *vecs[])
 {
   Vec              x, y;
@@ -476,8 +446,6 @@ PetscErrorCode VecNestGetMPI(PetscInt N, Vec *vecs[])
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "VecNestRestoreMPI"
 PetscErrorCode VecNestRestoreMPI(PetscInt N, Vec *vecs[])
 {
   Vec              y;
@@ -512,8 +480,6 @@ PetscErrorCode VecNestRestoreMPI(PetscInt N, Vec *vecs[])
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "VecScaleSkipInf"
 PetscErrorCode VecScaleSkipInf(Vec x, PetscScalar alpha)
 {
   PetscInt     i, n;

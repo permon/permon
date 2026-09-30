@@ -6,8 +6,6 @@ PetscLogEvent Mat_OrthColumns;
 const char *MatOrthTypes[] = {"none", "gs", "gslingen", "cholesky", "implicit", "inexact", "MatOrthType", "MAT_ORTH_", 0};
 const char *MatOrthForms[] = {"implicit", "explicit", "MatOrthForm", "MAT_ORTH_", 0};
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMult_ForwardSolve"
 static PetscErrorCode MatMult_ForwardSolve(Mat T, Vec x, Vec y)
 {
   Mat t = NULL;
@@ -18,8 +16,6 @@ static PetscErrorCode MatMult_ForwardSolve(Mat T, Vec x, Vec y)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatMultTranspose_ForwardSolve"
 static PetscErrorCode MatMultTranspose_ForwardSolve(Mat T, Vec x, Vec y)
 {
   Mat t = NULL;
@@ -30,8 +26,6 @@ static PetscErrorCode MatMultTranspose_ForwardSolve(Mat T, Vec x, Vec y)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatOrthColumns_Cholesky_Default"
 static PetscErrorCode MatOrthColumns_Cholesky_Default(Mat A, MatOrthType type, MatOrthForm form, Mat *Q_new, Mat *S_new)
 {
   MPI_Comm           comm;
@@ -140,8 +134,6 @@ static PetscErrorCode MatOrthColumns_Cholesky_Default(Mat A, MatOrthType type, M
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatOrthColumns_Implicit_Default"
 static PetscErrorCode MatOrthColumns_Implicit_Default(Mat A, MatOrthType type, MatOrthForm form, Mat *Q_new, Mat *S_new)
 {
   MPI_Comm comm;
@@ -171,8 +163,6 @@ static PetscErrorCode MatOrthColumns_Implicit_Default(Mat A, MatOrthType type, M
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatOrthRows_Implicit_Default"
 static PetscErrorCode MatOrthRows_Implicit_Default(Mat A, MatOrthType type, MatOrthForm form, Mat *Qt_new, Mat *T_new)
 {
   MPI_Comm comm;
@@ -202,8 +192,6 @@ static PetscErrorCode MatOrthRows_Implicit_Default(Mat A, MatOrthType type, MatO
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatOrthColumns_GS_Default"
 static PetscErrorCode MatOrthColumns_GS_Default(MPI_Comm comm, PetscInt N, Vec q[], Vec s[], PetscScalar dots[], PetscInt *o_max, PetscInt *o_acc)
 {
   PetscReal norm, norm_last, alpha = 0.5;
@@ -235,8 +223,6 @@ static PetscErrorCode MatOrthColumns_GS_Default(MPI_Comm comm, PetscInt N, Vec q
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PetscScalarNormSquared"
 static inline PetscErrorCode PetscScalarNormSquared(PetscInt n, const PetscScalar xx[], PetscReal *z)
 {
   PetscBLASInt one = 1, bn;
@@ -247,8 +233,6 @@ static inline PetscErrorCode PetscScalarNormSquared(PetscInt n, const PetscScala
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatOrthColumns_GS_Lingen"
 static PetscErrorCode MatOrthColumns_GS_Lingen(MPI_Comm comm, PetscInt N, Vec q[], Vec s[], PetscScalar p[], PetscInt *o_max, PetscInt *o_acc)
 {
   PetscReal delta, delta_last, alpha = 0.5, beta, gamma;
@@ -287,8 +271,6 @@ static PetscErrorCode MatOrthColumns_GS_Lingen(MPI_Comm comm, PetscInt N, Vec q[
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatOrthColumns_GS"
 static PetscErrorCode MatOrthColumns_GS(Mat A, MatOrthType type, MatOrthForm form, Mat *Q_new, Mat *S_new)
 {
   MPI_Comm     comm;
@@ -369,8 +351,6 @@ static PetscErrorCode MatOrthColumns_GS(Mat A, MatOrthType type, MatOrthForm for
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatOrthColumns"
 /*@
    MatOrthColumns - Perform a QR factorization.
 
@@ -404,7 +384,7 @@ PetscErrorCode MatOrthColumns(Mat A, MatOrthType type, MatOrthForm form, Mat *Q_
   PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
   PetscValidLogicalCollectiveEnum(A, type, 2);
   if (!registered) {
-    PetscCall(PetscLogEventRegister(__FUNCT__, MAT_CLASSID, &Mat_OrthColumns));
+    PetscCall(PetscLogEventRegister("MatOrthColumns", MAT_CLASSID, &Mat_OrthColumns));
     registered = PETSC_TRUE;
   }
 
@@ -490,8 +470,6 @@ PetscErrorCode MatOrthColumns(Mat A, MatOrthType type, MatOrthForm form, Mat *Q_
 
 .seealso: MatOrthColumns(), MatOrthType
 @*/
-#undef __FUNCT__
-#define __FUNCT__ "MatOrthRows"
 PetscErrorCode MatOrthRows(Mat A, MatOrthType type, MatOrthForm form, Mat *Qt_new, Mat *T_new)
 {
   Mat At, Qt, Tt;
@@ -520,8 +498,6 @@ PetscErrorCode MatOrthRows(Mat A, MatOrthType type, MatOrthForm form, Mat *Qt_ne
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatHasOrthonormalRowsImplicitly"
 PetscErrorCode MatHasOrthonormalRowsImplicitly(Mat A, PetscBool *flg)
 {
   Mat T;
@@ -533,8 +509,6 @@ PetscErrorCode MatHasOrthonormalRowsImplicitly(Mat A, PetscBool *flg)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatHasOrthonormalColumnsImplicitly"
 PetscErrorCode MatHasOrthonormalColumnsImplicitly(Mat A, PetscBool *flg)
 {
   Mat S;
@@ -546,8 +520,6 @@ PetscErrorCode MatHasOrthonormalColumnsImplicitly(Mat A, PetscBool *flg)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatHasOrthonormalRows"
 PetscErrorCode MatHasOrthonormalRows(Mat A, PetscReal tol, PetscInt ntrials, PetscBool *flg)
 {
   Mat At, AAt;
@@ -563,8 +535,6 @@ PetscErrorCode MatHasOrthonormalRows(Mat A, PetscReal tol, PetscInt ntrials, Pet
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatHasOrthonormalColumns"
 PetscErrorCode MatHasOrthonormalColumns(Mat A, PetscReal tol, PetscInt ntrials, PetscBool *flg)
 {
   Mat AtA;

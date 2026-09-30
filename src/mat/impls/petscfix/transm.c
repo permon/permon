@@ -1,8 +1,6 @@
 #include <permon/private/permonmatimpl.h>
 #include <permon/private/petscimpl.h>
 
-#undef __FUNCT__
-#define __FUNCT__ "MatIsImplicitTranspose"
 PetscErrorCode MatIsImplicitTranspose(Mat A, PetscBool *flg)
 {
   PetscFunctionBegin;
@@ -12,8 +10,6 @@ PetscErrorCode MatIsImplicitTranspose(Mat A, PetscBool *flg)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonMatTranspose_Transpose"
 static PetscErrorCode PermonMatTranspose_Transpose(Mat A, MatTransposeType type, Mat *At_out)
 {
   Mat At, Ate, Ae;
@@ -35,8 +31,6 @@ static PetscErrorCode PermonMatTranspose_Transpose(Mat A, MatTransposeType type,
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonMatTranspose_Default"
 static PetscErrorCode PermonMatTranspose_Default(Mat A, MatTransposeType type, Mat *At_out)
 {
   Mat At;
@@ -54,8 +48,6 @@ static PetscErrorCode PermonMatTranspose_Default(Mat A, MatTransposeType type, M
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatDiagonalScale_TransposePermon"
 PetscErrorCode MatDiagonalScale_TransposePermon(Mat At, Vec l, Vec r)
 {
   Mat_Transpose *data = (Mat_Transpose *)At->data;
@@ -65,8 +57,6 @@ PetscErrorCode MatDiagonalScale_TransposePermon(Mat At, Vec l, Vec r)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatDuplicate_TransposePermon"
 PetscErrorCode MatDuplicate_TransposePermon(Mat mat, MatDuplicateOption op, Mat *M)
 {
   Mat A = ((Mat_Transpose *)mat->data)->A;
@@ -80,8 +70,6 @@ PetscErrorCode MatDuplicate_TransposePermon(Mat mat, MatDuplicateOption op, Mat 
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatCreateTransposePermon"
 PetscErrorCode MatCreateTransposePermon(Mat A, Mat *At)
 {
   PetscFunctionBegin;
@@ -91,8 +79,6 @@ PetscErrorCode MatCreateTransposePermon(Mat A, Mat *At)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "PermonMatTranspose"
 PetscErrorCode PermonMatTranspose(Mat A, MatTransposeType type, Mat *At_out)
 {
   PetscErrorCode (*f)(Mat, MatTransposeType, Mat *);

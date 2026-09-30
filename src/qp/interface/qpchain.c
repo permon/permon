@@ -1,7 +1,5 @@
 #include <permon/private/qpimpl.h>
 
-#undef __FUNCT__
-#define __FUNCT__ "QPChainAdd"
 /*@
    QPChainAdd - Append QP into the QP chain.
 
@@ -26,8 +24,6 @@ PetscErrorCode QPChainAdd(QP qp, QPDuplicateOption opt, QP *newchild)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPChainPop"
 /*@
    QPChainPop - Delete the last QP of the chain.
 
@@ -47,8 +43,6 @@ PetscErrorCode QPChainPop(QP qp)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPChainFind"
 /*@
    QPChainFind - Find QP in the chain.
 
@@ -87,8 +81,6 @@ PetscErrorCode QPChainFind(QP qp, PetscErrorCode (*transform)(QP), QP *child)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPChainGetLast"
 /*@
    QPChainGetLast - Get last QP in the chain.
 
@@ -120,8 +112,6 @@ PetscErrorCode QPChainGetLast(QP qp, QP *last)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPChainSetUp"
 /*@
    QPChainSetUp - Calls QPSetUP() on QP and its descendants in the chain.
 
@@ -143,8 +133,6 @@ PetscErrorCode QPChainSetUp(QP qp)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPChainSetFromOptions"
 /*@
    QPChainSetFromOptions - Calls QPSetFromOptions() on QP and its descendants in the chain.
 
@@ -174,8 +162,6 @@ PetscErrorCode QPChainSetFromOptions(QP qp)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPChainPostSolve"
 /*@
    QPChainPostSolve - Apply post solve functions and optionally view.
 
@@ -274,8 +260,6 @@ PetscErrorCode QPChainPostSolve(QP qp)
   PetscFunctionReturnI(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPChainViewKKT"
 /*@
    QPChainViewKKT - Calls QPViewKKT() on each QP in the chain.
 
@@ -321,8 +305,6 @@ PetscErrorCode QPChainViewKKT(QP qp, PetscViewer viewer)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPChainView"
 /*@
    QPChainView - Calls QPView() on each QP in the chain.
 
@@ -351,7 +333,7 @@ PetscErrorCode QPChainView(QP qp, PetscViewer viewer)
   PetscCheck(iascii, comm, PETSC_ERR_SUP, "Viewer type %s not supported", ((PetscObject)viewer)->type_name);
 
   PetscCall(PetscViewerASCIIPrintf(viewer, "=====================\n"));
-  PetscCall(PetscViewerASCIIPrintf(viewer, __FUNCT__ " output follows\n"));
+  PetscCall(PetscViewerASCIIPrintf(viewer, "%s output follows\n", PETSC_FUNCTION_NAME));
   PetscCall(QPView(qp, viewer));
   PetscCall(QPGetChild(qp, &qp));
   while (qp) {
@@ -363,8 +345,6 @@ PetscErrorCode QPChainView(QP qp, PetscViewer viewer)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPChainViewQPPF"
 /*@
    QPChainViewQPPF - Calls QPViewQPPF() on each QP in the chain.
 
@@ -394,7 +374,7 @@ PetscErrorCode QPChainViewQPPF(QP qp, PetscViewer viewer)
   PetscCheck(iascii, comm, PETSC_ERR_SUP, "Viewer type %s not supported", ((PetscObject)viewer)->type_name);
 
   PetscCall(PetscViewerASCIIPrintf(viewer, "=====================\n"));
-  PetscCall(PetscViewerASCIIPrintf(viewer, __FUNCT__ " output follows\n"));
+  PetscCall(PetscViewerASCIIPrintf(viewer, "%s output follows\n", PETSC_FUNCTION_NAME));
   PetscCall(QPGetChild(qp, &qp));
   PetscCall(PetscViewerASCIIPushTab(viewer));
   while (qp) {

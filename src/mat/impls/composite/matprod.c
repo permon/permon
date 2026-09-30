@@ -1,8 +1,6 @@
 #include <permonmat.h>
 
 /* TODO remove MatProdGetMat? */
-#undef __FUNCT__
-#define __FUNCT__ "MatProdGetMat"
 PetscErrorCode MatProdGetMat(Mat A, PetscInt i, Mat *Ai)
 {
   PetscFunctionBegin;
@@ -10,8 +8,6 @@ PetscErrorCode MatProdGetMat(Mat A, PetscInt i, Mat *Ai)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "MatCreateProd"
 /*@C
    MatCreateProd - Creates a matrix as the implicit product of one or more matrices.
    This is a simple wrapper over MATCOMPOSITE type in PETSc.

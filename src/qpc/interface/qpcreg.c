@@ -8,8 +8,6 @@ PERMON_EXTERN PetscErrorCode QPCCreate_Box(QPC);
 PetscFunctionList QPCList              = 0;
 PetscBool         QPCRegisterAllCalled = PETSC_FALSE;
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCRegisterAll"
 PetscErrorCode QPCRegisterAll(void)
 {
   PetscFunctionBegin;
@@ -18,8 +16,6 @@ PetscErrorCode QPCRegisterAll(void)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-#undef __FUNCT__
-#define __FUNCT__ "QPCRegister"
 PetscErrorCode QPCRegister(const char sname[], PetscErrorCode (*function)(QPC))
 {
   PetscFunctionBegin;
