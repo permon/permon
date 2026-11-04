@@ -590,6 +590,8 @@ PetscErrorCode QPSSolve_MPGP(QPS qps)
       PetscCall(VecDotRealPart(p, Ap, &pAp)); /* pAp=p'*Ap       */
       PetscCall(VecDotRealPart(g, p, &acg));  /* acg=g'*p        */
       acg = acg / pAp;                        /* acg=acg/pAp     */
+      PetscCall(QPCFeas(qpc, x, p, &afeas));  /* finds max.feas.steplength */
+      if (acg > afeas) acg = afeas;
 
       /* make a step */
       PetscCall(VecAXPY(x, -acg, p));  /* x=x-acg*p       */
